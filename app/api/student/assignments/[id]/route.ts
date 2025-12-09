@@ -115,24 +115,37 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const canAccess = isSpecialType || attendancePercent >= requiredAttendance;
 
         // 7. Get student's assigned questions
-        // Check for ANY of the student IDs
+        console.log(`[Detailed Debug] Fetching questions for Assignment: ${id}`);
+        console.log(`[Detailed Debug] Student IDs: ${JSON.stringify(allStudentIds)}`);
+        console.log(`[Detailed Debug] CanAccess: ${canAccess}, IsPastDeadline: ${isPastDeadline}`);
+
         const studentAssignment = await StudentAssignment.findOne({
             studentId: { $in: allStudentIds },
             assignmentId: id
         });
 
+        console.log(`[Detailed Debug] StudentAssignment found: ${!!studentAssignment}`);
+
         let questions: any[] = [];
         if (canAccess && !isPastDeadline) {
             if (studentAssignment && studentAssignment.questionIds) {
+                console.log(`[Detailed Debug] Fetching from studentAssignment.questionIds: ${studentAssignment.questionIds.length}`);
                 questions = await Question.find({
                     _id: { $in: studentAssignment.questionIds }
                 });
             } else if (assignment.questions && assignment.questions.length > 0) {
+                console.log(`[Detailed Debug] Fetching from assignment.questions: ${assignment.questions.length}`);
                 questions = await Question.find({
                     _id: { $in: assignment.questions }
                 });
+            } else {
+                console.log(`[Detailed Debug] No questions found in assignment or studentAssignment`);
             }
+        } else {
+            console.log(`[Detailed Debug] Skipping question fetch due to access/deadline restrictions`);
         }
+
+        console.log(`[Detailed Debug] Final Questions Count: ${questions.length}`);
 
         // 8. Get faculty's script URL for submission (matching legacy logic)
         let scriptUrl = null;

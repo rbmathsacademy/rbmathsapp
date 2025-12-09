@@ -35,6 +35,8 @@ export async function middleware(req: NextRequest) {
         requestHeaders.set('x-user-id', payload.userId as string);
         requestHeaders.set('x-user-role', payload.role as string);
 
+        console.log(`[Middleware] Authenticated User: ${payload.userId} (${payload.role})`);
+
         // 4. Return response with new headers
         return NextResponse.next({
             request: {
