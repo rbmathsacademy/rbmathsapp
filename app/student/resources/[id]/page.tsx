@@ -27,7 +27,9 @@ export default function PracticeQuestionsPage() {
 
     const fetchResource = async () => {
         try {
-            const res = await fetch(`/api/student/resources/${resourceId}`);
+            const res = await fetch(`/api/student/resources/${resourceId}`, {
+                credentials: 'include'
+            });
             if (res.ok) {
                 const data = await res.json();
                 setResource(data.resource);

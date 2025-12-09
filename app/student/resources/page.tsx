@@ -45,7 +45,9 @@ export default function StudentResources() {
                 params.append('course_code', codeStr);
             }
 
-            const res = await fetch(`/api/student/resources?${params.toString()}`);
+            const res = await fetch(`/api/student/resources?${params.toString()}`, {
+                credentials: 'include'
+            });
             if (res.ok) {
                 setResources(await res.json());
             } else {
