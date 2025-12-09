@@ -12,8 +12,15 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // 2. Check for the token in cookies
-    const token = req.cookies.get('auth_token')?.value;
+    // 2. Check for the token in cookies OR headers
+    let token = req.cookies.get('auth_token')?.value;
+
+    if (!token) {
+        const authHeader = req.headers.get('Authorization');
+        if (authHeader?.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
+    }
 
     if (!token) {
         return NextResponse.json({ error: 'Unauthorized: No token provided' }, { status: 401 });

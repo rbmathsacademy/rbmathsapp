@@ -52,6 +52,7 @@ export async function POST(req: Request) {
                 name: user.name,
                 role: user.role,
             },
+            token,
         });
 
         response.cookies.set({

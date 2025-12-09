@@ -45,8 +45,12 @@ export default function StudentResources() {
                 params.append('course_code', codeStr);
             }
 
+            const token = localStorage.getItem('auth_token');
             const res = await fetch(`/api/student/resources?${params.toString()}`, {
-                credentials: 'include'
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             if (res.ok) {
                 setResources(await res.json());

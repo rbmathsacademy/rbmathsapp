@@ -27,8 +27,12 @@ export default function PracticeQuestionsPage() {
 
     const fetchResource = async () => {
         try {
+            const token = localStorage.getItem('auth_token');
             const res = await fetch(`/api/student/resources/${resourceId}`, {
-                credentials: 'include'
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             if (res.ok) {
                 const data = await res.json();

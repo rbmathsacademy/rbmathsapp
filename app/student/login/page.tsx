@@ -36,6 +36,9 @@ export default function StudentLogin() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Login failed');
 
+            if (data.token) {
+                localStorage.setItem('auth_token', data.token);
+            }
             localStorage.setItem('student', JSON.stringify(data.user));
             toast.success('Welcome back! 🚀');
             router.push('/student');

@@ -32,8 +32,12 @@ export default function StudentAttendance() {
 
     const fetchAttendance = async (studentId: string) => {
         try {
+            const token = localStorage.getItem('auth_token');
             const res = await fetch(`/api/student/attendance?studentId=${studentId}`, {
-                credentials: 'include'
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (res.status === 404 || res.status === 401) {

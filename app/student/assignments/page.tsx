@@ -46,8 +46,12 @@ export default function StudentAssignments() {
             }
             if (studentData._id) params.append('studentId', studentData._id);
 
+            const token = localStorage.getItem('auth_token');
             const res = await fetch(`/api/student/assignments?${params.toString()}`, {
-                credentials: 'include'
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             if (res.ok) {
                 setAssignments(await res.json());
