@@ -1,0 +1,50 @@
+import { NextResponse } from 'next/server';
+import connectDB from '@/lib/db';
+import Resource from '@/models/Resource';
+import Question from '@/models/Question';
+
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        await connectDB();
+        const { id } = await params;
+
+        // Get the resource
+        const resource = await Resource.findById(id);
+        if (!resource) {
+            return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
+        }
+
+        // Get the questions if any
+        let questions: any[] = [];
+        if (resource.questions && resource.questions.length > 0) {
+            questions = await Question.find({ _id: { $in: resource.questions } });
+        }
+
+        return NextResponse.json({
+            resource: {
+                _id: resource._id,
+                title: resource.title,
+                type: resource.type,
+                url: resource.url,
+                videoLink: resource.videoLink,
+                targetCourse: resource.targetCourse || resource.course_code,
+                facultyName: resource.facultyName,
+                topic: resource.topic,
+                subtopic: resource.subtopic,
+                hints: resource.hints,
+            },
+            questions: questions.map(q => ({
+                _id: q._id,
+                text: q.text,
+                latex: q.latex,
+                type: q.type,
+                topic: q.topic,
+                subtopic: q.subtopic,
+            }))
+        });
+
+    } catch (error: any) {
+        console.error('Fetch Resource Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
