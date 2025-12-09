@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Loader2, Calendar, Users, Clock, Save, Search, Trash2, CheckSquare, Square } from 'lucide-react';
+import InstallPWA from '@/components/InstallPWA';
 
 export default function AdminAttendance() {
     const [loading, setLoading] = useState(false);
@@ -301,7 +302,10 @@ export default function AdminAttendance() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Attendance Management</h1>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">Attendance Management</h1>
+                    <InstallPWA type="admin" />
+                </div>
                 {adminEmail && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{JSON.parse(localStorage.getItem('user') || '{}').name}</span></div>}
             </div>
 
