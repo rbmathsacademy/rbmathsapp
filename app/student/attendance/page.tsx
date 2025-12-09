@@ -32,7 +32,9 @@ export default function StudentAttendance() {
 
     const fetchAttendance = async (studentId: string) => {
         try {
-            const res = await fetch(`/api/student/attendance?studentId=${studentId}`);
+            const res = await fetch(`/api/student/attendance?studentId=${studentId}`, {
+                credentials: 'include'
+            });
 
             if (res.status === 404 || res.status === 401) {
                 toast.error('Session expired or invalid. Please login again.');

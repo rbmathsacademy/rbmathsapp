@@ -46,7 +46,9 @@ export default function StudentAssignments() {
             }
             if (studentData._id) params.append('studentId', studentData._id);
 
-            const res = await fetch(`/api/student/assignments?${params.toString()}`);
+            const res = await fetch(`/api/student/assignments?${params.toString()}`, {
+                credentials: 'include'
+            });
             if (res.ok) {
                 setAssignments(await res.json());
             } else {
