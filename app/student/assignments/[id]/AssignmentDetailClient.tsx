@@ -351,6 +351,23 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                     </div>
                 )}
 
+                {/* Not Started Warning */}
+                {!hasStarted && (
+                    <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-amber-900/20 border border-amber-500/30 mb-6 sm:mb-8">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                            <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-amber-500/20">
+                                <Clock className="h-5 w-5 sm:h-8 sm:w-8 text-amber-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm sm:text-xl font-bold text-amber-300 mb-1">Assignment Not Started</h2>
+                                <p className="text-xs sm:text-base text-amber-200/80">
+                                    This assignment will open on {startTime?.toLocaleString()}.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Main Content */}
                 {access.canAccess && hasStarted && !isPastDeadline && (
                     <>
@@ -368,6 +385,12 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                         )}
 
                         {/* Questions */}
+                        {questions.length === 0 && (
+                            <div className="p-8 rounded-xl bg-gray-800/30 border border-white/10 text-center mb-8">
+                                <p className="text-gray-400">No questions have been uploaded for this assignment yet.</p>
+                            </div>
+                        )}
+
                         {questions.length > 0 && (
                             <div className="mb-6 sm:mb-8">
                                 <button
