@@ -6,7 +6,38 @@ export async function GET(req: Request) {
     try {
         await connectDB();
         const { searchParams } = new URL(req.url);
-        const course = searchParams.get('course');
+
+        // AUTH CHECK (since middleware header is unreliable)
+        let token = null;
+        const cookieStore = req.headers.get('cookie');
+        if (cookieStore) {
+            const cookies = cookieStore.split(';').reduce((acc: any, cookie) => {
+                const [k, v] = cookie.trim().split('=');
+                acc[k] = v;
+                return acc;
+            }, {});
+            token = cookies['auth_token'];
+        }
+
+        if (!token) {
+            const authHeader = req.headers.get('authorization');
+            if (authHeader?.startsWith('Bearer ')) {
+                token = authHeader.split(' ')[1];
+            }
+        }
+
+        // We don't strictly need user ID here but we do strictly need to be logged in
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized: No token' }, { status: 401 });
+        }
+
+
+        let course = searchParams.get('course');
+        // Handle array-like string e.g. "CSE,ECE" -> just take first
+        if (course && course.includes(',')) {
+            course = course.split(',')[0];
+        }
+
         const department = searchParams.get('department');
         const year = searchParams.get('year');
 

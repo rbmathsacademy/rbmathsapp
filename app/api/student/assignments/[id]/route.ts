@@ -8,14 +8,46 @@ import Student from '@/models/Student';
 import Config from '@/models/Config';
 import FacultyConfig from '@/models/FacultyConfig';
 import Submission from '@/models/Submission';
+import { jwtVerify } from 'jose';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
+const key = new TextEncoder().encode(JWT_SECRET);
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         await connectDB();
         const { id } = await params;
 
-        // SECURE: Read from headers set by middleware
-        const studentId = req.headers.get('x-user-id');
+        // 0. Manual Auth Verification (Middleware Fallback)
+        let token = null;
+        const cookieStore = req.headers.get('cookie');
+        if (cookieStore) {
+            const cookies = cookieStore.split(';').reduce((acc: any, cookie) => {
+                const [k, v] = cookie.trim().split('=');
+                acc[k] = v;
+                return acc;
+            }, {});
+            token = cookies['auth_token'];
+        }
+
+        if (!token) {
+            const authHeader = req.headers.get('authorization');
+            if (authHeader?.startsWith('Bearer ')) {
+                token = authHeader.split(' ')[1];
+            }
+        }
+
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized: No token' }, { status: 401 });
+        }
+
+        let studentId;
+        try {
+            const { payload } = await jwtVerify(token, key);
+            studentId = payload.userId as string;
+        } catch (err) {
+            return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
+        }
 
         if (!studentId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -28,7 +60,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         }
 
         // 2. Get student details
-        // 2. Get student details (Find KEY student)
         const student = await Student.findById(studentId);
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
@@ -116,7 +147,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
         // 7. Get student's assigned questions
         console.log(`[Detailed Debug] Fetching questions for Assignment: ${id}`);
-        console.log(`[Detailed Debug] Student IDs: ${JSON.stringify(allStudentIds)}`);
         console.log(`[Detailed Debug] CanAccess: ${canAccess}, IsPastDeadline: ${isPastDeadline}`);
 
         const studentAssignment = await StudentAssignment.findOne({
@@ -127,8 +157,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         console.log(`[Detailed Debug] StudentAssignment found: ${!!studentAssignment}`);
 
         let questions: any[] = [];
-        // DEBUG: Bypassing canAccess check to verify data loading
-        if (true || (canAccess && !isPastDeadline)) { // FORCE TRUE FOR DEBUGGING
+        if (canAccess && !isPastDeadline) {
             if (studentAssignment && studentAssignment.questionIds) {
                 console.log(`[Detailed Debug] Fetching from studentAssignment.questionIds: ${studentAssignment.questionIds.length}`);
                 questions = await Question.find({
