@@ -64,7 +64,12 @@ export default function MockTest() {
                 department: studentData.department,
                 year: studentData.year
             });
-            const res = await fetch(`/api/student/mock-test/faculties?${params}`);
+            const token = localStorage.getItem('auth_token');
+            const res = await fetch(`/api/student/mock-test/faculties?${params}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (res.ok) {
                 setFaculties(await res.json());
             }
@@ -76,7 +81,12 @@ export default function MockTest() {
     const fetchTopics = async (facultyName: string) => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/student/mock-test/topics?facultyName=${encodeURIComponent(facultyName)}`);
+            const token = localStorage.getItem('auth_token');
+            const res = await fetch(`/api/student/mock-test/topics?facultyName=${encodeURIComponent(facultyName)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (res.ok) {
                 setTopics(await res.json());
                 setStep('topics');
@@ -98,9 +108,13 @@ export default function MockTest() {
 
         setLoading(true);
         try {
+            const token = localStorage.getItem('auth_token');
             const res = await fetch('/api/student/mock-test/generate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ facultyName: selectedFaculty, topics: selectedTopics })
             });
 

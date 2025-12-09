@@ -39,7 +39,12 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
     const fetchAssignmentDetail = async (studentId: string) => {
         try {
             // Remove studentId query param, utilize cookie
-            const res = await fetch(`/api/student/assignments/${assignmentId}`);
+            const token = localStorage.getItem('auth_token');
+            const res = await fetch(`/api/student/assignments/${assignmentId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (res.ok) {
                 setData(await res.json());
             } else {
@@ -117,10 +122,12 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
             });
 
             // Use server-side proxy to avoid CORS issues
+            const token = localStorage.getItem('auth_token');
             const response = await fetch('/api/student/upload-to-drive', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ scriptUrl: data.scriptUrl, fileData, fileName, folderPath }),
             });
@@ -141,7 +148,10 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
 
             const saveRes = await fetch('/api/student/submissions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     assignmentId: assignment._id,
                     studentId: studentData._id,
