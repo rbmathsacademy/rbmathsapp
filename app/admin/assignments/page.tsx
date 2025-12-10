@@ -159,10 +159,7 @@ export default function AssignmentsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-white">Assignments Portal</h1>
-                {user && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{user.name}</span></div>}
-            </div>
+
 
             {/* Navigation Tabs */}
             <div className="flex flex-wrap gap-2 bg-gray-800/50 p-1 rounded-lg border border-gray-700 w-fit">

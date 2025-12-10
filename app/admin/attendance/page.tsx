@@ -306,20 +306,7 @@ export default function AdminAttendance() {
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center border-b border-white/5 pb-6">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Attendance Management</h1>
-                    <p className="text-slate-400 text-sm mt-1">Mark daily attendance or manage records</p>
-                </div>
-                {adminEmail && (
-                    <div className="hidden sm:flex items-center gap-3 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5">
-                        <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
-                            {JSON.parse(localStorage.getItem('user') || '{}').name?.[0]}
-                        </div>
-                        <span className="text-slate-300 text-sm font-medium">{JSON.parse(localStorage.getItem('user') || '{}').name}</span>
-                    </div>
-                )}
-            </div>
+
 
             {/* Tabs */}
             <div className="flex space-x-1 rounded-xl bg-slate-900/50 p-1 mb-8 max-w-md border border-white/5 backdrop-blur-md">

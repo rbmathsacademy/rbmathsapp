@@ -221,10 +221,7 @@ export default function MarksPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-white">Student Marks</h1>
-                {user && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{user.name}</span></div>}
-            </div>
+
 
             {/* Filters */}
             <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 space-y-4">

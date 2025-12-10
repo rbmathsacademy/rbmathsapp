@@ -305,10 +305,7 @@ ${JSON.stringify(selectedData, null, 2)}`;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Study Materials & Resources</h1>
-                <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{user?.name}</span></div>
-            </div>
+
 
             {/* Tabs */}
             <div className="border-b border-gray-700">

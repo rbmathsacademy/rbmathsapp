@@ -346,107 +346,11 @@ export default function AdminDashboard() {
 
 
     // Change Password State
-    const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
 
-    const handleChangePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (passwordForm.new !== passwordForm.confirm) {
-            alert('New passwords do not match');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const res = await fetch('/api/admin/profile/change-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword: passwordForm.current, newPassword: passwordForm.new }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to update password');
-
-            alert('Password updated successfully! Please login again with the new password.');
-            localStorage.removeItem('user');
-            // Force logout
-            window.location.href = '/admin/login';
-        } catch (error: any) {
-            alert(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Student Data Entry</h1>
-                <div className="flex items-center gap-4">
-                    {adminEmail && <div className="text-sm text-gray-400 hidden sm:block">Logged in as: <span className="text-blue-400 font-semibold">{JSON.parse(localStorage.getItem('user') || '{}').name}</span></div>}
-                    <button
-                        onClick={() => setShowPasswordModal(true)}
-                        className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md transition-colors flex items-center gap-2 border border-gray-600"
-                    >
-                        <Save className="h-4 w-4" /> Change Password
-                    </button>
-                </div>
-            </div>
-
-            {/* Change Password Modal */}
-            {showPasswordModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-md p-8 shadow-2xl shadow-indigo-500/10 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
-                        <h3 className="text-xl font-bold text-white mb-6">Change Password</h3>
-                        <form onSubmit={handleChangePassword} className="space-y-5">
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
-                                <input
-                                    type="password" required
-                                    className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                                    value={passwordForm.current}
-                                    onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
-                                <input
-                                    type="password" required
-                                    className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                                    value={passwordForm.new}
-                                    onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
-                                <input
-                                    type="password" required
-                                    className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                                    value={passwordForm.confirm}
-                                    onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                                />
-                            </div>
-                            <div className="flex gap-4 mt-8">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPasswordModal(false)}
-                                    className="flex-1 py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition-colors border border-white/5"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 disabled:shadow-none"
-                                >
-                                    {loading ? 'Updating...' : 'Update Password'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Add Student & CSV */}
 
             {/* Add Student & CSV */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

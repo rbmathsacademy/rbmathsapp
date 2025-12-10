@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
     Users, ClipboardList, CheckSquare, FileText,
-    Upload, BarChart, BookOpen, LogOut, Menu, X
+    Upload, BarChart, BookOpen, LogOut, Menu, X, GraduationCap
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -46,6 +46,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const handleLogout = () => {
         localStorage.removeItem('user');
         router.push('/admin/login');
+    };
+
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordForm.new !== passwordForm.confirm) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/profile/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: passwordForm.current, newPassword: passwordForm.new }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update password');
+
+            alert('Password updated successfully! Please login again with the new password.');
+            localStorage.removeItem('user');
+            // Force logout
+            window.location.href = '/admin/login';
+        } catch (error: any) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
+            setShowPasswordModal(false);
+        }
     };
 
     const navigation = [
@@ -90,17 +123,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex flex-col h-full">
                     {/* Logo Area */}
                     <div className="flex h-20 shrink-0 items-center px-6 border-b border-white/5 bg-gradient-to-r from-slate-900 to-slate-800/50">
-                        <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                <span className="text-white font-bold text-lg">A</span>
+                        <div className="flex items-center gap-3">
+                            <div className="h-14 w-14 rounded-xl bg-blue-900/20 border border-blue-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                                <GraduationCap className="h-8 w-8 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-xl font-bold text-white tracking-tight block leading-tight">Admin<span className="text-indigo-400">Portal</span></span>
-                                <div className="mt-1 text-center">
-                                    <span className="text-[11px] text-slate-500 font-medium tracking-wide opacity-80 block leading-tight">
+                            <div className="flex flex-col justify-center h-14">
+                                <span className="text-xl font-bold text-white tracking-tight block leading-none">Admin<span className="text-indigo-400">Portal</span></span>
+                                <div className="mt-1.5 text-left">
+                                    <span className="text-[10px] text-slate-500 font-medium tracking-wide opacity-80 block leading-tight">
                                         Developed by
                                     </span>
-                                    <span className="text-[11px] text-slate-400 font-semibold tracking-wide block leading-tight">
+                                    <span className="text-[10px] text-slate-400 font-semibold tracking-wide block leading-tight">
                                         Dr. Ritwick Banerjee
                                     </span>
                                 </div>
@@ -136,7 +169,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         })}
                     </nav>
 
-                    <div className="p-4 border-t border-white/5 bg-slate-900/50">
+                    <div className="p-4 border-t border-white/5 bg-slate-900/50 block md:hidden">
                         <div className="flex items-center gap-3 px-2 mb-4">
                             <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
                                 {user.name?.[0] || 'A'}
@@ -172,8 +205,117 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
 
                 <main className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 scroll-smooth">
+                    {/* Global Header */}
+                    <div className="hidden md:flex justify-between items-center mb-8">
+                        <div>
+                            <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                                {navigation.find(n => n.href === pathname)?.name || 'Admin Portal'}
+                            </h1>
+                            <p className="text-slate-400 text-sm mt-1">
+                                {pathname === '/admin/dashboard' && 'Manage existing student records'}
+                                {pathname === '/admin/reports' && 'Manage adjustments and generate detailed reports'}
+                                {pathname === '/admin/attendance' && 'Mark daily attendance for students'}
+                                {pathname === '/admin/questions' && 'Manage question bank'}
+                                {pathname === '/admin/assignments' && 'Manage assignments'}
+                                {pathname === '/admin/submissions' && 'View and grade submissions'}
+                                {pathname === '/admin/marks' && 'View student marks'}
+                                {pathname === '/admin/resources' && 'Manage study materials'}
+                            </p>
+                        </div>
+                        <div className="relative group z-50">
+                            <button className="flex items-center gap-3 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5 hover:bg-slate-800/50 transition-colors">
+                                <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
+                                    {user.name?.[0] || 'A'}
+                                </div>
+                                <div className="text-left hidden sm:block">
+                                    <span className="text-slate-300 text-sm font-medium block leading-tight">{user.name}</span>
+                                    <span className="text-[10px] text-slate-500 block leading-tight">Admin</span>
+                                </div>
+                            </button>
+
+                            {/* Dropdown */}
+                            <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-slate-900 border border-white/10 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform z-50">
+                                <div className="p-3 border-b border-white/5">
+                                    <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                                </div>
+                                <div className="p-1">
+                                    <button
+                                        onClick={() => setShowPasswordModal(true)}
+                                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                                    >
+                                        <div className="h-4 w-4 text-slate-400"><FileText className="h-4 w-4" /></div> {/* Reusing FileText as placeholder if Key not imported, but will add Key import */}
+                                        Change Password
+                                    </button>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                        Sign out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {children}
                 </main>
+
+                {/* Change Password Modal (Global) */}
+                {showPasswordModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-md p-8 shadow-2xl shadow-indigo-500/10 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+                            <h3 className="text-xl font-bold text-white mb-6">Change Password</h3>
+                            <form onSubmit={handleChangePassword} className="space-y-5">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
+                                    <input
+                                        type="password" required
+                                        className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                        value={passwordForm.current}
+                                        onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
+                                    <input
+                                        type="password" required
+                                        className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                        value={passwordForm.new}
+                                        onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
+                                    <input
+                                        type="password" required
+                                        className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                        value={passwordForm.confirm}
+                                        onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex gap-4 mt-8">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswordModal(false)}
+                                        className="flex-1 py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition-colors border border-white/5"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 disabled:shadow-none"
+                                    >
+                                        {loading ? 'Updating...' : 'Update Password'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -539,26 +539,13 @@ The HOD of ${student.department}
 4) Submission: Submit the fully signed documents to me (the undersigned) in person.
 
 Failure to comply with these instructions or to submit the required documents will result in further strict disciplinary action.
+
 Treat this matter with extreme urgency.`;
         copyToClipboard(text);
     };
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center border-b border-white/5 pb-6">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Track Attendance</h1>
-                    <p className="text-slate-400 text-sm mt-1">Manage adjustments and generate detailed reports</p>
-                </div>
-                {adminName && (
-                    <div className="flex items-center gap-3 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5">
-                        <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
-                            {adminName[0]}
-                        </div>
-                        <span className="text-slate-300 text-sm font-medium hidden sm:inline">{adminName}</span>
-                    </div>
-                )}
-            </div>
 
             {/* --- SECTION 1: Current Student Database --- */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl overflow-hidden">
@@ -905,11 +892,11 @@ Treat this matter with extreme urgency.`;
                                                                             }
                                                                         }}
                                                                         disabled={!student.email?.endsWith('@heritageit.edu.in')}
-                                                                        className={`p-1.5 rounded-md transition-all ${student.email?.endsWith('@heritageit.edu.in')
-                                                                                ? 'text-indigo-400 bg-indigo-500/10 shadow-[0_0_8px_rgba(99,102,241,0.4)] hover:bg-indigo-500/20 hover:text-indigo-300 hover:shadow-[0_0_12px_rgba(99,102,241,0.6)] cursor-copy'
-                                                                                : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
-                                                                            }`}
-                                                                        title={student.email?.endsWith('@heritageit.edu.in') ? `Copy Email: ${student.email}` : 'Invalid Institutional Email'}
+                                                                        className={`p - 1.5 rounded - md transition - all ${student.email?.endsWith('@heritageit.edu.in')
+                                                                            ? 'text-indigo-400 bg-indigo-500/10 shadow-[0_0_8px_rgba(99,102,241,0.4)] hover:bg-indigo-500/20 hover:text-indigo-300 hover:shadow-[0_0_12px_rgba(99,102,241,0.6)] cursor-copy'
+                                                                            : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
+                                                                            } `}
+                                                                        title={student.email?.endsWith('@heritageit.edu.in') ? `Copy Email: ${student.email} ` : 'Invalid Institutional Email'}
                                                                     >
                                                                         <Mail className="h-4 w-4" />
                                                                     </button>
@@ -931,11 +918,11 @@ Treat this matter with extreme urgency.`;
                                                                             }
                                                                         }}
                                                                         disabled={!student.guardian_email}
-                                                                        className={`p-1.5 rounded-md transition-all ${student.guardian_email
-                                                                                ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_8px_rgba(16,185,129,0.4)] hover:bg-emerald-500/20 hover:text-emerald-300 hover:shadow-[0_0_12px_rgba(16,185,129,0.6)] cursor-copy'
-                                                                                : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
-                                                                            }`}
-                                                                        title={student.guardian_email ? `Copy Guardian Email: ${student.guardian_email}` : 'No Guardian Email Required'}
+                                                                        className={`p - 1.5 rounded - md transition - all ${student.guardian_email
+                                                                            ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_8px_rgba(16,185,129,0.4)] hover:bg-emerald-500/20 hover:text-emerald-300 hover:shadow-[0_0_12px_rgba(16,185,129,0.6)] cursor-copy'
+                                                                            : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
+                                                                            } `}
+                                                                        title={student.guardian_email ? `Copy Guardian Email: ${student.guardian_email} ` : 'No Guardian Email Required'}
                                                                     >
                                                                         <Shield className="h-4 w-4" />
                                                                     </button>

@@ -620,11 +620,7 @@ export default function QuestionBank() {
                 {topics.map(t => <option key={t} value={t} />)}
             </datalist>
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Question Bank</h1>
-                    {userName && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{userName}</span></div>}
-                </div>
+            <div className="flex justify-end items-center gap-4 mb-6">
                 <div className="flex gap-2 flex-wrap">
                     <button onClick={() => setIsPaperModalOpen(true)} className="bg-orange-600 hover:bg-orange-500 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
                         <FileText className="h-4 w-4" /> Create Question Paper
