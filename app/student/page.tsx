@@ -157,7 +157,7 @@ export default function StudentDashboard() {
                             </button>
 
                             {showNotifications && (
-                                <div className="absolute top-full right-0 mt-2 w-72 sm:w-80 bg-[#12182a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                                <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-full sm:right-0 sm:left-auto sm:w-80 bg-[#12182a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                                     <div className="p-3 border-b border-white/5 flex justify-between items-center bg-[#12182a]">
                                         <h3 className="text-sm font-bold text-white">Notifications</h3>
                                         <div className="flex gap-2 items-center">
@@ -381,10 +381,7 @@ export default function StudentDashboard() {
                 </div>
             </main>
 
-            {/* Footer - Compact */}
-            <footer className="py-3 text-center">
-                <p className="text-[10px] text-gray-600">&copy; 2025 Dr. Ritwick Banerjee</p>
-            </footer>
+
 
             <style jsx>{`
                 .bg-gradient-radial {

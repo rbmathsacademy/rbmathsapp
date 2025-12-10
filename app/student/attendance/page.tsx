@@ -422,7 +422,7 @@ export default function StudentAttendance() {
                                             </div>
 
                                             {/* Attendance History - Compact on mobile */}
-                                            <div className="px-2 sm:px-5 pb-2 sm:pb-4 space-y-1 sm:space-y-2 max-h-32 sm:max-h-48 overflow-y-auto custom-scrollbar">
+                                            <div className="px-2 sm:px-5 pb-2 sm:pb-4 space-y-1 sm:space-y-2 max-h-64 sm:max-h-96 overflow-y-auto custom-scrollbar">
                                                 {recentDates.map((d: any, i: number) => (
                                                     <div
                                                         key={i}
