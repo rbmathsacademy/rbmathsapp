@@ -94,9 +94,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                                 <span className="text-white font-bold text-lg">A</span>
                             </div>
-                            <div>
+                            <div className="flex flex-col">
                                 <span className="text-xl font-bold text-white tracking-tight block leading-tight">Admin<span className="text-indigo-400">Portal</span></span>
-                                <span className="text-[10px] text-slate-500 font-normal tracking-wide opacity-60 block">developed by Dr. Ritwick Banerjee</span>
+                                <div className="mt-1 text-center">
+                                    <span className="text-[11px] text-slate-500 font-medium tracking-wide opacity-80 block leading-tight">
+                                        Developed by
+                                    </span>
+                                    <span className="text-[11px] text-slate-400 font-semibold tracking-wide block leading-tight">
+                                        Dr. Ritwick Banerjee
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <button className="ml-auto md:hidden" onClick={() => setSidebarOpen(false)}>

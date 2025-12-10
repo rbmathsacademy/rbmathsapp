@@ -555,24 +555,24 @@ export default function AdminDashboard() {
                             className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.dept} onChange={e => setViewFilter({ ...viewFilter, dept: e.target.value })}
                         >
-                            <option value="">All Depts</option>
-                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                            <option value="" className="bg-slate-900 text-slate-200">All Depts</option>
+                            {departments.map(d => <option key={d} value={d} className="bg-slate-900 text-slate-200">{d}</option>)}
                         </select>
                         <div className="w-px bg-white/10 my-1"></div>
                         <select
                             className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.year} onChange={e => setViewFilter({ ...viewFilter, year: e.target.value })}
                         >
-                            <option value="">All Years</option>
-                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                            <option value="" className="bg-slate-900 text-slate-200">All Years</option>
+                            {years.map(y => <option key={y} value={y} className="bg-slate-900 text-slate-200">{y}</option>)}
                         </select>
                         <div className="w-px bg-white/10 my-1"></div>
                         <select
                             className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.course} onChange={e => setViewFilter({ ...viewFilter, course: e.target.value })}
                         >
-                            <option value="">All Courses</option>
-                            {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                            <option value="" className="bg-slate-900 text-slate-200">All Courses</option>
+                            {courses.map(c => <option key={c} value={c} className="bg-slate-900 text-slate-200">{c}</option>)}
                         </select>
 
                         {visibleStudents.length > 0 && (
