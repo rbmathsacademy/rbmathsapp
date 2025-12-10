@@ -59,8 +59,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Study Materials', href: '/admin/resources', icon: BookOpen },
     ];
 
-    // Bypass auth check for login page
-    if (pathname === '/admin/login') {
+    // Bypass auth check for login and forgot password pages
+    if (pathname === '/admin/login' || pathname === '/admin/forgot-password') {
         return <>{children}</>;
     }
 
