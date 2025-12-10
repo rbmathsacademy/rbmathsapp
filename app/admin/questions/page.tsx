@@ -467,6 +467,14 @@ export default function QuestionBank() {
                 </div>
                 {isOpen && (
                     <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-48 overflow-y-auto">
+                        {selected.length > 0 && (
+                            <div
+                                className="px-3 py-2 hover:bg-red-900/30 cursor-pointer flex items-center gap-2 text-xs text-red-400 border-b border-gray-700 sticky top-0 bg-gray-800 z-10"
+                                onClick={() => onChange([])}
+                            >
+                                <X className="h-3 w-3" /> Clear Selection
+                            </div>
+                        )}
                         {options.map((opt: string) => (
                             <div
                                 key={opt}

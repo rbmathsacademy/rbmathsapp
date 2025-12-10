@@ -19,6 +19,14 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a name'],
     },
+    otp: {
+        type: String,
+        select: false,
+    },
+    otpExpiry: {
+        type: Date,
+        select: false,
+    },
 }, { timestamps: true });
 
 // Force recompilation

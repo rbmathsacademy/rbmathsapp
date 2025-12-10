@@ -116,7 +116,14 @@ export default function AdminLogin() {
                                 )}
                             </button>
                         </div>
+
                     </form>
+
+                    <div className="mt-4 flex justify-end">
+                        <Link href="/admin/forgot-password" className="text-sm font-medium text-blue-400 hover:text-blue-300">
+                            Forgot your password?
+                        </Link>
+                    </div>
 
                     {error && (
                         <p className="mt-4 text-center text-sm text-red-400">{error}</p>
@@ -131,7 +138,7 @@ export default function AdminLogin() {
                         </Link>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

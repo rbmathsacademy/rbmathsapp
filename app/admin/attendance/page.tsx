@@ -249,14 +249,19 @@ export default function AdminAttendance() {
     };
 
     const handleSearchRecords = async () => {
-        if (!manageFilters.date || !manageFilters.dept || !manageFilters.year || !manageFilters.course) {
-            alert('Please select all filters.');
+        if (!manageFilters.dept || !manageFilters.year || !manageFilters.course) {
+            alert('Please select Department, Year, and Course.');
             return;
         }
         setLoading(true);
         try {
-            const params = new URLSearchParams(manageFilters);
-            const res = await fetch(`/api/admin/attendance?${params}`);
+            const params = new URLSearchParams();
+            if (manageFilters.date) params.append('date', manageFilters.date);
+            params.append('department', manageFilters.dept);
+            params.append('year', manageFilters.year);
+            params.append('course_code', manageFilters.course);
+
+            const res = await fetch(`/api/admin/attendance?${params.toString()}`);
             if (res.ok) {
                 setSearchResults(await res.json());
                 setHasSearched(true);
@@ -503,10 +508,10 @@ export default function AdminAttendance() {
                         <h2 className="text-lg font-semibold text-white mb-4">Search Existing Records</h2>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
-                                <label className="block text-xs font-medium text-gray-400 mb-1">Date</label>
+                                <label className="block text-xs font-medium text-gray-400 mb-1">Date (Optional)</label>
                                 <input
                                     type="date"
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
                                     value={manageFilters.date}
                                     onChange={e => setManageFilters({ ...manageFilters, date: e.target.value })}
                                 />

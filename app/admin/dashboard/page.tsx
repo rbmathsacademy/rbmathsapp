@@ -327,14 +327,107 @@ export default function AdminDashboard() {
         }
     };
 
+    // Change Password State
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordForm.new !== passwordForm.confirm) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/profile/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: passwordForm.current, newPassword: passwordForm.new }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update password');
+
+            alert('Password updated successfully! Please login again with the new password.');
+            localStorage.removeItem('user');
+            // Force logout
+            window.location.href = '/admin/login';
+        } catch (error: any) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-
-
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl md:text-3xl font-bold text-white">Student Data Entry</h1>
-                {adminEmail && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{JSON.parse(localStorage.getItem('user') || '{}').name}</span></div>}
+                <div className="flex items-center gap-4">
+                    {adminEmail && <div className="text-sm text-gray-400 hidden sm:block">Logged in as: <span className="text-blue-400 font-semibold">{JSON.parse(localStorage.getItem('user') || '{}').name}</span></div>}
+                    <button
+                        onClick={() => setShowPasswordModal(true)}
+                        className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md transition-colors flex items-center gap-2 border border-gray-600"
+                    >
+                        <Save className="h-4 w-4" /> Change Password
+                    </button>
+                </div>
             </div>
+
+            {/* Change Password Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-md p-6 shadow-2xl relative">
+                        <h3 className="text-xl font-bold text-white mb-4">Change Password</h3>
+                        <form onSubmit={handleChangePassword} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Current Password</label>
+                                <input
+                                    type="password" required
+                                    className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    value={passwordForm.current}
+                                    onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">New Password</label>
+                                <input
+                                    type="password" required
+                                    className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    value={passwordForm.new}
+                                    onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Confirm New Password</label>
+                                <input
+                                    type="password" required
+                                    className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    value={passwordForm.confirm}
+                                    onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                                />
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswordModal(false)}
+                                    className="flex-1 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-md font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-medium shadow-sm transition-colors disabled:opacity-50"
+                                >
+                                    {loading ? 'Updating...' : 'Update Password'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Add Student & CSV */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

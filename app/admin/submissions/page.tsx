@@ -50,7 +50,7 @@ export default function SubmissionsPage() {
 
                         if (config.teacherAssignments) {
                             Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
-                                if (Array.isArray(teachers) && teachers.some((t: any) => t.email === parsedUser.email)) {
+                                if (Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === parsedUser.email?.toLowerCase())) {
                                     const [d, y, c] = key.split('_');
                                     if (d) depts.add(d);
                                     if (y) years.add(y);
@@ -140,9 +140,9 @@ export default function SubmissionsPage() {
 
         const assignment = assignments.find(a => a._id === filters.assignmentId);
         if (!assignment) return;
-        if (!assignment.targetCourse) return toast.error("Assignment has no target course configured");
 
-        const targetCourse = assignment.targetCourse;
+        const targetCourse = assignment.targetCourse || assignment.course_code;
+        if (!targetCourse) return toast.error("Assignment has no target course configured");
         const deadlineDate = new Date(assignment.deadline);
 
         // Filter Students
