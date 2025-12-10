@@ -105,18 +105,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         {navigation.map((item) => {
                             const isActive = pathname === item.href;
                             return (
+                            return (
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`group flex items-center gap-x-3 rounded-lg p-3 text-sm font-medium transition-all duration-200 ${isActive
-                                        ? 'bg-indigo-500/10 text-indigo-400 shadow-sm border border-indigo-500/20'
+                                    className={`group flex items-center gap-x-3 rounded-lg p-3 text-sm font-medium transition-all duration-200 relative ${isActive
+                                        ? 'light-beam-border text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.3)]'
                                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
                                         }`}
                                     onClick={() => setSidebarOpen(false)}
                                 >
-                                    <item.icon className={`h-5 w-5 shrink-0 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                                    {item.name}
+                                    {/* Background overlay for active state to ensure text readability over the beam */}
+                                    {isActive && <div className="absolute inset-[1px] bg-slate-900/90 rounded-[inherit] z-[-1]" />}
+
+                                    <item.icon className={`h-5 w-5 shrink-0 transition-colors z-10 ${isActive ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                                    <span className="z-10">{item.name}</span>
                                 </Link>
+                            );
                             );
                         })}
                     </nav>

@@ -396,49 +396,50 @@ export default function AdminDashboard() {
 
             {/* Change Password Modal */}
             {showPasswordModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-md p-6 shadow-2xl relative">
-                        <h3 className="text-xl font-bold text-white mb-4">Change Password</h3>
-                        <form onSubmit={handleChangePassword} className="space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-md p-8 shadow-2xl shadow-indigo-500/10 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+                        <h3 className="text-xl font-bold text-white mb-6">Change Password</h3>
+                        <form onSubmit={handleChangePassword} className="space-y-5">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Current Password</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
                                 <input
                                     type="password" required
-                                    className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                     value={passwordForm.current}
                                     onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">New Password</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
                                 <input
                                     type="password" required
-                                    className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                     value={passwordForm.new}
                                     onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Confirm New Password</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Confirm New Password</label>
                                 <input
                                     type="password" required
-                                    className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                     value={passwordForm.confirm}
                                     onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
                                 />
                             </div>
-                            <div className="flex gap-3 mt-6">
+                            <div className="flex gap-4 mt-8">
                                 <button
                                     type="button"
                                     onClick={() => setShowPasswordModal(false)}
-                                    className="flex-1 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-md font-medium transition-colors"
+                                    className="flex-1 py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition-colors border border-white/5"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-medium shadow-sm transition-colors disabled:opacity-50"
+                                    className="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 disabled:shadow-none"
                                 >
                                     {loading ? 'Updating...' : 'Update Password'}
                                 </button>
@@ -449,99 +450,126 @@ export default function AdminDashboard() {
             )}
 
             {/* Add Student & CSV */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Single Student */}
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-3">Add Single Student</h3>
-                    <form onSubmit={handleAddStudent} className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 items-end">
-                        <input type="email" placeholder="Email*" required className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500" value={studentForm.email} onChange={e => setStudentForm({ ...studentForm, email: e.target.value })} />
-                        <input type="text" placeholder="Name*" required className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500" value={studentForm.name} onChange={e => setStudentForm({ ...studentForm, name: e.target.value })} />
-                        <input type="text" placeholder="Roll*" required className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500" value={studentForm.roll} onChange={e => setStudentForm({ ...studentForm, roll: e.target.value })} />
-                        <input type="text" placeholder="Department*" required className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500" value={studentForm.department} onChange={e => setStudentForm({ ...studentForm, department: e.target.value })} />
-                        <input type="text" placeholder="Year*" required className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500" value={studentForm.year} onChange={e => setStudentForm({ ...studentForm, year: e.target.value })} />
-                        <input type="text" placeholder="Course Code*" required className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500" value={studentForm.course_code} onChange={e => setStudentForm({ ...studentForm, course_code: e.target.value })} />
-                        <input type="email" placeholder="Guardian Email" className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500 sm:col-span-2" value={studentForm.guardian_email} onChange={e => setStudentForm({ ...studentForm, guardian_email: e.target.value })} />
-                        <button type="submit" disabled={loading} className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 w-full sm:col-span-2 disabled:opacity-50">{loading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : 'Add'}</button>
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="h-8 w-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400">
+                            <Edit className="h-4 w-4" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white">Add Single Student</h3>
+                    </div>
+                    <form onSubmit={handleAddStudent} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="email" placeholder="Email Address*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.email} onChange={e => setStudentForm({ ...studentForm, email: e.target.value })} />
+                        <input type="text" placeholder="Full Name*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.name} onChange={e => setStudentForm({ ...studentForm, name: e.target.value })} />
+                        <input type="text" placeholder="Roll Number*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.roll} onChange={e => setStudentForm({ ...studentForm, roll: e.target.value })} />
+                        <input type="text" placeholder="Department (e.g. CSE)*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.department} onChange={e => setStudentForm({ ...studentForm, department: e.target.value })} />
+                        <input type="text" placeholder="Year (e.g. 4th)*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.year} onChange={e => setStudentForm({ ...studentForm, year: e.target.value })} />
+                        <input type="text" placeholder="Course Code*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.course_code} onChange={e => setStudentForm({ ...studentForm, course_code: e.target.value })} />
+                        <input type="email" placeholder="Guardian Email (Optional)" className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all sm:col-span-2" value={studentForm.guardian_email} onChange={e => setStudentForm({ ...studentForm, guardian_email: e.target.value })} />
+
+                        <button type="submit" disabled={loading} className="col-span-1 sm:col-span-2 mt-2 rounded-lg bg-green-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-500/20 hover:bg-green-500 transition-all disabled:opacity-50 disabled:shadow-none">
+                            {loading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : 'Add Student'}
+                        </button>
                     </form>
                 </div>
 
                 {/* CSV Upload */}
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-3">Bulk Upload Students</h3>
-                    <div className="flex gap-2 mt-2 flex-wrap items-center">
-                        <label className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-500 cursor-pointer transition-colors text-sm font-semibold">
-                            <Upload className="w-4 h-4 mr-2" />
-                            Choose CSV
-                            <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
-                        </label>
-                        <button onClick={handleDownloadSample} className="flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-md shadow-sm hover:bg-gray-500 transition-colors text-sm font-semibold">
-                            <Download className="w-4 h-4 mr-2" />
-                            Sample CSV
-                        </button>
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                <Upload className="h-4 w-4" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white">Bulk Upload Students</h3>
+                        </div>
+                        <p className="text-sm text-slate-400 mb-6">Upload a CSV file to add multiple students at once. Ensure the CSV follows the required format.</p>
+
+                        <div className="flex gap-3 flex-wrap items-center">
+                            <label className="flex-1 flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 cursor-pointer transition-all text-sm font-medium hover:-translate-y-0.5">
+                                <Upload className="w-4 h-4 mr-2" />
+                                Select CSV File
+                                <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
+                            </label>
+                            <button onClick={handleDownloadSample} className="flex-1 flex items-center justify-center px-4 py-3 bg-slate-800 text-slate-300 rounded-lg border border-white/5 hover:bg-slate-700 hover:text-white transition-all text-sm font-medium">
+                                <Download className="w-4 h-4 mr-2" />
+                                Download Sample
+                            </button>
+                        </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">Required: email, name, roll, department, year, course_code</p>
+
+                    <div className="mt-6 p-4 rounded-lg bg-indigo-500/5 border border-indigo-500/10">
+                        <p className="text-xs font-mono text-indigo-300 break-all">Format: email, name, roll, department, year, course_code, guardian_email</p>
+                    </div>
                 </div>
             </div>
 
             {/* Staging Area */}
             {showStaging && (
-                <div className="mt-4 mb-6">
-                    <h3 className="text-lg font-semibold text-white">Staged Students ({stagedStudents.length})</h3>
-                    <div className="mt-2 overflow-auto max-h-64 bg-gray-800 rounded-lg border border-gray-700">
-                        <table className="min-w-full divide-y divide-gray-700 text-sm text-gray-300">
-                            <thead className="bg-gray-700 sticky top-0 text-white">
-                                <tr>
-                                    <th className="px-3 py-2 text-left">Email</th>
-                                    <th className="px-3 py-2 text-left">Name</th>
-                                    <th className="px-3 py-2 text-left">Roll</th>
-                                    <th className="px-3 py-2 text-left">Dept</th>
-                                    <th className="px-3 py-2 text-left">Year</th>
-                                    <th className="px-3 py-2 text-left">Course</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-700">
-                                {stagedStudents.map((s, i) => (
-                                    <tr key={i}>
-                                        <td className="px-3 py-2">{s.email}</td>
-                                        <td className="px-3 py-2">{s.name}</td>
-                                        <td className="px-3 py-2">{s.roll}</td>
-                                        <td className="px-3 py-2">{s.department}</td>
-                                        <td className="px-3 py-2">{s.year}</td>
-                                        <td className="px-3 py-2">{s.course_code}</td>
+                <div className="mt-4 mb-8 animate-in slide-in-from-top-4 duration-300">
+                    <h3 className="text-lg font-semibold text-white mb-3">Staged Students <span className="text-slate-400 text-sm font-normal">({stagedStudents.length} records found)</span></h3>
+                    <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-900/50 backdrop-blur-md shadow-2xl">
+                        <div className="overflow-x-auto max-h-64 custom-scrollbar">
+                            <table className="min-w-full divide-y divide-white/5 text-sm text-slate-300">
+                                <thead className="bg-white/5 sticky top-0 text-white backdrop-blur-md z-1">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left font-medium">Email</th>
+                                        <th className="px-4 py-3 text-left font-medium">Name</th>
+                                        <th className="px-4 py-3 text-left font-medium">Roll</th>
+                                        <th className="px-4 py-3 text-left font-medium">Dept</th>
+                                        <th className="px-4 py-3 text-left font-medium">Year</th>
+                                        <th className="px-4 py-3 text-left font-medium">Course</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-white/5 bg-transparent">
+                                    {stagedStudents.map((s, i) => (
+                                        <tr key={i} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-2.5">{s.email}</td>
+                                            <td className="px-4 py-2.5 font-medium text-white">{s.name}</td>
+                                            <td className="px-4 py-2.5 font-mono text-xs">{s.roll}</td>
+                                            <td className="px-4 py-2.5">{s.department}</td>
+                                            <td className="px-4 py-2.5">{s.year}</td>
+                                            <td className="px-4 py-2.5">{s.course_code}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <button onClick={handleSubmitStaged} disabled={loading} className="mt-4 w-full rounded-md bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-green-500 disabled:opacity-50">
-                        {loading ? 'Uploading...' : 'Save Upload'}
+                    <button onClick={handleSubmitStaged} disabled={loading} className="mt-4 w-full rounded-lg bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-green-500/20 hover:bg-green-500 transition-all disabled:opacity-50 disabled:shadow-none hover:-translate-y-0.5">
+                        {loading ? 'Uploading Students...' : `Confirm & Upload ${stagedStudents.length} Students`}
                     </button>
                 </div>
             )}
 
             {/* Registered Students List */}
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                    <h3 className="text-xl font-semibold text-white">Registered Students ({visibleStudents.length})</h3>
+            <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl mb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h3 className="text-xl font-semibold text-white">Registered Students</h3>
+                        <p className="text-sm text-slate-400 mt-1">Manage existing student records ({visibleStudents.length})</p>
+                    </div>
 
                     {/* View Filters */}
-                    <div className="flex gap-2 text-sm">
+                    <div className="flex flex-wrap gap-2 text-sm bg-slate-950/50 p-1.5 rounded-lg border border-white/5">
                         <select
-                            className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1"
+                            className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.dept} onChange={e => setViewFilter({ ...viewFilter, dept: e.target.value })}
                         >
                             <option value="">All Depts</option>
                             {departments.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
+                        <div className="w-px bg-white/10 my-1"></div>
                         <select
-                            className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1"
+                            className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.year} onChange={e => setViewFilter({ ...viewFilter, year: e.target.value })}
                         >
                             <option value="">All Years</option>
                             {years.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
+                        <div className="w-px bg-white/10 my-1"></div>
                         <select
-                            className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1"
+                            className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.course} onChange={e => setViewFilter({ ...viewFilter, course: e.target.value })}
                         >
                             <option value="">All Courses</option>
@@ -551,47 +579,56 @@ export default function AdminDashboard() {
                         {visibleStudents.length > 0 && (
                             <button
                                 onClick={handleBulkDelete}
-                                className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                                className="ml-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all text-xs font-medium border border-red-500/20"
                             >
                                 <Trash2 className="h-3 w-3" />
-                                Delete Filtered
+                                Clear List
                             </button>
                         )}
                     </div>
                 </div>
-                <div className="overflow-x-auto bg-gray-900 rounded-lg border border-gray-600 shadow-md max-h-96">
-                    <table className="min-w-full text-sm text-left text-gray-400">
-                        <thead className="text-xs text-gray-200 uppercase bg-gray-700 border-b border-gray-600 sticky top-0">
-                            <tr>
-                                <th className="px-6 py-3 font-bold">Name</th>
-                                <th className="px-6 py-3 font-bold">Email</th>
-                                <th className="px-6 py-3 font-bold">Roll</th>
-                                <th className="px-6 py-3 font-bold">Dept/Year</th>
-                                <th className="px-6 py-3 font-bold">Course</th>
-                                <th className="px-6 py-3 font-bold text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-700">
-                            {visibleStudents.length === 0 ? (
-                                <tr><td colSpan={6} className="text-center py-4">No students found (or not assigned to you)</td></tr>
-                            ) : (
-                                visibleStudents.map((s) => (
-                                    <tr key={s._id} className="hover:bg-gray-800">
-                                        <td className="px-6 py-4 font-medium text-white">{s.name}</td>
-                                        <td className="px-6 py-4">{s.email}</td>
-                                        <td className="px-6 py-4">{s.roll}</td>
-                                        <td className="px-6 py-4">{s.department} - {s.year}</td>
-                                        <td className="px-6 py-4">{s.course_code}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button onClick={() => handleDeleteStudent(s._id)} className="text-xs bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded transition-colors flex items-center gap-1 ml-auto">
-                                                <Trash2 className="h-3 w-3" /> Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="overflow-hidden rounded-xl border border-white/5">
+                    <div className="overflow-x-auto max-h-[500px] custom-scrollbar">
+                        <table className="min-w-full text-sm text-left text-slate-400">
+                            <thead className="text-xs text-slate-200 uppercase bg-white/5 border-b border-white/5 sticky top-0 backdrop-blur-md z-10">
+                                <tr>
+                                    <th className="px-6 py-4 font-semibold tracking-wider">Name</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wider">Email</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wider">Roll</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wider">Dept/Year</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wider">Course</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wider text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5 bg-transparent">
+                                {visibleStudents.length === 0 ? (
+                                    <tr><td colSpan={6} className="text-center py-12 text-slate-500 italic">No students found matching filters (or no assignment access).</td></tr>
+                                ) : (
+                                    visibleStudents.map((s) => (
+                                        <tr key={s._id} className="hover:bg-white/5 transition-colors group">
+                                            <td className="px-6 py-4 font-medium text-white">{s.name}</td>
+                                            <td className="px-6 py-4">{s.email}</td>
+                                            <td className="px-6 py-4 font-mono text-xs">{s.roll}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2 py-1 rounded bg-slate-800 text-slate-300 text-xs border border-white/5">{s.department}</span>
+                                                <span className="mx-2 text-slate-600">/</span>
+                                                <span>{s.year}</span>
+                                            </td>
+                                            <td className="px-6 py-4">{s.course_code}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button onClick={() => handleDeleteStudent(s._id)} className="text-xs bg-transparent hover:bg-red-500/10 text-slate-500 hover:text-red-400 px-3 py-1.5 rounded transition-all flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div className="mt-4 text-center text-xs text-slate-500">
+                    Showing {visibleStudents.length} records
                 </div>
             </div>
 
