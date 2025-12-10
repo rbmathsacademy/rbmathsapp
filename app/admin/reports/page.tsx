@@ -794,7 +794,7 @@ Treat this matter with extreme urgency.`;
                                             const baseAttended = participated.filter((r: any) => r.presentStudentIds?.includes(student._id)).length;
                                             const total = participated.length + (student.total_classes_adjustment || 0);
                                             const attended = baseAttended + (student.attended_adjustment || 0);
-                                            const percent = total > 0 ? ((attended / total) * 100).toFixed(0) : 0;
+                                            const percent = total > 0 ? ((attended / total) * 100).toFixed(0) : "0";
 
                                             return (
                                                 <tr key={student._id} className="hover:bg-gray-700/50">
