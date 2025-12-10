@@ -3,15 +3,21 @@ import dbConnect from '@/lib/db';
 import Question from '@/models/Question';
 import User from '@/models/User';
 
-// Helper to get user from request (mocking session for now, assuming client sends email/id)
-// In a real app, use NextAuth session. Here we'll rely on a header or query param for simplicity
-// OR better, since we have a login flow, we can try to parse the 'user' cookie if it exists,
-// but the previous login implementation just returned user data to client.
-// We will expect the client to send 'X-User-Email' header for now as a simple security measure for this migration.
+const GLOBAL_ADMIN_KEY = 'globaladmin_25';
 
 export async function GET(req: Request) {
     await dbConnect();
     const email = req.headers.get('X-User-Email');
+    const adminKey = req.headers.get('X-Global-Admin-Key');
+
+    if (adminKey === GLOBAL_ADMIN_KEY) {
+        try {
+            const questions = await Question.find({}).sort({ createdAt: -1 });
+            return NextResponse.json(questions);
+        } catch (error: any) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+    }
 
     if (!email) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,14 +35,25 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     await dbConnect();
     const email = req.headers.get('X-User-Email');
+    const adminKey = req.headers.get('X-Global-Admin-Key');
 
-    if (!email) {
+    if (!email && adminKey !== GLOBAL_ADMIN_KEY) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
-        const user = await User.findOne({ email });
-        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        let uploaderEmail = email;
+        let facultyName = 'Global Admin';
+
+        if (email) {
+            const user = await User.findOne({ email });
+            if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            facultyName = user.name;
+            uploaderEmail = email;
+        } else {
+            // Global Admin without email
+            uploaderEmail = 'global_admin';
+        }
 
         const body = await req.json();
         const { questions } = body; // Expecting an array of questions
@@ -51,8 +68,8 @@ export async function POST(req: Request) {
                 update: {
                     $set: {
                         ...q,
-                        uploadedBy: email,
-                        facultyName: user.name
+                        uploadedBy: uploaderEmail,
+                        facultyName: facultyName
                     }
                 },
                 upsert: true
@@ -70,8 +87,9 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
     await dbConnect();
     const email = req.headers.get('X-User-Email');
+    const adminKey = req.headers.get('X-Global-Admin-Key');
 
-    if (!email) {
+    if (!email && adminKey !== GLOBAL_ADMIN_KEY) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -82,10 +100,12 @@ export async function DELETE(req: Request) {
         }
 
         // Only delete questions owned by this user
-        await Question.deleteMany({
-            id: { $in: ids },
-            uploadedBy: email
-        });
+        const query: any = { id: { $in: ids } };
+        if (adminKey !== GLOBAL_ADMIN_KEY) {
+            query.uploadedBy = email;
+        }
+
+        await Question.deleteMany(query);
 
         return NextResponse.json({ message: 'Questions deleted successfully' });
     } catch (error: any) {

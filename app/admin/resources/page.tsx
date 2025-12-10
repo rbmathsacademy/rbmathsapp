@@ -11,6 +11,7 @@ export default function Resources() {
     const [resources, setResources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
 
     // Context Data
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
@@ -51,16 +52,28 @@ export default function Resources() {
     }, []);
 
     useEffect(() => {
+        const ga = localStorage.getItem('globalAdminActive');
+        if (ga === 'true') setIsGlobalAdmin(true);
+
         if (user) {
             fetchResources();
             fetchContextData();
         }
     }, [user]);
 
+    const getHeaders = () => {
+        const headers: any = { 'X-User-Email': user?.email || '' };
+        const ga = localStorage.getItem('globalAdminActive'); // Read directly to be safe or use state
+        if (ga === 'true' || isGlobalAdmin) {
+            headers['X-Global-Admin-Key'] = 'globaladmin_25';
+        }
+        return headers;
+    };
+
     const fetchResources = async () => {
         try {
             const res = await fetch('/api/admin/resources', {
-                headers: { 'X-User-Email': user.email }
+                headers: getHeaders()
             });
             if (res.ok) setResources(await res.json());
         } catch (error) {
@@ -73,8 +86,8 @@ export default function Resources() {
     const fetchContextData = async () => {
         try {
             const [qRes, assignmentsRes] = await Promise.all([
-                fetch('/api/admin/questions', { headers: { 'X-User-Email': user.email } }),
-                fetch('/api/admin/faculty-assignments', { headers: { 'X-User-Email': user.email } })
+                fetch('/api/admin/questions', { headers: getHeaders() }),
+                fetch('/api/admin/faculty-assignments', { headers: getHeaders() })
             ]);
 
             if (qRes.ok) {
@@ -100,7 +113,7 @@ export default function Resources() {
         try {
             const res = await fetch(`/api/admin/resources?id=${id}`, {
                 method: 'DELETE',
-                headers: { 'X-User-Email': user.email }
+                headers: getHeaders()
             });
             if (res.ok) {
                 toast.success('Resource deleted');
@@ -158,7 +171,7 @@ export default function Resources() {
 
             const res = await fetch('/api/admin/resources', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-User-Email': user.email },
+                headers: { 'Content-Type': 'application/json', ...getHeaders() },
                 body: JSON.stringify(payload)
             });
 
@@ -247,7 +260,7 @@ ${JSON.stringify(selectedData, null, 2)}`;
 
             const res = await fetch('/api/admin/resources', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-User-Email': user.email },
+                headers: { 'Content-Type': 'application/json', ...getHeaders() },
                 body: JSON.stringify(payload)
             });
 
@@ -269,7 +282,7 @@ ${JSON.stringify(selectedData, null, 2)}`;
             const payload = { ...materialForm, type: 'pdf', facultyName: user.name };
             const res = await fetch('/api/admin/resources', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-User-Email': user.email },
+                headers: { 'Content-Type': 'application/json', ...getHeaders() },
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
@@ -289,7 +302,7 @@ ${JSON.stringify(selectedData, null, 2)}`;
             const payload = { ...videoForm, type: 'video', videoLink: videoForm.url, facultyName: user.name };
             const res = await fetch('/api/admin/resources', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-User-Email': user.email },
+                headers: { 'Content-Type': 'application/json', ...getHeaders() },
                 body: JSON.stringify(payload)
             });
             if (res.ok) {

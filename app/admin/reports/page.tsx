@@ -68,17 +68,11 @@ export default function AdminReports() {
         };
         fetchData();
 
-    }, []);
+        // Check Global Admin Status
+        const ga = localStorage.getItem('globalAdminActive');
+        if (ga === 'true') setIsGlobalAdmin(true);
 
-    const handleGlobalAdminLogin = () => {
-        const password = prompt("Enter Global Admin Password:");
-        if (password === "globaladmin_25") {
-            setIsGlobalAdmin(true);
-            alert("Global Admin Access Granted");
-        } else if (password) {
-            alert("Incorrect Password");
-        }
-    };
+    }, []);
 
     // Derived Lists for Dropdowns
     const { departments, years, courses } = useMemo(() => {
@@ -568,16 +562,9 @@ Treat this matter with extreme urgency.`;
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-            {/* Header / Global Admin Toggle */}
+            {/* Header / Global Admin Indicator Only */}
             <div className="flex justify-end">
-                {!isGlobalAdmin ? (
-                    <button
-                        onClick={handleGlobalAdminLogin}
-                        className="text-xs font-semibold text-slate-500 hover:text-indigo-400 transition-colors uppercase tracking-wider"
-                    >
-                        Global Admin Login
-                    </button>
-                ) : (
+                {isGlobalAdmin && (
                     <div className="flex items-center gap-2 px-3 py-1 rounded bg-indigo-500/20 border border-indigo-500/30">
                         <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
                         <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Global Admin Active</span>

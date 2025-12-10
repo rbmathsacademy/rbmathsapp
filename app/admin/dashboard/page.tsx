@@ -93,6 +93,10 @@ export default function AdminDashboard() {
             } catch (e) { console.error(e); }
         }
 
+        // Check Global Admin Status
+        const ga = localStorage.getItem('globalAdminActive');
+        if (ga === 'true') setIsGlobalAdmin(true);
+
         fetchConfig();
         fetchStudents();
     }, []);
@@ -154,12 +158,21 @@ export default function AdminDashboard() {
     }, [config, adminEmail, isGlobalAdmin]);
 
     const handleGlobalAdminLogin = () => {
-        const password = prompt("Enter Global Admin Password:");
-        if (password === "globaladmin_25") {
-            setIsGlobalAdmin(true);
-            alert("Global Admin Access Granted");
-        } else if (password) {
-            alert("Incorrect Password");
+        if (isGlobalAdmin) {
+            // Logout Logic
+            setIsGlobalAdmin(false);
+            localStorage.removeItem('globalAdminActive');
+            alert("Global Admin Access Revoked");
+        } else {
+            // Login Logic
+            const password = prompt("Enter Global Admin Password:");
+            if (password === "globaladmin_25") {
+                setIsGlobalAdmin(true);
+                localStorage.setItem('globalAdminActive', 'true');
+                alert("Global Admin Access Granted");
+            } else if (password) {
+                alert("Incorrect Password");
+            }
         }
     };
 
@@ -378,20 +391,20 @@ export default function AdminDashboard() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header / Global Admin */}
-            <div className="flex justify-end">
-                {!isGlobalAdmin ? (
-                    <button
-                        onClick={handleGlobalAdminLogin}
-                        className="text-xs font-semibold text-slate-500 hover:text-indigo-400 transition-colors uppercase tracking-wider"
-                    >
-                        Global Admin Login
-                    </button>
-                ) : (
+            <div className="flex justify-end gap-2 items-center">
+                {isGlobalAdmin && (
                     <div className="flex items-center gap-2 px-3 py-1 rounded bg-indigo-500/20 border border-indigo-500/30">
                         <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
                         <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Global Admin Active</span>
                     </div>
                 )}
+
+                <button
+                    onClick={handleGlobalAdminLogin}
+                    className={`text-xs font-semibold hover:text-indigo-400 transition-colors uppercase tracking-wider ${isGlobalAdmin ? 'text-red-400' : 'text-slate-500'}`}
+                >
+                    {isGlobalAdmin ? 'Global Admin Logout' : 'Global Admin Login'}
+                </button>
             </div>
 
             {/* Add Student & CSV */}

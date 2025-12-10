@@ -14,6 +14,7 @@ export default function AssignmentsPage() {
     const [assignments, setAssignments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
     const [allowedContext, setAllowedContext] = useState<{
         courses: string[],
         depts: string[],
@@ -45,9 +46,16 @@ export default function AssignmentsPage() {
                     const depts = new Set<string>();
                     const years = new Set<string>();
 
+
+                    // Check Global Admin Status
+                    const ga = localStorage.getItem('globalAdminActive');
+                    const isGA = ga === 'true';
+                    setIsGlobalAdmin(isGA);
+
                     if (config.teacherAssignments) {
                         Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
-                            if (Array.isArray(teachers) && teachers.some((t: any) => t.email === parsedUser.email)) {
+                            // If Global Admin OR User is assigned
+                            if (isGA || (Array.isArray(teachers) && teachers.some((t: any) => t.email === parsedUser.email))) {
                                 const [d, y, c] = key.split('_');
                                 if (d) depts.add(d);
                                 if (y) years.add(y);
