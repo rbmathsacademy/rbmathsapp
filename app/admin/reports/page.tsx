@@ -12,6 +12,9 @@ export default function AdminReports() {
     const [adminName, setAdminName] = useState<string | null>(null);
     const reportRef = useRef<HTMLDivElement>(null);
 
+    // Global Admin State
+    const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+
     // Student Database Filters
     const [dbSearch, setDbSearch] = useState('');
     const [dbFilters, setDbFilters] = useState({ dept: '', year: '', course: '' });
@@ -64,7 +67,18 @@ export default function AdminReports() {
             }
         };
         fetchData();
+
     }, []);
+
+    const handleGlobalAdminLogin = () => {
+        const password = prompt("Enter Global Admin Password:");
+        if (password === "globaladmin_25") {
+            setIsGlobalAdmin(true);
+            alert("Global Admin Access Granted");
+        } else if (password) {
+            alert("Incorrect Password");
+        }
+    };
 
     // Derived Lists for Dropdowns
     const { departments, years, courses } = useMemo(() => {
@@ -97,18 +111,26 @@ export default function AdminReports() {
 
     // Access Control (Faculty Visibility)
     const visibleStudents = useMemo(() => {
-        if (!adminEmail) return students;
-        const assignedKeys = Object.entries(config.teacherAssignments || {}).filter(([key, teachers]: [string, any]) => {
-            return Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === adminEmail.toLowerCase());
-        }).map(([key]) => key);
+        let filtered = students;
 
-        if (assignedKeys.length === 0) return students;
+        if (!isGlobalAdmin && adminEmail) {
+            const assignedKeys = Object.entries(config.teacherAssignments || {}).filter(([key, teachers]: [string, any]) => {
+                return Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === adminEmail.toLowerCase());
+            }).map(([key]) => key);
 
-        return students.filter(s => {
-            const key = `${s.department}_${s.year}_${s.course_code}`;
-            return assignedKeys.includes(key);
-        });
-    }, [students, config, adminEmail]);
+            if (assignedKeys.length > 0) {
+                filtered = filtered.filter(s => {
+                    const key = `${s.department}_${s.year}_${s.course_code}`;
+                    return assignedKeys.includes(key);
+                });
+            } else {
+                filtered = []; // Blank slate
+            }
+        }
+        // If isGlobalAdmin is true, return all students (no filtering)
+
+        return filtered;
+    }, [students, config, adminEmail, isGlobalAdmin]);
 
     // Filtered Students for Database View
     const filteredDbStudents = useMemo(() => {
@@ -546,6 +568,22 @@ Treat this matter with extreme urgency.`;
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+            {/* Header / Global Admin Toggle */}
+            <div className="flex justify-end">
+                {!isGlobalAdmin ? (
+                    <button
+                        onClick={handleGlobalAdminLogin}
+                        className="text-xs font-semibold text-slate-500 hover:text-indigo-400 transition-colors uppercase tracking-wider"
+                    >
+                        Global Admin Login
+                    </button>
+                ) : (
+                    <div className="flex items-center gap-2 px-3 py-1 rounded bg-indigo-500/20 border border-indigo-500/30">
+                        <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                        <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Global Admin Active</span>
+                    </div>
+                )}
+            </div>
 
             {/* --- SECTION 1: Current Student Database --- */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl overflow-hidden">

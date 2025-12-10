@@ -8,6 +8,9 @@ export default function AdminDashboard() {
     const [config, setConfig] = useState<any>({ attendanceRequirement: 70, attendanceRules: {}, teacherAssignments: {} });
     const [adminEmail, setAdminEmail] = useState<string | null>(null);
 
+    // Global Admin State
+    const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+
     // Student Form State
     const [studentForm, setStudentForm] = useState({
         email: '', name: '', roll: '', department: '', year: '', course_code: '', guardian_email: ''
@@ -99,7 +102,7 @@ export default function AdminDashboard() {
         let filtered = students;
 
         // 1. Access Control (Teacher Assignments)
-        if (adminEmail) {
+        if (!isGlobalAdmin && adminEmail) {
             const assignedKeys = Object.entries(config.teacherAssignments || {}).filter(([key, teachers]: [string, any]) => {
                 return Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === adminEmail.toLowerCase());
             }).map(([key]) => key);
@@ -109,6 +112,8 @@ export default function AdminDashboard() {
                     const key = `${s.department}_${s.year}_${s.course_code}`;
                     return assignedKeys.includes(key);
                 });
+            } else {
+                filtered = [];
             }
         }
 
@@ -134,7 +139,29 @@ export default function AdminDashboard() {
         });
 
         return filtered;
-    }, [students, config, adminEmail, viewFilter]);
+    }, [students, config, adminEmail, viewFilter, isGlobalAdmin]);
+
+    // Active Assignments Filter (Access Control)
+    const visibleAssignments = useMemo(() => {
+        const allAssignments = Object.entries(config.teacherAssignments || {});
+        if (isGlobalAdmin) return allAssignments;
+
+        if (!adminEmail) return [];
+
+        return allAssignments.filter(([key, teachers]: [string, any]) => {
+            return Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === adminEmail.toLowerCase());
+        });
+    }, [config, adminEmail, isGlobalAdmin]);
+
+    const handleGlobalAdminLogin = () => {
+        const password = prompt("Enter Global Admin Password:");
+        if (password === "globaladmin_25") {
+            setIsGlobalAdmin(true);
+            alert("Global Admin Access Granted");
+        } else if (password) {
+            alert("Incorrect Password");
+        }
+    };
 
     const handleAddStudent = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -350,6 +377,23 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Header / Global Admin */}
+            <div className="flex justify-end">
+                {!isGlobalAdmin ? (
+                    <button
+                        onClick={handleGlobalAdminLogin}
+                        className="text-xs font-semibold text-slate-500 hover:text-indigo-400 transition-colors uppercase tracking-wider"
+                    >
+                        Global Admin Login
+                    </button>
+                ) : (
+                    <div className="flex items-center gap-2 px-3 py-1 rounded bg-indigo-500/20 border border-indigo-500/30">
+                        <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                        <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Global Admin Active</span>
+                    </div>
+                )}
+            </div>
+
             {/* Add Student & CSV */}
 
             {/* Add Student & CSV */}
@@ -649,7 +693,7 @@ export default function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {Object.entries(config.teacherAssignments || {}).map(([key, teachers]: [string, any]) => (
+                                {visibleAssignments.map(([key, teachers]: [string, any]) => (
                                     <tr key={key} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-medium text-white">{key}</td>
                                         <td className="px-6 py-4 text-emerald-400 font-bold">{config.attendanceRules?.[key] || config.attendanceRequirement}%</td>
