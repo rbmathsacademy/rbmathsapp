@@ -108,6 +108,22 @@ export default function AdminDashboard() {
         if (viewFilter.year) filtered = filtered.filter(s => s.year === viewFilter.year);
         if (viewFilter.course) filtered = filtered.filter(s => s.course_code === viewFilter.course);
 
+        // Sort by Roll Number Ascending
+        filtered.sort((a, b) => {
+            const rollA = a.roll ? String(a.roll).toLowerCase() : '';
+            const rollB = b.roll ? String(b.roll).toLowerCase() : '';
+
+            // Try numeric sort first if both are numbers
+            const numA = parseInt(rollA);
+            const numB = parseInt(rollB);
+
+            if (!isNaN(numA) && !isNaN(numB)) {
+                return numA - numB;
+            }
+
+            return rollA.localeCompare(rollB, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
         return filtered;
     }, [students, config, adminEmail, viewFilter]);
 
