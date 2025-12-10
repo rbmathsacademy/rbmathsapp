@@ -16,24 +16,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
+        // Safety Timeout in case logic hangs
+        const timer = setTimeout(() => setLoading(false), 2000);
+
         const storedUser = localStorage.getItem('user');
         if (!storedUser) {
             router.push('/admin/login');
-            return;
-        }
-        try {
-            const parsedUser = JSON.parse(storedUser);
-            if (parsedUser.role !== 'admin') {
+            // Do not return here, let the timeout or loading state handle UI
+        } else {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                if (parsedUser.role !== 'admin') {
+                    router.push('/admin/login');
+                } else {
+                    setUser(parsedUser);
+                }
+            } catch (e) {
+                localStorage.removeItem('user');
                 router.push('/admin/login');
-                return;
             }
-            setUser(parsedUser);
-        } catch (e) {
-            localStorage.removeItem('user');
-            router.push('/admin/login');
-        } finally {
-            setLoading(false);
         }
+
+        // Ensure loading is turned off quickly to allow redirect or render
+        setLoading(false);
+
+        return () => clearTimeout(timer);
     }, [router]);
 
     const handleLogout = () => {
@@ -61,6 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <p className="ml-4 text-gray-400">Loading Admin Portal...</p>
             </div>
         );
     }

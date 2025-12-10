@@ -17,6 +17,15 @@ export default function ForgotPassword() {
     const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        // Safety timeout
+        const timer = setTimeout(() => {
+            if (loading) {
+                setLoading(false);
+                toast.error('Request timed out. Please try again.');
+            }
+        }, 15000); // 15s timeout
+
         try {
             const res = await fetch('/api/auth/forgot-password', {
                 method: 'POST',
@@ -25,6 +34,8 @@ export default function ForgotPassword() {
             });
 
             const data = await res.json();
+            clearTimeout(timer); // Clear timeout on response
+
             if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
 
             toast.success(data.message || 'OTP Sent!');
@@ -34,6 +45,7 @@ export default function ForgotPassword() {
             }
             setStep('otp');
         } catch (error: any) {
+            clearTimeout(timer);
             toast.error(error.message);
         } finally {
             setLoading(false);
