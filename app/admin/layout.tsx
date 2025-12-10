@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         {navigation.map((item) => {
                             const isActive = pathname === item.href;
                             return (
-                            return (
+
                                 <Link
                                     key={item.name}
                                     href={item.href}
@@ -122,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     <span className="z-10">{item.name}</span>
                                 </Link>
                             );
-                            );
+
                         })}
                     </nav>
 

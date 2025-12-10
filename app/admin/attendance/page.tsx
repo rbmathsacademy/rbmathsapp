@@ -305,27 +305,34 @@ export default function AdminAttendance() {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">Attendance Management</h1>
-                    <InstallPWA type="admin" />
+        <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center border-b border-white/5 pb-6">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Attendance Management</h1>
+                    <p className="text-slate-400 text-sm mt-1">Mark daily attendance or manage records</p>
                 </div>
-                {adminEmail && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{JSON.parse(localStorage.getItem('user') || '{}').name}</span></div>}
+                {adminEmail && (
+                    <div className="hidden sm:flex items-center gap-3 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5">
+                        <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
+                            {JSON.parse(localStorage.getItem('user') || '{}').name?.[0]}
+                        </div>
+                        <span className="text-slate-300 text-sm font-medium">{JSON.parse(localStorage.getItem('user') || '{}').name}</span>
+                    </div>
+                )}
             </div>
 
             {/* Tabs */}
-            <div className="flex space-x-1 rounded-xl bg-gray-800 p-1 mb-6 max-w-md">
+            <div className="flex space-x-1 rounded-xl bg-slate-900/50 p-1 mb-8 max-w-md border border-white/5 backdrop-blur-md">
                 <button
                     onClick={() => { setActiveTab('take'); setEditingRecordId(null); }}
-                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all ${activeTab === 'take' ? 'bg-white text-blue-700 shadow' : 'text-gray-400 hover:text-white hover:bg-white/[0.12]'
+                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 ${activeTab === 'take' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'
                         }`}
                 >
                     {editingRecordId ? 'Edit Record' : 'Take Attendance'}
                 </button>
                 <button
                     onClick={() => { setActiveTab('manage'); setEditingRecordId(null); }}
-                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all ${activeTab === 'manage' ? 'bg-white text-blue-700 shadow' : 'text-gray-400 hover:text-white hover:bg-white/[0.12]'
+                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition-all duration-200 ${activeTab === 'manage' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'
                         }`}
                 >
                     Manage Records
@@ -334,21 +341,21 @@ export default function AdminAttendance() {
 
             {/* TAKE ATTENDANCE TAB */}
             {activeTab === 'take' && (
-                <div className="animate-fade-in">
+                <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-6">
                     {editingRecordId && (
-                        <div className="bg-blue-900/30 border border-blue-800 p-4 rounded-lg mb-6 flex justify-between items-center">
-                            <span className="text-blue-300 font-medium">Editing Record: {date} - {filters.dept} {filters.year} {filters.course}</span>
-                            <button onClick={handleCancelEdit} className="text-sm text-gray-400 hover:text-white underline">Cancel Edit</button>
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl mb-6 flex justify-between items-center backdrop-blur-sm">
+                            <span className="text-indigo-300 font-medium">Editing Record: {date} - {filters.dept} {filters.year} {filters.course}</span>
+                            <button onClick={handleCancelEdit} className="text-sm text-slate-400 hover:text-white underline decoration-slate-500/30 underline-offset-4">Cancel Edit</button>
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Date */}
-                        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">1. Select Date</label>
+                        <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">1. Select Date</label>
                             <input
                                 type="date"
-                                className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                 value={date}
                                 onChange={e => setDate(e.target.value)}
                                 disabled={!!editingRecordId}
@@ -356,11 +363,11 @@ export default function AdminAttendance() {
                         </div>
 
                         {/* Group Filters */}
-                        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">2. Select Student Group</label>
+                        <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl md:col-span-2">
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">2. Select Student Group</label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <select
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                     value={filters.dept} onChange={e => setFilters({ ...filters, dept: e.target.value })}
                                     disabled={!!editingRecordId}
                                 >
@@ -368,7 +375,7 @@ export default function AdminAttendance() {
                                     {departments.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
                                 <select
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                     value={filters.year} onChange={e => setFilters({ ...filters, year: e.target.value })}
                                     disabled={!!editingRecordId}
                                 >
@@ -376,7 +383,7 @@ export default function AdminAttendance() {
                                     {years.map(y => <option key={y} value={y}>{y}</option>)}
                                 </select>
                                 <select
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                     value={filters.course} onChange={e => setFilters({ ...filters, course: e.target.value })}
                                     disabled={!!editingRecordId}
                                 >
@@ -387,20 +394,22 @@ export default function AdminAttendance() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Teacher Display (Auto-selected) */}
-                        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">3. Faculty</label>
-                            <div className="w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600">
+                        <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">3. Faculty</label>
+                            <div className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-3 px-4 text-slate-300">
                                 {selectedTeacher ? (
-                                    <span>
-                                        {typeof selectedTeacher === 'string' ? JSON.parse(selectedTeacher).name : (selectedTeacher as any).name}
-                                        <span className="text-gray-400 text-xs ml-2">
+                                    <span className="flex items-center gap-2">
+                                        <span className="font-medium text-indigo-400">
+                                            {typeof selectedTeacher === 'string' ? JSON.parse(selectedTeacher).name : (selectedTeacher as any).name}
+                                        </span>
+                                        <span className="text-slate-500 text-xs text-opacity-70">
                                             ({typeof selectedTeacher === 'string' ? JSON.parse(selectedTeacher).email : (selectedTeacher as any).email})
                                         </span>
                                     </span>
                                 ) : (
-                                    <span className="text-gray-500 italic">
+                                    <span className="text-slate-600 italic text-sm">
                                         {filters.course ? 'You are not assigned to this course.' : 'Select Group First'}
                                     </span>
                                 )}
@@ -408,8 +417,8 @@ export default function AdminAttendance() {
                         </div>
 
                         {/* Time Slots (Multi-select) */}
-                        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">4. Select Time Slots</label>
+                        <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">4. Select Time Slots</label>
                             <div className="flex flex-wrap gap-2">
                                 {TIME_SLOTS.map(slot => (
                                     <button
@@ -421,9 +430,9 @@ export default function AdminAttendance() {
                                             );
                                         }}
                                         disabled={!!editingRecordId}
-                                        className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors ${selectedTimeSlots.includes(slot)
-                                            ? 'bg-blue-600 text-white border-blue-500'
-                                            : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                                        className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all duration-200 ${selectedTimeSlots.includes(slot)
+                                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-500/25 scale-105'
+                                            : 'bg-slate-950 text-slate-400 border-white/10 hover:border-white/20 hover:text-slate-200 hover:bg-slate-900'
                                             } ${editingRecordId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {slot}
@@ -433,53 +442,58 @@ export default function AdminAttendance() {
                         </div>
                     </div>
 
+
                     {/* Student List */}
-                    <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden mb-6">
-                        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-white">5. Mark Attendance ({tableStudents.length})</h3>
-                            <button onClick={handleSelectAll} className="text-sm text-blue-400 hover:text-blue-300">
+                    <div className="bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-2xl shadow-xl overflow-hidden mt-8">
+                        <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-900/50">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Users className="h-5 w-5 text-indigo-400" />
+                                5. Mark Attendance <span className="text-slate-500 text-sm font-normal ml-2">({tableStudents.length} Students)</span>
+                            </h3>
+                            <button onClick={handleSelectAll} className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
+                                {selectAll ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
                                 {selectAll ? 'Unselect All' : 'Select All'}
                             </button>
                         </div>
-                        <div className="overflow-x-auto max-h-96">
-                            <table className="min-w-full divide-y divide-gray-700">
-                                <thead className="bg-gray-700 sticky top-0">
+                        <div className="overflow-x-auto max-h-[500px] custom-scrollbar">
+                            <table className="min-w-full divide-y divide-white/5">
+                                <thead className="bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-4 py-3 text-left w-16">
+                                        <th className="px-5 py-4 text-left w-16">
                                             <input
                                                 type="checkbox"
                                                 checked={selectAll}
                                                 onChange={handleSelectAll}
-                                                className="rounded bg-gray-600 border-gray-500 text-blue-500 focus:ring-blue-500"
+                                                className="rounded bg-slate-800 border-gray-600 text-indigo-500 focus:ring-indigo-500 h-4 w-4 transition-all"
                                             />
                                         </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Name</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Roll</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                                        <th className="px-5 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Name</th>
+                                        <th className="px-5 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Roll</th>
+                                        <th className="px-5 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-700 bg-gray-800">
+                                <tbody className="divide-y divide-white/5 bg-transparent">
                                     {tableStudents.length === 0 ? (
-                                        <tr><td colSpan={4} className="text-center py-8 text-gray-500">Select a valid group to see students.</td></tr>
+                                        <tr><td colSpan={4} className="text-center py-12 text-slate-500 italic">Select a valid group above to load students.</td></tr>
                                     ) : (
                                         tableStudents.map(s => (
-                                            <tr key={s._id} className="hover:bg-gray-700/50" onClick={() => toggleStudent(s._id)}>
-                                                <td className="px-4 py-3">
+                                            <tr key={s._id} className="hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => toggleStudent(s._id)}>
+                                                <td className="px-5 py-3">
                                                     <input
                                                         type="checkbox"
                                                         checked={!!attendanceData[s._id]}
                                                         onChange={() => toggleStudent(s._id)}
-                                                        className="rounded bg-gray-600 border-gray-500 text-blue-500 focus:ring-blue-500"
+                                                        className="rounded bg-slate-800 border-gray-600 text-indigo-500 focus:ring-indigo-500 h-4 w-4 transition-all cursor-pointer"
                                                         onClick={e => e.stopPropagation()}
                                                     />
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-white font-medium">{s.name}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-400">{s.roll}</td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td className="px-5 py-3 text-sm text-slate-200 font-medium group-hover:text-white transition-colors">{s.name}</td>
+                                                <td className="px-5 py-3 text-sm text-slate-500 font-mono group-hover:text-slate-400 transition-colors">{s.roll}</td>
+                                                <td className="px-5 py-3 text-sm">
                                                     {attendanceData[s._id] ? (
-                                                        <span className="inline-flex items-center rounded-md bg-green-400/10 px-2 py-1 text-xs font-medium text-green-400 ring-1 ring-inset ring-green-400/20">Present</span>
+                                                        <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">Present</span>
                                                     ) : (
-                                                        <span className="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-400/20">Absent</span>
+                                                        <span className="inline-flex items-center rounded-md bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose-400 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.2)]">Absent</span>
                                                     )}
                                                 </td>
                                             </tr>
@@ -490,36 +504,41 @@ export default function AdminAttendance() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={handleSaveAttendance}
-                        disabled={loading || tableStudents.length === 0}
-                        className="w-full rounded-md bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-green-500 disabled:opacity-50 flex justify-center items-center gap-2"
-                    >
-                        {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
-                        {editingRecordId ? 'Update Attendance' : 'Save Attendance'}
-                    </button>
+                    <div className="pt-4">
+                        <button
+                            onClick={handleSaveAttendance}
+                            disabled={loading || tableStudents.length === 0}
+                            className="w-full md:w-auto ml-auto rounded-xl bg-indigo-600 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-3 transition-all duration-200"
+                        >
+                            {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <Save className="h-6 w-6" />}
+                            {editingRecordId ? 'Update Attendance Record' : 'Save Attendance Record'}
+                        </button>
+                    </div>
                 </div>
             )}
 
             {/* MANAGE RECORDS TAB */}
             {activeTab === 'manage' && (
-                <div className="animate-fade-in">
-                    <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 mb-6">
-                        <h2 className="text-lg font-semibold text-white mb-4">Search Existing Records</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl border border-white/5 shadow-xl mb-8">
+                        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Search className="h-5 w-5 text-indigo-400" />
+                            Search Existing Records
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
-                                <label className="block text-xs font-medium text-gray-400 mb-1">Date (Optional)</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Date (Optional)</label>
                                 <input
                                     type="date"
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder-slate-500"
                                     value={manageFilters.date}
                                     onChange={e => setManageFilters({ ...manageFilters, date: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-400 mb-1">Department</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Department</label>
                                 <select
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                     value={manageFilters.dept} onChange={e => setManageFilters({ ...manageFilters, dept: e.target.value })}
                                 >
                                     <option value="">Select Dept</option>
@@ -527,9 +546,9 @@ export default function AdminAttendance() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-400 mb-1">Year</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Year</label>
                                 <select
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                     value={manageFilters.year} onChange={e => setManageFilters({ ...manageFilters, year: e.target.value })}
                                 >
                                     <option value="">Select Year</option>
@@ -537,9 +556,9 @@ export default function AdminAttendance() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-400 mb-1">Course</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Course</label>
                                 <select
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
                                     value={manageFilters.course} onChange={e => setManageFilters({ ...manageFilters, course: e.target.value })}
                                 >
                                     <option value="">Select Course</option>
@@ -550,7 +569,7 @@ export default function AdminAttendance() {
                         <button
                             onClick={handleSearchRecords}
                             disabled={loading}
-                            className="mt-4 w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-6 rounded-md transition-colors flex items-center justify-center gap-2"
+                            className="mt-6 w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"
                         >
                             {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Search className="h-4 w-4" />}
                             Find Records
@@ -558,13 +577,16 @@ export default function AdminAttendance() {
                     </div>
 
                     {hasSearched && (
-                        <div>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-white">Found Records ({searchResults.length})</h3>
+                        <div className="animate-in fade-in duration-500">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    Found Records
+                                    <span className="bg-slate-800 text-slate-300 text-sm py-1 px-3 rounded-full border border-white/10">{searchResults.length}</span>
+                                </h3>
                                 {searchResults.length > 0 && (
                                     <button
                                         onClick={handleDeleteAllFiltered}
-                                        className="bg-red-600 hover:bg-red-500 text-white text-sm font-bold py-2 px-4 rounded-md flex items-center gap-2"
+                                        className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-sm font-bold py-2 px-5 rounded-lg flex items-center gap-2 transition-all hover:shadow-[0_0_15px_rgba(244,63,94,0.3)]"
                                     >
                                         <Trash2 className="h-4 w-4" /> Delete ALL Shown
                                     </button>
@@ -572,39 +594,46 @@ export default function AdminAttendance() {
                             </div>
 
                             {searchResults.length === 0 ? (
-                                <div className="text-center py-10 text-gray-400 bg-gray-800 rounded-lg border border-gray-700">
-                                    No attendance records found for this criteria.
+                                <div className="text-center py-16 text-slate-400 bg-slate-900/30 rounded-2xl border border-white/5 border-dashed">
+                                    <Clock className="h-10 w-10 text-slate-600 mx-auto mb-3" />
+                                    No attendance records found for these criteria.
                                 </div>
                             ) : (
-                                <div className="overflow-hidden bg-gray-800 shadow sm:rounded-md border border-gray-700">
-                                    <ul className="divide-y divide-gray-700">
+                                <div className="overflow-hidden bg-slate-900/50 backdrop-blur-md shadow-xl rounded-2xl border border-white/5">
+                                    <ul className="divide-y divide-white/5">
                                         {searchResults.map(record => (
-                                            <li key={record._id}>
-                                                <div className="px-4 py-4 sm:px-6 flex items-center justify-between hover:bg-gray-700/50 transition-colors">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="bg-blue-900/50 p-2 rounded-lg border border-blue-700/50 min-w-[80px]">
-                                                            <span className="text-blue-400 font-bold block text-center text-xs uppercase">Time Slot</span>
-                                                            <span className="text-white font-bold block text-center">{record.timeSlot}</span>
+                                            <li key={record._id} className="group hover:bg-white/[0.02] transition-colors">
+                                                <div className="px-6 py-5 flex items-center justify-between">
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20 min-w-[100px] flex flex-col items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
+                                                            <span className="text-indigo-400 font-bold text-[10px] uppercase tracking-wider mb-1">Time Slot</span>
+                                                            <span className="text-white font-bold text-sm text-center">{record.timeSlot}</span>
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-medium text-blue-400 truncate">{record.teacherName}</p>
-                                                            <p className="mt-1 flex items-center text-sm text-gray-400">
-                                                                <span className="truncate">
-                                                                    Present: {record.presentStudentIds?.length || 0} | Absent: {record.absentStudentIds?.length || 0}
-                                                                </span>
+                                                            <p className="text-base font-bold text-white flex items-center gap-2">
+                                                                {record.teacherName}
+                                                                <span className="text-xs font-normal text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full border border-white/5">{record.teacherEmail}</span>
                                                             </p>
+                                                            <div className="mt-2 flex items-center gap-3 text-sm text-slate-400 font-mono">
+                                                                <span className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-400 border border-emerald-500/10">
+                                                                    <Users className="h-3 w-3" /> Present: {record.presentStudentIds?.length || 0}
+                                                                </span>
+                                                                <span className="flex items-center gap-1.5 bg-rose-500/10 px-2 py-0.5 rounded text-rose-400 border border-rose-500/10">
+                                                                    <Users className="h-3 w-3" /> Absent: {record.absentStudentIds?.length || 0}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex shrink-0 ml-4 gap-2">
+                                                    <div className="flex shrink-0 ml-4 gap-3">
                                                         <button
                                                             onClick={() => handleEditRecord(record)}
-                                                            className="rounded-md bg-blue-900/30 px-3 py-2 text-xs font-semibold text-blue-400 ring-1 ring-inset ring-blue-700/50 hover:bg-blue-900/70 transition-all"
+                                                            className="rounded-lg bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-400 ring-1 ring-inset ring-indigo-500/20 hover:bg-indigo-500/20 transition-all hover:scale-105"
                                                         >
                                                             Edit
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteRecord(record._id)}
-                                                            className="rounded-md bg-red-900/30 px-3 py-2 text-xs font-semibold text-red-400 ring-1 ring-inset ring-red-700/50 hover:bg-red-900/70 transition-all"
+                                                            className="rounded-lg bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-400 ring-1 ring-inset ring-rose-500/20 hover:bg-rose-500/20 transition-all hover:scale-105"
                                                         >
                                                             Delete
                                                         </button>

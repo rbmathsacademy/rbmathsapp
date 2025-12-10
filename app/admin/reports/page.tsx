@@ -541,78 +541,97 @@ Treat this matter with extreme urgency.`;
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Track Attendance</h1>
-                {adminName && <div className="text-sm text-gray-400">Logged in as: <span className="text-blue-400 font-semibold">{adminName}</span></div>}
+            <div className="flex justify-between items-center border-b border-white/5 pb-6">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Track Attendance</h1>
+                    <p className="text-slate-400 text-sm mt-1">Manage adjustments and generate detailed reports</p>
+                </div>
+                {adminName && (
+                    <div className="flex items-center gap-3 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5">
+                        <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
+                            {adminName[0]}
+                        </div>
+                        <span className="text-slate-300 text-sm font-medium hidden sm:inline">{adminName}</span>
+                    </div>
+                )}
             </div>
 
             {/* --- SECTION 1: Current Student Database --- */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                <div className="p-4 border-b border-gray-700 flex flex-col md:flex-row gap-4 justify-between items-end">
-                    <div className="flex flex-wrap gap-2 items-end w-full">
-                        <div className="w-full md:w-auto">
-                            <label className="block text-xs text-gray-400 mb-1">Search</label>
-                            <div className="relative">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+            <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl overflow-hidden">
+                <div className="p-6 border-b border-white/5 flex flex-col xl:flex-row gap-6 justify-between items-end">
+                    <div className="flex flex-wrap gap-3 items-end w-full">
+                        <div className="w-full sm:w-64">
+                            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Search Student</label>
+                            <div className="relative group">
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder="Name or Roll..."
-                                    className="pl-8 bg-gray-700 border-none rounded-md text-white text-sm py-2 w-full md:w-48 focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Name or Roll Number..."
+                                    className="pl-10 bg-slate-950/50 border border-white/10 rounded-lg text-slate-200 text-sm py-2.5 w-full focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-600"
                                     value={dbSearch}
                                     onChange={e => setDbSearch(e.target.value)}
                                 />
                             </div>
                         </div>
-                        <select className="bg-gray-700 border-none rounded-md text-white text-sm py-2" value={dbFilters.dept} onChange={e => setDbFilters({ ...dbFilters, dept: e.target.value })}>
-                            <option value="">All Depts</option>
-                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <select className="bg-gray-700 border-none rounded-md text-white text-sm py-2" value={dbFilters.year} onChange={e => setDbFilters({ ...dbFilters, year: e.target.value })}>
-                            <option value="">All Years</option>
-                            {years.map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-                        <select className="bg-gray-700 border-none rounded-md text-white text-sm py-2" value={dbFilters.course} onChange={e => setDbFilters({ ...dbFilters, course: e.target.value })}>
-                            <option value="">All Courses</option>
-                            {courses.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <div className="w-40">
+                            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
+                            <select className="w-full bg-slate-950/50 border border-white/10 rounded-lg text-slate-300 text-sm py-2.5 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={dbFilters.dept} onChange={e => setDbFilters({ ...dbFilters, dept: e.target.value })}>
+                                <option value="">All Depts</option>
+                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
+                        <div className="w-32">
+                            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Year</label>
+                            <select className="w-full bg-slate-950/50 border border-white/10 rounded-lg text-slate-300 text-sm py-2.5 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={dbFilters.year} onChange={e => setDbFilters({ ...dbFilters, year: e.target.value })}>
+                                <option value="">All Years</option>
+                                {years.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </div>
+                        <div className="w-40">
+                            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Course</label>
+                            <select className="w-full bg-slate-950/50 border border-white/10 rounded-lg text-slate-300 text-sm py-2.5 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={dbFilters.course} onChange={e => setDbFilters({ ...dbFilters, course: e.target.value })}>
+                                <option value="">All Courses</option>
+                                {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
-                        <label className="cursor-pointer bg-yellow-600 hover:bg-yellow-500 text-white text-sm px-3 py-2 rounded-md flex items-center gap-2">
+                    <div className="flex gap-3 shrink-0 w-full xl:w-auto">
+                        <label className="cursor-pointer bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all font-medium flex-1 xl:flex-none">
                             <Upload className="h-4 w-4" /> Import CSV
                             <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
                         </label>
-                        <button onClick={exportDbToCSV} className="bg-gray-600 hover:bg-gray-500 text-white text-sm px-3 py-2 rounded-md flex items-center gap-2">
+                        <button onClick={exportDbToCSV} className="bg-emerald-500/10 hover:bg-emerald-600 text-emerald-500 hover:text-white border border-emerald-500/20 text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all font-medium flex-1 xl:flex-none">
                             <Download className="h-4 w-4" /> Export CSV
                         </button>
                     </div>
                 </div >
 
-                <div className="overflow-x-auto max-h-[500px]">
-                    <table className="min-w-full divide-y divide-gray-700 text-sm">
-                        <thead className="bg-gray-700 sticky top-0 z-10">
+                <div className="overflow-x-auto max-h-[500px] custom-scrollbar">
+                    <table className="min-w-full divide-y divide-white/5 text-sm">
+                        <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th className="px-3 py-3 text-left font-semibold text-white">Name</th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">Roll</th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">Dept</th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">Year</th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">Course</th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">Attended<br /><span className="text-[10px] text-gray-400">(System)</span></th>
-                                <th className="px-2 py-3 text-center font-semibold text-white border-r border-gray-600">Classes<br /><span className="text-[10px] text-gray-400">(System)</span></th>
+                                <th className="px-4 py-3.5 text-left font-semibold text-slate-200">Name</th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200">Roll</th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200">Dept</th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200">Year</th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200">Course</th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200">Attended<br /><span className="text-[10px] text-slate-500 font-normal uppercase tracking-wider">(System)</span></th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200 border-r border-white/5">Classes<br /><span className="text-[10px] text-slate-500 font-normal uppercase tracking-wider">(System)</span></th>
 
-                                <th className="px-2 py-3 text-center font-semibold text-white w-20">Attended<br /><span className="text-[10px] text-yellow-400">(Adjusted)</span></th>
-                                <th className="px-2 py-3 text-center font-semibold text-white w-20 border-r border-gray-600">Classes<br /><span className="text-[10px] text-yellow-400">(Adjusted)</span></th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-amber-200 w-24 bg-amber-500/5">Attended<br /><span className="text-[10px] text-amber-500/70 font-normal uppercase tracking-wider">(Adjusted)</span></th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-amber-200 w-24 border-r border-white/5 bg-amber-500/5">Classes<br /><span className="text-[10px] text-amber-500/70 font-normal uppercase tracking-wider">(Adjusted)</span></th>
 
-                                <th className="px-2 py-3 text-center font-semibold text-white">Attended<br /><span className="text-[10px] text-green-400">(Total)</span></th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">Classes<br /><span className="text-[10px] text-green-400">(Total)</span></th>
-                                <th className="px-2 py-3 text-center font-semibold text-white">%</th>
-                                <th className="px-3 py-3 text-center font-semibold text-white">Actions</th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-emerald-200 bg-emerald-500/5">Attended<br /><span className="text-[10px] text-emerald-500/70 font-normal uppercase tracking-wider">(Total)</span></th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-emerald-200 bg-emerald-500/5">Classes<br /><span className="text-[10px] text-emerald-500/70 font-normal uppercase tracking-wider">(Total)</span></th>
+                                <th className="px-3 py-3.5 text-center font-semibold text-slate-200">%</th>
+                                <th className="px-4 py-3.5 text-center font-semibold text-slate-200">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700 bg-gray-800">
+                        <tbody className="divide-y divide-white/5 bg-transparent">
                             {loading ? (
-                                <tr><td colSpan={10} className="text-center py-8 text-gray-400">Loading data...</td></tr>
+                                <tr><td colSpan={13} className="text-center py-12 text-slate-500 animate-pulse">Loading student data...</td></tr>
                             ) : filteredDbStudents.length === 0 ? (
-                                <tr><td colSpan={10} className="text-center py-8 text-gray-400">No students found.</td></tr>
+                                <tr><td colSpan={13} className="text-center py-12 text-slate-500 italic">No students found matching your criteria.</td></tr>
                             ) : (
                                 filteredDbStudents.map(student => {
                                     const stats = calculateStats(student, allAttendanceRecords);
@@ -625,44 +644,44 @@ Treat this matter with extreme urgency.`;
                                         currentTotAdj !== (student.total_classes_adjustment || 0);
 
                                     return (
-                                        <tr key={student._id} className="hover:bg-gray-700/50">
-                                            <td className="px-3 py-2 text-white">{student.name}</td>
-                                            <td className="px-2 py-2 text-center text-gray-300">{student.roll}</td>
-                                            <td className="px-2 py-2 text-center text-gray-300">{student.department}</td>
-                                            <td className="px-2 py-2 text-center text-gray-300">{student.year}</td>
-                                            <td className="px-2 py-2 text-center text-gray-300">{student.course_code}</td>
-                                            <td className="px-2 py-2 text-center text-gray-300">{stats.baseAttended}</td>
-                                            <td className="px-2 py-2 text-center text-gray-300 border-r border-gray-600">{stats.baseTotal}</td>
+                                        <tr key={student._id} className="hover:bg-white/5 transition-colors group">
+                                            <td className="px-4 py-3 text-white font-medium">{student.name}</td>
+                                            <td className="px-3 py-3 text-center text-slate-400 font-mono text-xs">{student.roll}</td>
+                                            <td className="px-3 py-3 text-center text-slate-400">{student.department}</td>
+                                            <td className="px-3 py-3 text-center text-slate-400">{student.year}</td>
+                                            <td className="px-3 py-3 text-center text-slate-400">{student.course_code}</td>
+                                            <td className="px-3 py-3 text-center text-slate-500">{stats.baseAttended}</td>
+                                            <td className="px-3 py-3 text-center text-slate-500 border-r border-white/5">{stats.baseTotal}</td>
 
-                                            <td className="px-2 py-2 text-center">
+                                            <td className="px-3 py-3 text-center bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
                                                 <input
                                                     type="number"
-                                                    className="w-16 bg-gray-900 border border-gray-600 rounded px-1 text-center text-yellow-400 focus:border-yellow-500"
+                                                    className="w-16 bg-slate-900 border border-white/10 rounded px-1 py-1 text-center text-amber-400 focus:border-amber-500 outline-none transition-all font-mono text-sm"
                                                     value={currentAttAdj}
                                                     onChange={(e) => handleAdjustmentChange(student._id, 'attended', e.target.value)}
                                                 />
                                             </td>
-                                            <td className="px-2 py-2 text-center border-r border-gray-600">
+                                            <td className="px-3 py-3 text-center border-r border-white/5 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors">
                                                 <input
                                                     type="number"
-                                                    className="w-16 bg-gray-900 border border-gray-600 rounded px-1 text-center text-yellow-400 focus:border-yellow-500"
+                                                    className="w-16 bg-slate-900 border border-white/10 rounded px-1 py-1 text-center text-amber-400 focus:border-amber-500 outline-none transition-all font-mono text-sm"
                                                     value={currentTotAdj}
                                                     onChange={(e) => handleAdjustmentChange(student._id, 'total', e.target.value)}
                                                 />
                                             </td>
 
-                                            <td className="px-2 py-2 text-center text-white font-bold">{stats.finalAttended}</td>
-                                            <td className="px-2 py-2 text-center text-white font-bold">{stats.finalTotal}</td>
-                                            <td className={`px-2 py-2 text-center font-bold ${Number(stats.percent) >= config.attendanceRequirement ? 'text-green-400' : 'text-red-400'}`}>
+                                            <td className="px-3 py-3 text-center text-emerald-300 font-bold bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors">{stats.finalAttended}</td>
+                                            <td className="px-3 py-3 text-center text-emerald-300 font-bold bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors">{stats.finalTotal}</td>
+                                            <td className={`px-3 py-3 text-center font-bold ${Number(stats.percent) >= config.attendanceRequirement ? 'text-emerald-400' : 'text-red-400'}`}>
                                                 {stats.percent}%
                                             </td>
-                                            <td className="px-3 py-2 text-center flex justify-center gap-2">
+                                            <td className="px-4 py-3 text-center flex justify-center gap-3">
                                                 {hasChanged && (
-                                                    <button onClick={() => handleSaveAdjustment(student)} className="text-green-400 hover:text-green-300" title="Save Adjustment">
+                                                    <button onClick={() => handleSaveAdjustment(student)} className="text-emerald-400 hover:text-emerald-300 transition-transform hover:scale-110" title="Save Adjustment">
                                                         <Save className="h-4 w-4" />
                                                     </button>
                                                 )}
-                                                <button onClick={() => handleEditClick(student)} className="text-blue-400 hover:text-blue-300" title="Edit Details">
+                                                <button onClick={() => handleEditClick(student)} className="text-indigo-400 hover:text-indigo-300 transition-transform hover:scale-110" title="Edit Details">
                                                     <Edit className="h-4 w-4" />
                                                 </button>
                                             </td>
@@ -676,44 +695,63 @@ Treat this matter with extreme urgency.`;
             </div >
 
             {/* --- SECTION 2: Attendance Report --- */}
-            < div className="bg-gray-800 p-6 rounded-lg border border-gray-700" >
-                <h2 className="text-xl font-bold text-white mb-4">Generate Report</h2>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1">Start Date</label>
-                        <input type="date" className="bg-gray-700 border-none rounded-md text-white w-full" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl relative overflow-visible z-20">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/10">
+                        <FileSpreadsheet className="h-5 w-5" />
                     </div>
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">End Date</label>
-                        <input type="date" className="bg-gray-700 border-none rounded-md text-white w-full" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                        <h2 className="text-xl font-semibold text-white">Generate Attendance Report</h2>
+                        <p className="text-sm text-slate-400">Create comprehensive attendance sheets</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-5 items-end bg-slate-950/30 p-5 rounded-xl border border-white/5">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Start Date</label>
+                        <input type="date" className="bg-slate-900 border border-white/10 rounded-lg text-slate-300 w-full py-2 px-3 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">End Date</label>
+                        <input type="date" className="bg-slate-900 border border-white/10 rounded-lg text-slate-300 w-full py-2 px-3 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={endDate} onChange={e => setEndDate(e.target.value)} />
                     </div>
                     {/* Reuse filters logic but separate state */}
-                    <select className="bg-gray-700 border-none rounded-md text-white" value={reportFilters.dept} onChange={e => setReportFilters({ ...reportFilters, dept: e.target.value })}>
-                        <option value="">All Depts</option>
-                        {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                    <select className="bg-gray-700 border-none rounded-md text-white" value={reportFilters.year} onChange={e => setReportFilters({ ...reportFilters, year: e.target.value })}>
-                        <option value="">All Years</option>
-                        {years.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                    <select className="bg-gray-700 border-none rounded-md text-white" value={reportFilters.course} onChange={e => setReportFilters({ ...reportFilters, course: e.target.value })}>
-                        <option value="">All Courses</option>
-                        {courses.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Department</label>
+                        <select className="bg-slate-900 border border-white/10 rounded-lg text-slate-300 w-full py-2 px-3 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={reportFilters.dept} onChange={e => setReportFilters({ ...reportFilters, dept: e.target.value })}>
+                            <option value="">All Depts</option>
+                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Year</label>
+                        <select className="bg-slate-900 border border-white/10 rounded-lg text-slate-300 w-full py-2 px-3 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={reportFilters.year} onChange={e => setReportFilters({ ...reportFilters, year: e.target.value })}>
+                            <option value="">All Years</option>
+                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Course</label>
+                        <select className="bg-slate-900 border border-white/10 rounded-lg text-slate-300 w-full py-2 px-3 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={reportFilters.course} onChange={e => setReportFilters({ ...reportFilters, course: e.target.value })}>
+                            <option value="">All Courses</option>
+                            {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
 
                     {/* Faculty Multi-Select */}
-                    <div className="relative group">
-                        <button className="bg-gray-700 border-none rounded-md text-white px-3 py-2 w-full text-left text-xs flex justify-between items-center">
+                    <div className="relative group z-50">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Faculty Filter</label>
+                        <button className="bg-slate-900 border border-white/10 rounded-lg text-slate-300 px-3 py-2 w-full text-left text-sm flex justify-between items-center focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all hover:bg-slate-800">
                             <span className="truncate">
                                 {selectedFaculties.length === 0 ? 'All Faculties' : `${selectedFaculties.length} Selected`}
                             </span>
                         </button>
-                        <div className="absolute hidden group-hover:block bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 w-48 p-2 max-h-48 overflow-y-auto">
+                        <div className="absolute hidden group-hover:block bg-slate-900 border border-white/10 rounded-lg shadow-2xl z-50 w-64 p-2 max-h-60 overflow-y-auto bottom-full mb-1 custom-scrollbar">
                             {availableFaculties.length === 0 ? (
-                                <div className="text-gray-500 text-xs p-2">Select Course First</div>
+                                <div className="text-slate-500 text-xs p-2 italic">Select Course First</div>
                             ) : (
                                 availableFaculties.map((f: any) => (
-                                    <label key={f.email} className="flex items-center gap-2 p-1 hover:bg-gray-700 rounded cursor-pointer">
+                                    <label key={f.email} className="flex items-center gap-2 p-2 hover:bg-slate-800 rounded cursor-pointer transition-colors">
                                         <input
                                             type="checkbox"
                                             checked={selectedFaculties.includes(f.email)}
@@ -721,23 +759,26 @@ Treat this matter with extreme urgency.`;
                                                 if (e.target.checked) setSelectedFaculties([...selectedFaculties, f.email]);
                                                 else setSelectedFaculties(selectedFaculties.filter(email => email !== f.email));
                                             }}
-                                            className="rounded bg-gray-600 border-gray-500 text-blue-500"
+                                            className="rounded bg-slate-700 border-slate-600 text-indigo-500 focus:ring-indigo-500"
                                         />
-                                        <span className="text-xs text-white truncate" title={f.name}>{f.name}</span>
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="text-sm text-slate-200 truncate" title={f.name}>{f.name}</span>
+                                            <span className="text-[10px] text-slate-500 truncate">{f.email}</span>
+                                        </div>
                                     </label>
                                 ))
                             )}
                             {availableFaculties.length > 0 && (
-                                <div className="border-t border-gray-700 mt-2 pt-2 flex justify-between">
+                                <div className="border-t border-white/5 mt-2 pt-2 flex justify-between sticky bottom-0 bg-slate-900 p-1">
                                     <button
                                         onClick={() => setSelectedFaculties(availableFaculties.map((f: any) => f.email))}
-                                        className="text-[10px] text-blue-400 hover:text-blue-300"
+                                        className="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
                                     >
                                         Select All
                                     </button>
                                     <button
                                         onClick={() => setSelectedFaculties([])}
-                                        className="text-[10px] text-gray-400 hover:text-gray-300"
+                                        className="text-xs text-slate-400 hover:text-slate-300"
                                     >
                                         Clear
                                     </button>
@@ -745,237 +786,261 @@ Treat this matter with extreme urgency.`;
                             )}
                         </div>
                     </div>
+                </div>
 
-                    <button onClick={handleGenerateReport} disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-50">
-                        {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4" />} Generate
+                <div className="mt-5 flex justify-end">
+                    <button onClick={handleGenerateReport} disabled={loading} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-indigo-500/20 flex justify-center items-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 transition-all w-full md:w-auto">
+                        {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <FileSpreadsheet className="h-5 w-5" />}
+                        Generate Report
                     </button>
                 </div>
 
                 {
                     reportData && (
-                        <div className="mt-6 overflow-x-auto max-h-[500px] border border-gray-700 rounded-lg">
-                            <div className="p-4 bg-gray-700 border-b border-gray-600 flex justify-end items-center text-white">
+                        <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-semibold text-white">Report Results</h3>
                                 <div className="text-right flex items-center gap-4">
-                                    <div>
-                                        <span className="text-gray-400 text-xs uppercase tracking-wider">Generated On</span>
-                                        <div className="font-bold">{new Date().toLocaleString()}</div>
+                                    <div className="hidden sm:block">
+                                        <span className="text-slate-500 text-xs uppercase tracking-wider block">Generated On</span>
+                                        <div className="font-mono text-sm text-slate-300">{new Date().toLocaleString()}</div>
                                     </div>
-                                    <button onClick={exportReportToCSV} className="bg-green-600 hover:bg-green-500 text-white text-xs px-3 py-2 rounded-md flex items-center gap-2">
-                                        <Download className="h-3 w-3" /> Export Report
+                                    <button onClick={exportReportToCSV} className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all hover:-translate-y-0.5">
+                                        <Download className="h-4 w-4" /> Export CSV
                                     </button>
                                 </div>
                             </div>
-                            {reportData.records.length === 0 ? (
-                                <div className="p-8 text-center text-gray-400">
-                                    No attendance records found for this period.
-                                </div>
-                            ) : (
-                                <table className="min-w-full divide-y divide-gray-700 text-xs">
-                                    <thead className="bg-gray-700 sticky top-0 z-10">
-                                        <tr>
-                                            <th className="px-3 py-3 text-left font-semibold text-white min-w-[150px]">Student</th>
-                                            {reportData.records.map((r: any) => (
-                                                <th key={r._id} className="px-2 py-2 text-center font-semibold text-white min-w-[80px]">
-                                                    <div className="whitespace-nowrap">{r.date.split('-').reverse().slice(0, 2).join('/')}</div>
-                                                    <div className="text-gray-400 text-[10px]">{r.timeSlot}</div>
-                                                    <div className="text-blue-400 text-[10px] mx-auto" title={r.teacherName}>{r.teacherName}</div>
-                                                </th>
-                                            ))}
-                                            <th className="px-2 py-3 text-center font-semibold text-white">Stats</th>
-                                            <th className="px-2 py-3 text-center font-semibold text-white text-[10px] w-24">Email Actions</th>
-                                            <th className="px-2 py-3 text-center font-semibold text-white text-[10px] w-24">Text Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-700 bg-gray-800">
-                                        {reportData.students.map(student => {
-                                            const participated = reportData.records.filter((r: any) =>
-                                                (r.presentStudentIds?.includes(student._id)) || (r.absentStudentIds?.includes(student._id))
-                                            );
-                                            const baseAttended = participated.filter((r: any) => r.presentStudentIds?.includes(student._id)).length;
-                                            const total = participated.length + (student.total_classes_adjustment || 0);
-                                            const attended = baseAttended + (student.attended_adjustment || 0);
-                                            const percent = total > 0 ? ((attended / total) * 100).toFixed(0) : "0";
 
-                                            return (
-                                                <tr key={student._id} className="hover:bg-gray-700/50">
-                                                    <td className="px-3 py-2 font-medium text-white">
-                                                        {student.name} <span className="text-gray-400">({student.roll})</span>
-                                                    </td>
-                                                    {reportData.records.map((r: any) => {
-                                                        const isPresent = r.presentStudentIds?.includes(student._id);
-                                                        const isAbsent = r.absentStudentIds?.includes(student._id);
-                                                        return <td key={r._id} className={`px-2 py-2 text-center font-bold ${isPresent ? 'text-green-400' : isAbsent ? 'text-red-400' : 'text-gray-600'}`}>{isPresent ? 'P' : isAbsent ? 'A' : '-'}</td>;
-                                                    })}
-                                                    <td className="px-2 py-2 text-center text-white font-bold">{percent}%</td>
-                                                    <td className="px-2 py-2 text-center">
-                                                        <div className="flex flex-col gap-1 items-center">
-                                                            <button
-                                                                onClick={() => copyToClipboard(student.guardian_email)}
-                                                                disabled={!student.guardian_email}
-                                                                className="w-full text-[10px] bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white px-2 py-1 rounded"
-                                                                title={student.guardian_email || "No Guardian Email"}
-                                                            >
-                                                                Guardian Mail
-                                                            </button>
-                                                            <button
-                                                                onClick={() => copyToClipboard(student.email)}
-                                                                disabled={!student.email || !student.email.endsWith('@heritageit.edu.in')}
-                                                                className="w-full text-[10px] bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-500 text-white px-2 py-1 rounded"
-                                                                title={student.email && !student.email.endsWith('@heritageit.edu.in') ? "Invalid Domain" : "Student Mail"}
-                                                            >
-                                                                Student Mail
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-2 py-2 text-center">
-                                                        <div className="flex flex-col gap-1 items-center">
-                                                            <button
-                                                                onClick={() => copyGuardianText(student, percent, startDate, endDate)}
-                                                                className="w-full text-[10px] bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded"
-                                                                title="Copy Warning to Guardian"
-                                                            >
-                                                                Guardian Text
-                                                            </button>
-                                                            <button
-                                                                onClick={() => copyStudentText(student, percent, startDate, endDate)}
-                                                                className="w-full text-[10px] bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded"
-                                                                title="Copy Warning to Student"
-                                                            >
-                                                                Student Text
-                                                            </button>
-                                                        </div>
-                                                    </td>
+                            <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-900 shadow-2xl">
+                                {reportData.records.length === 0 ? (
+                                    <div className="p-12 text-center text-slate-500 italic flex flex-col items-center gap-2">
+                                        <Calendar className="h-10 w-10 opacity-20" />
+                                        No attendance records found for this period.
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
+                                        <table className="min-w-full divide-y divide-white/5 text-xs">
+                                            <thead className="bg-slate-950 sticky top-0 z-20 shadow-md">
+                                                <tr>
+                                                    <th className="px-4 py-4 text-left font-bold text-white min-w-[180px] bg-slate-950 sticky left-0 z-30 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.5)]">
+                                                        Student Details
+                                                    </th>
+                                                    {reportData.records.map((r: any) => (
+                                                        <th key={r._id} className="px-2 py-2 text-center font-semibold text-slate-300 min-w-[100px] border-l border-white/5 group relative hover:bg-white/5 transition-colors">
+                                                            <div className="whitespace-nowrap font-mono text-indigo-300 mb-0.5">{r.date.split('-').reverse().slice(0, 2).join('/')}</div>
+                                                            <div className="text-slate-500 text-[10px] uppercase tracking-wider">{r.timeSlot}</div>
+                                                            <div className="text-slate-400 text-[10px] mt-1 px-1 truncate max-w-[90px] mx-auto opacity-70 group-hover:opacity-100" title={r.teacherName}>{r.teacherName.split(' ')[0]}</div>
+                                                        </th>
+                                                    ))}
+                                                    <th className="px-3 py-3 text-center font-bold text-white min-w-[80px] border-l border-white/10 bg-slate-900/50">Stats</th>
+                                                    <th className="px-3 py-3 text-center font-bold text-white min-w-[100px] border-l border-white/5">Actions</th>
                                                 </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5 bg-transparent">
+                                                {reportData.students.map(student => {
+                                                    const participated = reportData.records.filter((r: any) =>
+                                                        (r.presentStudentIds?.includes(student._id)) || (r.absentStudentIds?.includes(student._id))
+                                                    );
+                                                    const baseAttended = participated.filter((r: any) => r.presentStudentIds?.includes(student._id)).length;
+                                                    const total = participated.length + (student.total_classes_adjustment || 0);
+                                                    const attended = baseAttended + (student.attended_adjustment || 0);
+                                                    const percent = total > 0 ? ((attended / total) * 100).toFixed(0) : "0";
+
+                                                    const isLowAttendance = Number(percent) < config.attendanceRequirement;
+
+                                                    return (
+                                                        <tr key={student._id} className="hover:bg-white/5 group transition-colors">
+                                                            <td className="px-4 py-3 bg-slate-900/50 sticky left-0 z-10 border-r border-white/5 group-hover:bg-slate-800/80 transition-colors">
+                                                                <div className="font-medium text-white text-sm">{student.name}</div>
+                                                                <div className="flex gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
+                                                                    <span>{student.roll}</span>
+                                                                    <span>•</span>
+                                                                    <span>{student.department}</span>
+                                                                </div>
+                                                            </td>
+                                                            {reportData.records.map((r: any) => {
+                                                                const isPresent = r.presentStudentIds?.includes(student._id);
+                                                                const isAbsent = r.absentStudentIds?.includes(student._id);
+
+                                                                let cellContent = <span className="text-slate-700">-</span>;
+                                                                let cellClass = "bg-transparent";
+
+                                                                if (isPresent) {
+                                                                    cellContent = <span className="text-emerald-400 font-bold">P</span>;
+                                                                    cellClass = "bg-emerald-500/5";
+                                                                } else if (isAbsent) {
+                                                                    cellContent = <span className="text-red-400 font-bold">A</span>;
+                                                                    cellClass = "bg-red-500/5";
+                                                                }
+
+                                                                return (
+                                                                    <td key={r._id} className={`px-2 py-3 text-center border-l border-white/5 ${cellClass}`}>
+                                                                        {cellContent}
+                                                                    </td>
+                                                                );
+                                                            })}
+
+                                                            <td className="px-3 py-3 text-center border-l border-white/10 bg-slate-900/30">
+                                                                <div className="flex flex-col items-center">
+                                                                    <span className={`text-sm font-bold ${isLowAttendance ? 'text-red-400' : 'text-emerald-400'}`}>
+                                                                        {percent}%
+                                                                    </span>
+                                                                    <span className="text-[10px] text-slate-500">
+                                                                        {attended}/{total}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+
+                                                            <td className="px-3 py-3 text-center border-l border-white/5">
+                                                                <div className="flex justify-center gap-3">
+                                                                    {/* Email Guardian */}
+                                                                    <button
+                                                                        onClick={() => copyGuardianText(student, percent, startDate, endDate)}
+                                                                        className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                                                        title="Copy Email for Guardian"
+                                                                    >
+                                                                        <Mail className="h-4 w-4" />
+                                                                    </button>
+                                                                    {/* Text Student */}
+                                                                    <button
+                                                                        onClick={() => copyStudentText(student, percent, startDate, endDate)}
+                                                                        className="text-slate-500 hover:text-pink-400 transition-colors"
+                                                                        title="Copy Warning for Student"
+                                                                    >
+                                                                        <Copy className="h-4 w-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )
                 }
-            </div >
+            </div>
 
             {/* --- Edit Modal --- */}
-            {
-                isEditModalOpen && editingStudent && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-2xl p-6 shadow-2xl relative">
-                            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
-                                <X className="h-6 w-6" />
-                            </button>
-                            <h3 className="text-xl font-bold text-white mb-4">Edit Student Details</h3>
-                            <form onSubmit={handleSaveStudent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="block text-xs text-gray-400 mb-1">Name</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.name} onChange={e => setEditingStudent({ ...editingStudent, name: e.target.value })} /></div>
-                                <div><label className="block text-xs text-gray-400 mb-1">Roll</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.roll} onChange={e => setEditingStudent({ ...editingStudent, roll: e.target.value })} /></div>
-                                <div><label className="block text-xs text-gray-400 mb-1">Department</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.department} onChange={e => setEditingStudent({ ...editingStudent, department: e.target.value })} /></div>
-                                <div><label className="block text-xs text-gray-400 mb-1">Year</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.year} onChange={e => setEditingStudent({ ...editingStudent, year: e.target.value })} /></div>
-                                <div className="md:col-span-2"><label className="block text-xs text-gray-400 mb-1">Course Code</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.course_code} onChange={e => setEditingStudent({ ...editingStudent, course_code: e.target.value })} /></div>
-                                <div className="md:col-span-2"><label className="block text-xs text-gray-400 mb-1">Student Email</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.email} onChange={e => setEditingStudent({ ...editingStudent, email: e.target.value })} /></div>
-                                <div className="md:col-span-2"><label className="block text-xs text-gray-400 mb-1">Guardian Email</label><input className="w-full bg-gray-700 border-none rounded px-3 py-2 text-white" value={editingStudent.guardian_email || ''} onChange={e => setEditingStudent({ ...editingStudent, guardian_email: e.target.value })} /></div>
+            {isEditModalOpen && editingStudent && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-2xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
+                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
+                            <X className="h-6 w-6" />
+                        </button>
+                        <h3 className="text-2xl font-bold text-white mb-6">Edit Student Details</h3>
+                        <form onSubmit={handleSaveStudent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Name</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.name} onChange={e => setEditingStudent({ ...editingStudent, name: e.target.value })} /></div>
+                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Roll</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.roll} onChange={e => setEditingStudent({ ...editingStudent, roll: e.target.value })} /></div>
+                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Department</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.department} onChange={e => setEditingStudent({ ...editingStudent, department: e.target.value })} /></div>
+                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Year</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.year} onChange={e => setEditingStudent({ ...editingStudent, year: e.target.value })} /></div>
+                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Course Code</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.course_code} onChange={e => setEditingStudent({ ...editingStudent, course_code: e.target.value })} /></div>
+                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Student Email</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.email} onChange={e => setEditingStudent({ ...editingStudent, email: e.target.value })} /></div>
+                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Guardian Email</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.guardian_email || ''} onChange={e => setEditingStudent({ ...editingStudent, guardian_email: e.target.value })} /></div>
 
-                                <div className="md:col-span-2 flex justify-end gap-3 mt-4">
-                                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 text-white">Cancel</button>
-                                    <button type="submit" className="px-4 py-2 rounded bg-green-600 hover:bg-green-500 text-white font-bold">Save Changes</button>
-                                </div>
-                            </form>
-                        </div>
+                            <div className="md:col-span-2 flex justify-end gap-3 mt-6">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors font-medium border border-white/5">Cancel</button>
+                                <button type="submit" className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-all">Save Changes</button>
+                            </div>
+                        </form>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* --- Import Preview Modal --- */}
-            {
-                isImportModalOpen && importPreviewData.length > 0 && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-4xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
-                            <button onClick={() => setIsImportModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
-                                <X className="h-6 w-6" />
+            {isImportModalOpen && importPreviewData.length > 0 && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-4xl p-8 shadow-2xl relative max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300">
+                        <button onClick={() => setIsImportModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
+                            <X className="h-6 w-6" />
+                        </button>
+                        <h3 className="text-2xl font-bold text-white mb-2">Confirm Offline Attendance Import</h3>
+                        <p className="text-slate-400 mb-6 text-sm">
+                            The following changes will be applied to <b className="text-slate-200">Adjusted Attendance</b>.
+                            <br />
+                            <span className="text-amber-400 font-semibold">Note:</span> If you imported "Total", Adjusted is calculated as <code className="bg-slate-950 px-1 py-0.5 rounded border border-white/10">Total - System</code>.
+                        </p>
+
+                        <div className="overflow-auto flex-1 border border-white/10 rounded-xl custom-scrollbar bg-slate-950/30">
+                            <table className="min-w-full divide-y divide-white/5 text-sm">
+                                <thead className="bg-slate-950 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left font-bold text-slate-200">Student</th>
+                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Roll</th>
+                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Total Attended</th>
+                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Total Classes</th>
+                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Adjusted Change</th>
+                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5 bg-transparent">
+                                    {importPreviewData.map((item, idx) => {
+                                        const oldFinalAtt = item.baseAttended + item.oldAttAdj;
+                                        const newFinalAtt = item.baseAttended + item.newAttAdj;
+                                        const oldFinalTot = item.baseTotal + item.oldTotAdj;
+                                        const newFinalTot = item.baseTotal + item.newTotAdj;
+
+                                        const attChanged = item.oldAttAdj !== item.newAttAdj;
+                                        const totChanged = item.oldTotAdj !== item.newTotAdj;
+
+                                        return (
+                                            <tr key={idx} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-4 py-3 text-slate-300 font-medium">{item.student.name}</td>
+                                                <td className="px-3 py-3 text-center text-slate-400 font-mono text-xs">{item.student.roll}</td>
+
+                                                <td className="px-3 py-3 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <span className="text-slate-500">{oldFinalAtt}</span>
+                                                        {attChanged && <ArrowRight className="h-3 w-3 text-slate-600" />}
+                                                        {attChanged && <span className={newFinalAtt > oldFinalAtt ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{newFinalAtt}</span>}
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-3 py-3 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <span className="text-slate-500">{oldFinalTot}</span>
+                                                        {totChanged && <ArrowRight className="h-3 w-3 text-slate-600" />}
+                                                        {totChanged && <span className={newFinalTot > oldFinalTot ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{newFinalTot}</span>}
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-3 py-3 text-center text-xs">
+                                                    {attChanged && (
+                                                        <div className="text-indigo-300 font-mono">
+                                                            Att: {item.oldAttAdj} &rarr; {item.newAttAdj}
+                                                        </div>
+                                                    )}
+                                                    {totChanged && (
+                                                        <div className="text-indigo-300 font-mono mt-0.5">
+                                                            Tot: {item.oldTotAdj} &rarr; {item.newTotAdj}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-3 text-center text-slate-500 text-[10px]">
+                                                    {item.reasonAtt && <div>Att: {item.reasonAtt}</div>}
+                                                    {item.reasonTot && <div>Tot: {item.reasonTot}</div>}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-white/5">
+                            <button onClick={() => setIsImportModalOpen(false)} className="px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors font-medium border border-white/5">Cancel</button>
+                            <button onClick={confirmImport} className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                {loading && <Loader2 className="animate-spin h-4 w-4" />}
+                                Confirm Import
                             </button>
-                            <h3 className="text-xl font-bold text-white mb-4">Confirm Offline Attendance Import</h3>
-                            <p className="text-gray-400 mb-4 text-sm">
-                                The following changes will be applied to <b>Adjusted Attendance</b>.
-                                <br />
-                                <span className="text-yellow-400">Note:</span> If you imported "Total", Adjusted is calculated as <code>Total - System</code>.
-                            </p>
-
-                            <div className="overflow-auto flex-1 border border-gray-700 rounded-lg">
-                                <table className="min-w-full divide-y divide-gray-700 text-sm">
-                                    <thead className="bg-gray-700 sticky top-0">
-                                        <tr>
-                                            <th className="px-3 py-2 text-left text-white">Student</th>
-                                            <th className="px-2 py-2 text-center text-white">Roll</th>
-                                            <th className="px-2 py-2 text-center text-white">Total Attended</th>
-                                            <th className="px-2 py-2 text-center text-white">Total Classes</th>
-                                            <th className="px-2 py-2 text-center text-white">Adjusted Change</th>
-                                            <th className="px-2 py-2 text-center text-white">Reason</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-700 bg-gray-800">
-                                        {importPreviewData.map((item, idx) => {
-                                            const oldFinalAtt = item.baseAttended + item.oldAttAdj;
-                                            const newFinalAtt = item.baseAttended + item.newAttAdj;
-                                            const oldFinalTot = item.baseTotal + item.oldTotAdj;
-                                            const newFinalTot = item.baseTotal + item.newTotAdj;
-
-                                            const attChanged = item.oldAttAdj !== item.newAttAdj;
-                                            const totChanged = item.oldTotAdj !== item.newTotAdj;
-
-                                            return (
-                                                <tr key={idx} className="hover:bg-gray-700/50">
-                                                    <td className="px-3 py-2 text-white">{item.student.name}</td>
-                                                    <td className="px-2 py-2 text-center text-gray-300">{item.student.roll}</td>
-
-                                                    <td className="px-2 py-2 text-center">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <span className="text-gray-400">{oldFinalAtt}</span>
-                                                            {attChanged && <ArrowRight className="h-3 w-3 text-gray-500" />}
-                                                            {attChanged && <span className={newFinalAtt > oldFinalAtt ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{newFinalAtt}</span>}
-                                                        </div>
-                                                    </td>
-
-                                                    <td className="px-2 py-2 text-center">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <span className="text-gray-400">{oldFinalTot}</span>
-                                                            {totChanged && <ArrowRight className="h-3 w-3 text-gray-500" />}
-                                                            {totChanged && <span className={newFinalTot > oldFinalTot ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{newFinalTot}</span>}
-                                                        </div>
-                                                    </td>
-
-                                                    <td className="px-2 py-2 text-center text-xs">
-                                                        {attChanged && (
-                                                            <div className="text-blue-300">
-                                                                Att: {item.oldAttAdj} &rarr; {item.newAttAdj}
-                                                            </div>
-                                                        )}
-                                                        {totChanged && (
-                                                            <div className="text-blue-300">
-                                                                Tot: {item.oldTotAdj} &rarr; {item.newTotAdj}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-2 py-2 text-center text-gray-400 text-[10px]">
-                                                        {item.reasonAtt && <div>Att: {item.reasonAtt}</div>}
-                                                        {item.reasonTot && <div>Tot: {item.reasonTot}</div>}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-700">
-                                <button onClick={() => setIsImportModalOpen(false)} className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 text-white">Cancel</button>
-                                <button onClick={confirmImport} className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center gap-2">
-                                    {loading && <Loader2 className="animate-spin h-4 w-4" />}
-                                    Confirm Import
-                                </button>
-                            </div>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
     );
 }
+
