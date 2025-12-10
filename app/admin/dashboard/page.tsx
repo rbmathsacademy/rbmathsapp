@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, Upload, FileDown, Save, Trash2, Edit, Download } from 'lucide-react';
+import { Loader2, Upload, FileDown, Save, Trash2, Edit, Download, CheckSquare, Square, AlertTriangle, X } from 'lucide-react';
 
 export default function AdminDashboard() {
     const [loading, setLoading] = useState(false);
@@ -27,6 +27,15 @@ export default function AdminDashboard() {
 
     // View Filters for Student List [NEW]
     const [viewFilter, setViewFilter] = useState({ dept: '', year: '', course: '' });
+
+    // Selection & Delete Modal State [NEW]
+    const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+    const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean, type: 'single' | 'bulk' | 'assignment', id?: string, count?: number, payload?: any }>({ open: false, type: 'single' });
+
+    // Clear selection when filters change
+    useEffect(() => {
+        setSelectedStudentIds(new Set());
+    }, [viewFilter]);
 
     // Derived Lists for Dropdowns
     const { departments, years, courses } = useMemo(() => {
@@ -152,22 +161,53 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleDeleteStudent = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this student?')) return;
+    const handleDeleteStudent = (id: string) => {
+        setDeleteConfirm({ open: true, type: 'single', id });
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedStudentIds.size === 0) return;
+        setDeleteConfirm({ open: true, type: 'bulk', count: selectedStudentIds.size });
+    };
+
+    const confirmDeleteAction = async () => {
+        setLoading(true);
         try {
-            const res = await fetch(`/api/admin/students/${id}`, {
-                method: 'DELETE',
-            });
-
-            if (!res.ok) {
+            if (deleteConfirm.type === 'single' && deleteConfirm.id) {
+                const res = await fetch(`/api/admin/students/${deleteConfirm.id}`, { method: 'DELETE' });
+                if (!res.ok) { const data = await res.json(); throw new Error(data.error || 'Failed to delete student'); }
+                alert('Student deleted');
+            } else if (deleteConfirm.type === 'bulk') {
+                const idsToDelete = Array.from(selectedStudentIds);
+                const res = await fetch('/api/admin/students/bulk-delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: idsToDelete }),
+                });
+                if (!res.ok) { const data = await res.json(); throw new Error(data.error || 'Bulk delete failed'); }
                 const data = await res.json();
-                throw new Error(data.error || 'Failed to delete student');
+                alert(data.message);
+                setSelectedStudentIds(new Set());
+            } else if (deleteConfirm.type === 'assignment' && deleteConfirm.payload) {
+                const { key, email } = deleteConfirm.payload;
+                const newConfig = { ...config };
+                if (newConfig.teacherAssignments[key]) {
+                    newConfig.teacherAssignments[key] = newConfig.teacherAssignments[key].filter((t: any) => t.email !== email);
+                    if (newConfig.teacherAssignments[key].length === 0) delete newConfig.teacherAssignments[key];
+                }
+                setConfig(newConfig);
+                await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newConfig),
+                });
             }
-
-            alert('Student deleted');
             fetchStudents();
+            setDeleteConfirm({ ...deleteConfirm, open: false });
         } catch (error: any) {
             alert(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -299,52 +339,11 @@ export default function AdminDashboard() {
         }
     };
 
-    const removeAssignment = async (key: string, emailToRemove: string) => {
-        if (!confirm('Are you sure?')) return;
-        const newConfig = { ...config };
-
-        if (newConfig.teacherAssignments[key]) {
-            newConfig.teacherAssignments[key] = newConfig.teacherAssignments[key].filter((t: any) => t.email !== emailToRemove);
-            if (newConfig.teacherAssignments[key].length === 0) {
-                delete newConfig.teacherAssignments[key];
-            }
-        }
-
-        setConfig(newConfig);
-        await fetch('/api/admin/config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newConfig),
-        });
+    const removeAssignment = (key: string, emailToRemove: string) => {
+        setDeleteConfirm({ open: true, type: 'assignment', payload: { key, email: emailToRemove } });
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Are you sure you want to delete ALL ${visibleStudents.length} displayed students? This cannot be undone.`)) return;
 
-        setLoading(true);
-        try {
-            // Send IDs to delete
-            const idsToDelete = visibleStudents.map(s => s._id);
-            const res = await fetch('/api/admin/students/bulk-delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: idsToDelete }),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || 'Bulk delete failed');
-            }
-
-            const data = await res.json();
-            alert(data.message);
-            fetchStudents(); // Refresh list
-        } catch (error: any) {
-            alert(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Change Password State
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -579,10 +578,14 @@ export default function AdminDashboard() {
                         {visibleStudents.length > 0 && (
                             <button
                                 onClick={handleBulkDelete}
-                                className="ml-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all text-xs font-medium border border-red-500/20"
+                                disabled={selectedStudentIds.size === 0}
+                                className={`ml-2 px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all text-xs font-medium border ${selectedStudentIds.size > 0
+                                    ? 'bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border-red-500/20 shadow-lg shadow-red-500/10'
+                                    : 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed'
+                                    }`}
                             >
                                 <Trash2 className="h-3 w-3" />
-                                Clear List
+                                Delete Selected ({selectedStudentIds.size})
                             </button>
                         )}
                     </div>
@@ -592,6 +595,17 @@ export default function AdminDashboard() {
                         <table className="min-w-full text-sm text-left text-slate-400">
                             <thead className="text-xs text-slate-200 uppercase bg-white/5 border-b border-white/5 sticky top-0 backdrop-blur-md z-10">
                                 <tr>
+                                    <th className="px-6 py-4 font-semibold tracking-wider w-10">
+                                        <button
+                                            onClick={() => {
+                                                if (selectedStudentIds.size === visibleStudents.length) setSelectedStudentIds(new Set());
+                                                else setSelectedStudentIds(new Set(visibleStudents.map(s => s._id)));
+                                            }}
+                                            className="text-slate-400 hover:text-white transition-colors"
+                                        >
+                                            {visibleStudents.length > 0 && selectedStudentIds.size === visibleStudents.length ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                                        </button>
+                                    </th>
                                     <th className="px-6 py-4 font-semibold tracking-wider">Name</th>
                                     <th className="px-6 py-4 font-semibold tracking-wider">Email</th>
                                     <th className="px-6 py-4 font-semibold tracking-wider">Roll</th>
@@ -602,10 +616,23 @@ export default function AdminDashboard() {
                             </thead>
                             <tbody className="divide-y divide-white/5 bg-transparent">
                                 {visibleStudents.length === 0 ? (
-                                    <tr><td colSpan={6} className="text-center py-12 text-slate-500 italic">No students found matching filters (or no assignment access).</td></tr>
+                                    <tr><td colSpan={7} className="text-center py-12 text-slate-500 italic">No students found matching filters (or no assignment access).</td></tr>
                                 ) : (
                                     visibleStudents.map((s) => (
-                                        <tr key={s._id} className="hover:bg-white/5 transition-colors group">
+                                        <tr key={s._id} className={`transition-colors group ${selectedStudentIds.has(s._id) ? 'bg-indigo-500/10 hover:bg-indigo-500/20' : 'hover:bg-white/5'}`}>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const newSet = new Set(selectedStudentIds);
+                                                        if (newSet.has(s._id)) newSet.delete(s._id);
+                                                        else newSet.add(s._id);
+                                                        setSelectedStudentIds(newSet);
+                                                    }}
+                                                    className={`transition-colors ${selectedStudentIds.has(s._id) ? 'text-indigo-400' : 'text-slate-600 hover:text-slate-400'}`}
+                                                >
+                                                    {selectedStudentIds.has(s._id) ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                                                </button>
+                                            </td>
                                             <td className="px-6 py-4 font-medium text-white">{s.name}</td>
                                             <td className="px-6 py-4">{s.email}</td>
                                             <td className="px-6 py-4 font-mono text-xs">{s.roll}</td>
@@ -633,7 +660,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Global Settings */}
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 mb-6">
+            <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl mb-6">
                 <h3 className="text-xl font-semibold text-white mb-4">Global Settings & Assignments</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end mb-6">
@@ -641,46 +668,46 @@ export default function AdminDashboard() {
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Department</label>
                         <select
-                            className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                            className="block w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                             value={assignFilter.dept} onChange={e => setAssignFilter({ ...assignFilter, dept: e.target.value })}
                         >
-                            <option value="">Select Dept</option>
-                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                            <option value="" className="bg-slate-950 text-slate-300">Select Dept</option>
+                            {departments.map(d => <option key={d} value={d} className="bg-slate-950 text-slate-300">{d}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Year</label>
                         <select
-                            className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                            className="block w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                             value={assignFilter.year} onChange={e => setAssignFilter({ ...assignFilter, year: e.target.value })}
                         >
-                            <option value="">Select Year</option>
-                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                            <option value="" className="bg-slate-950 text-slate-300">Select Year</option>
+                            {years.map(y => <option key={y} value={y} className="bg-slate-950 text-slate-300">{y}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Course</label>
                         <select
-                            className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                            className="block w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                             value={assignFilter.course} onChange={e => setAssignFilter({ ...assignFilter, course: e.target.value })}
                         >
-                            <option value="">Select Course</option>
-                            {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                            <option value="" className="bg-slate-950 text-slate-300">Select Course</option>
+                            {courses.map(c => <option key={c} value={c} className="bg-slate-950 text-slate-300">{c}</option>)}
                         </select>
                     </div>
                 </div>
 
                 {/* Assignment & Rules (Only visible if filters selected) */}
                 {assignFilter.dept && assignFilter.year && assignFilter.course && (
-                    <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600 mb-6">
+                    <div className="bg-slate-950/30 p-4 rounded-xl border border-white/10 mb-6 backdrop-blur-sm">
                         <h4 className="text-lg font-semibold text-white mb-3">Settings for {assignFilter.dept} - {assignFilter.year} - {assignFilter.course}</h4>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Attendance Requirement (%)</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Attendance Requirement (%)</label>
                                 <input
                                     type="number" min="0" max="100"
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-900 py-2.5 px-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                     value={currentAssignmentRule}
                                     onChange={e => setCurrentAssignmentRule(parseInt(e.target.value))}
                                 />
@@ -689,10 +716,10 @@ export default function AdminDashboard() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Teacher</label>
-                                <div className="flex items-center gap-2 p-2 bg-gray-700/50 rounded border border-gray-600">
-                                    <span className="text-gray-300 text-sm">Assign to:</span>
-                                    <span className="text-blue-400 font-semibold text-sm">
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Teacher</label>
+                                <div className="flex items-center gap-2 p-2.5 bg-slate-900 rounded-lg border border-white/10">
+                                    <span className="text-slate-400 text-sm">Assign to:</span>
+                                    <span className="text-indigo-400 font-semibold text-sm">
                                         {JSON.parse(localStorage.getItem('user') || '{}').name || 'Me'}
                                     </span>
                                 </div>
@@ -705,12 +732,11 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* Assignments List */}
-                <div className="mt-8 pt-6 border-t border-gray-700">
-                    <h4 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wider">Active Faculty Assignments</h4>
-                    <div className="overflow-x-auto bg-gray-900 rounded-lg border border-gray-600 shadow-md">
-                        <table className="min-w-full text-sm text-left text-gray-400">
-                            <thead className="text-xs text-gray-200 uppercase bg-gray-700 border-b border-gray-600">
+                <div className="mt-8 pt-6 border-t border-white/5">
+                    <h4 className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Active Faculty Assignments</h4>
+                    <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-950/30">
+                        <table className="min-w-full text-sm text-left text-slate-400">
+                            <thead className="text-xs text-slate-200 uppercase bg-white/5 border-b border-white/5">
                                 <tr>
                                     <th className="px-6 py-3 font-bold">Assignment Key</th>
                                     <th className="px-6 py-3 font-bold">Attendance %</th>
@@ -718,17 +744,17 @@ export default function AdminDashboard() {
                                     <th className="px-6 py-3 font-bold text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-700">
+                            <tbody className="divide-y divide-white/5">
                                 {Object.entries(config.teacherAssignments || {}).map(([key, teachers]: [string, any]) => (
-                                    <tr key={key} className="hover:bg-gray-800">
+                                    <tr key={key} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-medium text-white">{key}</td>
-                                        <td className="px-6 py-4 text-blue-300">{config.attendanceRules?.[key] || config.attendanceRequirement}%</td>
-                                        <td className="px-6 py-4 text-gray-300">
-                                            <div className="flex flex-col gap-1">
+                                        <td className="px-6 py-4 text-emerald-400 font-bold">{config.attendanceRules?.[key] || config.attendanceRequirement}%</td>
+                                        <td className="px-6 py-4 text-slate-300">
+                                            <div className="flex flex-col gap-2">
                                                 {Array.isArray(teachers) && teachers.map((t: any, i: number) => (
-                                                    <div key={i} className="flex items-center justify-between bg-gray-800 px-2 py-1 rounded border border-gray-700">
-                                                        <span>{t.name} <span className="text-xs text-gray-500">({t.email})</span></span>
-                                                        <button onClick={() => removeAssignment(key, t.email)} className="text-red-500 hover:text-red-400 ml-2"><Trash2 className="w-3 h-3" /></button>
+                                                    <div key={i} className="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5">
+                                                        <span>{t.name} <span className="text-xs text-slate-500">({t.email})</span></span>
+                                                        <button onClick={() => removeAssignment(key, t.email)} className="text-slate-500 hover:text-red-400 ml-2 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -743,6 +769,30 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm.open && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-300">
+                        <div className="flex flex-col items-center text-center p-4">
+                            <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4">
+                                <AlertTriangle className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Confirm Deletion</h3>
+                            <p className="text-slate-400 text-sm mb-6">
+                                {deleteConfirm.type === 'single' && "Are you sure you want to delete this student? This action cannot be undone."}
+                                {deleteConfirm.type === 'bulk' && `Are you sure you want to delete ${deleteConfirm.count} selected students? This action cannot be undone.`}
+                                {deleteConfirm.type === 'assignment' && "Remove this faculty assignment?"}
+                            </p>
+                            <div className="flex gap-3 w-full">
+                                <button onClick={() => setDeleteConfirm({ ...deleteConfirm, open: false })} className="flex-1 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors border border-white/5">Cancel</button>
+                                <button onClick={confirmDeleteAction} className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold shadow-lg shadow-red-500/20 transition-all hover:-translate-y-0.5">
+                                    {loading ? <Loader2 className="animate-spin h-4 w-4 mx-auto" /> : 'Confirm Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

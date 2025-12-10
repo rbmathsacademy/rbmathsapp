@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Loader2, Calendar, FileSpreadsheet, Copy, Mail, Search, Upload, Download, Edit, Save, X, Trash2, ArrowRight } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Loader2, Calendar, FileSpreadsheet, Copy, Mail, Search, Upload, Download, Edit, Save, X, Trash2, ArrowRight, MessageSquare, MessageCircle, Shield } from 'lucide-react';
 
 export default function AdminReports() {
     const [loading, setLoading] = useState(false);
@@ -10,6 +10,7 @@ export default function AdminReports() {
     const [config, setConfig] = useState<any>({ attendanceRequirement: 70, teacherAssignments: {} });
     const [adminEmail, setAdminEmail] = useState<string | null>(null);
     const [adminName, setAdminName] = useState<string | null>(null);
+    const reportRef = useRef<HTMLDivElement>(null);
 
     // Student Database Filters
     const [dbSearch, setDbSearch] = useState('');
@@ -247,6 +248,9 @@ export default function AdminReports() {
             }
 
             setReportData({ students: filteredStudents, records });
+            setTimeout(() => {
+                reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         } catch (error) {
             console.error(error);
             alert('Error generating report');
@@ -576,22 +580,22 @@ Treat this matter with extreme urgency.`;
                         <div className="w-40">
                             <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
                             <select className="w-full bg-slate-950/50 border border-white/10 rounded-lg text-slate-300 text-sm py-2.5 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={dbFilters.dept} onChange={e => setDbFilters({ ...dbFilters, dept: e.target.value })}>
-                                <option value="">All Depts</option>
-                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                <option value="" className="bg-slate-950 text-slate-300">All Depts</option>
+                                {departments.map(d => <option key={d} value={d} className="bg-slate-950 text-slate-300">{d}</option>)}
                             </select>
                         </div>
                         <div className="w-32">
                             <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Year</label>
                             <select className="w-full bg-slate-950/50 border border-white/10 rounded-lg text-slate-300 text-sm py-2.5 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={dbFilters.year} onChange={e => setDbFilters({ ...dbFilters, year: e.target.value })}>
-                                <option value="">All Years</option>
-                                {years.map(y => <option key={y} value={y}>{y}</option>)}
+                                <option value="" className="bg-slate-950 text-slate-300">All Years</option>
+                                {years.map(y => <option key={y} value={y} className="bg-slate-950 text-slate-300">{y}</option>)}
                             </select>
                         </div>
                         <div className="w-40">
                             <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Course</label>
                             <select className="w-full bg-slate-950/50 border border-white/10 rounded-lg text-slate-300 text-sm py-2.5 focus:ring-2 focus:ring-indigo-500/50 outline-none" value={dbFilters.course} onChange={e => setDbFilters({ ...dbFilters, course: e.target.value })}>
-                                <option value="">All Courses</option>
-                                {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                                <option value="" className="bg-slate-950 text-slate-300">All Courses</option>
+                                {courses.map(c => <option key={c} value={c} className="bg-slate-950 text-slate-300">{c}</option>)}
                             </select>
                         </div>
                     </div>
@@ -797,7 +801,7 @@ Treat this matter with extreme urgency.`;
 
                 {
                     reportData && (
-                        <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
+                        <div ref={reportRef} className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-semibold text-white">Report Results</h3>
                                 <div className="text-right flex items-center gap-4">
@@ -893,21 +897,37 @@ Treat this matter with extreme urgency.`;
 
                                                             <td className="px-3 py-3 text-center border-l border-white/5">
                                                                 <div className="flex justify-center gap-3">
-                                                                    {/* Email Guardian */}
-                                                                    <button
-                                                                        onClick={() => copyGuardianText(student, percent, startDate, endDate)}
-                                                                        className="text-slate-500 hover:text-indigo-400 transition-colors"
-                                                                        title="Copy Email for Guardian"
+                                                                    {/* Email Student */}
+                                                                    <a
+                                                                        href={`mailto:${student.email}`}
+                                                                        className="text-slate-500 hover:text-indigo-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
+                                                                        title="Email Student"
                                                                     >
                                                                         <Mail className="h-4 w-4" />
-                                                                    </button>
+                                                                    </a>
                                                                     {/* Text Student */}
                                                                     <button
                                                                         onClick={() => copyStudentText(student, percent, startDate, endDate)}
-                                                                        className="text-slate-500 hover:text-pink-400 transition-colors"
+                                                                        className="text-slate-500 hover:text-pink-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
                                                                         title="Copy Warning for Student"
                                                                     >
-                                                                        <Copy className="h-4 w-4" />
+                                                                        <MessageSquare className="h-4 w-4" />
+                                                                    </button>
+                                                                    {/* Email Guardian */}
+                                                                    <a
+                                                                        href={`mailto:${student.guardian_email}`}
+                                                                        className="text-slate-500 hover:text-emerald-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
+                                                                        title="Email Guardian"
+                                                                    >
+                                                                        <Shield className="h-4 w-4" />
+                                                                    </a>
+                                                                    {/* Text Guardian */}
+                                                                    <button
+                                                                        onClick={() => copyGuardianText(student, percent, startDate, endDate)}
+                                                                        className="text-slate-500 hover:text-amber-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
+                                                                        title="Copy Text for Guardian"
+                                                                    >
+                                                                        <MessageCircle className="h-4 w-4" />
                                                                     </button>
                                                                 </div>
                                                             </td>
@@ -924,123 +944,129 @@ Treat this matter with extreme urgency.`;
                 }
             </div>
 
-            {/* --- Edit Modal --- */}
-            {isEditModalOpen && editingStudent && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-2xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
-                            <X className="h-6 w-6" />
-                        </button>
-                        <h3 className="text-2xl font-bold text-white mb-6">Edit Student Details</h3>
-                        <form onSubmit={handleSaveStudent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Name</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.name} onChange={e => setEditingStudent({ ...editingStudent, name: e.target.value })} /></div>
-                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Roll</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.roll} onChange={e => setEditingStudent({ ...editingStudent, roll: e.target.value })} /></div>
-                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Department</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.department} onChange={e => setEditingStudent({ ...editingStudent, department: e.target.value })} /></div>
-                            <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Year</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.year} onChange={e => setEditingStudent({ ...editingStudent, year: e.target.value })} /></div>
-                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Course Code</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.course_code} onChange={e => setEditingStudent({ ...editingStudent, course_code: e.target.value })} /></div>
-                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Student Email</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.email} onChange={e => setEditingStudent({ ...editingStudent, email: e.target.value })} /></div>
-                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Guardian Email</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.guardian_email || ''} onChange={e => setEditingStudent({ ...editingStudent, guardian_email: e.target.value })} /></div>
 
-                            <div className="md:col-span-2 flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors font-medium border border-white/5">Cancel</button>
-                                <button type="submit" className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-all">Save Changes</button>
-                            </div>
-                        </form>
+            {/* --- Edit Modal --- */}
+            {
+                isEditModalOpen && editingStudent && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-2xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
+                            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
+                                <X className="h-6 w-6" />
+                            </button>
+                            <h3 className="text-2xl font-bold text-white mb-6">Edit Student Details</h3>
+                            <form onSubmit={handleSaveStudent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Name</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.name} onChange={e => setEditingStudent({ ...editingStudent, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Roll</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.roll} onChange={e => setEditingStudent({ ...editingStudent, roll: e.target.value })} /></div>
+                                <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Department</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.department} onChange={e => setEditingStudent({ ...editingStudent, department: e.target.value })} /></div>
+                                <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Year</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.year} onChange={e => setEditingStudent({ ...editingStudent, year: e.target.value })} /></div>
+                                <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Course Code</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.course_code} onChange={e => setEditingStudent({ ...editingStudent, course_code: e.target.value })} /></div>
+                                <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Student Email</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.email} onChange={e => setEditingStudent({ ...editingStudent, email: e.target.value })} /></div>
+                                <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Guardian Email</label><input className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" value={editingStudent.guardian_email || ''} onChange={e => setEditingStudent({ ...editingStudent, guardian_email: e.target.value })} /></div>
+
+                                <div className="md:col-span-2 flex justify-end gap-3 mt-6">
+                                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors font-medium border border-white/5">Cancel</button>
+                                    <button type="submit" className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-all">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
+
 
             {/* --- Import Preview Modal --- */}
-            {isImportModalOpen && importPreviewData.length > 0 && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-4xl p-8 shadow-2xl relative max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setIsImportModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
-                            <X className="h-6 w-6" />
-                        </button>
-                        <h3 className="text-2xl font-bold text-white mb-2">Confirm Offline Attendance Import</h3>
-                        <p className="text-slate-400 mb-6 text-sm">
-                            The following changes will be applied to <b className="text-slate-200">Adjusted Attendance</b>.
-                            <br />
-                            <span className="text-amber-400 font-semibold">Note:</span> If you imported "Total", Adjusted is calculated as <code className="bg-slate-950 px-1 py-0.5 rounded border border-white/10">Total - System</code>.
-                        </p>
-
-                        <div className="overflow-auto flex-1 border border-white/10 rounded-xl custom-scrollbar bg-slate-950/30">
-                            <table className="min-w-full divide-y divide-white/5 text-sm">
-                                <thead className="bg-slate-950 sticky top-0 z-10">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left font-bold text-slate-200">Student</th>
-                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Roll</th>
-                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Total Attended</th>
-                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Total Classes</th>
-                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Adjusted Change</th>
-                                        <th className="px-3 py-3 text-center font-bold text-slate-200">Reason</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5 bg-transparent">
-                                    {importPreviewData.map((item, idx) => {
-                                        const oldFinalAtt = item.baseAttended + item.oldAttAdj;
-                                        const newFinalAtt = item.baseAttended + item.newAttAdj;
-                                        const oldFinalTot = item.baseTotal + item.oldTotAdj;
-                                        const newFinalTot = item.baseTotal + item.newTotAdj;
-
-                                        const attChanged = item.oldAttAdj !== item.newAttAdj;
-                                        const totChanged = item.oldTotAdj !== item.newTotAdj;
-
-                                        return (
-                                            <tr key={idx} className="hover:bg-white/5 transition-colors">
-                                                <td className="px-4 py-3 text-slate-300 font-medium">{item.student.name}</td>
-                                                <td className="px-3 py-3 text-center text-slate-400 font-mono text-xs">{item.student.roll}</td>
-
-                                                <td className="px-3 py-3 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <span className="text-slate-500">{oldFinalAtt}</span>
-                                                        {attChanged && <ArrowRight className="h-3 w-3 text-slate-600" />}
-                                                        {attChanged && <span className={newFinalAtt > oldFinalAtt ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{newFinalAtt}</span>}
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-3 py-3 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <span className="text-slate-500">{oldFinalTot}</span>
-                                                        {totChanged && <ArrowRight className="h-3 w-3 text-slate-600" />}
-                                                        {totChanged && <span className={newFinalTot > oldFinalTot ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{newFinalTot}</span>}
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-3 py-3 text-center text-xs">
-                                                    {attChanged && (
-                                                        <div className="text-indigo-300 font-mono">
-                                                            Att: {item.oldAttAdj} &rarr; {item.newAttAdj}
-                                                        </div>
-                                                    )}
-                                                    {totChanged && (
-                                                        <div className="text-indigo-300 font-mono mt-0.5">
-                                                            Tot: {item.oldTotAdj} &rarr; {item.newTotAdj}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-3 py-3 text-center text-slate-500 text-[10px]">
-                                                    {item.reasonAtt && <div>Att: {item.reasonAtt}</div>}
-                                                    {item.reasonTot && <div>Tot: {item.reasonTot}</div>}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-white/5">
-                            <button onClick={() => setIsImportModalOpen(false)} className="px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors font-medium border border-white/5">Cancel</button>
-                            <button onClick={confirmImport} className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                                {loading && <Loader2 className="animate-spin h-4 w-4" />}
-                                Confirm Import
+            {
+                isImportModalOpen && importPreviewData.length > 0 && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-4xl p-8 shadow-2xl relative max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300">
+                            <button onClick={() => setIsImportModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
+                                <X className="h-6 w-6" />
                             </button>
+                            <h3 className="text-2xl font-bold text-white mb-2">Confirm Offline Attendance Import</h3>
+                            <p className="text-slate-400 mb-6 text-sm">
+                                The following changes will be applied to <b className="text-slate-200">Adjusted Attendance</b>.
+                                <br />
+                                <span className="text-amber-400 font-semibold">Note:</span> If you imported "Total", Adjusted is calculated as <code className="bg-slate-950 px-1 py-0.5 rounded border border-white/10">Total - System</code>.
+                            </p>
+
+                            <div className="overflow-auto flex-1 border border-white/10 rounded-xl custom-scrollbar bg-slate-950/30">
+                                <table className="min-w-full divide-y divide-white/5 text-sm">
+                                    <thead className="bg-slate-950 sticky top-0 z-10">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left font-bold text-slate-200">Student</th>
+                                            <th className="px-3 py-3 text-center font-bold text-slate-200">Roll</th>
+                                            <th className="px-3 py-3 text-center font-bold text-slate-200">Total Attended</th>
+                                            <th className="px-3 py-3 text-center font-bold text-slate-200">Total Classes</th>
+                                            <th className="px-3 py-3 text-center font-bold text-slate-200">Adjusted Change</th>
+                                            <th className="px-3 py-3 text-center font-bold text-slate-200">Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5 bg-transparent">
+                                        {importPreviewData.map((item, idx) => {
+                                            const oldFinalAtt = item.baseAttended + item.oldAttAdj;
+                                            const newFinalAtt = item.baseAttended + item.newAttAdj;
+                                            const oldFinalTot = item.baseTotal + item.oldTotAdj;
+                                            const newFinalTot = item.baseTotal + item.newTotAdj;
+
+                                            const attChanged = item.oldAttAdj !== item.newAttAdj;
+                                            const totChanged = item.oldTotAdj !== item.newTotAdj;
+
+                                            return (
+                                                <tr key={idx} className="hover:bg-white/5 transition-colors">
+                                                    <td className="px-4 py-3 text-slate-300 font-medium">{item.student.name}</td>
+                                                    <td className="px-3 py-3 text-center text-slate-400 font-mono text-xs">{item.student.roll}</td>
+
+                                                    <td className="px-3 py-3 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <span className="text-slate-500">{oldFinalAtt}</span>
+                                                            {attChanged && <ArrowRight className="h-3 w-3 text-slate-600" />}
+                                                            {attChanged && <span className={newFinalAtt > oldFinalAtt ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{newFinalAtt}</span>}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="px-3 py-3 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <span className="text-slate-500">{oldFinalTot}</span>
+                                                            {totChanged && <ArrowRight className="h-3 w-3 text-slate-600" />}
+                                                            {totChanged && <span className={newFinalTot > oldFinalTot ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>{newFinalTot}</span>}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="px-3 py-3 text-center text-xs">
+                                                        {attChanged && (
+                                                            <div className="text-indigo-300 font-mono">
+                                                                Att: {item.oldAttAdj} &rarr; {item.newAttAdj}
+                                                            </div>
+                                                        )}
+                                                        {totChanged && (
+                                                            <div className="text-indigo-300 font-mono mt-0.5">
+                                                                Tot: {item.oldTotAdj} &rarr; {item.newTotAdj}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-3 py-3 text-center text-slate-500 text-[10px]">
+                                                        {item.reasonAtt && <div>Att: {item.reasonAtt}</div>}
+                                                        {item.reasonTot && <div>Tot: {item.reasonTot}</div>}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-white/5">
+                                <button onClick={() => setIsImportModalOpen(false)} className="px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors font-medium border border-white/5">Cancel</button>
+                                <button onClick={confirmImport} className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                    {loading && <Loader2 className="animate-spin h-4 w-4" />}
+                                    Confirm Import
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
 
