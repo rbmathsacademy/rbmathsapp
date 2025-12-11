@@ -659,9 +659,6 @@ export default function QuestionBank() {
 
             <div className="flex justify-end items-center gap-4 mb-6">
                 <div className="flex gap-2 flex-wrap">
-                    <button onClick={openMockTestModal} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4" /> Enable Mock Test
-                    </button>
                     <button onClick={() => { setPaperStep(0); setPaperQuestions([]); setIsPaperModalOpen(true); }} className="bg-orange-600 hover:bg-orange-500 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
                         <FileText className="h-4 w-4" /> Create Question Paper
                     </button>
@@ -673,6 +670,9 @@ export default function QuestionBank() {
                     </button>
                     <button onClick={() => handleModeSwitch('pdf')} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
                         <FileText className="h-4 w-4" /> AI PDF
+                    </button>
+                    <button onClick={openMockTestModal} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4" /> Enable Mock Test
                     </button>
                 </div>
             </div>

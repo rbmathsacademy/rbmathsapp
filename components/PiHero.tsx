@@ -23,13 +23,13 @@ export default function PiHero() {
                     </linearGradient>
                 </defs>
 
-                {/* Serif Style Pi Path (Classic Math Font) */}
-                {/* Scaled down to fit INSIDE the circle (approx bounds: 70,60 to 130,140) */}
+                {/* Italic Serif Style Pi Path (Slanted & Classic) */}
+                {/* Scaled down and encapsulated */}
                 <path
                     d="
-                        M 65 75 Q 65 60 75 65 L 125 65 Q 135 60 130 75
-                        M 85 65 L 85 125 Q 80 135 70 130
-                        M 115 65 L 115 125 Q 115 140 135 130
+                        M 75 75 Q 85 60 95 65 L 135 65 Q 145 60 140 75
+                        M 95 65 L 85 125 Q 80 135 70 130
+                        M 125 65 L 115 125 Q 115 140 135 130
                     "
                     fill="none"
                     stroke="url(#piGradient)"
@@ -39,11 +39,11 @@ export default function PiHero() {
                     className="animate-pi-draw"
                 />
 
-                {/* Rainbow Circle */}
+                {/* Rainbow Circle - Radius Reduced from 90 to 80 */}
                 <circle
                     cx="100"
                     cy="100"
-                    r="90"
+                    r="80"
                     fill="none"
                     stroke="url(#rainbowGradient)"
                     strokeWidth="3"
@@ -72,8 +72,8 @@ export default function PiHero() {
                 }
 
                 .animate-circle-draw {
-                    stroke-dasharray: 600;
-                    stroke-dashoffset: 600;
+                    stroke-dasharray: 510;
+                    stroke-dashoffset: 510;
                     opacity: 0;
                     animation: drawCircle 4s ease-in-out infinite;
                 }
@@ -90,7 +90,7 @@ export default function PiHero() {
                 }
 
                 @keyframes drawCircle {
-                    0%, 20% { stroke-dashoffset: 600; opacity: 1; }
+                    0%, 20% { stroke-dashoffset: 510; opacity: 1; }
                     50% { stroke-dashoffset: 0; opacity: 1; filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6)); }
                     85% { stroke-dashoffset: 0; opacity: 1; }
                     100% { stroke-dashoffset: 0; opacity: 0; }

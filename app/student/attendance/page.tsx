@@ -228,12 +228,61 @@ export default function StudentAttendance() {
                 2: { cellWidth: 40, fontStyle: 'bold' }
             },
             didParseCell: function (data) {
-                if (data.section === 'body' && data.column.index === 2) {
-                    const text = data.cell.raw as string;
-                    if (text === 'Present') data.cell.styles.textColor = [0, 128, 0];
-                    else if (text === 'Absent') data.cell.styles.textColor = [255, 0, 0];
-                    else if (text === 'Mass Bunk') data.cell.styles.textColor = [255, 140, 0]; // Orange color
+                if (data.section === 'body') {
+                    const status = data.row.cells[2].raw;
+
+                    // Highlight entire row for Mass Bunk
+                    if (status === 'Mass Bunk') {
+                        data.cell.styles.fillColor = [255, 243, 224]; // Light Orange background
+                        if (data.column.index === 2) {
+                            data.cell.styles.textColor = [255, 140, 0]; // Dark Orange text
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    } else if (data.column.index === 2) {
+                        // Standard status coloring
+                        if (status === 'Present') data.cell.styles.textColor = [0, 128, 0];
+                        else if (status === 'Absent') data.cell.styles.textColor = [255, 0, 0];
+                    }
                 }
+            }
+        });
+
+        // Calculate Stats for PDF Summary
+        const totalClasses = allDates.length;
+        const totalAttended = allDates.filter(d => d.status === 'Present').length;
+        const totalMassBunks = allDates.filter(d => d.status === 'Mass Bunk').length;
+        const totalAbsent = totalClasses - totalAttended; // Includes Mass Bunks as absent
+
+        // Add Summary Section
+        // Get final Y position of the previous table
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+        doc.setFontSize(14);
+        doc.setTextColor(40);
+        doc.text("Attendance Summary", 14, finalY);
+
+        autoTable(doc, {
+            startY: finalY + 5,
+            head: [['Total Classes', 'Total Attended', 'Total Absent', 'Total Mass Bunks']],
+            body: [[totalClasses, totalAttended, totalAbsent, totalMassBunks]],
+            theme: 'grid',
+            headStyles: {
+                fillColor: [41, 128, 185],
+                textColor: 255,
+                fontSize: 10,
+                halign: 'center'
+            },
+            bodyStyles: {
+                textColor: 50,
+                fontSize: 10,
+                halign: 'center',
+                fontStyle: 'bold'
+            },
+            columnStyles: {
+                0: { fillColor: [240, 248, 255] }, // Light Blue
+                1: { fillColor: [220, 252, 231] }, // Light Green
+                2: { fillColor: [254, 226, 226] }, // Light Red
+                3: { fillColor: [255, 237, 213] }  // Light Orange
             }
         });
 
