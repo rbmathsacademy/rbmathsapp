@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BookOpen, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { BookOpen, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -23,7 +23,7 @@ export default function Home() {
               {/* Glowing effect behind image */}
               <div className="absolute inset-0 bg-cyan-500/20 blur-[60px] rounded-full scale-75 animate-pulse"></div>
               <Image
-                src="/hero-glow.png"
+                src="/grad-hat-glow.png"
                 alt="Portal Gateway"
                 width={500}
                 height={500}
@@ -33,16 +33,9 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-300 text-sm font-medium backdrop-blur-md shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-                <Sparkles className="h-4 w-4" />
-                <span>Welcome to the Future of Learning</span>
-              </div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-slate-400 tracking-tight leading-tight">
                 Select Your <span className="text-cyan-400">Portal</span>
               </h1>
-              <p className="text-slate-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-                Access your personalized dashboard with seamless efficiency. Choose your gateway below to get started.
-              </p>
             </div>
           </div>
 

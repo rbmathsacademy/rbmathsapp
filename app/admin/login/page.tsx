@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');
@@ -48,97 +48,107 @@ export default function AdminLogin() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-900 text-gray-200">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
-                    Admin Portal Sign-in
-                </h2>
+        <div className="min-h-screen flex items-center justify-center bg-[#050b14] text-gray-200 relative overflow-hidden">
+
+            {/* Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-blue-900/20 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-emerald-900/20 rounded-full blur-[120px] animate-pulse"></div>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="rounded-lg bg-gray-800 px-4 py-8 shadow sm:px-10 border border-gray-700">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="block text-sm font-medium leading-6 text-gray-300"
-                            >
-                                Email address
-                            </label>
-                            <div className="mt-2">
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="password"
-                                className="block text-sm font-medium leading-6 text-gray-300"
-                            >
-                                Password
-                            </label>
-                            <div className="mt-2">
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full rounded-md border-0 bg-gray-700 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                                        Signing in...
-                                    </>
-                                ) : (
-                                    'Sign in'
-                                )}
-                            </button>
-                        </div>
-
-                    </form>
-
-                    <div className="mt-4 flex justify-end">
-                        <Link href="/admin/forgot-password" className="text-sm font-medium text-blue-400 hover:text-blue-300">
-                            Forgot your password?
-                        </Link>
+            <div className="w-full max-w-md p-8 relative z-10 animate-in fade-in zoom-in duration-500">
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 mb-4 ring-1 ring-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                        <ShieldCheck className="h-8 w-8 text-emerald-400" />
                     </div>
-
-                    {error && (
-                        <p className="mt-4 text-center text-sm text-red-400">{error}</p>
-                    )}
-
-                    <div className="mt-6 text-center">
-                        <Link
-                            href="/"
-                            className="text-sm text-blue-400 hover:text-blue-300"
-                        >
-                            ← Back to Portal Selection
-                        </Link>
-                    </div>
+                    <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-teal-400">
+                        Admin Portal
+                    </h2>
+                    <p className="text-slate-400 text-sm mt-2">Sign in to manage the platform</p>
                 </div>
-            </div >
-        </div >
+
+                <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">
+                                    Email Address
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                                    </div>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="block w-full rounded-xl border border-white/10 bg-black/40 pl-10 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all outline-none"
+                                        placeholder="admin@example.com"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">
+                                    Password
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                                    </div>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="block w-full rounded-xl border border-white/10 bg-black/40 pl-10 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all outline-none"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-sm">
+                            <Link href="/" className="text-gray-500 hover:text-white transition-colors flex items-center gap-1">
+                                ← Back
+                            </Link>
+                            <Link href="/admin/forgot-password" className="font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
+                                Forgot password?
+                            </Link>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-900/40 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            {loading ? (
+                                <Loader2 className="animate-spin h-5 w-5" />
+                            ) : (
+                                <span className="flex items-center gap-2">Sign In <ArrowRight className="h-4 w-4" /></span>
+                            )}
+                        </button>
+                    </form>
+                </div>
+
+                <div className="mt-8 text-center">
+                    <p className="text-xs text-slate-500 flex items-center justify-center gap-2">
+                        <ShieldCheck className="h-3 w-3" /> Secure Admin Access
+                    </p>
+                </div>
+
+            </div>
+        </div>
     );
 }

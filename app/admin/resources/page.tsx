@@ -830,8 +830,8 @@ ${JSON.stringify(selectedData, null, 2)}`;
 
     function renderDeployedResources() {
         return (
-            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden sticky top-6">
-                <div className="p-4 border-b border-gray-700 bg-gray-900/50">
+            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden sticky top-6">
+                <div className="p-4 border-b border-white/10 bg-white/5">
                     <h2 className="text-lg font-bold text-white">Deployed Resources</h2>
                 </div>
                 <div className="max-h-[80vh] overflow-y-auto p-2 space-y-2">

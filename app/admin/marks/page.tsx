@@ -283,10 +283,10 @@ export default function MarksPage() {
             </div>
 
             {/* Marks Table */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-700 text-sm text-gray-300">
-                        <thead className="bg-gray-700 text-white">
+                    <table className="min-w-full divide-y divide-white/10 text-sm text-gray-300">
+                        <thead className="bg-white/5 text-white">
                             <tr>
                                 <th className="px-4 py-3 text-left">Student Name</th>
                                 <th className="px-4 py-3 text-left">Roll</th>
