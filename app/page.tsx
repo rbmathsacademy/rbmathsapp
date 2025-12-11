@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { BookOpen, ShieldCheck, ArrowRight } from 'lucide-react';
+import PiHero from '@/components/PiHero';
 
 export default function Home() {
   return (
@@ -19,16 +19,8 @@ export default function Home() {
 
           {/* Hero Section */}
           <div className="text-center flex flex-col items-center gap-2">
-            <div className="relative w-full max-w-md mx-auto h-32 sm:h-40 md:h-56 flex items-center justify-center mix-blend-plus-lighter">
-              <Image
-                src="/grad-hat-glow.png"
-                alt="Portal Gateway"
-                width={400}
-                height={400}
-                className="object-contain w-full h-full drop-shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:scale-105 transition-transform duration-500"
-                priority
-              />
-            </div>
+            <PiHero />
+
 
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-slate-400 tracking-tight leading-tight">
