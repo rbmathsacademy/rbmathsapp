@@ -361,7 +361,7 @@ export default function AdminAttendance() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Date */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Select Date</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Date</label>
                             <input
                                 type="date"
                                 className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all cursor-pointer"
@@ -374,7 +374,7 @@ export default function AdminAttendance() {
 
                         {/* Group Filters */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl md:col-span-2">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Select Student Group</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Student Group</label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <select
                                     className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
@@ -428,7 +428,7 @@ export default function AdminAttendance() {
 
                         {/* Time Slots (Multi-select) */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Select Time Slots</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Time Slots</label>
                             <div className="flex flex-wrap gap-2">
                                 {TIME_SLOTS.map(slot => (
                                     <button
@@ -456,9 +456,12 @@ export default function AdminAttendance() {
                     {/* Student List */}
                     <div className="bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-2xl shadow-xl overflow-hidden mt-8">
                         <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-900/50">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Users className="h-5 w-5 text-indigo-400" />
-                                Mark Attendance <span className="text-slate-500 text-sm font-normal ml-2">({tableStudents.length} Students)</span>
+                            <h3 className="text-lg font-bold text-white flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                                <span className="flex items-center gap-2">
+                                    <Users className="h-5 w-5 text-indigo-400" />
+                                    Mark Attendance
+                                </span>
+                                <span className="text-slate-500 text-sm font-normal md:ml-2">({tableStudents.length} Students)</span>
                             </h3>
                         </div>
                         <div className="overflow-x-auto max-h-[500px] custom-scrollbar">
@@ -510,11 +513,16 @@ export default function AdminAttendance() {
                         </div>
                     </div>
 
-                    <div className="pt-4">
+                    <div className="pt-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 text-sm font-bold bg-slate-900/50 px-4 py-2 rounded-xl border border-white/5 w-full md:w-auto justify-center">
+                            <span className="text-emerald-400">Present: {tableStudents.filter(s => attendanceData[s._id]).length}</span>
+                            <span className="text-slate-600">|</span>
+                            <span className="text-rose-400">Absent: {tableStudents.length - tableStudents.filter(s => attendanceData[s._id]).length}</span>
+                        </div>
                         <button
                             onClick={handleSaveAttendance}
                             disabled={loading || tableStudents.length === 0}
-                            className="w-full md:w-auto ml-auto rounded-xl bg-indigo-600 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-3 transition-all duration-200"
+                            className="w-full md:w-auto rounded-xl bg-indigo-600 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-3 transition-all duration-200"
                         >
                             {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <Save className="h-6 w-6" />}
                             {editingRecordId ? 'Update Attendance Record' : 'Save Attendance Record'}
