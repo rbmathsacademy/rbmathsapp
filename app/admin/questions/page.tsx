@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
@@ -172,6 +172,15 @@ export default function QuestionBank() {
     // Derived Lists
     const topics = Array.from(new Set(questions.map(q => q.topic))).sort();
     const subtopics = Array.from(new Set(questions.map(q => q.subtopic))).sort();
+
+    // Compute filtered questions based on selected topics and subtopics
+    const filteredQuestions = useMemo(() => {
+        return questions.filter(q => {
+            const topicMatch = selectedTopics.length === 0 || selectedTopics.includes(q.topic);
+            const subtopicMatch = selectedSubtopics.length === 0 || selectedSubtopics.includes(q.subtopic);
+            return topicMatch && subtopicMatch;
+        });
+    }, [questions, selectedTopics, selectedSubtopics]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -443,7 +452,7 @@ export default function QuestionBank() {
 
     // --- Viewer Logic ---
     // Filter Questions for Paper Modal
-    const filteredQuestions = questions.filter(q => {
+    const paperModalFilteredQuestions = questions.filter((q) => {
         if (!q.topic) return false;
         if (selectedTopic && q.topic !== selectedTopic) return false;
         if (selectedSubtopic && q.subtopic !== selectedSubtopic) return false;
@@ -839,10 +848,10 @@ export default function QuestionBank() {
                                     </div>
 
                                     <div className="space-y-2 mb-4 border border-gray-700 rounded p-2 flex-1 overflow-y-auto custom-scrollbar bg-gray-900/50">
-                                        {filteredQuestions.length === 0 ? (
+                                        {paperModalFilteredQuestions.length === 0 ? (
                                             <p className="text-gray-500 text-center py-4 text-xs italic">No questions found matching current filters.</p>
                                         ) : (
-                                            filteredQuestions.map(q => (
+                                            paperModalFilteredQuestions.map(q => (
                                                 <div key={q.id} className="flex gap-3 p-3 rounded border border-gray-800 hover:border-gray-600 hover:bg-gray-800/50 transition-all">
                                                     <div className="pt-1">
                                                         <input
