@@ -184,7 +184,7 @@ Thank you!`;
                 <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-900/30 to-pink-900/20 border border-purple-500/30 mb-4 sm:mb-8">
                     <div className="flex items-center gap-3 sm:gap-4">
                         <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-purple-500/20">
-                            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
+                            <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
                         </div>
                         <div>
                             <p className="text-purple-300 font-bold text-sm sm:text-lg">

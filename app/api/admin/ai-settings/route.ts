@@ -6,11 +6,7 @@ const DB_NAME = 'HIT_Portal';
 
 export async function GET(req: NextRequest) {
     try {
-        const email = req.headers.get('X-User-Email');
-        if (!email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
+        // No auth required - students need to check which topics are enabled
         const client = await MongoClient.connect(MONGO_URI);
         const db = client.db(DB_NAME);
 
