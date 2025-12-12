@@ -481,19 +481,19 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Add Single Student  - SWAPPED RIGHT */}
+                {/* Add a Single Student  - SWAPPED RIGHT */}
                 <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="h-8 w-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400">
                             <Edit className="h-4 w-4" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white">Add Single Student</h3>
+                        <h3 className="text-lg font-semibold text-white">Add a Single Student</h3>
                     </div>
                     <form onSubmit={handleAddStudent} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <input type="email" placeholder="Email Address*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.email} onChange={e => setStudentForm({ ...studentForm, email: e.target.value })} />
                         <input type="text" placeholder="Full Name*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.name} onChange={e => setStudentForm({ ...studentForm, name: e.target.value })} />
                         <input type="text" placeholder="Roll Number*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.roll} onChange={e => setStudentForm({ ...studentForm, roll: e.target.value })} />
-                        <input type="text" placeholder="Department (e.g. ME, CSE-A, etc.)*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.department} onChange={e => setStudentForm({ ...studentForm, department: e.target.value })} />
+                        <input type="text" placeholder="Department (e.g. ME, CSE-A)*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.department} onChange={e => setStudentForm({ ...studentForm, department: e.target.value })} />
                         <input type="text" placeholder="Year (e.g. 4th)*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.year} onChange={e => setStudentForm({ ...studentForm, year: e.target.value })} />
                         <input type="text" placeholder="Course Code*" required className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all" value={studentForm.course_code} onChange={e => setStudentForm({ ...studentForm, course_code: e.target.value })} />
                         <input type="email" placeholder="Guardian Email (Optional)" className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-2.5 px-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-green-500 outline-none transition-all sm:col-span-2" value={studentForm.guardian_email} onChange={e => setStudentForm({ ...studentForm, guardian_email: e.target.value })} />
@@ -559,8 +559,7 @@ export default function AdminDashboard() {
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl mb-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
-                        <h3 className="text-xl font-semibold text-white">Registered Students</h3>
-                        <p className="text-sm text-slate-400 mt-1">Manage existing student records ({visibleStudents.length})</p>
+                        <h3 className="text-xl font-semibold text-white">Manage Registered Students ({visibleStudents.length})</h3>
                     </div>
 
                     {/* View Filters */}
@@ -675,7 +674,7 @@ export default function AdminDashboard() {
 
             {/* Global Settings */}
             <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl mb-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Assign Students & Attendance Percentage</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Assign Course & Attendance Percentage</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end mb-6">
                     {/* Filters */}
