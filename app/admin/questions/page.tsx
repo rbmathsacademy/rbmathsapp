@@ -9,12 +9,14 @@ import Latex from 'react-latex-next';
 // --- MultiSelect Component ---
 const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
+                setSearchTerm(''); // Reset search when closing
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -27,6 +29,11 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
             : [...selected, value];
         onChange(newSelected);
     };
+
+    // Filter options based on search term
+    const filteredOptions = options.filter((opt: string) =>
+        opt.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="relative" ref={containerRef}>
@@ -44,27 +51,48 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
                 <ChevronDown className="h-3 w-3 text-gray-400" />
             </div>
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-60 overflow-hidden flex flex-col">
+                    {/* Search Input */}
+                    <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+                        <input
+                            type="text"
+                            placeholder="Type to search..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-gray-900 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-blue-500"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+
+                    {/* Clear Selection Option */}
                     {selected.length > 0 && (
                         <div
-                            className="px-3 py-2 hover:bg-red-900/30 cursor-pointer flex items-center gap-2 text-xs text-red-400 border-b border-gray-700 sticky top-0 bg-gray-800 z-10"
+                            className="px-3 py-2 hover:bg-red-900/30 cursor-pointer flex items-center gap-2 text-xs text-red-400 border-b border-gray-700 sticky top-[42px] bg-gray-800 z-10"
                             onClick={() => onChange([])}
                         >
                             <X className="h-3 w-3" /> Clear Selection
                         </div>
                     )}
-                    {options.map((opt: string) => (
-                        <div
-                            key={opt}
-                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-xs text-gray-300"
-                            onClick={() => toggleOption(opt)}
-                        >
-                            <div className={`w-3 h-3 rounded border border-gray-500 flex items-center justify-center ${selected.includes(opt) ? 'bg-blue-600 border-blue-600' : ''}`}>
-                                {selected.includes(opt) && <Check className="h-2 w-2 text-white" />}
-                            </div>
-                            {opt}
-                        </div>
-                    ))}
+
+                    {/* Options List */}
+                    <div className="overflow-y-auto max-h-48">
+                        {filteredOptions.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-gray-500 italic">No matches found</div>
+                        ) : (
+                            filteredOptions.map((opt: string) => (
+                                <div
+                                    key={opt}
+                                    className="px-3 py-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-xs text-gray-300"
+                                    onClick={() => toggleOption(opt)}
+                                >
+                                    <div className={`w-3 h-3 rounded border border-gray-500 flex items-center justify-center ${selected.includes(opt) ? 'bg-blue-600 border-blue-600' : ''}`}>
+                                        {selected.includes(opt) && <Check className="h-2 w-2 text-white" />}
+                                    </div>
+                                    {opt}
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             )}
         </div>
@@ -498,6 +526,9 @@ export default function QuestionBank() {
     };
 
     const editQuestion = (q: any) => {
+        // Scroll to top so user can see the editor
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         setManualData({
             id: q.id,
             type: q.type,

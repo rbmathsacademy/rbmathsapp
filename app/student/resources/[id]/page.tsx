@@ -247,7 +247,7 @@ Thank you!`;
                                                     title="Verify your answer with AI"
                                                 >
                                                     <span className="hidden sm:inline">AI Verify</span>
-                                                    <span className="sm:hidden">AI</span>
+                                                    <span className="sm:hidden">AI Verify</span>
                                                 </button>
                                             )}
                                         </div>
@@ -364,7 +364,7 @@ Thank you!`;
                                     className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg font-bold shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2"
                                 >
                                     <Sparkles className="h-4 w-4" />
-                                    Open Gemini AI
+                                    Copy Question & Open Gemini
                                 </button>
                             </div>
                         </div>
