@@ -21,20 +21,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const timer = setTimeout(() => setLoading(false), 2000);
 
         const storedUser = localStorage.getItem('user');
-        if (!storedUser) {
+        const sessionStart = localStorage.getItem('adminSessionStart');
+
+        // Session duration: 30 minutes in milliseconds
+        const SESSION_DURATION = 30 * 60 * 1000;
+
+        if (!storedUser || !sessionStart) {
             router.push('/admin/login');
-            // Do not return here, let the timeout or loading state handle UI
         } else {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                if (parsedUser.role !== 'admin') {
-                    router.push('/admin/login');
-                } else {
-                    setUser(parsedUser);
-                }
-            } catch (e) {
+            const now = Date.now();
+            if (now - parseInt(sessionStart) > SESSION_DURATION) {
+                // Session expired
                 localStorage.removeItem('user');
+                localStorage.removeItem('adminSessionStart');
                 router.push('/admin/login');
+            } else {
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    if (parsedUser.role !== 'admin') {
+                        router.push('/admin/login');
+                    } else {
+                        setUser(parsedUser);
+                    }
+                } catch (e) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('adminSessionStart');
+                    router.push('/admin/login');
+                }
             }
         }
 
@@ -46,6 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const handleLogout = () => {
         localStorage.removeItem('user');
+        localStorage.removeItem('adminSessionStart');
         router.push('/admin/login');
     };
 
@@ -72,6 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             alert('Password updated successfully! Please login again with the new password.');
             localStorage.removeItem('user');
+            localStorage.removeItem('adminSessionStart');
             // Force logout
             window.location.href = '/admin/login';
         } catch (error: any) {

@@ -19,7 +19,7 @@ export default function Home() {
 
           {/* Hero Section */}
           <div className="text-center flex flex-col items-center gap-4">
-            <div className="scale-90 sm:scale-100 origin-center mt-24 md:mt-0">
+            <div className="scale-90 sm:scale-100 origin-center mt-12 md:mt-24">
               <LogoHero />
             </div>
 
@@ -36,16 +36,15 @@ export default function Home() {
             {/* Student Portal Card */}
             <Link href="/student" className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl blur opacity-20 group-hover:opacity-60 transition-opacity duration-500"></div>
-              <div className="relative h-full bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 flex flex-col items-center text-center hover:-translate-y-2 hover:border-cyan-500/50 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(6,182,212,0.2)]">
-                <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <div className="relative h-full bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 flex flex-row md:flex-col items-center justify-start md:justify-center gap-4 md:gap-0 text-left md:text-center hover:-translate-y-2 hover:border-cyan-500/50 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+                <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center shrink-0 md:mb-4 group-hover:scale-110 transition-transform duration-300">
                   <BookOpen className="h-6 w-6 md:h-7 md:w-7 text-cyan-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">Student Portal</h3>
-                <p className="text-slate-400 text-sm mb-4">
-                  Access attendance, assignments & resources.
-                </p>
-                <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
-                  Enter Portal <ArrowRight className="h-4 w-4" />
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-1">Student Portal</h3>
+                  <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
+                    Enter Portal <ArrowRight className="h-4 w-4" />
+                  </div>
                 </div>
               </div>
             </Link>
@@ -53,16 +52,15 @@ export default function Home() {
             {/* Admin Portal Card */}
             <Link href="/admin/login" className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl blur opacity-20 group-hover:opacity-60 transition-opacity duration-500"></div>
-              <div className="relative h-full bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 flex flex-col items-center text-center hover:-translate-y-2 hover:border-emerald-500/50 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <div className="relative h-full bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 flex flex-row md:flex-col items-center justify-start md:justify-center gap-4 md:gap-0 text-left md:text-center hover:-translate-y-2 hover:border-emerald-500/50 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center shrink-0 md:mb-4 group-hover:scale-110 transition-transform duration-300">
                   <ShieldCheck className="h-6 w-6 md:h-7 md:w-7 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">Admin Portal</h3>
-                <p className="text-slate-400 text-sm mb-4">
-                  Manage students, attendance & question banks.
-                </p>
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
-                  Secure Login <ArrowRight className="h-4 w-4" />
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-1">Admin Portal</h3>
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
+                    Secure Login <ArrowRight className="h-4 w-4" />
+                  </div>
                 </div>
               </div>
             </Link>

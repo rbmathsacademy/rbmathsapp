@@ -38,6 +38,7 @@ export default function AdminLogin() {
 
             // Store user in localStorage (or use a context/cookie in a real app)
             localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('adminSessionStart', Date.now().toString());
 
             // Force hard navigation to resolve potential freeze/infinite loading issues
             window.location.href = '/admin/dashboard';
