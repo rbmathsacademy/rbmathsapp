@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Loader2, Calendar, FileSpreadsheet, Copy, Mail, Search, Upload, Download, Edit, Save, X, Trash2, ArrowRight, MessageSquare, MessageCircle, Shield } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function AdminReports() {
     const [loading, setLoading] = useState(false);
@@ -259,8 +260,7 @@ export default function AdminReports() {
             }
 
             if (records.length === 0) {
-                alert('No attendance records found for the selected criteria.');
-                // We still set reportData to show the empty table structure or handle it in UI
+                toast('No system attendance records found for this period. You can still view students and add adjustments.', { icon: 'ℹ️' });
             }
 
             setReportData({ students: filteredStudents, records });
@@ -269,7 +269,7 @@ export default function AdminReports() {
             }, 100);
         } catch (error) {
             console.error(error);
-            alert('Error generating report');
+            toast.error('Error generating report');
         } finally {
             setLoading(false);
         }
@@ -640,7 +640,7 @@ Treat this matter with extreme urgency.`;
                                 <th className="px-3 py-3.5 text-center font-semibold text-emerald-200 bg-emerald-500/5">Attended<br /><span className="text-[10px] text-emerald-500/70 font-normal uppercase tracking-wider">(Total)</span></th>
                                 <th className="px-3 py-3.5 text-center font-semibold text-emerald-200 bg-emerald-500/5">Classes<br /><span className="text-[10px] text-emerald-500/70 font-normal uppercase tracking-wider">(Total)</span></th>
                                 <th className="px-3 py-3.5 text-center font-semibold text-slate-200">%</th>
-                                <th className="px-4 py-3.5 text-center font-semibold text-slate-200">Actions</th>
+                                <th className="px-4 py-3.5 text-center font-semibold text-slate-200">Edit</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5 bg-transparent">
@@ -828,153 +828,145 @@ Treat this matter with extreme urgency.`;
                             </div>
 
                             <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-900 shadow-2xl">
-                                {reportData.records.length === 0 ? (
-                                    <div className="p-12 text-center text-slate-500 italic flex flex-col items-center gap-2">
-                                        <Calendar className="h-10 w-10 opacity-20" />
-                                        No attendance records found for this period.
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-                                        <table className="min-w-full divide-y divide-white/5 text-xs">
-                                            <thead className="bg-slate-950 sticky top-0 z-20 shadow-md">
-                                                <tr>
-                                                    <th className="px-4 py-4 text-left font-bold text-white min-w-[180px] bg-slate-950 sticky left-0 z-30 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.5)]">
-                                                        Student Details
+                                <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
+                                    <table className="min-w-full divide-y divide-white/5 text-xs">
+                                        <thead className="bg-slate-950 sticky top-0 z-20 shadow-md">
+                                            <tr>
+                                                <th className="px-4 py-4 text-left font-bold text-white min-w-[180px] bg-slate-950 sticky left-0 z-30 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.5)]">
+                                                    Student Details
+                                                </th>
+                                                {reportData.records.map((r: any) => (
+                                                    <th key={r._id} className="px-2 py-2 text-center font-semibold text-slate-300 min-w-[100px] border-l border-white/5 group relative hover:bg-white/5 transition-colors">
+                                                        <div className="whitespace-nowrap font-mono text-indigo-300 mb-0.5">{r.date.split('-').reverse().slice(0, 2).join('/')}</div>
+                                                        <div className="text-slate-500 text-[10px] uppercase tracking-wider">{r.timeSlot}</div>
+                                                        <div className="text-slate-400 text-[10px] mt-1 px-1 truncate max-w-[90px] mx-auto opacity-70 group-hover:opacity-100" title={r.teacherName}>{r.teacherName.split(' ')[0]}</div>
                                                     </th>
-                                                    {reportData.records.map((r: any) => (
-                                                        <th key={r._id} className="px-2 py-2 text-center font-semibold text-slate-300 min-w-[100px] border-l border-white/5 group relative hover:bg-white/5 transition-colors">
-                                                            <div className="whitespace-nowrap font-mono text-indigo-300 mb-0.5">{r.date.split('-').reverse().slice(0, 2).join('/')}</div>
-                                                            <div className="text-slate-500 text-[10px] uppercase tracking-wider">{r.timeSlot}</div>
-                                                            <div className="text-slate-400 text-[10px] mt-1 px-1 truncate max-w-[90px] mx-auto opacity-70 group-hover:opacity-100" title={r.teacherName}>{r.teacherName.split(' ')[0]}</div>
-                                                        </th>
-                                                    ))}
-                                                    <th className="px-3 py-3 text-center font-bold text-white min-w-[80px] border-l border-white/10 bg-slate-900/50">Stats</th>
-                                                    <th className="px-3 py-3 text-center font-bold text-white min-w-[100px] border-l border-white/5">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-white/5 bg-transparent">
-                                                {reportData.students.map(student => {
-                                                    const participated = reportData.records.filter((r: any) =>
-                                                        (r.presentStudentIds?.includes(student._id)) || (r.absentStudentIds?.includes(student._id))
-                                                    );
-                                                    const baseAttended = participated.filter((r: any) => r.presentStudentIds?.includes(student._id)).length;
-                                                    const total = participated.length + (student.total_classes_adjustment || 0);
-                                                    const attended = baseAttended + (student.attended_adjustment || 0);
-                                                    const percent = total > 0 ? ((attended / total) * 100).toFixed(0) : "0";
+                                                ))}
+                                                <th className="px-3 py-3 text-center font-bold text-white min-w-[80px] border-l border-white/10 bg-slate-900/50">Stats</th>
+                                                <th className="px-3 py-3 text-center font-bold text-white min-w-[100px] border-l border-white/5">Edit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5 bg-transparent">
+                                            {reportData.students.map(student => {
+                                                const participated = reportData.records.filter((r: any) =>
+                                                    (r.presentStudentIds?.includes(student._id)) || (r.absentStudentIds?.includes(student._id))
+                                                );
+                                                const baseAttended = participated.filter((r: any) => r.presentStudentIds?.includes(student._id)).length;
+                                                const total = participated.length + (student.total_classes_adjustment || 0);
+                                                const attended = baseAttended + (student.attended_adjustment || 0);
+                                                const percent = total > 0 ? ((attended / total) * 100).toFixed(0) : "0";
 
-                                                    const isLowAttendance = Number(percent) < config.attendanceRequirement;
+                                                const isLowAttendance = Number(percent) < config.attendanceRequirement;
 
-                                                    return (
-                                                        <tr key={student._id} className="hover:bg-white/5 group transition-colors">
-                                                            <td className="px-4 py-3 bg-slate-900/50 sticky left-0 z-10 border-r border-white/5 group-hover:bg-slate-800/80 transition-colors">
-                                                                <div className="font-medium text-white text-sm">{student.name}</div>
-                                                                <div className="flex gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
-                                                                    <span>{student.roll}</span>
-                                                                    <span>•</span>
-                                                                    <span>{student.department}</span>
-                                                                </div>
-                                                            </td>
-                                                            {reportData.records.map((r: any) => {
-                                                                const isPresent = r.presentStudentIds?.includes(student._id);
-                                                                const isAbsent = r.absentStudentIds?.includes(student._id);
+                                                return (
+                                                    <tr key={student._id} className="hover:bg-white/5 group transition-colors">
+                                                        <td className="px-4 py-3 bg-slate-900/50 sticky left-0 z-10 border-r border-white/5 group-hover:bg-slate-800/80 transition-colors">
+                                                            <div className="font-medium text-white text-sm">{student.name}</div>
+                                                            <div className="flex gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
+                                                                <span>{student.roll}</span>
+                                                                <span>•</span>
+                                                                <span>{student.department}</span>
+                                                            </div>
+                                                        </td>
+                                                        {reportData.records.map((r: any) => {
+                                                            const isPresent = r.presentStudentIds?.includes(student._id);
+                                                            const isAbsent = r.absentStudentIds?.includes(student._id);
 
-                                                                let cellContent = <span className="text-slate-700">-</span>;
-                                                                let cellClass = "bg-transparent";
+                                                            let cellContent = <span className="text-slate-700">-</span>;
+                                                            let cellClass = "bg-transparent";
 
-                                                                if (isPresent) {
-                                                                    cellContent = <span className="text-emerald-400 font-bold">P</span>;
-                                                                    cellClass = "bg-emerald-500/5";
-                                                                } else if (isAbsent) {
-                                                                    cellContent = <span className="text-red-400 font-bold">A</span>;
-                                                                    cellClass = "bg-red-500/5";
-                                                                }
+                                                            if (isPresent) {
+                                                                cellContent = <span className="text-emerald-400 font-bold">P</span>;
+                                                                cellClass = "bg-emerald-500/5";
+                                                            } else if (isAbsent) {
+                                                                cellContent = <span className="text-red-400 font-bold">A</span>;
+                                                                cellClass = "bg-red-500/5";
+                                                            }
 
-                                                                return (
-                                                                    <td key={r._id} className={`px-2 py-3 text-center border-l border-white/5 ${cellClass}`}>
-                                                                        {cellContent}
-                                                                    </td>
-                                                                );
-                                                            })}
+                                                            return (
+                                                                <td key={r._id} className={`px-2 py-3 text-center border-l border-white/5 ${cellClass}`}>
+                                                                    {cellContent}
+                                                                </td>
+                                                            );
+                                                        })}
 
-                                                            <td className="px-3 py-3 text-center border-l border-white/10 bg-slate-900/30">
-                                                                <div className="flex flex-col items-center">
-                                                                    <span className={`text-sm font-bold ${isLowAttendance ? 'text-red-400' : 'text-emerald-400'}`}>
-                                                                        {percent}%
-                                                                    </span>
-                                                                    <span className="text-[10px] text-slate-500">
-                                                                        {attended}/{total}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
+                                                        <td className="px-3 py-3 text-center border-l border-white/10 bg-slate-900/30">
+                                                            <div className="flex flex-col items-center">
+                                                                <span className={`text-sm font-bold ${isLowAttendance ? 'text-red-400' : 'text-emerald-400'}`}>
+                                                                    {percent}%
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    {attended}/{total}
+                                                                </span>
+                                                            </div>
+                                                        </td>
 
-                                                            <td className="px-3 py-3 text-center border-l border-white/5">
-                                                                <div className="flex justify-center gap-2">
-                                                                    {/* Email Student */}
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            if (student.email?.endsWith('@heritageit.edu.in')) {
-                                                                                copyToClipboard(student.email);
-                                                                            }
-                                                                        }}
-                                                                        disabled={!student.email?.endsWith('@heritageit.edu.in')}
-                                                                        className={`p - 1.5 rounded - md transition - all ${student.email?.endsWith('@heritageit.edu.in')
-                                                                            ? 'text-indigo-400 bg-indigo-500/10 shadow-[0_0_8px_rgba(99,102,241,0.4)] hover:bg-indigo-500/20 hover:text-indigo-300 hover:shadow-[0_0_12px_rgba(99,102,241,0.6)] cursor-copy'
-                                                                            : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
-                                                                            } `}
-                                                                        title={student.email?.endsWith('@heritageit.edu.in') ? `Copy Email: ${student.email} ` : 'Invalid Institutional Email'}
-                                                                    >
-                                                                        <Mail className="h-4 w-4" />
-                                                                    </button>
+                                                        <td className="px-3 py-3 text-center border-l border-white/5">
+                                                            <div className="flex justify-center gap-2">
+                                                                {/* Email Student */}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (student.email?.endsWith('@heritageit.edu.in')) {
+                                                                            copyToClipboard(student.email);
+                                                                        }
+                                                                    }}
+                                                                    disabled={!student.email?.endsWith('@heritageit.edu.in')}
+                                                                    className={`p - 1.5 rounded - md transition - all ${student.email?.endsWith('@heritageit.edu.in')
+                                                                        ? 'text-indigo-400 bg-indigo-500/10 shadow-[0_0_8px_rgba(99,102,241,0.4)] hover:bg-indigo-500/20 hover:text-indigo-300 hover:shadow-[0_0_12px_rgba(99,102,241,0.6)] cursor-copy'
+                                                                        : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
+                                                                        } `}
+                                                                    title={student.email?.endsWith('@heritageit.edu.in') ? `Copy Email: ${student.email} ` : 'Invalid Institutional Email'}
+                                                                >
+                                                                    <Mail className="h-4 w-4" />
+                                                                </button>
 
-                                                                    {/* Text Student */}
-                                                                    <button
-                                                                        onClick={() => copyStudentText(student, percent, startDate, endDate)}
-                                                                        className="text-slate-500 hover:text-pink-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
-                                                                        title="Copy Warning for Student"
-                                                                    >
-                                                                        <MessageSquare className="h-4 w-4" />
-                                                                    </button>
+                                                                {/* Text Student */}
+                                                                <button
+                                                                    onClick={() => copyStudentText(student, percent, startDate, endDate)}
+                                                                    className="text-slate-500 hover:text-pink-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
+                                                                    title="Copy Warning for Student"
+                                                                >
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                </button>
 
-                                                                    {/* Email Guardian */}
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            if (student.guardian_email) {
-                                                                                copyToClipboard(student.guardian_email);
-                                                                            }
-                                                                        }}
-                                                                        disabled={!student.guardian_email}
-                                                                        className={`p - 1.5 rounded - md transition - all ${student.guardian_email
-                                                                            ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_8px_rgba(16,185,129,0.4)] hover:bg-emerald-500/20 hover:text-emerald-300 hover:shadow-[0_0_12px_rgba(16,185,129,0.6)] cursor-copy'
-                                                                            : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
-                                                                            } `}
-                                                                        title={student.guardian_email ? `Copy Guardian Email: ${student.guardian_email} ` : 'No Guardian Email Required'}
-                                                                    >
-                                                                        <Shield className="h-4 w-4" />
-                                                                    </button>
+                                                                {/* Email Guardian */}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (student.guardian_email) {
+                                                                            copyToClipboard(student.guardian_email);
+                                                                        }
+                                                                    }}
+                                                                    disabled={!student.guardian_email}
+                                                                    className={`p - 1.5 rounded - md transition - all ${student.guardian_email
+                                                                        ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_8px_rgba(16,185,129,0.4)] hover:bg-emerald-500/20 hover:text-emerald-300 hover:shadow-[0_0_12px_rgba(16,185,129,0.6)] cursor-copy'
+                                                                        : 'text-slate-600 bg-white/5 opacity-40 cursor-not-allowed'
+                                                                        } `}
+                                                                    title={student.guardian_email ? `Copy Guardian Email: ${student.guardian_email} ` : 'No Guardian Email Required'}
+                                                                >
+                                                                    <Shield className="h-4 w-4" />
+                                                                </button>
 
-                                                                    {/* Text Guardian */}
-                                                                    <button
-                                                                        onClick={() => copyGuardianText(student, percent, startDate, endDate)}
-                                                                        className="text-slate-500 hover:text-amber-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
-                                                                        title="Copy Text for Guardian"
-                                                                    >
-                                                                        <MessageCircle className="h-4 w-4" />
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                                                                {/* Text Guardian */}
+                                                                <button
+                                                                    onClick={() => copyGuardianText(student, percent, startDate, endDate)}
+                                                                    className="text-slate-500 hover:text-amber-400 transition-colors bg-white/5 p-1.5 rounded-md hover:bg-white/10"
+                                                                    title="Copy Text for Guardian"
+                                                                >
+                                                                    <MessageCircle className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )
                 }
             </div>
-
 
             {/* --- Edit Modal --- */}
             {

@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
 
             {/* Sidebar */}
-            <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900/95 backdrop-blur-xl border-r border-white/5 transform transition-transform duration-300 ease-out md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full shadow-2xl'}`}>
+            <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900/95 backdrop-blur-xl border-r border-white/5 transform transition-transform duration-300 ease-out md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:ml-4 md:mb-4 md:rounded-2xl md:border md:border-white/5 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full shadow-2xl'}`}>
                 <div className="flex flex-col h-full">
                     {/* Logo Area */}
                     <div className="flex h-20 shrink-0 items-center px-6 border-b border-white/5 bg-gradient-to-r from-slate-900 to-slate-800/50">
@@ -158,8 +158,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                             }
                                         }}
                                         className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border transition-colors ${(typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true')
-                                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/30'
-                                                : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300'
+                                            ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/30'
+                                            : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300'
                                             }`}
                                     >
                                         Global Admin

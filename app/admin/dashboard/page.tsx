@@ -753,14 +753,13 @@ export default function AdminDashboard() {
 
                 <div className="mt-8 pt-6 border-t border-white/5">
                     <h4 className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Co-teachers</h4>
-                    <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-950/30">
+                    <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-950/30 overflow-x-auto custom-scrollbar">
                         <table className="min-w-full text-sm text-left text-slate-400">
                             <thead className="text-xs text-slate-200 uppercase bg-white/5 border-b border-white/5">
                                 <tr>
                                     <th className="px-6 py-3 font-bold">Course</th>
                                     <th className="px-6 py-3 font-bold">Attendance %</th>
                                     <th className="px-6 py-3 font-bold">Faculty Members</th>
-                                    <th className="px-6 py-3 font-bold text-right">Edit</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -777,9 +776,6 @@ export default function AdminDashboard() {
                                                     </div>
                                                 ))}
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            {/* Actions handled per teacher above */}
                                         </td>
                                     </tr>
                                 ))}
