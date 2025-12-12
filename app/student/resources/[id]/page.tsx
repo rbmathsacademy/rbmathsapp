@@ -219,38 +219,35 @@ Thank you!`;
                                                 {index + 1}
                                             </div>
                                             <div className="flex-1">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex-1">
-                                                        <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
-                                                            {question.topic && (
-                                                                <span className="text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg bg-purple-500/20 text-purple-400">{question.topic}</span>
-                                                            )}
-                                                            {question.subtopic && (
-                                                                <span className="text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg bg-white/5 text-gray-400">{question.subtopic}</span>
-                                                            )}
-                                                            {question.type && (
-                                                                <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg ${question.type === 'broad' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                                                                    {question.type === 'broad' ? 'Broad' : 'Short'}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-xs sm:text-base text-gray-200 leading-relaxed pr-2">
-                                                            <Latex>{question.latex || question.text}</Latex>
-                                                        </div>
-                                                    </div>
+                                                {/* AI Verify Button - Float on right so text flows around it */}
+                                                {question.topic && aiEnabledTopics.has(question.topic) && (
+                                                    <button
+                                                        onClick={() => handleAIVerify(question)}
+                                                        className="float-right ml-3 mb-2 flex-shrink-0 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:text-cyan-300 text-[10px] sm:text-xs font-bold transition-all hover:shadow-lg hover:shadow-cyan-500/20 backdrop-blur-sm whitespace-nowrap"
+                                                        title="Verify your answer with AI"
+                                                    >
+                                                        <span className="hidden sm:inline">AI Verify</span>
+                                                        <span className="sm:hidden">AI Verify</span>
+                                                    </button>
+                                                )}
 
-                                                    {/* AI Verify Button - Only show if topic is enabled */}
-                                                    {question.topic && aiEnabledTopics.has(question.topic) && (
-                                                        <button
-                                                            onClick={() => handleAIVerify(question)}
-                                                            className="flex-shrink-0 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:text-cyan-300 text-[10px] sm:text-xs font-bold transition-all hover:shadow-lg hover:shadow-cyan-500/20 backdrop-blur-sm whitespace-nowrap"
-                                                            title="Verify your answer with AI"
-                                                        >
-                                                            <span className="hidden sm:inline">AI Verify</span>
-                                                            <span className="sm:hidden">AI Verify</span>
-                                                        </button>
+                                                <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
+                                                    {question.topic && (
+                                                        <span className="text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg bg-purple-500/20 text-purple-400">{question.topic}</span>
+                                                    )}
+                                                    {question.subtopic && (
+                                                        <span className="text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg bg-white/5 text-gray-400">{question.subtopic}</span>
+                                                    )}
+                                                    {question.type && (
+                                                        <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg ${question.type === 'broad' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                                            {question.type === 'broad' ? 'Broad' : 'Short'}
+                                                        </span>
                                                     )}
                                                 </div>
+                                                <div className="text-xs sm:text-base text-gray-200 leading-relaxed">
+                                                    <Latex>{question.latex || question.text}</Latex>
+                                                </div>
+                                                <div className="clear-both"></div>
                                             </div>
                                         </div>
                                     </div>
