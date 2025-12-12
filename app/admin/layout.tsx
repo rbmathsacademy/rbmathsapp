@@ -99,8 +99,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const navigation = [
         { name: 'Student & Course Management', href: '/admin/dashboard', icon: Users },
-        { name: 'Track Attendance', href: '/admin/reports', icon: ClipboardList },
         { name: 'Mark Daily Attendance', href: '/admin/attendance', icon: CheckSquare },
+        { name: 'Track Attendance', href: '/admin/reports', icon: ClipboardList },
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },
         { name: 'Assignments', href: '/admin/assignments', icon: Upload },
         { name: 'Submissions', href: '/admin/submissions', icon: FileText },
