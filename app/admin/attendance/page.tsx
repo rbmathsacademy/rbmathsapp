@@ -361,19 +361,20 @@ export default function AdminAttendance() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Date */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">1. Select Date</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Select Date</label>
                             <input
                                 type="date"
-                                className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
+                                className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all cursor-pointer"
                                 value={date}
                                 onChange={e => setDate(e.target.value)}
+                                onClick={(e: any) => e.target.showPicker && e.target.showPicker()}
                                 disabled={!!editingRecordId}
                             />
                         </div>
 
                         {/* Group Filters */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl md:col-span-2">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">2. Select Student Group</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Select Student Group</label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <select
                                     className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
@@ -406,7 +407,7 @@ export default function AdminAttendance() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Teacher Display (Auto-selected) */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">3. Faculty</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Faculty</label>
                             <div className="w-full rounded-lg border border-white/10 bg-slate-950/50 py-3 px-4 text-slate-300">
                                 {selectedTeacher ? (
                                     <span className="flex items-center gap-2">
@@ -427,7 +428,7 @@ export default function AdminAttendance() {
 
                         {/* Time Slots (Multi-select) */}
                         <div className="bg-slate-900/50 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-xl">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">4. Select Time Slots</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Select Time Slots</label>
                             <div className="flex flex-wrap gap-2">
                                 {TIME_SLOTS.map(slot => (
                                     <button
@@ -457,7 +458,7 @@ export default function AdminAttendance() {
                         <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-900/50">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 <Users className="h-5 w-5 text-indigo-400" />
-                                5. Mark Attendance <span className="text-slate-500 text-sm font-normal ml-2">({tableStudents.length} Students)</span>
+                                Mark Attendance <span className="text-slate-500 text-sm font-normal ml-2">({tableStudents.length} Students)</span>
                             </h3>
                             <button onClick={handleSelectAll} className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
                                 {selectAll ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
@@ -539,9 +540,10 @@ export default function AdminAttendance() {
                                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Date (Optional)</label>
                                 <input
                                     type="date"
-                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder-slate-500"
+                                    className="block w-full rounded-lg border border-white/10 bg-slate-950 text-slate-200 py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder-slate-500 cursor-pointer"
                                     value={manageFilters.date}
                                     onChange={e => setManageFilters({ ...manageFilters, date: e.target.value })}
+                                    onClick={(e: any) => e.target.showPicker && e.target.showPicker()}
                                 />
                             </div>
                             <div>
@@ -612,18 +614,18 @@ export default function AdminAttendance() {
                                     <ul className="divide-y divide-white/5">
                                         {searchResults.map(record => (
                                             <li key={record._id} className="group hover:bg-white/[0.02] transition-colors">
-                                                <div className="px-6 py-5 flex items-center justify-between">
-                                                    <div className="flex items-center gap-6">
-                                                        <div className="bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20 min-w-[100px] flex flex-col items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
-                                                            <span className="text-indigo-400 font-bold text-[10px] uppercase tracking-wider mb-1">Time Slot</span>
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                    <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
+                                                        <div className="bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20 w-full md:min-w-[100px] flex flex-row md:flex-col items-center justify-between md:justify-center group-hover:bg-indigo-500/20 transition-colors">
+                                                            <span className="text-indigo-400 font-bold text-[10px] uppercase tracking-wider mb-0 md:mb-1">Time Slot</span>
                                                             <span className="text-white font-bold text-sm text-center">{record.timeSlot}</span>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-base font-bold text-white flex items-center gap-2">
+                                                        <div className="w-full text-center md:text-left">
+                                                            <p className="text-base font-bold text-white flex flex-col md:flex-row items-center gap-2 justify-center md:justify-start">
                                                                 {record.teacherName}
                                                                 <span className="text-xs font-normal text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full border border-white/5">{record.teacherEmail}</span>
                                                             </p>
-                                                            <div className="mt-2 flex items-center gap-3 text-sm text-slate-400 font-mono">
+                                                            <div className="mt-2 flex flex-wrap items-center justify-center md:justify-start gap-3 text-sm text-slate-400 font-mono">
                                                                 <span className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-400 border border-emerald-500/10">
                                                                     <Users className="h-3 w-3" /> Present: {record.presentStudentIds?.length || 0}
                                                                 </span>
@@ -633,16 +635,16 @@ export default function AdminAttendance() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex shrink-0 ml-4 gap-3">
+                                                    <div className="flex shrink-0 gap-3 w-full md:w-auto mt-4 md:mt-0">
                                                         <button
                                                             onClick={() => handleEditRecord(record)}
-                                                            className="rounded-lg bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-400 ring-1 ring-inset ring-indigo-500/20 hover:bg-indigo-500/20 transition-all hover:scale-105"
+                                                            className="flex-1 md:flex-none rounded-lg bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-400 ring-1 ring-inset ring-indigo-500/20 hover:bg-indigo-500/20 transition-all hover:scale-105"
                                                         >
                                                             Edit
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteRecord(record._id)}
-                                                            className="rounded-lg bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-400 ring-1 ring-inset ring-rose-500/20 hover:bg-rose-500/20 transition-all hover:scale-105"
+                                                            className="flex-1 md:flex-none rounded-lg bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-400 ring-1 ring-inset ring-rose-500/20 hover:bg-rose-500/20 transition-all hover:scale-105"
                                                         >
                                                             Delete
                                                         </button>

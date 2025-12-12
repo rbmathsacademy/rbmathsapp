@@ -325,9 +325,10 @@ export default function AssignmentsPage() {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Start Time (Optional)</label>
                                 <input
                                     type="datetime-local"
-                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                                     value={editStartTime}
                                     onChange={(e) => setEditStartTime(e.target.value)}
+                                    onClick={(e: any) => e.target.showPicker && e.target.showPicker()}
                                 />
                             </div>
 
@@ -335,9 +336,10 @@ export default function AssignmentsPage() {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Deadline *</label>
                                 <input
                                     type="datetime-local"
-                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                                     value={editDeadline}
                                     onChange={(e) => setEditDeadline(e.target.value)}
+                                    onClick={(e: any) => e.target.showPicker && e.target.showPicker()}
                                     required
                                 />
                             </div>

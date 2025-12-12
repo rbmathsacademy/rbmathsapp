@@ -228,18 +228,19 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
                             <label className="block text-sm font-medium text-gray-300">Start Time</label>
                             <input
                                 type="datetime-local" required
-                                value={formData.startTime}
-                                onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                                className="mt-2 block w-full rounded-md border-0 bg-gray-900/50 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                                value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                                onClick={(e: any) => e.target.showPicker && e.target.showPicker()}
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-300">Deadline</label>
                             <input
                                 type="datetime-local" required
-                                value={formData.deadline}
-                                onChange={e => setFormData({ ...formData, deadline: e.target.value })}
-                                className="mt-2 block w-full rounded-md border-0 bg-gray-900/50 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                                value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })}
+                                min={formData.startTime || undefined}
+                                onClick={(e: any) => e.target.showPicker && e.target.showPicker()}
                             />
                         </div>
                     </div>
