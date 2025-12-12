@@ -198,44 +198,63 @@ export default function StudentResources() {
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        {getResourcesByType(activeView).map((resource) => (
-                                            <div key={resource._id} className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-lg shrink-0 ${activeView === 'materials' ? 'bg-blue-500/20' : activeView === 'videos' ? 'bg-rose-500/20' : 'bg-purple-500/20'}`}>
-                                                        {activeView === 'materials' && <FileText className="h-4 w-4 text-blue-400" />}
-                                                        {activeView === 'videos' && <Video className="h-4 w-4 text-rose-400" />}
-                                                        {activeView === 'practice' && <Brain className="h-4 w-4 text-purple-400" />}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="text-sm font-bold text-white truncate">{resource.title}</h3>
-                                                        {resource.facultyName && (
-                                                            <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                                                                <User className="h-3 w-3" /> {resource.facultyName}
-                                                            </p>
+                                        {getResourcesByType(activeView).map((resource) => {
+                                            // For practice questions with questions array
+                                            if (resource.questions && resource.questions.length > 0) {
+                                                return (
+                                                    <Link
+                                                        key={resource._id}
+                                                        href={`/student/resources/${resource._id}`}
+                                                        className="block p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/30 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 rounded-lg shrink-0 bg-purple-500/20">
+                                                                <Brain className="h-4 w-4 text-purple-400" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="text-sm font-bold text-white truncate">{resource.title}</h3>
+                                                                {resource.facultyName && (
+                                                                    <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                                        <User className="h-3 w-3" /> {resource.facultyName}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <ChevronRight className="h-5 w-5 text-purple-400 shrink-0" />
+                                                        </div>
+                                                    </Link>
+                                                );
+                                            }
+
+                                            // For materials and videos with URLs
+                                            return (
+                                                <div key={resource._id} className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg shrink-0 ${activeView === 'materials' ? 'bg-blue-500/20' : 'bg-rose-500/20'}`}>
+                                                            {activeView === 'materials' && <FileText className="h-4 w-4 text-blue-400" />}
+                                                            {activeView === 'videos' && <Video className="h-4 w-4 text-rose-400" />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="text-sm font-bold text-white truncate">{resource.title}</h3>
+                                                            {resource.facultyName && (
+                                                                <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                                    <User className="h-3 w-3" /> {resource.facultyName}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        {(resource.url || resource.videoLink) && (
+                                                            <a
+                                                                href={resource.url || resource.videoLink}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className={`p-2 rounded-lg shrink-0 ${activeView === 'videos' ? 'bg-rose-500' : 'bg-blue-500'}`}
+                                                            >
+                                                                {activeView === 'videos' ? <Play className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
+                                                            </a>
                                                         )}
                                                     </div>
-
-                                                    {/* Action Button */}
-                                                    {(resource.url || resource.videoLink) ? (
-                                                        <a
-                                                            href={resource.url || resource.videoLink}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className={`p-2 rounded-lg shrink-0 ${activeView === 'videos' ? 'bg-rose-500' : 'bg-blue-500'}`}
-                                                        >
-                                                            {activeView === 'videos' ? <Play className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
-                                                        </a>
-                                                    ) : resource.questions && resource.questions.length > 0 ? (
-                                                        <button
-                                                            onClick={() => router.push(`/student/resources/${resource._id}`)}
-                                                            className="px-3 py-1.5 rounded-lg bg-purple-500 text-white text-xs font-bold shrink-0"
-                                                        >
-                                                            {resource.questions.length}Q
-                                                        </button>
-                                                    ) : null}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

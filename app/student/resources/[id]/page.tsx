@@ -293,37 +293,56 @@ Thank you!`;
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border border-cyan-500/30 w-full max-w-lg shadow-2xl shadow-cyan-500/20 overflow-hidden max-h-[90vh] overflow-y-auto">
                             {/* Header */}
-                            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4">
+                            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 sm:p-5">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Sparkles className="h-5 w-5 text-white" />
-                                        <h3 className="text-base sm:text-lg font-bold text-white">AI Verification</h3>
+                                        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                        <div>
+                                            <h3 className="text-base sm:text-lg font-bold text-white">AI Answer Verification</h3>
+                                            <p className="text-blue-100 text-xs sm:text-sm">Get instant feedback</p>
+                                        </div>
                                     </div>
                                     <button onClick={() => setShowAIModal(false)} className="text-white/80 hover:text-white"><X className="h-5 w-5" /></button>
                                 </div>
                             </div>
 
                             {/* Content */}
-                            <div className="p-4 space-y-3">
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2 text-sm">
-                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs">1</span>
-                                        <span className="text-gray-300">Click below to copy question & open Gemini</span>
-                                    </div>
-                                    <div className="flex items-start gap-2 text-sm">
-                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs">2</span>
-                                        <span className="text-gray-300">Paste (Ctrl+V), upload your solution, get feedback</span>
-                                    </div>
+                            <div className="p-4 sm:p-5 space-y-3">
+                                <p className="text-xs sm:text-sm text-cyan-400 font-semibold">How it works:</p>
+                                <ol className="space-y-2 text-xs sm:text-sm text-gray-300">
+                                    <li className="flex items-start gap-2">
+                                        <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-[10px] sm:text-xs">1</span>
+                                        <span>We'll copy a custom prompt to your clipboard</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-[10px] sm:text-xs">2</span>
+                                        <span>Gemini AI will open in a new tab</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-[10px] sm:text-xs">3</span>
+                                        <span><strong className="text-white">Paste (Ctrl+V)</strong> the prompt in Gemini's chat</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-[10px] sm:text-xs">4</span>
+                                        <span><strong className="text-white">Upload</strong> a photo/PDF of your handwritten solution</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-[10px] sm:text-xs">5</span>
+                                        <span>Get instant feedback and guidance! 🎉</span>
+                                    </li>
+                                </ol>
+                                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2.5 sm:p-3">
+                                    <p className="text-[10px] sm:text-xs text-blue-300">💡 <strong>Tip:</strong> Make sure your solution is clearly written for best results</p>
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div className="p-4 flex gap-2">
-                                <button onClick={() => setShowAIModal(false)} className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all text-sm">Cancel</button>
-                                <button onClick={openGemini} className="flex-1 py-2 px-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg font-bold shadow-lg transition-all flex items-center justify-center gap-1 text-sm">
+                            <div className="p-4 sm:p-5 flex gap-2 sm:gap-3">
+                                <button onClick={() => setShowAIModal(false)} className="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all text-sm">Cancel</button>
+                                <button onClick={openGemini} className="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg font-bold shadow-lg transition-all flex items-center justify-center gap-1.5 text-sm">
                                     <Sparkles className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Copy & Open</span>
-                                    <span className="sm:hidden">Open</span>
+                                    <span className="hidden xs:inline">Copy Question & Open Gemini</span>
+                                    <span className="xs:hidden">Copy & Open</span>
                                 </button>
                             </div>
                         </div>
