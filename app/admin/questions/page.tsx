@@ -430,20 +430,6 @@ export default function QuestionBank() {
         }
     }, [isPaperModalOpen]);
 
-    useEffect(() => {
-        const uniqueTopics = Array.from(new Set(questions.map(q => q.topic))).filter(Boolean);
-        setTopics(uniqueTopics);
-    }, [questions]);
-
-    useEffect(() => {
-        if (selectedTopic) {
-            const uniqueSubtopics = Array.from(new Set(questions.filter(q => q.topic === selectedTopic).map(q => q.subtopic))).filter(Boolean);
-            setSubtopics(uniqueSubtopics);
-        } else {
-            setSubtopics([]);
-        }
-    }, [selectedTopic, questions]);
-
     const toggleSelectAll = () => {
         if (selectedQuestionIds.size === filteredQuestions.length) {
             setSelectedQuestionIds(new Set());
