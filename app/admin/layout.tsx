@@ -178,24 +178,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         Dr. Ritwick Banerjee
                                     </span>
                                 </div>
-                                <div className="mt-3">
-                                    <button
-                                        onClick={() => {
-                                            if (isGlobalAdmin) {
-                                                localStorage.removeItem('globalAdminActive');
-                                                setIsGlobalAdmin(false);
-                                            } else {
-                                                setShowGlobalAdminModal(true);
-                                            }
-                                        }}
-                                        className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded border transition-all ${isGlobalAdmin
-                                            ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:bg-red-500/30'
-                                            : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300 hover:border-slate-600'
-                                            }`}
-                                    >
-                                        {isGlobalAdmin ? '● GLOBAL ADMIN' : 'GLOBAL ADMIN'}
-                                    </button>
-                                </div>
                             </div>
                         </div>
                         <button className="ml-auto md:hidden" onClick={() => setSidebarOpen(false)}>
