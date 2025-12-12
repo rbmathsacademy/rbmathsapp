@@ -832,7 +832,7 @@ export default function QuestionBank() {
                                         <button onClick={() => setPaperStep(0)} className="px-6 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 font-medium">
                                             &larr; Back
                                         </button>
-                                        <button onClick={generatePaper} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold flex items-center gap-2">
+                                        <button onClick={generatePreview} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold flex items-center gap-2">
                                             Generate Review <FileText className="h-4 w-4" />
                                         </button>
                                     </div>
