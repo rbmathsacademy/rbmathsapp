@@ -5,7 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Brain, User, BookOpen, Loader2, Lightbulb, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import LatexRenderer from '@/components/LatexRenderer';
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 
 export default function PracticeQuestionsPage() {
     const [resource, setResource] = useState<any>(null);
@@ -233,7 +234,7 @@ Thank you!`;
                                                         )}
                                                     </div>
                                                     <div className="text-xs sm:text-base text-gray-200 leading-relaxed">
-                                                        <LatexRenderer content={question.latex || question.text} />
+                                                        <Latex>{question.latex || question.text}</Latex>
                                                     </div>
                                                 </div>
                                             </div>
@@ -274,7 +275,7 @@ Thank you!`;
                                                                 {hintIndex + 1}
                                                             </span>
                                                             <div className="text-amber-200/80 text-xs sm:text-sm">
-                                                                <LatexRenderer content={hint} />
+                                                                <Latex>{hint}</Latex>
                                                             </div>
                                                         </div>
                                                     ))}
