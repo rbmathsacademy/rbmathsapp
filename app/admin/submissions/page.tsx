@@ -191,6 +191,9 @@ export default function SubmissionsPage() {
             };
         });
 
+        // Sort by roll number in ascending order
+        data.sort((a, b) => a.roll.localeCompare(b.roll));
+
         setReportData(data);
         setShowReport(true);
     };
@@ -198,18 +201,29 @@ export default function SubmissionsPage() {
     const calculateAttendance = (student: any, targetCourse: string, deadlineDate: Date) => {
         const now = new Date();
 
+        console.log('[ATTENDANCE CALC]', student.name);
+        console.log('  Deadline:', deadlineDate);
+        console.log('  Now:', now);
+        console.log('  Deadline has passed?', now >= deadlineDate);
+
         // 1. Filter by Course
         let records = attendanceRecords.filter(r =>
             (r.course_code || "").trim().toUpperCase() === (targetCourse || "").trim().toUpperCase()
         );
 
-        // 2. Filter by Deadline (if passed)
-        if (now >= deadlineDate) {
-            records = records.filter(r => {
-                const recordDate = getRecordDateObject(r.date, r.timeSlot);
-                return recordDate <= deadlineDate;
-            });
-        }
+        // 2. Filter by Deadline (if passed) or Current Date (if not)
+        const cutoffDate = now >= deadlineDate ? deadlineDate : now;
+        console.log('  Cutoff Date:', cutoffDate);
+
+        records = records.filter(r => {
+            const recordDate = getRecordDateObject(r.date, r.timeSlot);
+            return recordDate <= cutoffDate;
+        });
+
+        console.log('  Total records before cutoff:', attendanceRecords.filter(r =>
+            (r.course_code || "").trim().toUpperCase() === (targetCourse || "").trim().toUpperCase()
+        ).length);
+        console.log('  Records after cutoff:', records.length);
 
         // 3. Filter by Student Presence (Explicitly marked)
         records = records.filter(r =>
@@ -226,6 +240,8 @@ export default function SubmissionsPage() {
 
         const finalPresent = present + adj;
         const pct = total > 0 ? (finalPresent / total) * 100 : 0;
+
+        console.log('  Final attendance %:', pct.toFixed(1));
 
         return {
             percentage: pct,
@@ -321,6 +337,14 @@ export default function SubmissionsPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
 
+            <InstructionsBox>
+                <ul className="list-disc list-inside space-y-1">
+                    <li>Select an <strong>Assignment</strong> to generate the report.</li>
+                    <li>The report shows submission status and <strong>Attendance Eligibility</strong> at the time of the deadline.</li>
+                    <li>You can manually adjust the submission count for a student in the "Adj." column.</li>
+                    <li>Use the <strong>Export CSV</strong> button to download the data.</li>
+                </ul>
+            </InstructionsBox>
 
             {/* Filters */}
             <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 space-y-4">
@@ -374,14 +398,7 @@ export default function SubmissionsPage() {
                 </div>
             </div>
 
-            <InstructionsBox>
-                <ul className="list-disc list-inside space-y-1">
-                    <li>Select an <strong>Assignment</strong> to generate the report.</li>
-                    <li>The report shows submission status and <strong>Attendance Eligibility</strong> at the time of the deadline.</li>
-                    <li>You can manually adjust the submission count for a student in the "Adj." column.</li>
-                    <li>Use the <strong>Export CSV</strong> button to download the data.</li>
-                </ul>
-            </InstructionsBox>
+
 
             <div className="flex gap-4">
                 <button

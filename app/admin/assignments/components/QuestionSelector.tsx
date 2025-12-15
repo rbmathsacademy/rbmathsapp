@@ -51,7 +51,7 @@ export default function QuestionSelector({ questions, selectedIds, onChange }: P
     };
 
     return (
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden flex flex-col h-[400px]">
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden flex flex-col h-[600px]">
             <div className="p-4 border-b border-gray-700 bg-gray-800 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
                     <h4 className="font-medium text-white">Question Pool ({selectedIds.length} / {questions.length} selected)</h4>
@@ -97,7 +97,7 @@ export default function QuestionSelector({ questions, selectedIds, onChange }: P
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">{q.topic}</div>
-                                    <div className="text-sm text-gray-200 line-clamp-2">
+                                    <div className="text-sm text-gray-200">
                                         <LatexWrapper>{q.text}</LatexWrapper>
                                     </div>
                                 </div>

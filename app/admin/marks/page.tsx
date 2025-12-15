@@ -151,8 +151,21 @@ export default function MarksPage() {
     }, [allowedContext, students]);
 
     const calculateMarks = () => {
-        // 1. Filter Students
-        const filteredStudents = students.filter(s =>
+        // 1. Filter Students (apply faculty restrictions first)
+        let filteredStudents = students;
+
+        // Apply faculty-based filtering if allowedContext exists
+        if (allowedContext) {
+            filteredStudents = filteredStudents.filter(s => {
+                const deptMatch = allowedContext.depts.length === 0 || allowedContext.depts.includes(s.department);
+                const yearMatch = allowedContext.years.length === 0 || allowedContext.years.includes(s.year);
+                const courseMatch = allowedContext.courses.length === 0 || allowedContext.courses.includes(s.course_code);
+                return deptMatch && yearMatch && courseMatch;
+            });
+        }
+
+        // Then apply user-selected filters
+        filteredStudents = filteredStudents.filter(s =>
             (filters.dept === 'all' || s.department === filters.dept) &&
             (filters.year === 'all' || s.year === filters.year) &&
             (filters.course === 'all' || s.course_code === filters.course)
@@ -174,14 +187,19 @@ export default function MarksPage() {
             });
 
             const totalTagged = taggedAssignments.length;
-            const taggedIds = new Set(taggedAssignments.map(a => a._id));
+            const taggedIds = new Set(taggedAssignments.map(a => a._id.toString()));
             const involvedCourses = new Set(taggedAssignments.map(a => a.targetCourse).filter(Boolean));
 
             // B. Count Submitted
-            const studentSubmissions = submissions.filter(sub =>
-                (sub.student._id === student._id || sub.student === student._id) &&
-                taggedIds.has(sub.assignment._id || sub.assignment)
-            );
+            const studentSubmissions = submissions.filter(sub => {
+                const studentId = sub.student?._id || sub.student;
+                const assignmentId = sub.assignment?._id || sub.assignment;
+
+                const studentMatch = (studentId && studentId.toString() === student._id.toString());
+                const assignmentMatch = (assignmentId && taggedIds.has(assignmentId.toString()));
+
+                return studentMatch && assignmentMatch;
+            });
 
             // C. Manual Adjustments
             let totalManualAdj = 0;
@@ -252,6 +270,14 @@ export default function MarksPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
 
+            <InstructionsBox>
+                <ul className="list-disc list-inside space-y-1">
+                    <li>Marks are calculated out of <strong>10</strong> based on submission ratio.</li>
+                    <li>Formula: <code>(Submitted + Manual Adj) / Total Assigned × 10</code>.</li>
+                    <li>Only assignments that have started (creation date passed) are counted.</li>
+                    <li>Use filters to narrow down the list and <strong>Export CSV</strong> to download.</li>
+                </ul>
+            </InstructionsBox>
 
             {/* Filters */}
             <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 space-y-4">
@@ -292,15 +318,6 @@ export default function MarksPage() {
                     </div>
                 </div>
             </div>
-
-            <InstructionsBox>
-                <ul className="list-disc list-inside space-y-1">
-                    <li>Marks are calculated out of <strong>10</strong> based on submission ratio.</li>
-                    <li>Formula: <code>(Submitted + Manual Adj) / Total Assigned × 10</code>.</li>
-                    <li>Only assignments that have started (creation date passed) are counted.</li>
-                    <li>Use filters to narrow down the list and <strong>Export CSV</strong> to download.</li>
-                </ul>
-            </InstructionsBox>
 
             <div className="flex justify-end">
                 <button

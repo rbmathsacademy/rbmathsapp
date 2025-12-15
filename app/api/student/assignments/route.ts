@@ -12,8 +12,8 @@ export async function GET(req: Request) {
         const department = searchParams.get('department');
         const year = searchParams.get('year');
         const course_code = searchParams.get('course_code');
-        // SECURE: Read from headers
-        const studentId = req.headers.get('x-user-id');
+        // Get studentId from query param (passed by client)
+        const studentId = searchParams.get('studentId');
 
         console.log('[ASSIGNMENTS DEBUG] Fetching for dept:', department, 'year:', year, 'course:', course_code, 'studentId:', studentId);
 
@@ -73,12 +73,20 @@ export async function GET(req: Request) {
             let allStudentIds = [studentId];
             if (currentStudent) {
                 const allDocs = await Student.find({ roll: currentStudent.roll });
-                allStudentIds = allDocs.map(d => d._id.toString());
+                allStudentIds = allDocs.map(d => d._id);
             }
+
+            console.log('[STUDENT ASSIGNMENTS] Student IDs:', allStudentIds.map(id => id.toString()));
+            console.log('[STUDENT ASSIGNMENTS] Assignment IDs:', uniqueAssignments.map((a: any) => a._id.toString()));
 
             const submissions = await Submission.find({
                 student: { $in: allStudentIds },
                 assignment: { $in: uniqueAssignments.map((a: any) => a._id) }
+            });
+
+            console.log('[STUDENT ASSIGNMENTS] Submissions found:', submissions.length);
+            submissions.forEach(s => {
+                console.log('  - Student:', s.student.toString(), 'Assignment:', s.assignment.toString());
             });
 
             const submissionMap = new Map(
@@ -87,6 +95,7 @@ export async function GET(req: Request) {
 
             assignmentsWithSubmissions = uniqueAssignments.map((assignment: any) => {
                 const submission = submissionMap.get(assignment._id.toString());
+                console.log('[STUDENT ASSIGNMENTS] Assignment', assignment._id.toString(), 'has submission:', !!submission);
                 return {
                     ...assignment.toObject(),
                     submitted: !!submission,

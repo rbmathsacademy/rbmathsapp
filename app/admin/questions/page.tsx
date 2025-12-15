@@ -159,6 +159,7 @@ export default function QuestionBank() {
     const [paperQuestions, setPaperQuestions] = useState<any[]>([]);
     const [paperHtml, setPaperHtml] = useState('');
     const [paperJson, setPaperJson] = useState('');
+    const [paperPreviewKey, setPaperPreviewKey] = useState(0);
     const [paperConfig, setPaperConfig] = useState({
         course: 'B. Tech.', sem: '1st', session: '', paperName: '', code: '', date: '', stream: '', time: '', marks: '', exam: ''
     });
@@ -621,6 +622,7 @@ export default function QuestionBank() {
         };
         setPaperJson(JSON.stringify(paperStructure, null, 2));
         updatePaperHtml(paperStructure);
+        setPaperPreviewKey(prev => prev + 1); // Force iframe remount
         setPaperStep(2);
     };
 
@@ -937,7 +939,7 @@ export default function QuestionBank() {
                                     <div className="w-full md:w-1/2 bg-gray-500 overflow-hidden relative h-full">
                                         <iframe
                                             id="paper-preview-frame"
-                                            key={paperHtml.substring(0, 50)}
+                                            key={paperPreviewKey}
                                             srcDoc={paperHtml}
                                             className="w-full h-full bg-white"
                                             title="Paper Preview"
@@ -1121,15 +1123,15 @@ export default function QuestionBank() {
                         </div>
                     </div>
 
-                    {/* Floating Action Buttons (Sticky) */}
-                    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 md:static md:flex-row md:z-0">
-                        <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full md:rounded-md shadow-lg md:shadow-none text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap">
+                    {/* Floating Action Buttons (Always Floating) */}
+                    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+                        <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
                             <Printer className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Print Selected</span>
                         </button>
-                        <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full md:rounded-md shadow-lg md:shadow-none text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap">
+                        <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
                             <Download className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Export JSON</span>
                         </button>
-                        <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full md:rounded-md shadow-lg md:shadow-none text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap">
+                        <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
                             <Trash2 className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Delete ({selectedQuestionIds.size})</span>
                         </button>
                     </div>

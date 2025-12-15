@@ -138,7 +138,16 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <InstructionsBox>
+                <ul className="list-disc list-inside space-y-2">
+                    <li><strong>Randomized Assignment:</strong> Each student gets a unique set of questions randomly picked from your selected pool.</li>
+                    <li><strong>Step 1 Rule:</strong> Use the "Refine Question Pool" section to uncheck any questions you want to <strong>exclude</strong>. Unchecked questions will NEVER be assigned to any student.</li>
+                    <li>You can filter the pool by topics first, then manually refine the selection.</li>
+                    <li>Ensure you have selected enough questions in the pool to satisfy the "Questions Count" requirement.</li>
+                </ul>
+            </InstructionsBox>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Settings */}
                 <div className="space-y-6">
                     <div>
@@ -221,10 +230,19 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
                             />
                         </div>
                     </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="rounded-md bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:bg-blue-500 w-full disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                    >
+                        {loading && <Loader2 className="animate-spin h-4 w-4" />}
+                        Publish Randomized Assignment
+                    </button>
                 </div>
 
-                {/* Right Column: Question Exclusion */}
-                <div className="space-y-4">
+                {/* Right Column: Question Exclusion (2/3 width) */}
+                <div className="space-y-4 lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-300">Step 1: Refine Question Pool</label>
                     <QuestionSelector
                         questions={filteredQuestions}
@@ -236,24 +254,6 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
                     </p>
                 </div>
             </div>
-
-            <InstructionsBox>
-                <ul className="list-disc list-inside space-y-2">
-                    <li><strong>Randomized Assignment:</strong> Each student gets a unique set of questions randomly picked from your selected pool.</li>
-                    <li><strong>Step 1 Rule:</strong> Use the "Refine Question Pool" section to uncheck any questions you want to <strong>exclude</strong>. Unchecked questions will NEVER be assigned to any student.</li>
-                    <li>You can filter the pool by topics first, then manually refine the selection.</li>
-                    <li>Ensure you have selected enough questions in the pool to satisfy the "Questions Count" requirement.</li>
-                </ul>
-            </InstructionsBox>
-
-            <button
-                type="submit"
-                disabled={loading}
-                className="rounded-md bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-900/20 hover:bg-blue-500 w-full md:w-auto disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-            >
-                {loading && <Loader2 className="animate-spin h-4 w-4" />}
-                Publish Randomized Assignment
-            </button>
         </form>
     );
 }

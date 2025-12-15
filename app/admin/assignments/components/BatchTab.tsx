@@ -88,10 +88,11 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
         const current = [...formData.topicWeights];
         const idx = current.findIndex(t => t.topic === topic);
         if (idx >= 0) {
-            if (weight <= 0) current.splice(idx, 1);
-            else current[idx].weight = weight;
-        } else if (weight > 0) {
-            current.push({ topic, weight });
+            // Update existing topic weight (allow 0)
+            current[idx].weight = weight;
+        } else {
+            // Add new topic with the specified weight (default 1 if 0 provided)
+            current.push({ topic, weight: weight > 0 ? weight : 1 });
         }
         setFormData({ ...formData, topicWeights: current });
     };
@@ -184,7 +185,20 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <InstructionsBox>
+                <ul className="list-disc list-inside space-y-2">
+                    <li><strong>Manually Randomized (Batch):</strong> Assign different number of questions based on student attendance.</li>
+                    <li><strong>Attendance Rules:</strong> Add rules like "70-100% attendance gets 5 questions".
+                        <ul className="list-disc list-inside ml-4 text-gray-400">
+                            <li>If a student's attendance falls on a boundary (e.g., exactly 70%), they are considered for the <strong>upper interval</strong> (e.g., 70-100%).</li>
+                        </ul>
+                    </li>
+                    <li><strong>Step 1 Rule:</strong> Use the "Refine Question Pool" section to uncheck any questions you want to <strong>exclude</strong>.</li>
+                    <li>Questions are drawn from the pool based on the <strong>Topic Weights</strong> you define.</li>
+                </ul>
+            </InstructionsBox>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Settings */}
                 <div className="space-y-6">
                     <div>
@@ -290,32 +304,70 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
                                 );
                             })()}
                         </div>
-                        <p className="text-sm text-gray-400 mb-4">Assign percentage weights to topics. <strong>Total must equal 100%.</strong></p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-60 overflow-y-auto pr-2">
-                            {topics.map(topic => {
-                                const currentWeight = formData.topicWeights.find(t => t.topic === topic)?.weight || 0;
-                                return (
-                                    <div key={topic} className="flex items-center justify-between bg-gray-900/50 p-3 rounded border border-gray-700">
-                                        <span className="text-sm text-gray-300 truncate mr-2" title={topic}>{topic}</span>
-                                        <div className="flex items-center gap-1">
-                                            <input
-                                                type="number" min="0" max="100"
-                                                value={currentWeight || ''}
-                                                placeholder="0"
-                                                className="w-16 rounded bg-gray-800 border-gray-600 text-white text-sm p-1 text-center"
-                                                onChange={(e) => handleTopicWeightChange(topic, parseInt(e.target.value) || 0)}
-                                            />
-                                            <span className="text-gray-500 text-xs">%</span>
-                                        </div>
+                        <p className="text-sm text-gray-400 mb-4">Add topics with percentage weights. <strong>Total must equal 100%.</strong></p>
+
+                        {/* Selected Topics */}
+                        <div className="space-y-2 mb-4">
+                            {formData.topicWeights.map((tw, idx) => (
+                                <div key={idx} className="flex items-center gap-2 bg-gray-900/50 p-3 rounded border border-gray-700">
+                                    <span className="text-sm text-gray-300 flex-1">{tw.topic}</span>
+                                    <div className="flex items-center gap-1">
+                                        <input
+                                            type="number" min="0" max="100"
+                                            value={tw.weight}
+                                            className="w-20 rounded bg-gray-800 border-gray-600 text-white text-sm p-2 text-center"
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    handleTopicWeightChange(tw.topic, val);
+                                                } else if (e.target.value === '') {
+                                                    handleTopicWeightChange(tw.topic, 0);
+                                                }
+                                            }}
+                                        />
+                                        <span className="text-gray-500 text-sm">%</span>
                                     </div>
-                                );
-                            })}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const current = formData.topicWeights.filter(t => t.topic !== tw.topic);
+                                            setFormData({ ...formData, topicWeights: current });
+                                        }}
+                                        className="text-red-400 hover:text-red-300 p-1"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
                         </div>
+
+                        {/* Add Topic Dropdown */}
+                        {formData.topicWeights.length < topics.length && (
+                            <div>
+                                <select
+                                    className="w-full rounded-md border-0 bg-gray-900/50 py-2 px-3 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-500"
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            handleTopicWeightChange(e.target.value, 0);
+                                            e.target.value = '';
+                                        }
+                                    }}
+                                    value=""
+                                >
+                                    <option value="">+ Add Topic...</option>
+                                    {topics
+                                        .filter(t => !formData.topicWeights.find(tw => tw.topic === t))
+                                        .map(topic => (
+                                            <option key={topic} value={topic}>{topic}</option>
+                                        ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Right Column: Question Exclusion */}
-                <div className="space-y-4">
+                {/* Right Column: Question Exclusion (2/3 width) */}
+                <div className="space-y-4 lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-300">Step 1: Refine Question Pool</label>
                     <QuestionSelector
                         questions={filteredQuestions}
@@ -328,18 +380,7 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
                 </div>
             </div>
 
-            <InstructionsBox>
-                <ul className="list-disc list-inside space-y-2">
-                    <li><strong>Manually Randomized (Batch):</strong> Assign different number of questions based on student attendance.</li>
-                    <li><strong>Attendance Rules:</strong> Add rules like "70-100% attendance gets 5 questions".
-                        <ul className="list-disc list-inside ml-4 text-gray-400">
-                            <li>If a student's attendance falls on a boundary (e.g., exactly 70%), they are considered for the <strong>upper interval</strong> (e.g., 70-100%).</li>
-                        </ul>
-                    </li>
-                    <li><strong>Step 1 Rule:</strong> Use the "Refine Question Pool" section to uncheck any questions you want to <strong>exclude</strong>.</li>
-                    <li>Questions are drawn from the pool based on the <strong>Topic Weights</strong> you define.</li>
-                </ul>
-            </InstructionsBox>
+
 
             <button
                 type="submit"

@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', 'react-hot-toast'],
   },
+
+  // Turbopack configuration (empty to acknowledge webpack config is intentional)
+  turbopack: {},
 };
 
 export default withPWA(nextConfig);
