@@ -70,7 +70,7 @@ export async function GET(req: Request) {
 
         if (studentId) {
             const currentStudent = await Student.findById(studentId);
-            let allStudentIds = [studentId];
+            let allStudentIds: any[] = [studentId];
             if (currentStudent) {
                 const allDocs = await Student.find({ roll: currentStudent.roll });
                 allStudentIds = allDocs.map(d => d._id);
