@@ -41,39 +41,25 @@ export default function AdminDashboard() {
         setSelectedStudentIds(new Set());
     }, [viewFilter]);
 
-    // Derived Lists for Dropdowns [UPDATED with Access Control]
+    // Derived Lists for Dropdowns - OPEN ACCESS: Everyone can see all available options
     const { departments, years, courses } = useMemo(() => {
         const depts = new Set<string>();
         const yrs = new Set<string>();
         const crs = new Set<string>();
 
-        // If Global Admin, use all students to populate dropdowns (as they have access to everything)
-        if (isGlobalAdmin) {
-            students.forEach(s => {
-                if (s.department) depts.add(s.department);
-                if (s.year) yrs.add(s.year);
-                if (s.course_code) crs.add(s.course_code);
-            });
-        } else if (adminEmail && config.teacherAssignments) {
-            // If Faculty, only show what they are assigned to
-            Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
-                if (Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === adminEmail.toLowerCase())) {
-                    const parts = key.split('_');
-                    if (parts.length >= 3) {
-                        depts.add(parts[0]);
-                        yrs.add(parts[1]);
-                        crs.add(parts[2]);
-                    }
-                }
-            });
-        }
+        // Always use all students to populate dropdowns so any faculty can tag themselves to any course
+        students.forEach(s => {
+            if (s.department) depts.add(s.department);
+            if (s.year) yrs.add(s.year);
+            if (s.course_code) crs.add(s.course_code);
+        });
 
         return {
             departments: Array.from(depts).sort(),
             years: Array.from(yrs).sort(),
             courses: Array.from(crs).sort()
         };
-    }, [students, isGlobalAdmin, adminEmail, config]);
+    }, [students]);
 
     // ...
 
