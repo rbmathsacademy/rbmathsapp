@@ -4,7 +4,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
+import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
+import LineNumberTextarea from '../components/LineNumberTextarea';
 
 // --- MultiSelect Component ---
 const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
@@ -137,7 +139,10 @@ export default function QuestionBank() {
     const [jsonContent, setJsonContent] = useState('');
     const [previewContent, setPreviewContent] = useState<any[]>([]);
     const [jsonError, setJsonError] = useState<string | null>(null);
+
+    const [errorLine, setErrorLine] = useState<number | null>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const lastEditedId = useRef<string | null>(null);
 
     // Duplicate Detection State
     const [duplicateQuestions, setDuplicateQuestions] = useState<any[]>([]);
@@ -336,14 +341,32 @@ export default function QuestionBank() {
     const handleJsonInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const val = e.target.value;
         setJsonContent(val);
+
+        if (!val.trim()) {
+            setPreviewContent([]);
+            setJsonError(null);
+            setErrorLine(null);
+            return;
+        }
+
         try {
             const parsed = JSON.parse(val);
             const arr = Array.isArray(parsed) ? parsed : [parsed];
             const normalized = normalizeImportedData(arr);
             checkForDuplicates(normalized);
             setJsonError(null);
-        } catch (e) {
+            setErrorLine(null);
+        } catch (e: any) {
             setJsonError((e as Error).message);
+            // Extract line number from error message if possible
+            // Chrome/Node syntax: "Unexpected token ... at position X"
+            // We can try to calculate line number from position
+            const match = e.message.match(/position\s+(\d+)/);
+            if (match) {
+                const pos = parseInt(match[1]);
+                const contentUpToError = val.substring(0, pos);
+                setErrorLine(contentUpToError.split('\n').length);
+            }
         }
     };
 
@@ -441,6 +464,21 @@ export default function QuestionBank() {
                 setJsonContent('');
                 setPreviewContent([]);
                 if (userEmail) fetchQuestions(userEmail);
+
+                // Scroll back to edited question
+                if (lastEditedId.current) {
+                    const targetId = lastEditedId.current;
+                    setTimeout(() => {
+                        const el = document.getElementById(`q-${targetId}`);
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.classList.add('ring-2', 'ring-blue-500', 'bg-gray-800');
+                            setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'bg-gray-800'), 2000);
+                        }
+                    }, 500); // Wait for list to re-render/visible
+                    // We don't clear lastEditedId here immediately to allow the timeout to read it, 
+                    // or we capture it in const targetId closure above.
+                }
             } else {
                 toast.error('Failed to save.');
             }
@@ -525,12 +563,15 @@ export default function QuestionBank() {
         setJsonContent('');
         setPreviewContent([]);
         setJsonError(null);
+        setErrorLine(null);
+        lastEditedId.current = null;
         setIsEditorOpen(true);
     };
 
     const editQuestion = (q: any) => {
         // Scroll to top so user can see the editor
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        lastEditedId.current = q.id;
 
         setManualData({
             id: q.id,
@@ -965,8 +1006,13 @@ export default function QuestionBank() {
                             <button onClick={() => setIsEditorOpen(false)} className="text-gray-400 hover:text-white px-3 flex items-center gap-2 text-sm font-medium">
                                 <ArrowLeft className="h-4 w-4" /> Back to Homepage
                             </button>
-                            <button onClick={saveToDatabase} className="bg-green-600 hover:bg-green-500 text-white px-4 py-1 rounded font-bold flex items-center gap-2">
-                                <Save className="h-4 w-4" /> Save
+                            <button
+                                onClick={saveToDatabase}
+                                disabled={loading}
+                                className="bg-green-600 hover:bg-green-500 text-white px-4 py-1 rounded font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
+                                {loading ? 'Saving...' : 'Save'}
                             </button>
                         </div>
                     </div>
@@ -1148,7 +1194,7 @@ export default function QuestionBank() {
                         </div>
                     ) : (
                         filteredQuestions.map((q) => (
-                            <div key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-gray-900 border-gray-700'} hover:border-gray-500 transition-colors group`}>
+                            <div id={`q-${q.id}`} key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-gray-900 border-gray-700'} hover:border-gray-500 transition-colors group`}>
                                 <div className="flex gap-3">
                                     <div className="pt-1">
                                         <input

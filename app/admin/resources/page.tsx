@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { Loader2, Plus, Trash2, Link as LinkIcon, FileText, Video, Brain, Copy, Check, Sparkles, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
-import LatexWrapper from '../assignments/components/LatexWrapper';
+import 'katex/dist/katex.min.css';
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
+import LineNumberTextarea from '../components/LineNumberTextarea';
 
 export default function Resources() {
     const [activeTab, setActiveTab] = useState('practice');
@@ -32,6 +35,8 @@ export default function Resources() {
         selectedTopics: [] as string[], selectedQuestions: new Set<string>(),
         aiOutput: '', hintsData: [] as any[]
     });
+    const [jsonError, setJsonError] = useState<string | null>(null);
+    const [errorLine, setErrorLine] = useState<number | null>(null);
 
     const [materialForm, setMaterialForm] = useState({
         title: '', url: '', targetDepartments: [] as string[], targetYear: '', targetCourse: ''
@@ -266,6 +271,8 @@ ${JSON.stringify(selectedData, null, 2)}`;
 
         if (!val.trim()) {
             setHintsForm(prev => ({ ...prev, hintsData: [] }));
+            setJsonError(null);
+            setErrorLine(null);
             return;
         }
         try {
@@ -273,9 +280,20 @@ ${JSON.stringify(selectedData, null, 2)}`;
             const data = JSON.parse(cleanJson);
             if (Array.isArray(data)) {
                 setHintsForm(prev => ({ ...prev, hintsData: data }));
+                setJsonError(null);
+                setErrorLine(null);
+            } else {
+                setJsonError("Input must be a JSON Array");
+                setErrorLine(null);
             }
-        } catch (err) {
-            // Silent fail on parse error while typing
+        } catch (err: any) {
+            setJsonError(err.message);
+            const match = err.message.match(/position\s+(\d+)/);
+            if (match) {
+                const pos = parseInt(match[1]);
+                const contentUpToError = val.substring(0, pos);
+                setErrorLine(contentUpToError.split('\n').length);
+            }
         }
     };
 
@@ -484,7 +502,7 @@ ${JSON.stringify(selectedData, null, 2)}`;
                                                 <span className="text-xs bg-blue-900 text-blue-300 px-1.5 py-0.5 rounded">{q.topic}</span>
                                                 <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">{q.subtopic}</span>
                                             </div>
-                                            <div className="text-gray-300"><LatexWrapper>{q.text}</LatexWrapper></div>
+                                            <div className="text-gray-300"><Latex>{q.text}</Latex></div>
                                         </div>
                                     </label>
                                 ))}
@@ -580,7 +598,7 @@ ${JSON.stringify(selectedData, null, 2)}`;
                                                 onChange={() => toggleQuestion('hints', q._id)}
                                                 className="mt-1 w-4 h-4 rounded bg-gray-700 border-gray-600 text-blue-600"
                                             />
-                                            <div className="flex-1 text-sm text-gray-300"><LatexWrapper>{q.text}</LatexWrapper></div>
+                                            <div className="flex-1 text-sm text-gray-300"><Latex>{q.text}</Latex></div>
                                         </label>
                                     ))}
                                 </div>
@@ -610,12 +628,20 @@ ${JSON.stringify(selectedData, null, 2)}`;
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs text-gray-500">Paste AI Output (JSON) below</span>
                                         </div>
-                                        <textarea
-                                            className="flex-1 bg-gray-800 border border-gray-600 text-green-400 font-mono p-4 rounded focus:outline-none focus:border-blue-500 text-sm leading-relaxed resize-none whitespace-pre-wrap"
+                                        <LineNumberTextarea
+                                            className="flex-1 min-h-0"
                                             placeholder="Paste JSON here..."
                                             value={hintsForm.aiOutput}
                                             onChange={handleAiInput}
-                                        ></textarea>
+                                            errorLine={errorLine}
+                                        />
+                                        {jsonError && (
+                                            <div className="text-red-400 text-xs font-mono bg-red-900/20 p-2 rounded border border-red-500/20 flex flex-col">
+                                                <span className="font-bold">Error:</span>
+                                                <span>{jsonError}</span>
+                                                {errorLine && <span>Line detected: {errorLine}</span>}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex flex-col bg-gray-100 h-full min-h-0">
@@ -630,11 +656,11 @@ ${JSON.stringify(selectedData, null, 2)}`;
                                                         <div className="flex justify-between items-start mb-2 border-b border-gray-100 pb-2">
                                                             <div className="font-bold text-gray-800 text-sm">{h.topic || 'Question'}</div>
                                                         </div>
-                                                        <div className="text-gray-800 text-sm mb-2"><LatexWrapper>{h.content}</LatexWrapper></div>
+                                                        <div className="text-gray-800 text-sm mb-2"><Latex>{h.content}</Latex></div>
                                                         <div className="pl-3 border-l-2 border-green-600 bg-green-50 p-2 rounded-r">
                                                             <span className="text-xs text-green-700 font-bold uppercase">Hints:</span>
                                                             <ul className="list-disc list-inside text-gray-600 text-xs mt-1 space-y-1">
-                                                                {h.hints.map((hint: string, j: number) => <li key={j}><LatexWrapper>{hint}</LatexWrapper></li>)}
+                                                                {h.hints.map((hint: string, j: number) => <li key={j}><Latex>{hint}</Latex></li>)}
                                                             </ul>
                                                         </div>
                                                     </div>
