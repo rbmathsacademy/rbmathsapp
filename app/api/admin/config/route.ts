@@ -5,14 +5,16 @@ import Config from '@/models/Config';
 export async function GET() {
     try {
         await connectDB();
-        let config = await Config.findOne();
+        let config = await Config.findOne({ _id: 'system_config' } as any);
 
         if (!config) {
             config = await Config.create({
+                _id: 'system_config',
                 attendanceRequirement: 70, // Fallback global
                 attendanceRules: {}, // Keyed by DEPT_YEAR_COURSE
-                teacherAssignments: {} // Keyed by DEPT_YEAR_COURSE
-            });
+                teacherAssignments: {}, // Keyed by DEPT_YEAR_COURSE
+                aiEnabledTopics: []
+            } as any);
         }
 
         return NextResponse.json(config);
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
 
         console.log('Updating config with:', JSON.stringify(body, null, 2)); // DEBUG
 
-        const config = await Config.findOneAndUpdate({}, body, { new: true, upsert: true });
+        const config = await Config.findOneAndUpdate({ _id: 'system_config' } as any, body, { new: true, upsert: true });
         return NextResponse.json(config);
     } catch (error: any) {
         console.error('Config update error:', error); // DEBUG

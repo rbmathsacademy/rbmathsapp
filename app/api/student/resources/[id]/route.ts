@@ -25,7 +25,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         // We use findOne() to get the singleton config document
         const config = await Config.findOne({});
         const aiEnabledTopics = new Set(config?.aiEnabledTopics || []);
+
+        console.log('[DEBUG] Resource Topic:', resource.topic);
+        console.log('[DEBUG] Config Found:', !!config);
+        console.log('[DEBUG] AI Enabled Topics:', Array.from(aiEnabledTopics));
+
         const isAIEnabled = resource.topic ? aiEnabledTopics.has(resource.topic) : false;
+        console.log('[DEBUG] isAIEnabled:', isAIEnabled);
 
         return NextResponse.json({
             resource: {
