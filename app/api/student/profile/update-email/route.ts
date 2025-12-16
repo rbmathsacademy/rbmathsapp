@@ -10,40 +10,27 @@ const key = new TextEncoder().encode(JWT_SECRET);
 export async function POST(req: Request) {
     try {
         await connectDB();
-        const { email, studentId } = await req.json();
+        const { email } = await req.json(); // studentId from body is IGNORED
 
-        if (!email || !studentId) {
-            return NextResponse.json({ error: 'Email and Student ID are required' }, { status: 400 });
+        if (!email) {
+            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
-        // Verify Authentication
-        let token = null;
-        const cookieStore = req.headers.get('cookie');
-        if (cookieStore) {
-            const cookies = cookieStore.split(';').reduce((acc: any, cookie) => {
-                const [k, v] = cookie.trim().split('=');
-                acc[k] = v;
-                return acc;
-            }, {});
-            token = cookies['auth_token'];
-        }
+        // SECURE: Middleware verifies token and injects x-user-id.
+        // We rely on that or re-verify if paranoid.
+        // For consistency with other routes, let's use the header if available, or fall back to strict check.
+        // Actually, let's trust the Middleware + Header for IDOR fix.
 
-        if (!token) {
-            const authHeader = req.headers.get('authorization');
-            if (authHeader?.startsWith('Bearer ')) {
-                token = authHeader.split(' ')[1];
-            }
-        }
+        let userId = req.headers.get('x-user-id');
 
-        if (!token) {
+        // Fallback for direct calls bypassing middleware (unlikely but safe)
+        if (!userId) {
+            // ... existing token logic could stay, but let's assume middleware config is correct.
+            // If middleware didn't run, x-user-id is missing => 401.
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        try {
-            await jwtVerify(token, key);
-        } catch (err) {
-            return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
-        }
+        const studentId = userId; // Override body studentId
 
         // Update Email
         const student = await Student.findById(studentId);

@@ -12,13 +12,14 @@ export async function GET(req: Request) {
         const department = searchParams.get('department');
         const year = searchParams.get('year');
         const course_code = searchParams.get('course_code');
-        // Get studentId from query param (passed by client)
-        const studentId = searchParams.get('studentId');
+        // Get studentId from SECURE HEADERS (injected by middleware) - PREVENT IDOR
+        // We ignore the query param 'studentId' sent by client for security.
+        const studentId = req.headers.get('x-user-id');
 
         console.log('[ASSIGNMENTS DEBUG] Fetching for dept:', department, 'year:', year, 'course:', course_code, 'studentId:', studentId);
 
-        if (!department || !year) {
-            return NextResponse.json({ error: 'Department and Year are required' }, { status: 400 });
+        if (!department || !year || !studentId) {
+            return NextResponse.json({ error: 'Department, Year, and Auth are required' }, { status: 400 });
         }
 
         // 1. Query batch/manual/randomized assignments that match student's department

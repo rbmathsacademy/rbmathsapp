@@ -7,7 +7,9 @@ export async function POST(req: Request) {
     try {
         await connectDB();
         const body = await req.json();
-        const { assignmentId, studentId, driveLink } = body;
+        // SECURE: Force studentId from token to prevent IDOR
+        const studentId = req.headers.get('x-user-id');
+        const { assignmentId, driveLink } = body;
 
         if (!assignmentId || !studentId || !driveLink) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

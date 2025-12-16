@@ -8,10 +8,10 @@ export async function GET(req: Request) {
     try {
         await connectDB();
         const { searchParams } = new URL(req.url);
-        const studentId = searchParams.get('studentId');
+        const studentId = req.headers.get('x-user-id'); // SECURE: Get ID from token (middleware) NOT query param
 
         if (!studentId) {
-            return NextResponse.json({ error: 'Student ID is required' }, { status: 400 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         if (!mongoose.Types.ObjectId.isValid(studentId)) {
