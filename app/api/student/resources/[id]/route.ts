@@ -22,7 +22,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         }
 
         // Check if AI is enabled for this topic (Global Config)
-        const config = await Config.findOne({ _id: 'system_config' } as any);
+        // We use findOne() to get the singleton config document
+        const config = await Config.findOne({});
         const aiEnabledTopics = new Set(config?.aiEnabledTopics || []);
         const isAIEnabled = resource.topic ? aiEnabledTopics.has(resource.topic) : false;
 

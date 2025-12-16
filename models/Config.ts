@@ -24,6 +24,10 @@ const ConfigSchema = new mongoose.Schema({
         }],
         default: {},
     },
+    aiEnabledTopics: {
+        type: [String],
+        default: []
+    }
 }, { timestamps: true });
 
 // Force recompilation
