@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Resource from '@/models/Resource';
 import Question from '@/models/Question';
+import Config from '@/models/Config';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -20,6 +21,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             questions = await Question.find({ _id: { $in: resource.questions } });
         }
 
+        // Check if AI is enabled for this topic (Global Config)
+        const config = await Config.findOne({ _id: 'system_config' } as any);
+        const aiEnabledTopics = new Set(config?.aiEnabledTopics || []);
+        const isAIEnabled = resource.topic ? aiEnabledTopics.has(resource.topic) : false;
+
         return NextResponse.json({
             resource: {
                 _id: resource._id,
@@ -32,6 +38,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 topic: resource.topic,
                 subtopic: resource.subtopic,
                 hints: resource.hints,
+                aiEnabled: isAIEnabled // Send flag to frontend
             },
             questions: questions.map(q => ({
                 _id: q._id,

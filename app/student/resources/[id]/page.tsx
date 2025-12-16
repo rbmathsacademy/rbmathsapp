@@ -17,7 +17,8 @@ export default function PracticeQuestionsPage() {
     // AI Verification State
     const [showAIModal, setShowAIModal] = useState(false);
     const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
-    const [aiEnabledTopics, setAiEnabledTopics] = useState<Set<string>>(new Set());
+
+    // const [aiEnabledTopics, setAiEnabledTopics] = useState<Set<string>>(new Set()); // REMOVED: Now part of resource
 
     const router = useRouter();
     const params = useParams();
@@ -49,9 +50,10 @@ export default function PracticeQuestionsPage() {
                 toast.error('Failed to load resource');
             }
 
-            // Fetch AI Enabled Topics
+            // Fetch AI Enabled Topics - REMOVED (Merged into Resource API)
+            /* 
             try {
-                const aiRes = await fetch('/api/admin/ai-settings');
+                const aiRes = await fetch('/api/student/ai-settings');
                 if (aiRes.ok) {
                     const data = await aiRes.json();
                     setAiEnabledTopics(new Set(data.enabledTopics || []));
@@ -59,6 +61,7 @@ export default function PracticeQuestionsPage() {
             } catch (error) {
                 console.error('Error loading AI settings', error);
             }
+            */
         } catch (error) {
             console.error('Failed to fetch resource', error);
             toast.error('Something went wrong');
@@ -220,7 +223,8 @@ Thank you!`;
                                             </div>
                                             <div className="flex-1">
                                                 {/* AI Verify Button - Float on right so text flows around it */}
-                                                {question.topic && aiEnabledTopics.has(question.topic) && (
+                                                {/* Check resource.aiEnabled instead of local set */}
+                                                {resource.aiEnabled && (
                                                     <button
                                                         onClick={() => handleAIVerify(question)}
                                                         className="float-right ml-3 mb-2 flex-shrink-0 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:text-cyan-300 text-[10px] sm:text-xs font-bold transition-all hover:shadow-lg hover:shadow-cyan-500/20 backdrop-blur-sm whitespace-nowrap"
