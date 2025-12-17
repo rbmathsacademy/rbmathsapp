@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, Plus, Trash2, Link as LinkIcon, FileText, Video, Brain, Copy, Check, Sparkles, X } from 'lucide-react';
+import { Loader2, Plus, Trash2, Edit, Link as LinkIcon, FileText, Video, Brain, Copy, Check, Sparkles, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
@@ -48,6 +48,12 @@ export default function Resources() {
     });
 
     const [submitting, setSubmitting] = useState(false);
+
+    // Edit Resource State
+    const [editingResource, setEditingResource] = useState<any>(null);
+    const [editForm, setEditForm] = useState({
+        title: '', targetDepartments: [] as string[], targetYear: '', targetCourse: ''
+    });
 
     // AI Verification Control State
     const [showAIModal, setShowAIModal] = useState(false);
@@ -165,6 +171,39 @@ export default function Resources() {
             }
         } catch (error) {
             toast.error('Error deleting resource');
+        }
+    };
+
+    const handleEdit = (resource: any) => {
+        setEditingResource(resource);
+        setEditForm({
+            title: resource.title || '',
+            targetDepartments: resource.targetDepartments || [],
+            targetYear: resource.targetYear || '',
+            targetCourse: resource.targetCourse || resource.course_code || ''
+        });
+    };
+
+    const handleUpdate = async () => {
+        if (!editingResource) return;
+        try {
+            setSubmitting(true);
+            const res = await fetch(`/api/admin/resources?id=${editingResource._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...getHeaders() },
+                body: JSON.stringify(editForm)
+            });
+            if (res.ok) {
+                toast.success('Resource updated!');
+                setEditingResource(null);
+                fetchResources();
+            } else {
+                toast.error('Failed to update resource');
+            }
+        } catch (error) {
+            toast.error('Error updating resource');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -930,6 +969,102 @@ ${JSON.stringify(selectedData, null, 2)}`;
                 </div>
             </div >
 
+
+            {/* Edit Resource Modal */}
+            {editingResource && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 rounded-lg w-full max-w-2xl border border-gray-700 shadow-2xl">
+                        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-white">Edit Resource</h2>
+                            <button onClick={() => setEditingResource(null)} className="text-gray-400 hover:text-white transition-colors">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Title</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-gray-800 border-gray-700 rounded text-white p-2"
+                                    value={editForm.title}
+                                    onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Departments</label>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        className="bg-gray-800 border-gray-700 rounded text-white p-2 w-full text-left flex justify-between items-center"
+                                        onClick={() => document.getElementById('dept-dropdown-edit')?.classList.toggle('hidden')}
+                                    >
+                                        <span className="truncate">{editForm.targetDepartments.length ? editForm.targetDepartments.join(', ') : 'Select Departments'}</span>
+                                        <span className="text-xs">▼</span>
+                                    </button>
+                                    <div id="dept-dropdown-edit" className="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-700 rounded mt-1 z-10 max-h-40 overflow-y-auto">
+                                        {depts.map(d => (
+                                            <label key={d} className="flex items-center gap-2 p-2 hover:bg-gray-700 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editForm.targetDepartments.includes(d)}
+                                                    onChange={(e) => {
+                                                        const newDepts = e.target.checked
+                                                            ? [...editForm.targetDepartments, d]
+                                                            : editForm.targetDepartments.filter(x => x !== d);
+                                                        setEditForm({ ...editForm, targetDepartments: newDepts });
+                                                    }}
+                                                />
+                                                <span className="text-sm text-white">{d}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Year</label>
+                                    <select
+                                        className="w-full bg-gray-800 border-gray-700 rounded text-white p-2"
+                                        value={editForm.targetYear}
+                                        onChange={e => setEditForm({ ...editForm, targetYear: e.target.value })}
+                                    >
+                                        <option value="">Select Year</option>
+                                        {years.map(y => <option key={y} value={y}>{y}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Course</label>
+                                    <select
+                                        className="w-full bg-gray-800 border-gray-700 rounded text-white p-2"
+                                        value={editForm.targetCourse}
+                                        onChange={e => setEditForm({ ...editForm, targetCourse: e.target.value })}
+                                    >
+                                        <option value="">Select Course</option>
+                                        {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-gray-700 flex gap-3">
+                            <button
+                                onClick={() => setEditingResource(null)}
+                                className="flex-1 py-3 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUpdate}
+                                disabled={submitting}
+                                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                Update Resource
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* AI Topic Control Modal */}
             {showAIModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -1042,9 +1177,14 @@ ${JSON.stringify(selectedData, null, 2)}`;
                             <div key={r._id} className="bg-gray-900 p-3 rounded border border-gray-700 group relative">
                                 <div className="flex justify-between items-start mb-1">
                                     <h3 className="text-white font-medium text-sm line-clamp-2">{r.title}</h3>
-                                    <button onClick={() => handleDelete(r._id)} className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleEdit(r)} className="text-gray-600 hover:text-blue-400 transition-colors">
+                                            <Edit className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={() => handleDelete(r._id)} className="text-gray-600 hover:text-red-400 transition-colors">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2 mb-2">
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${r.type === 'practice' ? 'bg-blue-900 text-blue-300' :
