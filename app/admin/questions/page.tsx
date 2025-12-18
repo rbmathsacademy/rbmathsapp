@@ -133,6 +133,8 @@ Example Output:
 ]
 `;
 
+type EditorMode = 'manual' | 'json' | 'image';
+
 export default function QuestionBank() {
     const [loading, setLoading] = useState(false);
     const [questions, setQuestions] = useState<any[]>([]);
