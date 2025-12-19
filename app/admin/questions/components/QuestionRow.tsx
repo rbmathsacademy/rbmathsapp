@@ -307,28 +307,113 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                 </div>
                 {error && <span className="text-xs text-red-400 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Invalid JSON</span>}
                 <textarea
-                    className={`flex-1 w-full bg-gray-950 p-3 rounded border text-xs font-mono resize-none focus:outline-none focus:ring-1 transition-all min-h-[150px] ${error ? 'border-red-500/50 focus:ring-red-500' : 'border-gray-700 focus:ring-blue-500'
+                    className={`flex-1 w-full bg-gray-950 p-3 rounded border text-xs font-mono resize-none focus:outline-none focus:ring-1 transition-all min-h-[150px] text-emerald-400 ${error ? 'border-red-500/50 focus:ring-red-500' : 'border-gray-700 focus:ring-blue-500'
                         }`}
                     value={jsonInput}
                     onChange={(e) => handleJsonChange(e.target.value)}
                     spellCheck={false}
+                    onPaste={(e) => {
+                        const items = e.clipboardData.items;
+                        for (let i = 0; i < items.length; i++) {
+                            if (items[i].type.indexOf('image') !== -1) {
+                                e.preventDefault();
+                                const blob = items[i].getAsFile();
+                                if (!blob) return;
+
+                                const reader = new FileReader();
+                                reader.readAsDataURL(blob);
+                                reader.onload = (event) => {
+                                    const img = new Image();
+                                    img.src = event.target?.result as string;
+                                    img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        const MAX_WIDTH = 800;
+                                        const scaleSize = MAX_WIDTH / img.width;
+                                        canvas.width = MAX_WIDTH;
+                                        canvas.height = img.height * scaleSize;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                                        const updated = { ...localQuestion, image: compressedBase64 };
+                                        updateParent(updated);
+                                    };
+                                };
+                            }
+                        }
+                    }}
                 />
+
+                {/* Manual Image Upload for JSON Mode */}
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-800">
+                    <label className="flex items-center gap-2 text-xs text-gray-400 hover:text-blue-400 cursor-pointer transition-colors">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                const reader = new FileReader();
+                                reader.readAsDataURL(file);
+                                reader.onload = (event) => {
+                                    const img = new Image();
+                                    img.src = event.target?.result as string;
+                                    img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        const MAX_WIDTH = 800;
+                                        const scaleSize = MAX_WIDTH / img.width;
+                                        canvas.width = MAX_WIDTH;
+                                        canvas.height = img.height * scaleSize;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                                        const updated = { ...localQuestion, image: compressedBase64 };
+                                        updateParent(updated);
+                                    };
+                                };
+                            }}
+                        />
+                        <div className="p-1.5 bg-gray-800 rounded border border-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                        </div>
+                        <span>Upload/Paste Image</span>
+                    </label>
+                    {localQuestion.image && (
+                        <span className="text-[10px] text-green-400 bg-green-900/20 px-2 py-0.5 rounded border border-green-900/30">
+                            Image Attached
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Right: Live Preview */}
-            <div className="p-4 bg-gray-50 min-h-[200px]">
+            <div className="p-4 bg-gray-900 min-h-[200px] border-l border-gray-700">
                 {!error ? (
                     <div className="h-full flex flex-col">
-                        <div className="flex justify-between items-start mb-2 border-b border-gray-200 pb-2">
+                        <div className="flex justify-between items-start mb-2 border-b border-gray-700 pb-2">
                             <div className="flex gap-2 flex-wrap">
-                                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold uppercase">{localQuestion.topic || 'No Topic'}</span>
-                                <span className="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold uppercase">{localQuestion.subtopic || 'No Subtopic'}</span>
+                                <span className="bg-blue-900/50 text-blue-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-blue-500/30">{localQuestion.topic || 'No Topic'}</span>
+                                <span className="bg-purple-900/50 text-purple-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-purple-500/30">{localQuestion.subtopic || 'No Subtopic'}</span>
                             </div>
                             <span className="text-[10px] text-gray-400 font-mono uppercase">{localQuestion.type || 'Unknown'}</span>
                         </div>
-                        <div className="text-gray-800 text-sm prose prose-sm max-w-none">
-                            {localQuestion.text ? <Latex>{localQuestion.text}</Latex> : <span className="text-gray-400 italic">(No text content)</span>}
+                        <div className="text-white text-sm prose prose-sm prose-invert max-w-none">
+                            {localQuestion.text ? <Latex>{localQuestion.text}</Latex> : <span className="text-gray-500 italic">(No text content)</span>}
                         </div>
+
+                        {/* Render Image at Bottom & Inverted */}
+                        {localQuestion.image && (
+                            <div className="mt-4 pt-4 border-t border-gray-700 flex justify-center">
+                                <img
+                                    src={localQuestion.image}
+                                    alt="Question Diagram"
+                                    className="max-w-full max-h-[200px] object-contain rounded filter invert mix-blend-lighten"
+                                />
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="h-full flex items-center justify-center text-gray-400 text-xs italic">

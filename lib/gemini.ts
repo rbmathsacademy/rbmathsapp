@@ -4,6 +4,7 @@ import connectDB from './db';
 import ApiUsage from '../models/ApiUsage';
 
 // Initialize Gemini AI
+// Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // Constants - NO HARD LIMITS, Passive Tracking Only
@@ -16,8 +17,12 @@ Rules:
 1. Output MUST be a valid JSON array of objects.
 2. Each question object must have: "text" (string), "type" (string: "broad", "mcq", or "blanks"), "topic" (string), "subtopic" (string).
 3. Preserve LaTeX math notation using $ for inline and $$ for display math.
-4. Do NOT add any explanation, markdown formatting, or extra text. Output ONLY the JSON array.
-5. Ensure all special characters are properly escaped in JSON strings.
+4. IF THE CONTENT CONTAINS IMAGES (diagrams, circuits, graphs):
+   - Extract the image and convert it to a Base64 string.
+   - Add an "image" field to the JSON object with the Base64 string (e.g., "data:image/png;base64,...").
+   - If no image is present for a question, omit the "image" field or set it to null.
+5. Do NOT add any explanation, markdown formatting, or extra text. Output ONLY the JSON array.
+6. Ensure all special characters are properly escaped in JSON strings.
 
 Example Output:
 [
@@ -25,7 +30,8 @@ Example Output:
     "text": "Find the rank of the matrix $ A = \\\\begin{pmatrix} 1 & 2 \\\\\\\\ 3 & 4 \\\\end{pmatrix} $",
     "type": "broad",
     "topic": "Matrix",
-    "subtopic": "Rank"
+    "subtopic": "Rank",
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
   }
 ]`;
 
@@ -127,6 +133,7 @@ export async function extractQuestionsFromFile(
     try {
         onProgress?.('initializing', 10);
 
+        // Reverting to gemini-2.5-flash as it is confirmed available in the model list
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         onProgress?.('processing', 30);

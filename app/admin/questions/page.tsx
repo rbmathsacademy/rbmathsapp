@@ -112,23 +112,23 @@ const AI_PROMPT = `You are a Question Bank Assistant. Your task is to extract qu
 
 Rules:
 1. Output MUST be a valid JSON array of objects.
-2. Each object must have the following fields:
-   - "text": The question text. Use LaTeX for math.
-     - IMPORTANT: Use ONLY single dollar signs ($...$) for ALL math expressions (inline and display). DO NOT use double dollar signs ($$...$$).
-     - IMPORTANT: Escape ALL backslashes. Use double backslash (\\\\) for every single backslash in LaTeX commands. Example: use \\\\frac{a}{b} instead of \\frac{a}{b}.
-   - "type": One of "broad", "mcq", "blanks".
-   - "topic": Infer the specific topic (e.g., "Matrix", "Thermodynamics"). Avoid generic terms like "Math" or "Physics".
-   - "subtopic": Infer the specific subtopic (e.g., "Rank", "Entropy").
-3. If images are present, try to describe them using TikZ code within the "text" field, or provide a clear text description.
-4. Do NOT wrap the output in markdown code blocks (like \`\`\`json). Return ONLY the raw JSON string.
+2. Each question object must have: "text" (string), "type" (string: "broad", "mcq", or "blanks"), "topic" (string), "subtopic" (string).
+3. Preserve LaTeX math notation using $ for inline and $$ for display math.
+4. IF THE CONTENT CONTAINS IMAGES (diagrams, circuits, graphs):
+   - Extract the image and convert it to a Base64 string.
+   - Add an "image" field to the JSON object with the Base64 string (e.g., "data:image/png;base64,...").
+   - If no image is present for a question, omit the "image" field or set it to null.
+5. Do NOT add any explanation, markdown formatting, or extra text. Output ONLY the JSON array.
+6. Ensure all special characters are properly escaped in JSON strings.
 
 Example Output:
 [
   {
-    "text": "Find the rank of the matrix $ A = \\\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\\\end{pmatrix} $",
+    "text": "Find the rank of the matrix $ A = \\\\begin{pmatrix} 1 & 2 \\\\\\\\ 3 & 4 \\\\end{pmatrix} $",
     "type": "broad",
     "topic": "Matrix",
-    "subtopic": "Rank"
+    "subtopic": "Rank",
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
   }
 ]
 `;
@@ -571,10 +571,7 @@ export default function QuestionBank() {
             topic: "Topic",
             subtopic: "Subtopic"
         }]);
-        // Scroll to bottom
-        setTimeout(() => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }, 100);
+        // Auto-scroll removed
     };
 
 
@@ -795,7 +792,7 @@ export default function QuestionBank() {
 
             setExtractionProgress(100);
             setExtractionStage('complete');
-            setEditorMode('json');
+            setEditorMode('pdf'); // Keep user in PDF/AI Editor mode
             setIsEditorOpen(true);
             setUsageRefreshTrigger(prev => prev + 1);
 
@@ -1029,9 +1026,7 @@ export default function QuestionBank() {
                     <button onClick={() => handleModeSwitch('pdf')} className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
                         PDF
                     </button>
-                    <button onClick={() => handleModeSwitch('image')} className="bg-pink-600 hover:bg-pink-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
-                        Image
-                    </button>
+
                 </div>
 
                 {/* Right Side Buttons */}
@@ -1386,14 +1381,7 @@ export default function QuestionBank() {
                             <button onClick={() => setIsEditorOpen(false)} className="text-gray-400 hover:text-white px-3 flex items-center gap-2 text-sm font-medium">
                                 <ArrowLeft className="h-4 w-4" /> Back to Homepage
                             </button>
-                            <button
-                                onClick={saveToDatabase}
-                                disabled={loading}
-                                className="bg-green-600 hover:bg-green-500 text-white px-4 py-1 rounded font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                                {loading ? 'Saving...' : 'Save'}
-                            </button>
+
                         </div>
                     </div>
 
@@ -1548,13 +1536,16 @@ export default function QuestionBank() {
                                 ))}
 
                                 {!['json', 'latex'].includes(editorMode) && (
-                                    <div className="p-8 flex justify-center bg-gray-900 border-t border-gray-700">
+                                    <div className="p-8 flex flex-col gap-4 justify-center bg-gray-900 border-t border-gray-700">
                                         <button
                                             onClick={handleAddNewQuestion}
-                                            className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors w-full max-w-md justify-center"
+                                            className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors w-full max-w-md mx-auto justify-center"
                                         >
                                             <Plus className="h-5 w-5" /> Add New Question
                                         </button>
+
+                                        {/* Bottom Save Button */}
+
                                     </div>
                                 )}
                             </div>
@@ -1598,16 +1589,30 @@ export default function QuestionBank() {
                     </div>
 
                     {/* Floating Action Buttons (Always Floating) */}
+                    {/* Floating Action Buttons */}
                     <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
-                        <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
-                            <Printer className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Print Selected</span>
-                        </button>
-                        <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
-                            <Download className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Export JSON</span>
-                        </button>
-                        <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
-                            <Trash2 className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Delete ({selectedQuestionIds.size})</span>
-                        </button>
+                        {!isEditorOpen ? (
+                            <>
+                                <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                    <Printer className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Print Selected</span>
+                                </button>
+                                <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                    <Download className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Export JSON</span>
+                                </button>
+                                <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                    <Trash2 className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Delete ({selectedQuestionIds.size})</span>
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={saveToDatabase}
+                                disabled={loading}
+                                className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 rounded-full shadow-lg text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 animate-in fade-in zoom-in duration-300"
+                            >
+                                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
+                                <span className="hidden md:inline">{loading ? 'Saving...' : 'Save Changes'}</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
