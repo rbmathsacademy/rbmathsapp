@@ -11,15 +11,30 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
         }
 
-        const student = await Student.findByIdAndUpdate(
-            studentId,
-            { loginDisabled: disabled },
-            { new: true }
-        );
-
-        if (!student) {
+        const studentToUpdate = await Student.findById(studentId);
+        if (!studentToUpdate) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
+
+        let newCourseCode = studentToUpdate.course_code;
+        if (disabled) {
+            if (!newCourseCode.startsWith('DISABLED_')) {
+                newCourseCode = `DISABLED_${newCourseCode}`;
+            }
+        } else {
+            if (newCourseCode.startsWith('DISABLED_')) {
+                newCourseCode = newCourseCode.replace('DISABLED_', '');
+            }
+        }
+
+        const student = await Student.findByIdAndUpdate(
+            studentId,
+            {
+                loginDisabled: disabled,
+                course_code: newCourseCode
+            },
+            { new: true }
+        );
 
         return NextResponse.json({
             message: `Student login ${disabled ? 'disabled' : 'enabled'} successfully`,

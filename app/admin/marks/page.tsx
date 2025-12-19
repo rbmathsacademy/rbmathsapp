@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Loader2, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import InstructionsBox from '../assignments/components/InstructionsBox';
@@ -11,6 +11,8 @@ export default function MarksPage() {
     const [assignments, setAssignments] = useState<any[]>([]);
     const [submissions, setSubmissions] = useState<any[]>([]);
 
+    const [config, setConfig] = useState<any>({ teacherAssignments: {} });
+
     // Filters
     const [filters, setFilters] = useState({
         dept: 'all',
@@ -18,59 +20,34 @@ export default function MarksPage() {
         course: 'all'
     });
 
-    // Derived Lists
-    const [depts, setDepts] = useState<string[]>([]);
-    const [years, setYears] = useState<string[]>([]);
-    const [courses, setCourses] = useState<string[]>([]);
-
-    // Calculated Data
     const [marksData, setMarksData] = useState<any[]>([]);
 
     const [user, setUser] = useState<any>(null);
-    const [allowedContext, setAllowedContext] = useState<any>(null);
 
     useEffect(() => {
         const init = async () => {
             const storedUser = localStorage.getItem('user');
+            let headers: any = {};
+
             if (storedUser) {
                 const parsedUser = JSON.parse(storedUser);
                 setUser(parsedUser);
-
-                const isGA = localStorage.getItem('globalAdminActive') === 'true';
-
-                try {
-                    // If Global Admin, we don't restrict context; let it fall back to all students
-                    if (!isGA) {
-                        const cRes = await fetch('/api/admin/config');
-                        if (cRes.ok) {
-                            const config = await cRes.json();
-                            const courses = new Set<string>();
-                            const depts = new Set<string>();
-                            const years = new Set<string>();
-
-                            if (config.teacherAssignments) {
-                                Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
-                                    if (Array.isArray(teachers) && teachers.some((t: any) => t.email === parsedUser.email)) {
-                                        const [d, y, c] = key.split('_');
-                                        if (d) depts.add(d);
-                                        if (y) years.add(y);
-                                        if (c) courses.add(c);
-                                    }
-                                });
-                            }
-                            setAllowedContext({
-                                courses: Array.from(courses).sort(),
-                                depts: Array.from(depts).sort(),
-                                years: Array.from(years).sort()
-                            });
-                        }
-                    } else {
-                        setAllowedContext(null); // Ensure it's null for GA so it uses all data
-                    }
-                } catch (e) {
-                    console.error("Error fetching config", e);
-                }
+                if (parsedUser.email) headers['X-User-Email'] = parsedUser.email;
             }
+
+            const ga = localStorage.getItem('globalAdminActive');
+            if (ga === 'true') headers['X-Global-Admin-Key'] = 'globaladmin_25';
+
+            try {
+                const cRes = await fetch('/api/admin/config', { headers });
+                if (cRes.ok) {
+                    const data = await cRes.json();
+                    setConfig(data);
+                }
+            } catch (e) {
+                console.error("Error fetching config", e);
+            }
+
             fetchData();
         };
         init();
@@ -80,26 +57,60 @@ export default function MarksPage() {
         if (user) fetchData();
     }, [user]);
 
+    // Derived Lists [UPDATED with Access Control]
+    const { depts, years, courses } = useMemo(() => {
+        const d = new Set<string>();
+        const y = new Set<string>();
+        const c = new Set<string>();
+
+        const isGA = typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true';
+
+        if (isGA) {
+            students.forEach(s => {
+                if (s.department) d.add(s.department);
+                if (s.year) y.add(s.year);
+                if (s.course_code) c.add(s.course_code);
+            });
+        } else if (user?.email && config.teacherAssignments) {
+            Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
+                if (Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === user.email.toLowerCase())) {
+                    const parts = key.split('_');
+                    if (parts.length >= 3) {
+                        d.add(parts[0]);
+                        y.add(parts[1]);
+                        c.add(parts[2]);
+                    }
+                }
+            });
+        }
+
+        return {
+            depts: Array.from(d).sort(),
+            years: Array.from(y).sort(),
+            courses: Array.from(c).sort()
+        };
+    }, [students, config, user]);
 
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch Students (Public, but good practice to send headers if available)
-            const sRes = await fetch('/api/admin/students/all');
+            // Prepare Headers
+            const headers: any = {};
+            if (user?.email) {
+                headers['X-User-Email'] = user.email;
+            }
+            const ga = localStorage.getItem('globalAdminActive');
+            if (ga === 'true') headers['X-Global-Admin-Key'] = 'globaladmin_25';
+
+            // Fetch Students
+            const sRes = await fetch('/api/admin/students/all', { headers });
             if (sRes.ok) {
                 const data = await sRes.json();
                 setStudents(data);
             }
 
-            // Fetch Assignments (PROTECTED - Requires Email Header)
-            const headers: any = {};
-            if (user?.email) {
-                headers['X-User-Email'] = user.email;
-                const ga = localStorage.getItem('globalAdminActive');
-                if (ga === 'true') headers['X-Global-Admin-Key'] = 'globaladmin_25';
-            }
-
+            // Fetch Assignments
             const aRes = await fetch('/api/admin/assignments', { headers });
             if (aRes.ok) {
                 const data = await aRes.json();
@@ -107,7 +118,7 @@ export default function MarksPage() {
             }
 
             // Fetch Submissions
-            const subRes = await fetch('/api/admin/submissions');
+            const subRes = await fetch('/api/admin/submissions', { headers });
             if (subRes.ok) {
                 const data = await subRes.json();
                 setSubmissions(data);
@@ -121,47 +132,35 @@ export default function MarksPage() {
         }
     };
 
-    useEffect(() => {
-        if (!loading) calculateMarks();
-    }, [filters, students, assignments, submissions]);
-
-    // Update derived lists based on allowedContext
-    useEffect(() => {
-        if (!allowedContext) {
-            if (students.length > 0) {
-                const d = new Set<string>();
-                const y = new Set<string>();
-                const c = new Set<string>();
-                students.forEach((s: any) => {
-                    if (s.department) d.add(s.department);
-                    if (s.year) y.add(s.year);
-                    if (s.course_code) c.add(s.course_code);
-                });
-                setDepts(Array.from(d).sort());
-                setYears(Array.from(y).sort());
-                setCourses(Array.from(c).sort());
-            }
-            return;
-        }
-
-        setDepts(allowedContext.depts);
-        setYears(allowedContext.years);
-        setCourses(allowedContext.courses);
-
-    }, [allowedContext, students]);
-
     const calculateMarks = () => {
         // 1. Filter Students (apply faculty restrictions first)
         let filteredStudents = students;
 
-        // Apply faculty-based filtering if allowedContext exists
-        if (allowedContext) {
-            filteredStudents = filteredStudents.filter(s => {
-                const deptMatch = allowedContext.depts.length === 0 || allowedContext.depts.includes(s.department);
-                const yearMatch = allowedContext.years.length === 0 || allowedContext.years.includes(s.year);
-                const courseMatch = allowedContext.courses.length === 0 || allowedContext.courses.includes(s.course_code);
-                return deptMatch && yearMatch && courseMatch;
-            });
+        const isGA = typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true';
+
+        // Apply faculty-based filtering if NOT Global Admin
+        if (!isGA && user?.email && config.teacherAssignments) {
+            const assignedKeys = Object.entries(config.teacherAssignments)
+                .filter(([key, teachers]: [string, any]) =>
+                    Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === user.email.toLowerCase())
+                )
+                .map(([key]) => key);
+
+            if (assignedKeys.length > 0) {
+                filteredStudents = filteredStudents.filter(s => {
+                    const key = `${s.department}_${s.year}_${s.course_code}`;
+                    return assignedKeys.includes(key);
+                });
+            } else {
+                // If faculty has NO assignments, show nothing (or all? usually nothing)
+                // The Attendance page falls back to 'students' if assignedKeys is empty, 
+                // but that might be unsafe if we want strict restriction.
+                // However, the prompt says "populate only the data tagged".
+                // If I have no tags, I should see nothing.
+                // But let's follow the logic: if assignedKeys is empty, it might mean config isn't loaded or user has no assignments.
+                // Let's be strict: if no assignments found, show nothing.
+                filteredStudents = [];
+            }
         }
 
         // Then apply user-selected filters
@@ -235,6 +234,13 @@ export default function MarksPage() {
         data.sort((a, b) => a.roll.localeCompare(b.roll));
         setMarksData(data);
     };
+
+    // Trigger calculation when data or filters change
+    useEffect(() => {
+        if (students.length > 0) {
+            calculateMarks();
+        }
+    }, [students, assignments, submissions, filters, config, user]);
 
     const exportCSV = () => {
         if (marksData.length === 0) return;

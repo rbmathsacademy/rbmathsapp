@@ -23,6 +23,7 @@ interface AttendanceRule {
 export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Props) {
     const [loading, setLoading] = useState(false);
     const [topics, setTopics] = useState<string[]>([]);
+    const [subTopics, setSubTopics] = useState<string[]>([]);
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
 
     // Step 1 Rule: Pool of allowed questions
@@ -36,7 +37,8 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
         startTime: '',
         deadline: '',
         topicWeights: [] as { topic: string, weight: number }[],
-        rules: [{ min: 70, max: 100, count: 5 }] as AttendanceRule[]
+        rules: [{ min: 70, max: 100, count: 5 }] as AttendanceRule[],
+        selectedSubTopics: [] as string[]
     });
 
     useEffect(() => {
@@ -44,16 +46,25 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
     }, [user]);
 
     useEffect(() => {
-        // Filter questions based on topic weights (if any topic is selected in weights)
-        // If no weights, maybe show all? Or show none?
-        // Usually batch assignment implies topics are weighted.
-        // Let's show all questions that belong to topics present in topicWeights.
-        // If topicWeights is empty, show all?
-
+        // Update available subtopics based on selected weighted topics
         const weightedTopics = formData.topicWeights.map(t => t.topic);
-        const filtered = allQuestions.filter(q =>
-            weightedTopics.length === 0 || weightedTopics.includes(q.topic)
-        );
+        const relevantQuestions = weightedTopics.length === 0
+            ? allQuestions
+            : allQuestions.filter(q => weightedTopics.includes(q.topic));
+
+        const newSubTopics = Array.from(new Set(relevantQuestions.map(q => q.subtopic).filter(Boolean))).sort();
+        setSubTopics(newSubTopics);
+    }, [formData.topicWeights, allQuestions]);
+
+    useEffect(() => {
+        // Filter questions based on topic weights AND subtopics
+        const weightedTopics = formData.topicWeights.map(t => t.topic);
+
+        const filtered = allQuestions.filter(q => {
+            const topicMatch = weightedTopics.length === 0 || weightedTopics.includes(q.topic);
+            const subTopicMatch = formData.selectedSubTopics.length === 0 || formData.selectedSubTopics.includes(q.subtopic);
+            return topicMatch && subTopicMatch;
+        });
         setFilteredQuestions(filtered);
 
         // Auto-select new questions if they match criteria, but preserve unselected ones?
@@ -61,7 +72,7 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
         // Or we can try to preserve.
         // Let's reset for now to ensure consistency.
         setAllowedQuestionIds(filtered.map(q => q._id));
-    }, [formData.topicWeights, allQuestions]);
+    }, [formData.topicWeights, formData.selectedSubTopics, allQuestions]);
 
     const fetchData = async () => {
         if (!user?.email) return;
@@ -169,7 +180,8 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
                     startTime: '',
                     deadline: '',
                     topicWeights: [],
-                    rules: [{ min: 70, max: 100, count: 5 }]
+                    rules: [{ min: 70, max: 100, count: 5 }],
+                    selectedSubTopics: []
                 });
                 onSuccess();
             } else {
@@ -368,6 +380,18 @@ export default function BatchTab({ onSuccess, user, context, isGlobalAdmin }: Pr
 
                 {/* Right Column: Question Exclusion (2/3 width) */}
                 <div className="space-y-4 lg:col-span-2">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300">Filter Pool by Sub-topic</label>
+                        <div className="mt-2">
+                            <MultiSelect
+                                options={subTopics}
+                                selected={formData.selectedSubTopics}
+                                onChange={s => setFormData({ ...formData, selectedSubTopics: s })}
+                                placeholder="Filter by sub-topic..."
+                            />
+                        </div>
+                    </div>
+
                     <label className="block text-sm font-medium text-gray-300">Step 1: Refine Question Pool</label>
                     <QuestionSelector
                         questions={filteredQuestions}

@@ -13,30 +13,45 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Roll number and password are required' }, { status: 400 });
         }
 
-        const student = await Student.findOne({ roll });
+        const students = await Student.find({ roll });
 
-        if (!student) {
+        if (students.length === 0) {
             return NextResponse.json(
                 { error: 'Invalid credentials' },
                 { status: 401 }
             );
         }
 
-        if (!student.isVerified) {
+        // Check if ALL accounts are disabled
+        const allDisabled = students.every(doc => doc.loginDisabled);
+        if (allDisabled) {
             return NextResponse.json(
-                { error: 'Account not verified. Please register first.' },
+                { error: 'Your account has been disabled for all courses. Contact admin.' },
                 { status: 403 }
             );
         }
 
-        if (student.loginDisabled) {
+        // Find an active AND verified account to authenticate against
+        // We prioritize verified accounts. If multiple exist, any is fine (assuming same password).
+        const activeVerifiedStudent = students.find(s => !s.loginDisabled && s.isVerified);
+
+        if (!activeVerifiedStudent) {
+            // Check if there are active but unverified accounts
+            const activeUnverified = students.some(s => !s.loginDisabled);
+            if (activeUnverified) {
+                return NextResponse.json(
+                    { error: 'Account not verified. Please register first.' },
+                    { status: 403 }
+                );
+            }
+            // Should be covered by allDisabled check, but fallback
             return NextResponse.json(
-                { error: 'Your account has been disabled. Contact admin.' },
+                { error: 'Account disabled.' },
                 { status: 403 }
             );
         }
 
-        const isMatch = await bcrypt.compare(password, student.password);
+        const isMatch = await bcrypt.compare(password, activeVerifiedStudent.password);
 
         if (!isMatch) {
             return NextResponse.json(
@@ -45,9 +60,14 @@ export async function POST(req: Request) {
             );
         }
 
-        // AGGREGATION: Find ALL records for this student (same roll) to get all enrolled courses
-        const allStudentDocs = await Student.find({ roll: student.roll });
-        const allCourseCodes = allStudentDocs.map(doc => doc.course_code).filter(Boolean);
+        // Use the authenticated student record for ID, but aggregate courses
+        const student = activeVerifiedStudent;
+
+        // Filter only ACTIVE courses from ALL records
+        const activeStudentDocs = students.filter(doc => !doc.loginDisabled);
+        const allCourseCodes = activeStudentDocs
+            .map(doc => doc.course_code)
+            .filter(code => code && !code.startsWith('DISABLED_'));
 
         // Create JWT Token
         const secret = new TextEncoder().encode(

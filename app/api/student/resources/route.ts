@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Resource from '@/models/Resource';
+import Student from '@/models/Student';
 
 export async function GET(req: Request) {
     try {
@@ -16,7 +17,26 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Department and Year are required' }, { status: 400 });
         }
 
-        const courseCodes = course_code ? course_code.split(',') : [];
+        const studentId = req.headers.get('x-user-id');
+
+        // 1. Validate Course Enrollment (Server-Side)
+        let activeCourseCodes: string[] = [];
+        if (studentId) {
+            const currentStudent = await Student.findById(studentId);
+            if (currentStudent) {
+                const allStudentDocs = await Student.find({
+                    roll: currentStudent.roll,
+                    loginDisabled: { $ne: true }
+                });
+                activeCourseCodes = allStudentDocs
+                    .map(s => s.course_code)
+                    .filter(code => code && !code.startsWith('DISABLED_'));
+            }
+        }
+
+        const requestedCodes = course_code ? course_code.split(',') : [];
+        // Only allow requesting courses that are actually active
+        const validCourseCodes = requestedCodes.filter(code => activeCourseCodes.includes(code));
 
         // Query resources - matching department, year, and optionally course
         const query: any = {
@@ -25,17 +45,23 @@ export async function GET(req: Request) {
                 { targetDepartments: { $in: [department] } }
             ],
             targetYear: year,
-            ...(courseCodes.length > 0 ? { targetCourse: { $in: courseCodes } } : {})
+            ...(validCourseCodes.length > 0 ? { targetCourse: { $in: validCourseCodes } } : {})
         };
 
         let resources = await Resource.find(query).sort({ createdAt: -1 });
 
-
-        // If no results, try getting all resources (fallback)  
-        if (resources.length === 0) {
-            resources = await Resource.find({}).sort({ createdAt: -1 });
-
+        // Double check: Filter out any resource that targets a course NOT in activeCourseCodes
+        // Only if we have activeCourseCodes (authenticated user)
+        if (activeCourseCodes.length > 0) {
+            resources = resources.filter(r => {
+                if (!r.targetCourse) return true; // General resource
+                return activeCourseCodes.includes(r.targetCourse);
+            });
         }
+
+
+        // Fallback logic removed to prevent unauthorized access to all resources
+        // if (resources.length === 0) { ... }
 
         return NextResponse.json(resources);
     } catch (error) {

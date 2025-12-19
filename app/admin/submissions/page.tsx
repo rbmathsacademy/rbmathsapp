@@ -21,17 +21,44 @@ export default function SubmissionsPage() {
         assignmentId: ''
     });
 
-    // Derived Lists for Dropdowns
-    const [depts, setDepts] = useState<string[]>([]);
-    const [years, setYears] = useState<string[]>([]);
-    const [courses, setCourses] = useState<string[]>([]);
+    const [user, setUser] = useState<any>(null);
 
-    // Report Data
+    // Derived Lists for Dropdowns
+    const { depts, years, courses } = useMemo(() => {
+        const d = new Set<string>();
+        const y = new Set<string>();
+        const c = new Set<string>();
+
+        const isGA = typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true';
+
+        if (isGA) {
+            students.forEach(s => {
+                if (s.department) d.add(s.department);
+                if (s.year) y.add(s.year);
+                if (s.course_code) c.add(s.course_code);
+            });
+        } else if (user?.email && config.teacherAssignments) {
+            Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
+                if (Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === user.email.toLowerCase())) {
+                    const parts = key.split('_');
+                    if (parts.length >= 3) {
+                        d.add(parts[0]);
+                        y.add(parts[1]);
+                        c.add(parts[2]);
+                    }
+                }
+            });
+        }
+
+        return {
+            depts: Array.from(d).sort(),
+            years: Array.from(y).sort(),
+            courses: Array.from(c).sort()
+        };
+    }, [students, config, user]);
+
     const [reportData, setReportData] = useState<any[]>([]);
     const [showReport, setShowReport] = useState(false);
-
-    const [user, setUser] = useState<any>(null);
-    const [allowedContext, setAllowedContext] = useState<any>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -47,35 +74,6 @@ export default function SubmissionsPage() {
 
                 if (isGA) {
                     headers['X-Global-Admin-Key'] = 'globaladmin_25';
-                    setAllowedContext(null);
-                } else {
-                    try {
-                        const cRes = await fetch('/api/admin/config');
-                        if (cRes.ok) {
-                            const config = await cRes.json();
-                            const courses = new Set<string>();
-                            const depts = new Set<string>();
-                            const years = new Set<string>();
-
-                            if (config.teacherAssignments) {
-                                Object.entries(config.teacherAssignments).forEach(([key, teachers]: [string, any]) => {
-                                    if (Array.isArray(teachers) && teachers.some((t: any) => t.email?.toLowerCase() === parsedUser.email?.toLowerCase())) {
-                                        const [d, y, c] = key.split('_');
-                                        if (d) depts.add(d);
-                                        if (y) years.add(y);
-                                        if (c) courses.add(c);
-                                    }
-                                });
-                            }
-                            setAllowedContext({
-                                courses: Array.from(courses).sort(),
-                                depts: Array.from(depts).sort(),
-                                years: Array.from(years).sort()
-                            });
-                        }
-                    } catch (e) {
-                        console.error("Error fetching config", e);
-                    }
                 }
             }
             fetchData(headers);
@@ -86,11 +84,11 @@ export default function SubmissionsPage() {
     const fetchData = async (headers: any = {}) => {
         try {
             const [sRes, aRes, subRes, attRes, cRes] = await Promise.all([
-                fetch('/api/admin/students/all'),
+                fetch('/api/admin/students/all', { headers }),
                 fetch('/api/admin/assignments', { headers }),
                 fetch('/api/admin/submissions', { headers }),
                 fetch('/api/admin/attendance', { headers }),
-                fetch('/api/admin/config')
+                fetch('/api/admin/config', { headers })
             ]);
 
             if (sRes.ok && aRes.ok && subRes.ok && attRes.ok) {
@@ -110,40 +108,7 @@ export default function SubmissionsPage() {
         }
     };
 
-    // Update derived lists based on allowedContext
-    useEffect(() => {
-        if (!allowedContext) {
-            // Fallback to all if no context (or admin) - but requirement says "per logged in faculty"
-            // If no allowedContext is found (e.g. admin or unassigned), maybe show all?
-            // For now, let's stick to the requirement: "populate as per the logged in faculty's tagged courses"
-            // If allowedContext is set, use it. If not, maybe we should default to empty or all?
-            // Let's assume if they are admin they might want all, but the prompt is specific about "logged in faculty".
-            // If I am just a faculty, allowedContext will be populated.
-            // If I am a super admin, maybe I don't have specific assignments?
-            // Let's default to showing all if allowedContext is null/empty, but if it exists, use it.
-            // Actually, the prompt implies restriction.
 
-            if (students.length > 0) {
-                const d = new Set<string>();
-                const y = new Set<string>();
-                const c = new Set<string>();
-                students.forEach((s: any) => {
-                    if (s.department) d.add(s.department);
-                    if (s.year) y.add(s.year);
-                    if (s.course_code) c.add(s.course_code);
-                });
-                setDepts(Array.from(d).sort());
-                setYears(Array.from(y).sort());
-                setCourses(Array.from(c).sort());
-            }
-            return;
-        }
-
-        setDepts(allowedContext.depts);
-        setYears(allowedContext.years);
-        setCourses(allowedContext.courses);
-
-    }, [allowedContext, students]);
 
     const handleGenerateReport = () => {
         if (!filters.assignmentId) return toast.error("Please select an assignment");

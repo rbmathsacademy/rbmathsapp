@@ -261,6 +261,7 @@ export default function QuestionBank() {
     };
 
     // --- Mock Test Logic ---
+    // --- Mock Test Logic ---
     const openMockTestModal = async () => {
         setIsMockTestModalOpen(true);
         setMockConfigLoading(true);
@@ -273,40 +274,33 @@ export default function QuestionBank() {
                 return;
             }
 
-            console.log('[MOCK TEST MODAL] Opening with user:', user);
-            console.log('[MOCK TEST MODAL] Current faculty name:', currentFacultyName);
-            console.log('[MOCK TEST MODAL] User name:', userName);
+            const headers: any = { 'X-User-Email': user.email };
+            if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
 
-            const res = await fetch('/api/admin/mock-test-config', {
-                headers: { 'X-User-Email': user.email }
+            const res = await fetch('/api/admin/mock-test-config', { headers });
+            let data: any[] = [];
+            if (res.ok) {
+                data = await res.json();
+            }
+
+            // Get all unique topics from loaded questions
+            const uniqueTopics = Array.from(new Set(questions.map((q: any) => q.topic))).filter(Boolean).sort();
+
+            const allTopicsConfigs = uniqueTopics.map((topicName: any) => {
+                const existing = data.find((d: any) => d.topic === topicName);
+                if (existing) return existing;
+                return {
+                    topic: topicName,
+                    enabled: false,
+                    deployments: []
+                };
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                console.log('[MOCK TEST] Loaded config:', data);
-
-                // Merge saved topics with all available topics from question bank
-                const savedTopics = data.topics || [];
-                const allTopicsConfigs = topics.map(topicName => {
-                    // Check if this topic has saved config
-                    const savedConfig = savedTopics.find((t: any) => t.topic === topicName);
-                    if (savedConfig) {
-                        return savedConfig; // Use saved config
-                    } else {
-                        // Create default config for topics not yet configured
-                        return {
-                            topic: topicName,
-                            enabled: false,
-                            deployments: []
-                        };
-                    }
-                });
-
-                console.log('[MOCK TEST] Final configs:', allTopicsConfigs);
-                setMockTopicConfigs(allTopicsConfigs);
-                if (data.facultyName) setCurrentFacultyName(data.facultyName);
-            }
+            setMockTopicConfigs(allTopicsConfigs);
         } catch (error) {
+            console.error(error);
             toast.error('Error loading config');
         } finally {
             setMockConfigLoading(false);
@@ -1012,11 +1006,13 @@ export default function QuestionBank() {
             <datalist id="subtopics-list">
                 {subtopics.map(t => <option key={t} value={t} />)}
             </datalist>
-
             {/* Header Buttons */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                 {/* Left Side Buttons */}
-                <div className="flex gap-2 flex-wrap w-full md:w-auto">
+                <div className="flex gap-2 flex-wrap w-full md:w-auto items-center">
+                    <span className="bg-gray-800 text-gray-300 px-3 py-1.5 rounded-md text-xs font-bold border border-gray-700">
+                        Total: {questions.length}
+                    </span>
                     <button onClick={() => handleModeSwitch('latex')} className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
                         Latex
                     </button>
@@ -1026,7 +1022,6 @@ export default function QuestionBank() {
                     <button onClick={() => handleModeSwitch('pdf')} className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
                         PDF
                     </button>
-
                 </div>
 
                 {/* Right Side Buttons */}
@@ -1355,6 +1350,9 @@ export default function QuestionBank() {
                                         editorMode === 'image' ? 'Image Editor Mode' : 'AI Editor'}
                             </h3>
                             <span className="px-2 py-0.5 rounded text-xs bg-gray-700 text-gray-300 uppercase tracking-wider">{editorMode} Mode</span>
+                            <span className="px-2 py-0.5 rounded text-xs bg-blue-900/50 text-blue-300 border border-blue-500/30">
+                                ({previewContent.length} Questions)
+                            </span>
                         </div>
                         <div className="flex gap-2">
                             {editorMode === 'json' && (
@@ -1386,124 +1384,128 @@ export default function QuestionBank() {
                     </div>
 
                     {/* AI Features Section - Full Width Above Split Screen */}
-                    {editorMode === 'pdf' && (
-                        <div className="bg-gray-900 border-b border-gray-700 p-6 space-y-6">
-                            {/* Token Usage Indicator */}
-                            {userEmail && !quotaExhausted && (
-                                <TokenUsageIndicator
-                                    userEmail={userEmail}
-                                    onQuotaExhausted={() => {
-                                        setQuotaExhausted(true);
-                                        toast.error('Daily API quota exhausted. Use manual entry below.');
-                                    }}
-                                    refreshTrigger={usageRefreshTrigger}
-                                />
-                            )}
-
-                            {/* Quota Exhausted Warning */}
-                            {quotaExhausted && (
-                                <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-                                    <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <h4 className="text-red-300 font-bold text-sm mb-1">Daily Quota Exhausted</h4>
-                                        <p className="text-red-200/80 text-xs">
-                                            Daily API limit reached. Use manual entry below.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* File Upload Zone */}
-                            {!quotaExhausted && (
-                                <>
-                                    <FileUploadZone
-                                        onFilesReady={handleAiExtraction}
-                                        maxFiles={5}
-                                        disabled={isAiExtracting}
+                    {
+                        editorMode === 'pdf' && (
+                            <div className="bg-gray-900 border-b border-gray-700 p-6 space-y-6">
+                                {/* Token Usage Indicator */}
+                                {userEmail && !quotaExhausted && (
+                                    <TokenUsageIndicator
+                                        userEmail={userEmail}
+                                        onQuotaExhausted={() => {
+                                            setQuotaExhausted(true);
+                                            toast.error('Daily API quota exhausted. Use manual entry below.');
+                                        }}
+                                        refreshTrigger={usageRefreshTrigger}
                                     />
-
-                                </>
-                            )}
-
-                            {/* Extraction Progress */}
-                            {isAiExtracting && (
-                                <ExtractionProgress
-                                    stage={extractionStage}
-                                    progress={extractionProgress}
-                                    questionsFound={previewContent.length}
-                                    error={extractionError || undefined}
-                                />
-                            )}
-
-                            {/* Auto Debugger */}
-                            {validationIssues.length > 0 && extractionStage === 'complete' && (
-                                <AutoDebugger
-                                    jsonContent={jsonContent}
-                                    issues={validationIssues}
-                                    onAutoFix={handleAutoFix}
-                                    onRetry={handleRetryExtraction}
-                                />
-                            )}
-
-                            {/* Manual Tool Section */}
-                            <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-lg space-y-4">
-                                <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
-                                    <span>Manual: Use External AI Tool</span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button onClick={copyPrompt} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2 border border-gray-600">
-                                        <Copy className="h-3 w-3" /> Copy Prompt
-                                    </button>
-                                    <a href="https://gemini.google.com/app" target="_blank" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
-                                        Gemini <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                    <a href="https://chatgpt.com/" target="_blank" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
-                                        ChatGPT <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                    <a href="https://www.perplexity.ai/" target="_blank" className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-black py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
-                                        Perplexity <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                </div>
-                                <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
-                                    <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white">↓</div>
-                                    <span>Paste Generated JSON Below</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* JSON Mode - Bulk Input */}
-                    {editorMode === 'json' && (
-                        <div className="bg-gray-900 border-b border-gray-700 p-6 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-emerald-500/10 text-emerald-400 p-2 rounded-lg">
-                                        <FileText className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-bold text-sm">Bulk JSON Import</h4>
-                                        <p className="text-xs text-gray-400">Paste your JSON array here. The editor below will update automatically.</p>
-                                    </div>
-                                </div>
-                                {jsonError && (
-                                    <span className="text-red-400 text-xs font-bold bg-red-900/20 px-2 py-1 rounded border border-red-500/20">
-                                        {jsonError}
-                                    </span>
                                 )}
+
+                                {/* Quota Exhausted Warning */}
+                                {quotaExhausted && (
+                                    <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
+                                        <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <h4 className="text-red-300 font-bold text-sm mb-1">Daily Quota Exhausted</h4>
+                                            <p className="text-red-200/80 text-xs">
+                                                Daily API limit reached. Use manual entry below.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* File Upload Zone */}
+                                {!quotaExhausted && (
+                                    <>
+                                        <FileUploadZone
+                                            onFilesReady={handleAiExtraction}
+                                            maxFiles={5}
+                                            disabled={isAiExtracting}
+                                        />
+
+                                    </>
+                                )}
+
+                                {/* Extraction Progress */}
+                                {isAiExtracting && (
+                                    <ExtractionProgress
+                                        stage={extractionStage}
+                                        progress={extractionProgress}
+                                        questionsFound={previewContent.length}
+                                        error={extractionError || undefined}
+                                    />
+                                )}
+
+                                {/* Auto Debugger */}
+                                {validationIssues.length > 0 && extractionStage === 'complete' && (
+                                    <AutoDebugger
+                                        jsonContent={jsonContent}
+                                        issues={validationIssues}
+                                        onAutoFix={handleAutoFix}
+                                        onRetry={handleRetryExtraction}
+                                    />
+                                )}
+
+                                {/* Manual Tool Section */}
+                                <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-lg space-y-4">
+                                    <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
+                                        <span>Manual: Use External AI Tool</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={copyPrompt} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2 border border-gray-600">
+                                            <Copy className="h-3 w-3" /> Copy Prompt
+                                        </button>
+                                        <a href="https://gemini.google.com/app" target="_blank" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
+                                            Gemini <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                        <a href="https://chatgpt.com/" target="_blank" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
+                                            ChatGPT <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                        <a href="https://www.perplexity.ai/" target="_blank" className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-black py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
+                                            Perplexity <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
+                                        <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white">↓</div>
+                                        <span>Paste Generated JSON Below</span>
+                                    </div>
+                                </div>
                             </div>
+                        )
+                    }
 
-                            <textarea
-                                className="w-full h-48 bg-gray-950 border border-gray-700 rounded-lg p-3 text-xs md:text-sm font-mono text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-y"
-                                placeholder={`[\n  {\n    "text": "Question text...",\n    "type": "broad",\n    "topic": "Math",\n    "subtopic": "Algebra"\n  }\n]`}
-                                value={jsonContent}
-                                onChange={handleJsonInput}
-                                spellCheck={false}
-                            />
-                        </div>
-                    )}
+                    {
+                        jsonError && (
+                            <span className="text-red-400 text-xs font-bold bg-red-900/20 px-2 py-1 rounded border border-red-500/20">
+                                {jsonError}
+                            </span>
+                        )
+                    }
 
-                    {/* Row-Based Editor List */}
+
+                    <textarea
+                        className="w-full h-48 bg-gray-950 border border-gray-700 rounded-lg p-3 text-xs md:text-sm font-mono text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-y"
+                        placeholder={`[\n  {\n    "text": "Question text...",\n    "type": "broad",\n    "topic": "Math",\n    "subtopic": "Algebra"\n  }\n]`}
+                        value={jsonContent}
+                        onChange={handleJsonInput}
+                        spellCheck={false}
+                    />
+                </div >
+            )
+            }
+
+            {/* Row-Based Editor List */}
+            {
+                isEditorOpen && (
                     <div className="flex flex-col bg-gray-900 border-t border-gray-700">
+                        {/* Total Generated Questions Count */}
+                        {previewContent.length > 0 && (
+                            <div className="bg-gray-800 border-b border-gray-700 px-6 py-3 flex justify-center">
+                                <div className="bg-blue-900/30 border border-blue-500/50 px-4 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+                                    <span className="text-blue-200 text-xs uppercase font-bold tracking-wider">Total Generated Questions:</span>
+                                    <span className="text-white font-bold text-lg">{previewContent.length}</span>
+                                </div>
+                            </div>
+                        )}
+
                         {previewContent.length === 0 ? (
                             <div className="p-12 text-center flex flex-col items-center justify-center text-gray-500">
                                 <FileText className="h-12 w-12 mb-4 opacity-50" />
@@ -1543,17 +1545,15 @@ export default function QuestionBank() {
                                         >
                                             <Plus className="h-5 w-5" /> Add New Question
                                         </button>
-
-                                        {/* Bottom Save Button */}
-
                                     </div>
                                 )}
                             </div>
                         )}
                     </div>
+                )
+            }
 
-                </div>
-            )}
+
 
             {/* Viewer Panel */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex-1 flex flex-col shadow-lg">
@@ -1585,6 +1585,13 @@ export default function QuestionBank() {
                                 onChange={setSelectedSubtopics}
                                 placeholder="All Subtopics"
                             />
+                        </div>
+                        {/* Filtered Count Box */}
+                        <div className="flex flex-col justify-end">
+                            <label className="text-xs text-gray-400 mb-1 block opacity-0">Count</label>
+                            <div className="h-[38px] px-3 bg-blue-900/30 border border-blue-500/30 rounded flex items-center justify-center min-w-[60px]">
+                                <span className="text-blue-300 font-bold text-sm">{filteredQuestions.length}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1665,34 +1672,36 @@ export default function QuestionBank() {
             </div>
 
             {/* Duplicate Modal */}
-            {isDuplicateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 p-6 rounded-lg max-w-2xl w-full border border-gray-700 shadow-2xl">
-                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <RefreshCw className="h-5 w-5 text-yellow-500" /> Duplicates Detected
-                        </h3>
-                        <p className="text-gray-400 mb-4">Found {duplicateQuestions.length} duplicates. How should we handle them?</p>
+            {
+                isDuplicateModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="bg-gray-800 p-6 rounded-lg max-w-2xl w-full border border-gray-700 shadow-2xl">
+                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <RefreshCw className="h-5 w-5 text-yellow-500" /> Duplicates Detected
+                            </h3>
+                            <p className="text-gray-400 mb-4">Found {duplicateQuestions.length} duplicates. How should we handle them?</p>
 
-                        <div className="max-h-60 overflow-y-auto mb-6 space-y-2">
-                            {duplicateQuestions.map((d, i) => (
-                                <div key={i} className="p-3 bg-gray-900 rounded border border-gray-700 text-xs">
-                                    <div className="text-red-400 font-bold mb-1">Duplicate #{i + 1}</div>
-                                    <div className="text-gray-300 mb-1">{d.new.text.substring(0, 100)}...</div>
-                                </div>
-                            ))}
-                        </div>
+                            <div className="max-h-60 overflow-y-auto mb-6 space-y-2">
+                                {duplicateQuestions.map((d, i) => (
+                                    <div key={i} className="p-3 bg-gray-900 rounded border border-gray-700 text-xs">
+                                        <div className="text-red-400 font-bold mb-1">Duplicate #{i + 1}</div>
+                                        <div className="text-gray-300 mb-1">{d.new.text.substring(0, 100)}...</div>
+                                    </div>
+                                ))}
+                            </div>
 
-                        <div className="flex gap-4 justify-end">
-                            <button onClick={() => resolveDuplicates('keep')} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium">
-                                Keep Both (Create New)
-                            </button>
-                            <button onClick={() => resolveDuplicates('overwrite')} className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded font-medium">
-                                Overwrite Existing
-                            </button>
+                            <div className="flex gap-4 justify-end">
+                                <button onClick={() => resolveDuplicates('keep')} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium">
+                                    Keep Both (Create New)
+                                </button>
+                                <button onClick={() => resolveDuplicates('overwrite')} className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded font-medium">
+                                    Overwrite Existing
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

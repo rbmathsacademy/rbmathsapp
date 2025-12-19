@@ -17,6 +17,7 @@ interface Props {
 export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin }: Props) {
     const [loading, setLoading] = useState(false);
     const [topics, setTopics] = useState<string[]>([]);
+    const [subTopics, setSubTopics] = useState<string[]>([]);
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
 
     // Step 1 Rule: Pool of allowed questions (initially all, then filtered by user)
@@ -29,7 +30,8 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
         targetCourse: '',
         startTime: '',
         deadline: '',
-        selectedTopics: [] as string[]
+        selectedTopics: [] as string[],
+        selectedSubTopics: [] as string[]
     });
 
     const [filteredQuestions, setFilteredQuestions] = useState<any[]>([]);
@@ -39,10 +41,22 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
     }, [user]);
 
     useEffect(() => {
-        // Filter questions based on selected topics
-        const filtered = allQuestions.filter(q =>
-            formData.selectedTopics.length === 0 || formData.selectedTopics.includes(q.topic)
-        );
+        // Update available subtopics based on selected topics
+        const relevantQuestions = formData.selectedTopics.length === 0
+            ? allQuestions
+            : allQuestions.filter(q => formData.selectedTopics.includes(q.topic));
+
+        const newSubTopics = Array.from(new Set(relevantQuestions.map(q => q.subtopic).filter(Boolean))).sort();
+        setSubTopics(newSubTopics);
+    }, [formData.selectedTopics, allQuestions]);
+
+    useEffect(() => {
+        // Filter questions based on selected topics AND subtopics
+        const filtered = allQuestions.filter(q => {
+            const topicMatch = formData.selectedTopics.length === 0 || formData.selectedTopics.includes(q.topic);
+            const subTopicMatch = formData.selectedSubTopics.length === 0 || formData.selectedSubTopics.includes(q.subtopic);
+            return topicMatch && subTopicMatch;
+        });
         setFilteredQuestions(filtered);
 
         // Reset allowed IDs to match filter when filter changes (optional, or keep selection?)
@@ -54,7 +68,7 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
         // We should auto-select new questions that appear in the filter?
         // Let's auto-select all filtered questions initially.
         setAllowedQuestionIds(filtered.map(q => q._id));
-    }, [formData.selectedTopics, allQuestions]);
+    }, [formData.selectedTopics, formData.selectedSubTopics, allQuestions]);
 
     const fetchData = async () => {
         if (!user?.email) return;
@@ -122,7 +136,8 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
                     targetCourse: '',
                     startTime: '',
                     deadline: '',
-                    selectedTopics: []
+                    selectedTopics: [],
+                    selectedSubTopics: []
                 });
                 onSuccess();
             } else {
@@ -226,7 +241,19 @@ export default function RandomizedTab({ onSuccess, user, context, isGlobalAdmin 
                                 options={topics}
                                 selected={formData.selectedTopics}
                                 onChange={s => setFormData({ ...formData, selectedTopics: s })}
-                                placeholder="Filter question pool..."
+                                placeholder="Filter by topic..."
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300">Sub-topic Filter</label>
+                        <div className="mt-2">
+                            <MultiSelect
+                                options={subTopics}
+                                selected={formData.selectedSubTopics}
+                                onChange={s => setFormData({ ...formData, selectedSubTopics: s })}
+                                placeholder="Filter by sub-topic..."
                             />
                         </div>
                     </div>

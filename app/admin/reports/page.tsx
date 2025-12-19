@@ -38,6 +38,22 @@ export default function AdminReports() {
     // Adjustment State (for inline editing)
     const [adjustments, setAdjustments] = useState<{ [key: string]: { attended: number, total: number } }>({});
 
+    // Helper for Auth Headers
+    const getHeaders = () => {
+        const headers: any = {};
+        const user = localStorage.getItem('user');
+        if (user) {
+            try {
+                const parsed = JSON.parse(user);
+                if (parsed.email) headers['X-User-Email'] = parsed.email;
+            } catch (e) { console.error(e); }
+        }
+        if (localStorage.getItem('globalAdminActive') === 'true') {
+            headers['X-Global-Admin-Key'] = 'globaladmin_25';
+        }
+        return headers;
+    };
+
     // Fetch Initial Data
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -52,10 +68,12 @@ export default function AdminReports() {
         const fetchData = async () => {
             setLoading(true);
             try {
+                const headers = getHeaders();
+
                 const [studentsRes, configRes, attendanceRes] = await Promise.all([
-                    fetch('/api/admin/students/all'),
-                    fetch('/api/admin/config'),
-                    fetch('/api/admin/attendance') // Fetch all for stats
+                    fetch('/api/admin/students/all', { headers }),
+                    fetch('/api/admin/config', { headers }),
+                    fetch('/api/admin/attendance', { headers }) // Fetch all for stats
                 ]);
 
                 if (studentsRes.ok) setStudents(await studentsRes.json());
@@ -156,7 +174,7 @@ export default function AdminReports() {
         try {
             const res = await fetch(`/api/admin/students/${editingStudent._id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { ...getHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify(editingStudent)
             });
 
@@ -193,7 +211,7 @@ export default function AdminReports() {
         try {
             const res = await fetch(`/api/admin/students/${student._id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { ...getHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     attended_adjustment: newAttendedAdj,
                     total_classes_adjustment: newTotalAdj
@@ -242,7 +260,7 @@ export default function AdminReports() {
 
             console.log('Fetching report with params:', params.toString()); // Debug
 
-            const res = await fetch(`/api/admin/attendance?${params}`);
+            const res = await fetch(`/api/admin/attendance?${params}`, { headers: getHeaders() });
             if (!res.ok) throw new Error('Failed to fetch attendance records');
 
             let records = await res.json();
@@ -471,7 +489,7 @@ export default function AdminReports() {
             for (const item of importPreviewData) {
                 await fetch(`/api/admin/students/${item.student._id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         attended_adjustment: item.newAttAdj,
                         total_classes_adjustment: item.newTotAdj

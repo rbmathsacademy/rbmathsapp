@@ -24,8 +24,8 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
 
-        // FIND ALL IDs for this student (across all courses)
-        const allStudentDocs = await Student.find({ roll: student.roll });
+        // FIND ALL IDs for this student (across all courses) - EXCLUDE DISABLED
+        const allStudentDocs = await Student.find({ roll: student.roll, loginDisabled: { $ne: true } });
         const allStudentIds = allStudentDocs.map(s => s._id);
         const allCourseCodes = allStudentDocs.map(s => s.course_code);
 

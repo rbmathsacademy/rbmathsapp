@@ -44,7 +44,11 @@ export async function POST(req: Request) {
         // Aggregate all courses for this student (Roll Number)
         // Since we are moving to "One Doc Per Course", we need to fetch all docs with same Roll
         const allEnrollments = await Student.find({ roll: student.roll });
-        const courses = [...new Set(allEnrollments.map(s => s.course_code).filter(Boolean))];
+
+        // Filter out enrollments where login is disabled
+        const activeEnrollments = allEnrollments.filter(s => !s.loginDisabled);
+
+        const courses = [...new Set(activeEnrollments.map(s => s.course_code).filter(Boolean))];
 
         return NextResponse.json({
             user: {

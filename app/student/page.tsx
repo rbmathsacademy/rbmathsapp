@@ -31,6 +31,31 @@ export default function StudentDashboard() {
         setStudent(parsedStudent);
         fetchNotifications(parsedStudent.id || parsedStudent._id);
 
+        // REFRESH PROFILE DATA (Critical for course disablement updates)
+        const fetchProfile = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+
+                const res = await fetch('/api/student/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Update local state and storage with fresh data (including course_code)
+                    setStudent(data);
+                    localStorage.setItem('student', JSON.stringify(data));
+                } else if (res.status === 401 || res.status === 403) {
+                    // If token is invalid or user is fully disabled
+                    handleLogout();
+                }
+            } catch (e) {
+                console.error("Failed to refresh profile", e);
+            }
+        };
+        fetchProfile();
+
         const hour = new Date().getHours();
         if (hour < 12) setGreeting('Good Morning');
         else if (hour < 17) setGreeting('Good Afternoon');

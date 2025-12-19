@@ -106,7 +106,7 @@ export default function Resources() {
         try {
             const [qRes, cRes] = await Promise.all([
                 fetch('/api/admin/questions', { headers: getHeaders() }),
-                fetch('/api/admin/config')
+                fetch('/api/admin/config', { headers: getHeaders() })
             ]);
 
             if (qRes.ok) {

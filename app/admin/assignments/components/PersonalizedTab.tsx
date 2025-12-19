@@ -17,6 +17,7 @@ interface Props {
 export default function PersonalizedTab({ onSuccess, user, context, isGlobalAdmin }: Props) {
     const [loading, setLoading] = useState(false);
     const [topics, setTopics] = useState<string[]>([]);
+    const [subTopics, setSubTopics] = useState<string[]>([]);
     const [allQuestions, setAllQuestions] = useState<any[]>([]);
     const [students, setStudents] = useState<any[]>([]);
     const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
@@ -36,6 +37,7 @@ export default function PersonalizedTab({ onSuccess, user, context, isGlobalAdmi
         startTime: '',
         deadline: '',
         selectedTopics: [] as string[],
+        selectedSubTopics: [] as string[],
         selectedStudentIds: [] as string[]
     });
 
@@ -64,12 +66,24 @@ export default function PersonalizedTab({ onSuccess, user, context, isGlobalAdmi
     }, [searchTerm, students, context, filterDept, filterYear, filterCourse]);
 
     useEffect(() => {
-        const filtered = allQuestions.filter(q =>
-            formData.selectedTopics.length === 0 || formData.selectedTopics.includes(q.topic)
-        );
+        // Update available subtopics based on selected topics
+        const relevantQuestions = formData.selectedTopics.length === 0
+            ? allQuestions
+            : allQuestions.filter(q => formData.selectedTopics.includes(q.topic));
+
+        const newSubTopics = Array.from(new Set(relevantQuestions.map(q => q.subtopic).filter(Boolean))).sort();
+        setSubTopics(newSubTopics);
+    }, [formData.selectedTopics, allQuestions]);
+
+    useEffect(() => {
+        const filtered = allQuestions.filter(q => {
+            const topicMatch = formData.selectedTopics.length === 0 || formData.selectedTopics.includes(q.topic);
+            const subTopicMatch = formData.selectedSubTopics.length === 0 || formData.selectedSubTopics.includes(q.subtopic);
+            return topicMatch && subTopicMatch;
+        });
         setFilteredQuestions(filtered);
         setAllowedQuestionIds(filtered.map(q => q._id));
-    }, [formData.selectedTopics, allQuestions]);
+    }, [formData.selectedTopics, formData.selectedSubTopics, allQuestions]);
 
     const fetchData = async () => {
         if (!user?.email) return;
@@ -159,6 +173,7 @@ export default function PersonalizedTab({ onSuccess, user, context, isGlobalAdmi
                     startTime: '',
                     deadline: '',
                     selectedTopics: [],
+                    selectedSubTopics: [],
                     selectedStudentIds: []
                 });
                 onSuccess();
@@ -243,6 +258,18 @@ export default function PersonalizedTab({ onSuccess, user, context, isGlobalAdmi
                                 selected={formData.selectedTopics}
                                 onChange={s => setFormData({ ...formData, selectedTopics: s })}
                                 placeholder="Filter question pool..."
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300">Sub-topic Filter</label>
+                        <div className="mt-2">
+                            <MultiSelect
+                                options={subTopics}
+                                selected={formData.selectedSubTopics}
+                                onChange={s => setFormData({ ...formData, selectedSubTopics: s })}
+                                placeholder="Filter by sub-topic..."
                             />
                         </div>
                     </div>

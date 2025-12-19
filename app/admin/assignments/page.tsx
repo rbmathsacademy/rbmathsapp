@@ -54,7 +54,10 @@ export default function AssignmentsPage() {
 
         const fetchConfig = async () => {
             try {
-                const res = await fetch('/api/admin/config');
+                const headers: any = { 'X-User-Email': user.email };
+                if (isGlobalAdmin) headers['X-Global-Admin-Key'] = 'globaladmin_25';
+
+                const res = await fetch('/api/admin/config', { headers });
                 if (res.ok) {
                     const config = await res.json();
                     const courses = new Set<string>();

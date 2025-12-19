@@ -22,17 +22,61 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Department, Year, and Auth are required' }, { status: 400 });
         }
 
-        // 1. Query batch/manual/randomized assignments that match student's department
-        const courseCodes = course_code ? course_code.split(',') : [];
+        // 1. Validate Course Enrollment (Server-Side)
+        // Fetch student's ACTUAL active courses from DB to prevent accessing disabled courses
+        const currentStudent = await Student.findById(studentId);
+        if (!currentStudent) {
+            return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+        }
+
+        // Find all active course codes for this student (same roll)
+        // Exclude any that start with 'DISABLED_' or where loginDisabled is true
+        const allStudentDocs = await Student.find({
+            roll: currentStudent.roll,
+            loginDisabled: { $ne: true }
+        });
+
+        const activeCourseCodes = allStudentDocs
+            .map(s => s.course_code)
+            .filter(code => code && !code.startsWith('DISABLED_'));
+
+        // Filter the requested course codes against the active list
+        const requestedCodes = course_code ? course_code.split(',') : [];
+        const validCourseCodes = requestedCodes.filter(code => activeCourseCodes.includes(code));
+
+        // If specific courses requested but none are valid, return empty (or just general dept/year ones)
+        // But usually we want to restrict to ONLY valid courses if courses are specified.
+
         const query: any = {
             targetDepartments: department,
             $or: [
                 { targetYear: year },
-                ...(courseCodes.length > 0 ? [{ targetCourse: { $in: courseCodes } }] : [])
+                ...(validCourseCodes.length > 0 ? [{ targetCourse: { $in: validCourseCodes } }] : [])
             ]
         };
 
+        // CRITICAL: If courses WERE requested but NONE are valid, ensure we don't accidentally show all courses
+        // However, the query above falls back to just Dept/Year if validCourseCodes is empty. 
+        // We should explicitly exclude courses that are NOT in the active list if they were targeted.
+        // Actually, safer approach: Always enforce that targetCourse must be in activeCourseCodes if it exists.
+
+        // Refined Query:
+        // 1. Matches Dept & Year
+        // 2. AND (TargetCourse is Empty/Null OR TargetCourse is in ActiveList)
+        // But the current schema uses `targetCourse` string.
+
+        // Let's stick to the previous logic but with validCourseCodes. 
+        // If the user asked for CS301 and it's disabled, validCourseCodes excludes it.
+        // The query then becomes "Dept=CSE AND Year=3rd". This might show assignments meant for "All CSE 3rd".
+        // This is acceptable. We just don't want to show "CS301" specific assignments.
+
         let assignments = await Assignment.find(query).sort({ createdAt: -1 });
+
+        // Double check: Filter out any assignment that targets a course NOT in activeCourseCodes
+        assignments = assignments.filter(a => {
+            if (!a.targetCourse) return true; // General assignment
+            return activeCourseCodes.includes(a.targetCourse);
+        });
 
         // 2. If studentId provided, also fetch personalized assignments
         if (studentId) {
@@ -40,7 +84,7 @@ export async function GET(req: Request) {
             let allStudentIds = [studentId];
 
             if (currentStudent) {
-                const allDocs = await Student.find({ roll: currentStudent.roll });
+                const allDocs = await Student.find({ roll: currentStudent.roll, loginDisabled: { $ne: true } });
                 allStudentIds = allDocs.map(d => d._id.toString());
             }
 
@@ -73,7 +117,7 @@ export async function GET(req: Request) {
             const currentStudent = await Student.findById(studentId);
             let allStudentIds: any[] = [studentId];
             if (currentStudent) {
-                const allDocs = await Student.find({ roll: currentStudent.roll });
+                const allDocs = await Student.find({ roll: currentStudent.roll, loginDisabled: { $ne: true } });
                 allStudentIds = allDocs.map(d => d._id);
             }
 

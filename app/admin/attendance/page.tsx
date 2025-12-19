@@ -33,16 +33,32 @@ export default function AdminAttendance() {
     ];
 
     // Fetch Data
+    // Fetch Data
+    const getHeaders = () => {
+        const headers: any = {};
+        const user = localStorage.getItem('user');
+        if (user) {
+            try {
+                const parsed = JSON.parse(user);
+                if (parsed.email) headers['X-User-Email'] = parsed.email;
+            } catch (e) { console.error(e); }
+        }
+        if (localStorage.getItem('globalAdminActive') === 'true') {
+            headers['X-Global-Admin-Key'] = 'globaladmin_25';
+        }
+        return headers;
+    };
+
     const fetchStudents = async () => {
         try {
-            const res = await fetch('/api/admin/students/all');
+            const res = await fetch('/api/admin/students/all', { headers: getHeaders() });
             if (res.ok) setStudents(await res.json());
         } catch (error) { console.error('Failed to fetch students', error); }
     };
 
     const fetchConfig = async () => {
         try {
-            const res = await fetch('/api/admin/config');
+            const res = await fetch('/api/admin/config', { headers: getHeaders() });
             if (res.ok) setConfig(await res.json() || { attendanceRequirement: 70, attendanceRules: {}, teacherAssignments: {} });
         } catch (error) { console.error('Failed to fetch config', error); }
     };
@@ -283,7 +299,7 @@ export default function AdminAttendance() {
             params.append('year', manageFilters.year);
             params.append('course_code', manageFilters.course);
 
-            const res = await fetch(`/api/admin/attendance?${params.toString()}`);
+            const res = await fetch(`/api/admin/attendance?${params.toString()}`, { headers: getHeaders() });
             if (res.ok) {
                 setSearchResults(await res.json());
                 setHasSearched(true);
@@ -298,7 +314,7 @@ export default function AdminAttendance() {
     const handleDeleteRecord = async (id: string) => {
         if (!confirm('Delete this record?')) return;
         try {
-            const res = await fetch(`/api/admin/attendance/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/admin/attendance/${id}`, { method: 'DELETE', headers: getHeaders() });
             if (res.ok) {
                 setSearchResults(prev => prev.filter(r => r._id !== id));
             }
@@ -314,7 +330,7 @@ export default function AdminAttendance() {
             const ids = searchResults.map(r => r._id);
             const res = await fetch('/api/admin/attendance', {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { ...getHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids })
             });
 

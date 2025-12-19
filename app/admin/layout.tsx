@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const handleGlobalAdminSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (globalAdminPassword === 'globaladmin_25') {
+        if (globalAdminPassword.trim() === 'globaladmin_25') {
             localStorage.setItem('globalAdminActive', 'true');
             setShowGlobalAdminModal(false);
             setGlobalAdminPassword('');
@@ -129,6 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },
         { name: 'Assignments', href: '/admin/assignments', icon: Upload },
         { name: 'Submissions', href: '/admin/submissions', icon: FileText },
+        { name: 'Online Test', href: '/admin/online-test', icon: Users }, // Using Users temporarily, will switch to Laptop if available or keep generic
         { name: 'Student Marks', href: '/admin/marks', icon: BarChart },
         { name: 'Study Materials', href: '/admin/resources', icon: BookOpen },
     ];
@@ -198,8 +199,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 }
                             }}
                             className={`w-full text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg border transition-all ${(typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true')
-                                    ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:bg-red-500/30'
-                                    : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200 hover:border-slate-600 hover:bg-slate-800'
+                                ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:bg-red-500/30'
+                                : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200 hover:border-slate-600 hover:bg-slate-800'
                                 }`}
                         >
                             {(typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') ? '● GLOBAL ADMIN' : 'GLOBAL ADMIN'}
