@@ -756,7 +756,6 @@ export default function AdminDashboard() {
                         <select
                             className="bg-transparent text-slate-300 border-none rounded px-3 py-1.5 focus:ring-0 outline-none hover:text-white transition-colors cursor-pointer"
                             value={viewFilter.dept} onChange={e => setViewFilter({ ...viewFilter, dept: e.target.value })}
-                            value={viewFilter.dept} onChange={e => setViewFilter({ ...viewFilter, dept: e.target.value })}
                         >
                             <option value="" className="bg-slate-900 text-slate-200">All Depts</option>
                             {filteredDropdowns.departments.map(d => <option key={d} value={d} className="bg-slate-900 text-slate-200">{d}</option>)}
