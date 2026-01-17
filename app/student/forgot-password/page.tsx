@@ -208,9 +208,11 @@ export default function ForgotPassword() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center mt-8 text-xs text-gray-600">
-                    &copy; 2025 copyright Dept. of Mathematics, HIT • All rights reserved
-                </p>
+                <div className="mt-8 text-center">
+                    <p className="text-sm text-slate-500">
+                        &copy; 2026, RB Maths Academy || Coded and developed by Dr. Ritwick Banerjee
+                    </p>
+                </div>
             </div>
 
             <style jsx>{`

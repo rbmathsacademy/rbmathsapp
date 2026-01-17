@@ -1,60 +1,75 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Resource from '@/models/Resource';
+import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
+import Folder from '@/models/Folder';
 import Question from '@/models/Question';
 import Config from '@/models/Config';
+import '@/lib/db';
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+const MONGODB_URI = process.env.MONGODB_URI!;
+
+if (!MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+}
+
+async function connectDB() {
+    if (mongoose.connection.readyState >= 1) return;
     try {
-        await connectDB();
-        const { id } = await params;
+        await mongoose.connect(MONGODB_URI);
+    } catch (error) {
+        console.error("DB Connect Error", error);
+    }
+}
 
-        // Get the resource
-        const resource = await Resource.findById(id);
-        if (!resource) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
+    await connectDB();
+    const resourceId = params.id;
+
+    try {
+        // Fetch Folder (Resource)
+        const folder = await Folder.findById(resourceId);
+        if (!folder) {
             return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
         }
 
-        // Get the questions if any
-        let questions: any[] = [];
-        if (resource.questions && resource.questions.length > 0) {
-            questions = await Question.find({ _id: { $in: resource.questions } });
+        // Fetch Questions for this Folder
+        const questions = await Question.find({ "deployments.folderId": resourceId });
+
+        // Check AI Enabled Status
+        const config = await Config.findOne({ key: 'data' });
+        const enabledTopics = new Set(config?.aiEnabledTopics || []);
+
+        // Determine if AI is enabled for this resource (e.g. check first question's topic)
+        let aiEnabled = false;
+        if (questions.length > 0) {
+            // Check if any question's topic is enabled? Or checks if majority?
+            // Simple logic: if ANY question's topic is in enabledTopics, or if the folder name/course is?
+            // Usually topic based.
+            const firstTopic = questions[0].topic;
+            if (firstTopic && enabledTopics.has(firstTopic)) {
+                aiEnabled = true;
+            }
         }
 
-        // Check if AI is enabled for any of the question topics
-        const config = await Config.findOne({});
-        const aiEnabledTopics = new Set(config?.aiEnabledTopics || []);
-
-        // Check if ANY question in this resource has an AI-enabled topic
-        const hasAIEnabledTopic = questions.some(q => q.topic && aiEnabledTopics.has(q.topic));
+        // Construct Resource Object
+        const resource = {
+            _id: folder._id,
+            title: folder.name,
+            topic: questions.length > 0 ? questions[0].topic : '', // Infer topic from first question
+            targetCourse: folder.course,
+            facultyName: 'RB', // Hardcoded or fetched? Folder doesn't have faculty. Assuming RB mostly.
+            createdAt: folder.createdAt,
+            aiEnabled: aiEnabled
+            // hints: {} // Legacy hints map not needed as Questions have hints.
+        };
 
         return NextResponse.json({
-            resource: {
-                _id: resource._id,
-                title: resource.title,
-                type: resource.type,
-                url: resource.url,
-                videoLink: resource.videoLink,
-                targetCourse: resource.targetCourse || resource.course_code,
-                facultyName: resource.facultyName,
-                topic: resource.topic,
-                subtopic: resource.subtopic,
-                hints: resource.hints,
-                aiEnabled: hasAIEnabledTopic // Send flag to frontend
-            },
-            questions: questions.map(q => ({
-                _id: q._id,
-                text: q.text,
-                latex: q.latex,
-                image: q.image,
-                type: q.type,
-                topic: q.topic,
-                subtopic: q.subtopic,
-            }))
+            resource: resource,
+            questions: questions
         });
 
-    } catch (error: any) {
-        console.error('Fetch Resource Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        console.error("Error fetching resource:", error);
+        return NextResponse.json({ error: 'Failed to fetch resource' }, { status: 500 });
     }
 }

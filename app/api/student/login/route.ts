@@ -1,73 +1,70 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Student from '@/models/Student';
-import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from 'next/server';
+import { getStudentCourses } from '@/lib/googleSheet';
+import { SignJWT } from 'jose';
+import dbConnect from '@/lib/db';
+import BatchStudent from '@/models/BatchStudent';
 
-export async function POST(req: Request) {
+// Helper to upsert student
+async function getStudent(phoneNumber: string, name: string, courses: string[]) {
+    await dbConnect();
+    return BatchStudent.findOneAndUpdate(
+        { phoneNumber },
+        {
+            phoneNumber,
+            name,
+            courses, // Update courses from sheet
+            $setOnInsert: { bookmarks: [] }
+        },
+        { upsert: true, new: true }
+    );
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
+export async function POST(req: NextRequest) {
     try {
-        await connectDB();
-        const { email, password } = await req.json();
+        const { phoneNumber } = await req.json();
 
-        // Find student by institute email or secondary email or roll
-        // The legacy app used institute email or roll for "ID" input, but also had secondary email flow.
-        // We'll support email (institute or secondary) and roll.
-        const student = await Student.findOne({
-            $or: [
-                { email: email },
-                { roll: email }
-            ]
+        if (!phoneNumber) {
+            return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+        }
+
+        const studentData = await getStudentCourses(phoneNumber);
+
+        if (!studentData) {
+            return NextResponse.json({ error: 'Phone number not found in records' }, { status: 401 });
+        }
+
+        // Ensure Student exists in MongoDB
+        await getStudent(phoneNumber, studentData.studentName, studentData.batches);
+
+        // Create JWT
+        const token = await new SignJWT({
+            userId: phoneNumber, // Map phoneNumber to userId for middleware compatibility
+            phoneNumber,
+            studentName: studentData.studentName,
+            courses: studentData.batches,
+            role: 'student'
+        })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('24h') // 24 hour session
+            .sign(new TextEncoder().encode(JWT_SECRET));
+
+        const response = NextResponse.json({ success: true, student: studentData });
+
+        // Use auth_token to match middleware expectation
+        response.cookies.set('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 60 * 60 * 24 // 24 hours
         });
 
-        if (!student) {
-            return NextResponse.json(
-                { error: 'Invalid credentials' },
-                { status: 401 }
-            );
-        }
+        return response;
 
-        if (!student.isVerified) {
-            return NextResponse.json(
-                { error: 'Account not registered. Please register first.' },
-                { status: 403 }
-            );
-        }
-
-        const isMatch = await bcrypt.compare(password, student.password);
-
-        if (!isMatch) {
-            return NextResponse.json(
-                { error: 'Invalid credentials' },
-                { status: 401 }
-            );
-        }
-
-        // Aggregate all courses for this student (Roll Number)
-        // Since we are moving to "One Doc Per Course", we need to fetch all docs with same Roll
-        const allEnrollments = await Student.find({ roll: student.roll });
-
-        // Filter out enrollments where login is disabled
-        const activeEnrollments = allEnrollments.filter(s => !s.loginDisabled);
-
-        const courses = [...new Set(activeEnrollments.map(s => s.course_code).filter(Boolean))];
-
-        return NextResponse.json({
-            user: {
-                id: student._id, // Primary ID (of the first doc found)
-                name: student.name,
-                email: student.email,
-                secondary_email: student.secondary_email,
-                roll: student.roll,
-                department: student.department, // Assuming Dept/Year are consistent across enrollments
-                year: student.year,
-                course_code: courses, // Return Array of strings
-                role: 'student',
-            },
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+    } catch (error: any) {
+        console.error("Login Error Details:", error.message || error);
+        return NextResponse.json({ error: `Login failed: ${error.message}` }, { status: 500 });
     }
 }

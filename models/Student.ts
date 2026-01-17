@@ -75,7 +75,12 @@ const StudentSchema = new mongoose.Schema({
     otpExpiry: {
         type: Date,
         select: false
-    }
+    },
+    bookmarks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question',
+        default: []
+    }]
 }, { timestamps: true });
 
 // Force recompilation of the model in dev mode if it exists, to ensure schema updates are applied

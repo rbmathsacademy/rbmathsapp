@@ -27,6 +27,11 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         select: false,
     },
+    bookmarks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question',
+        default: []
+    }],
 }, { timestamps: true });
 
 // Force recompilation

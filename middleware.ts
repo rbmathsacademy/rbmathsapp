@@ -8,7 +8,8 @@ const key = new TextEncoder().encode(JWT_SECRET);
 
 export async function middleware(req: NextRequest) {
     // 1. Skip middleware for auth routes AND Admin API (handled by route headers)
-    if (req.nextUrl.pathname.startsWith('/api/student/auth')) {
+    // 1. Skip middleware for auth routes AND Admin API (handled by route headers)
+    if (req.nextUrl.pathname.startsWith('/api/student/auth') || req.nextUrl.pathname.startsWith('/api/student/login')) {
         return NextResponse.next();
     }
 

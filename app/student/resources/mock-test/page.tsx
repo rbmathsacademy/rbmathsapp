@@ -173,7 +173,7 @@ export default function MockTest() {
                 <div className="sticky top-0 z-50 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-emerald-500/30 shadow-lg">
                     <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
                         <h1 className="text-center text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-1 sm:mb-2">
-                            Heritage Institute of Technology
+                            RB Maths Academy
                         </h1>
                         <h2 className="text-center text-sm sm:text-base font-semibold text-gray-300 mb-2">
                             Mock Test

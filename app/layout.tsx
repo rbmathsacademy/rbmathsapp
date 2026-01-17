@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MAAP - Math Attendance Assignment Portal",
-  description: "MAAP - Math Attendance Assignment Portal",
+  title: "RB Maths Question Bank",
+  description: "RB Maths Question Bank Portal",
   manifest: "/manifest.json",
   icons: {
     icon: "/icons/icon-192x192.png",

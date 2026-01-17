@@ -62,14 +62,37 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
         }
 
+        // Validate questions
+        for (const q of questions) {
+            // Allow EITHER examName OR examNames (or both)
+            const hasExamInfo = q.examName || (q.examNames && q.examNames.length > 0);
+
+            if (!q.text || !q.type || !q.topic || !q.subtopic || !hasExamInfo || q.marks === undefined) {
+                return NextResponse.json({ error: 'Missing required fields in questions (text, type, topic, subtopic, at least one exam name, marks)' }, { status: 400 });
+            }
+        }
+
         const operations = questions.map((q: any) => ({
             updateOne: {
                 filter: { id: q.id },
                 update: {
                     $set: {
-                        ...q,
+                        id: q.id || `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        text: q.text,
+                        type: q.type,
+                        topic: q.topic,
+                        subtopic: q.subtopic,
+                        image: q.image,
+                        examName: q.examName, // Keep for backward compat
+                        examNames: q.examNames || [], // New Array
+                        marks: q.marks,
+                        answer: q.answer,
+                        options: q.options || [], // MCQ Options
+                        hint: q.hint,
+                        explanation: q.explanation,
                         uploadedBy: uploaderEmail,
-                        facultyName: facultyName
+                        facultyName: facultyName,
+                        deployments: q.deployments || []
                     }
                 },
                 upsert: true

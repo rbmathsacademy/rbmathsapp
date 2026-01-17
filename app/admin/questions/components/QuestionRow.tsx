@@ -61,12 +61,12 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
         }
     };
 
-    const handleFieldChange = (field: string, value: string) => {
+    const handleFieldChange = (field: string, value: any) => {
         const updated = { ...localQuestion, [field]: value };
         updateParent(updated);
     };
 
-    if (mode === 'latex') {
+    if (mode === 'latex' || mode === 'manual') {
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-gray-700 bg-gray-900 group">
                 {/* Left: Raw Latex Editor */}
@@ -127,9 +127,32 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                                 onChange={(e) => handleFieldChange('type', e.target.value)}
                             >
                                 <option value="broad">Broad</option>
+                                <option value="short">Short</option>
                                 <option value="mcq">MCQ</option>
                                 <option value="blanks">Blanks</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 p-3 bg-white rounded border border-gray-200 shadow-sm mt-auto">
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Exam Name</label>
+                            <input
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                value={localQuestion.examName || ''}
+                                onChange={(e) => handleFieldChange('examName', e.target.value)}
+                                placeholder="e.g. JEE Main 2024"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Marks</label>
+                            <input
+                                type="number"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                value={localQuestion.marks || ''}
+                                onChange={(e) => handleFieldChange('marks', e.target.value)}
+                                placeholder="e.g. 4"
+                            />
                         </div>
                     </div>
                 </div>
@@ -251,6 +274,32 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                     </div>
 
                     {/* Metadata */}
+                    <div className="grid grid-cols-2 gap-2 p-3 bg-white rounded border border-gray-200 shadow-sm mt-auto">
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Exam Names</label>
+                            <input
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                value={localQuestion.examNames?.join(', ') || localQuestion.examName || ''}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const names = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                                    handleFieldChange('examNames', names);
+                                    handleFieldChange('examName', val);
+                                }}
+                                placeholder="e.g. JEE 2024"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Marks</label>
+                            <input
+                                type="number"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                value={localQuestion.marks || ''}
+                                onChange={(e) => handleFieldChange('marks', e.target.value)}
+                                placeholder="e.g. 4"
+                            />
+                        </div>
+                    </div>
                     <div className="grid grid-cols-3 gap-2 p-3 bg-white rounded border border-gray-200 shadow-sm mt-auto">
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Topic <span className="text-red-500">*</span></label>
@@ -393,16 +442,57 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
             <div className="p-4 bg-gray-900 min-h-[200px] border-l border-gray-700">
                 {!error ? (
                     <div className="h-full flex flex-col">
-                        <div className="flex justify-between items-start mb-2 border-b border-gray-700 pb-2">
-                            <div className="flex gap-2 flex-wrap">
-                                <span className="bg-blue-900/50 text-blue-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-blue-500/30">{localQuestion.topic || 'No Topic'}</span>
-                                <span className="bg-purple-900/50 text-purple-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-purple-500/30">{localQuestion.subtopic || 'No Subtopic'}</span>
-                            </div>
-                            <span className="text-[10px] text-gray-400 font-mono uppercase">{localQuestion.type || 'Unknown'}</span>
+                        {/* Distinct Colored Badges at Top */}
+                        <div className="mb-4 border-b border-gray-700 pb-2 flex flex-wrap gap-2 items-center">
+                            {/* Topic -> Blue */}
+                            <span className="bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                {localQuestion.topic || 'No Topic'}
+                            </span>
+
+                            {/* Subtopic -> Cyan */}
+                            <span className="bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                {localQuestion.subtopic || 'No Subtopic'}
+                            </span>
+
+                            {/* Type -> Color Coded */}
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${localQuestion.type === 'mcq' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
+                                localQuestion.type === 'broad' ? 'bg-pink-900/40 text-pink-300 border-pink-500/30' :
+                                    localQuestion.type === 'short' ? 'bg-purple-900/40 text-purple-300 border-purple-500/30' :
+                                        'bg-gray-700 text-gray-300 border-gray-600'
+                                }`}>
+                                {localQuestion.type || 'Unknown'}
+                            </span>
+
+                            {/* Exam Names - Handle Array or String */}
+                            {(localQuestion.examNames && localQuestion.examNames.length > 0 ? localQuestion.examNames : localQuestion.examName ? [localQuestion.examName] : []).map((exam: string, i: number) => (
+                                <span key={i} className="bg-indigo-900/40 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                    {exam}
+                                </span>
+                            ))}
+
+                            {/* Marks -> Gray Badge */}
+                            {localQuestion.marks && (
+                                <span className="bg-gray-800 text-gray-300 border border-gray-600 px-2 py-0.5 rounded text-[10px] font-bold">
+                                    {localQuestion.marks} Marks
+                                </span>
+                            )}
                         </div>
-                        <div className="text-white text-sm prose prose-sm prose-invert max-w-none">
+
+                        <div className="text-white text-sm prose prose-sm prose-invert max-w-none mb-4">
                             {localQuestion.text ? <Latex>{localQuestion.text}</Latex> : <span className="text-gray-500 italic">(No text content)</span>}
                         </div>
+
+                        {/* Options for MCQ */}
+                        {localQuestion.type === 'mcq' && localQuestion.options && localQuestion.options.length > 0 && (
+                            <div className="flex flex-col gap-2 mb-4">
+                                {localQuestion.options.map((opt: string, i: number) => (
+                                    <div key={i} className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300">
+                                        <span className="font-bold text-gray-400 mr-2">{String.fromCharCode(65 + i)}.</span>
+                                        <Latex>{opt}</Latex>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Render Image at Bottom & Inverted */}
                         {localQuestion.image && (

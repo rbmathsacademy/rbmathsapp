@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle } from 'lucide-react';
@@ -112,14 +112,22 @@ const AI_PROMPT = `You are a Question Bank Assistant. Your task is to extract qu
 
 Rules:
 1. Output MUST be a valid JSON array of objects.
-2. Each question object must have: "text" (string), "type" (string: "broad", "mcq", or "blanks"), "topic" (string), "subtopic" (string).
+2. Each question object must have: 
+   - "text" (string)
+   - "type" (string: "broad", "mcq", "blanks", or "short")
+   - "topic" (string)
+   - "subtopic" (string)
+   - "examNames" (array of strings, e.g. ["JEE Main 2024"]) or [] if empty
+   - "marks" (number) or null
+   - "options" (array of strings) if MCQ, else []
 3. Preserve LaTeX math notation using $ for inline and $$ for display math.
-4. IF THE CONTENT CONTAINS IMAGES (diagrams, circuits, graphs):
+4. **Line Breaks**: To break lines (e.g. for subparts like a, b, c), use "$\\\\\\\\$" instead of "\\n".
+5. IF THE CONTENT CONTAINS IMAGES (diagrams, circuits, graphs):
    - Extract the image and convert it to a Base64 string.
-   - Add an "image" field to the JSON object with the Base64 string (e.g., "data:image/png;base64,...").
-   - If no image is present for a question, omit the "image" field or set it to null.
-5. Do NOT add any explanation, markdown formatting, or extra text. Output ONLY the JSON array.
-6. Ensure all special characters are properly escaped in JSON strings.
+   - Add an "image" field to the JSON object with the Base64 string.
+   - If no image is present, omit the "image" field.
+6. Do NOT add any explanation, markdown formatting, or extra text. Output ONLY the JSON array.
+7. Ensure all special characters are properly escaped in JSON strings.
 
 Example Output:
 [
@@ -128,7 +136,10 @@ Example Output:
     "type": "broad",
     "topic": "Matrix",
     "subtopic": "Rank",
-    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    "examNames": ["JEE Main 2023"],
+    "marks": 4,
+    "options": [],
+    "image": "data:image/png;base64,..."
   }
 ]
 `;
@@ -148,6 +159,7 @@ export default function QuestionBank() {
     const [jsonContent, setJsonContent] = useState('');
     const [previewContent, setPreviewContent] = useState<any[]>([]);
     const [jsonError, setJsonError] = useState<string | null>(null);
+    const [editScrollPosition, setEditScrollPosition] = useState<number>(0);
 
     const [errorLine, setErrorLine] = useState<number | null>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -489,36 +501,47 @@ export default function QuestionBank() {
     };
 
     const handleJsonInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const val = e.target.value;
-        setJsonContent(val);
-
-        if (!val.trim()) {
-            setPreviewContent([]);
-            setJsonError(null);
-            setErrorLine(null);
-            return;
-        }
-
-        try {
-            const parsed = JSON.parse(val);
-            const arr = Array.isArray(parsed) ? parsed : [parsed];
-            const normalized = normalizeImportedData(arr);
-            checkForDuplicates(normalized);
-            setJsonError(null);
-            setErrorLine(null);
-        } catch (e: any) {
-            setJsonError((e as Error).message);
-            // Extract line number from error message if possible
-            // Chrome/Node syntax: "Unexpected token ... at position X"
-            // We can try to calculate line number from position
-            const match = e.message.match(/position\s+(\d+)/);
-            if (match) {
-                const pos = parseInt(match[1]);
-                const contentUpToError = val.substring(0, pos);
-                setErrorLine(contentUpToError.split('\n').length);
-            }
-        }
+        setJsonContent(e.target.value);
     };
+
+    // Debounced JSON Parsing
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (!jsonContent.trim()) {
+                setPreviewContent([]);
+                setJsonError(null);
+                setErrorLine(null);
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(jsonContent);
+                const arr = Array.isArray(parsed) ? parsed : [parsed];
+                const normalized = normalizeImportedData(arr);
+                // checkForDuplicates causing side effects (modal open), only run if valid
+                if (normalized.length > 0) {
+                    // For editor typing, we might strictly want to just preview, 
+                    // but checkForDuplicates is useful. However, auto-opening modal while typing might be annoying.
+                    // Let's keep it for now but user might request change later.
+                    // Actually, checkForDuplicates sets previewContent if no dupes.
+                    checkForDuplicates(normalized);
+                }
+                setJsonError(null);
+                setErrorLine(null);
+            } catch (e: any) {
+                setJsonError((e as Error).message);
+                const match = e.message.match(/position\s+(\d+)/);
+                if (match) {
+                    const pos = parseInt(match[1]);
+                    const contentUpToError = jsonContent.substring(0, pos);
+                    setErrorLine(contentUpToError.split('\n').length);
+                }
+            }
+        }, 800); // 800ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [jsonContent]);
+
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -628,20 +651,13 @@ export default function QuestionBank() {
                 setPreviewContent([]);
                 if (userEmail) fetchQuestions(userEmail);
 
-                // Scroll back to edited question
-                if (lastEditedId.current) {
-                    const targetId = lastEditedId.current;
-                    setTimeout(() => {
-                        const el = document.getElementById(`q-${targetId}`);
-                        if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            el.classList.add('ring-2', 'ring-blue-500', 'bg-gray-800');
-                            setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'bg-gray-800'), 2000);
-                        }
-                    }, 500); // Wait for list to re-render/visible
-                    // We don't clear lastEditedId here immediately to allow the timeout to read it, 
-                    // or we capture it in const targetId closure above.
-                }
+                // Restore scroll position after save
+                setTimeout(() => {
+                    if (editScrollPosition > 0) {
+                        window.scrollTo({ top: editScrollPosition, behavior: 'smooth' });
+                        setEditScrollPosition(0); // Reset
+                    }
+                }, 300); // Wait for list to re-render
             } else {
                 toast.error('Failed to save.');
             }
@@ -742,6 +758,20 @@ export default function QuestionBank() {
             setPreviewContent([]);
         }
 
+        setIsEditorOpen(true);
+    };
+
+    const handleEditQuestion = (question: any) => {
+        // Capture current scroll position
+        setEditScrollPosition(window.scrollY);
+
+        // Load question into JSON editor
+        const questionArray = [question];
+        setJsonContent(JSON.stringify(questionArray, null, 2));
+        setPreviewContent(questionArray);
+
+        // Switch to JSON editor mode
+        setEditorMode('json');
         setIsEditorOpen(true);
     };
 
@@ -1037,9 +1067,6 @@ export default function QuestionBank() {
                     </button>
                     <button onClick={() => handleModeSwitch('latex')} className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
                         Latex
-                    </button>
-                    <button onClick={() => handleModeSwitch('pdf')} className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
-                        PDF
                     </button>
                 </div>
 
@@ -1375,25 +1402,30 @@ export default function QuestionBank() {
                         </div>
                         <div className="flex gap-2">
                             {editorMode === 'json' && (
-                                <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium cursor-pointer flex items-center gap-2">
-                                    <input
-                                        type="file"
-                                        accept=".json"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (event) => {
-                                                    const content = event.target?.result as string;
-                                                    handleJsonInput({ target: { value: content } } as any);
-                                                };
-                                                reader.readAsText(file);
-                                            }
-                                        }}
-                                    />
-                                    Upload JSON
-                                </label>
+                                <>
+                                    <button onClick={copyPrompt} className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded text-sm font-medium flex items-center gap-2 border border-gray-600">
+                                        <Copy className="h-4 w-4" /> Copy Prompt
+                                    </button>
+                                    <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium cursor-pointer flex items-center gap-2">
+                                        <input
+                                            type="file"
+                                            accept=".json"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => {
+                                                        const content = event.target?.result as string;
+                                                        handleJsonInput({ target: { value: content } } as any);
+                                                    };
+                                                    reader.readAsText(file);
+                                                }
+                                            }}
+                                        />
+                                        Upload JSON
+                                    </label>
+                                </>
                             )}
                             <button onClick={() => setIsEditorOpen(false)} className="text-gray-400 hover:text-white px-3 flex items-center gap-2 text-sm font-medium">
                                 <ArrowLeft className="h-4 w-4" /> Back to Homepage
@@ -1469,9 +1501,6 @@ export default function QuestionBank() {
                                         <span>Manual: Use External AI Tool</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={copyPrompt} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2 border border-gray-600">
-                                            <Copy className="h-3 w-3" /> Copy Prompt
-                                        </button>
                                         <a href="https://gemini.google.com/app" target="_blank" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
                                             Gemini <ExternalLink className="h-3 w-3" />
                                         </a>
@@ -1483,7 +1512,7 @@ export default function QuestionBank() {
                                         </a>
                                     </div>
                                     <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
-                                        <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white">↓</div>
+                                        <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white">Γåô</div>
                                         <span>Paste Generated JSON Below</span>
                                     </div>
                                 </div>
@@ -1502,7 +1531,7 @@ export default function QuestionBank() {
 
                     <textarea
                         className="w-full h-48 bg-gray-950 border border-gray-700 rounded-lg p-3 text-xs md:text-sm font-mono text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-y"
-                        placeholder={`[\n  {\n    "text": "Question text...",\n    "type": "broad",\n    "topic": "Math",\n    "subtopic": "Algebra"\n  }\n]`}
+                        placeholder={`[\n  {\n    "text": "Question text...",\n    "type": "broad",\n    "topic": "Math",\n    "subtopic": "Algebra",\n    "examNames": ["JEE Main"],\n    "marks": 4\n  }\n]`}
                         value={jsonContent}
                         onChange={handleJsonInput}
                         spellCheck={false}
@@ -1663,16 +1692,35 @@ export default function QuestionBank() {
                                             className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
                                         />
                                     </div>
-                                    <div className="flex-1 cursor-pointer" onClick={() => editQuestion(q)}>
-                                        <div className="flex justify-between items-start mb-1">
-                                            <div className="flex gap-2 mb-1">
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex flex-wrap gap-1.5 mb-1">
                                                 <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
                                                 <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.subtopic}</span>
                                                 <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
                                                     {q.type}
                                                 </span>
+                                                {q.examNames && q.examNames.length > 0 && q.examNames.map((exam: string, idx: number) => (
+                                                    <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                        {exam}
+                                                    </span>
+                                                ))}
+                                                {q.marks && (
+                                                    <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                        {q.marks} marks
+                                                    </span>
+                                                )}
                                             </div>
-                                            <Edit className="h-4 w-4 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditQuestion(q);
+                                                }}
+                                                className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Edit className="h-3 w-3" />
+                                                Edit
+                                            </button>
                                         </div>
                                         <div className="text-gray-300 text-sm leading-relaxed">
                                             {q.image && (

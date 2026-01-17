@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Brain, User, BookOpen, Loader2, Lightbulb, ChevronRight, ChevronLeft, Sparkles, X, Bookmark, Eye, HelpCircle, CheckCircle, Home } from 'lucide-react';
+import { ArrowLeft, Brain, User, BookOpen, Loader2, Lightbulb, ChevronRight, ChevronLeft, Sparkles, X, Bookmark, CheckCircle, Home } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
-export default function PracticeQuestionsPage() {
-    const [resource, setResource] = useState<any>(null);
+export default function BookmarksPage() {
     const [questions, setQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,15 +19,12 @@ export default function PracticeQuestionsPage() {
     const [showAnswer, setShowAnswer] = useState(false);
     const [showExplanation, setShowExplanation] = useState(false);
 
-    // Bookmarks
+    // Bookmarks (For toggling state UI)
     const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
     // AI Verification State
     const [showAIModal, setShowAIModal] = useState(false);
-
     const router = useRouter();
-    const params = useParams();
-    const resourceId = params.id as string;
 
     useEffect(() => {
         const storedStudent = localStorage.getItem('student');
@@ -36,9 +32,8 @@ export default function PracticeQuestionsPage() {
             router.push('/student/login');
             return;
         }
-        fetchResource();
         fetchBookmarks();
-    }, [router, resourceId]);
+    }, [router]);
 
     // Reset toggles when question changes
     useEffect(() => {
@@ -46,26 +41,6 @@ export default function PracticeQuestionsPage() {
         setShowAnswer(false);
         setShowExplanation(false);
     }, [currentIndex]);
-
-    const fetchResource = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch(`/api/student/resources/${resourceId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setResource(data.resource);
-                setQuestions(data.questions || []);
-            } else {
-                toast.error('Failed to load resource');
-            }
-        } catch (error) {
-            toast.error('Something went wrong');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const fetchBookmarks = async () => {
         try {
@@ -75,13 +50,20 @@ export default function PracticeQuestionsPage() {
             });
             if (res.ok) {
                 const data = await res.json();
-                // data is array of populated questions or IDs.
-                // Actually, API returns array of populated questions.
-                // We just need IDs to check status.
-                const ids = new Set<string>(data.map((q: any) => String(q._id || q)));
+                // data is array of populated questions
+                setQuestions(data);
+
+                // Initialize IDs set
+                const ids = new Set<string>(data.map((q: any) => String(q._id)));
                 setBookmarkedIds(ids);
+            } else {
+                toast.error('Failed to load bookmarks');
             }
-        } catch (e) { }
+        } catch (error) {
+            toast.error('Something went wrong');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const toggleBookmark = async (questionId: string) => {
@@ -103,9 +85,10 @@ export default function PracticeQuestionsPage() {
                     else next.delete(questionId);
                     return next;
                 });
+
+                // Optional: Remove from list immediately? 
+                // Or just show unbookmarked state. Let's show state.
                 toast.success(data.isBookmarked ? 'Bookmarked!' : 'Removed bookmark');
-            } else {
-                toast.error('Failed to bookmark. Please login again.');
             }
         } catch (e) {
             toast.error('Failed to update bookmark');
@@ -132,7 +115,6 @@ export default function PracticeQuestionsPage() {
         }
     };
 
-    // AI Logic
     const generateAIPrompt = (question: any) => {
         return `I need help verifying my answer to this question:\n\nQUESTION:\n${question.latex || question.text}\n\nPlease:\n1. Check if my answer and process are correct\n2. If there are errors, guide me\n3. Keep it crisp.\n\nThank you!`;
     };
@@ -150,55 +132,59 @@ export default function PracticeQuestionsPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0f1a] text-gray-200 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
         );
     }
 
-    if (!resource || questions.length === 0) {
+    if (questions.length === 0) {
         return (
             <div className="min-h-screen bg-[#0a0f1a] text-gray-200 p-8 flex flex-col items-center justify-center">
-                <p className="text-gray-400 mb-4">No questions available.</p>
-                <Link href="/student" className="text-purple-400 hover:underline">Back to Dashboard</Link>
+                <div className="bg-amber-500/10 p-6 rounded-full mb-6">
+                    <Bookmark className="h-12 w-12 text-amber-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">No bookmarks yet</h2>
+                <p className="text-gray-400 mb-8 text-center max-w-md">Questions you bookmark from your practice sessions will appear here for review.</p>
+                <Link href="/student" className="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all">
+                    Go to Dashboard
+                </Link>
             </div>
         );
     }
 
     const currentQuestion = questions[currentIndex];
     const isBookmarked = bookmarkedIds.has(currentQuestion._id);
-    // Legacy support for hints in resource object + new field in Question
-    const questionHints = resource.hints?.[currentQuestion._id] || (currentQuestion.hint ? [currentQuestion.hint] : []);
+
+    // For bookmarks, hints come from Question object itself (if populated/available)
+    // The Admin API update ensures fields are on Question.
+    const questionHints = currentQuestion.hint ? [currentQuestion.hint] : [];
+    // If Question model has `hints` array, it's safer. But legacy used `hint` string.
+    // I'll assume `hint` string.
 
     return (
         <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans flex flex-col">
             {/* Animated Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-30%] left-[-20%] w-[60%] h-[60%] bg-gradient-radial from-purple-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute bottom-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-violet-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute top-[-30%] left-[-20%] w-[60%] h-[60%] bg-gradient-radial from-amber-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute bottom-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-yellow-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
             </div>
 
             {/* Header */}
             <header className="relative z-10 px-3 py-2 md:px-4 md:py-4 border-b border-white/5 bg-black/20 backdrop-blur-md">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" title="Go Back">
-                            <ArrowLeft className="h-5 w-5" />
-                        </button>
-                        <Link href="/student" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" title="Dashboard">
-                            <Home className="h-5 w-5" />
-                        </Link>
-                    </div>
+                    <Link href="/student" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                        <Home className="h-5 w-5" />
+                        <span className="hidden sm:inline">Dashboard</span>
+                    </Link>
                     <div className="text-center">
-                        <h1 className="text-base md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                            {resource.title}
+                        <h1 className="text-base md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400">
+                            My Bookmarks
                         </h1>
                         <p className="text-[10px] md:text-xs text-gray-500">
                             Question {currentIndex + 1} of {questions.length}
                         </p>
                     </div>
-                    <div className="w-20 flex justify-end">
-                        {/* Placeholder for balance */}
-                    </div>
+                    <div className="w-20 flex justify-end"></div>
                 </div>
             </header>
 
@@ -207,7 +193,7 @@ export default function PracticeQuestionsPage() {
                 <div className={`w-full max-w-3xl transition-all duration-300 transform ${animating ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'}`}>
 
                     {/* Question Card */}
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative group">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-amber-500/20 rounded-3xl shadow-2xl overflow-hidden relative group">
                         {/* Bookmark Badge */}
                         <button
                             onClick={() => toggleBookmark(currentQuestion._id)}
@@ -226,11 +212,6 @@ export default function PracticeQuestionsPage() {
                                 <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-white/5 text-gray-400 border border-white/10">
                                     {currentQuestion.topic}
                                 </span>
-                                {currentQuestion.examNames && currentQuestion.examNames.map((exam: string, i: number) => (
-                                    <span key={i} className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                        {exam}
-                                    </span>
-                                ))}
                                 {currentQuestion.marks && (
                                     <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                         {currentQuestion.marks} Marks
@@ -287,16 +268,13 @@ export default function PracticeQuestionsPage() {
                                 </button>
                             )}
 
-                            {/* AI Verify Button */}
-                            {resource.aiEnabled && (
-                                <button
-                                    onClick={() => setShowAIModal(true)}
-                                    className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30"
-                                >
-                                    <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
-                                    AI Verify
-                                </button>
-                            )}
+                            <button
+                                onClick={() => setShowAIModal(true)}
+                                className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30"
+                            >
+                                <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
+                                AI Verify
+                            </button>
                         </div>
                     </div>
 
@@ -361,22 +339,22 @@ export default function PracticeQuestionsPage() {
                 <button
                     onClick={handleNext}
                     disabled={currentIndex === questions.length - 1}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20 transition-all active:scale-95"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 transition-all active:scale-95"
                 >
                     Next <ChevronRight className="h-5 w-5" />
                 </button>
             </footer>
 
-            {/* AI Modal (Simplified reusing existing logic) */}
+            {/* AI Modal */}
             {showAIModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in">
                     <div className="bg-gray-900 border border-gray-700 p-6 rounded-2xl max-w-md w-full text-center">
-                        <Sparkles className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                        <Sparkles className="h-12 w-12 text-amber-500 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Verify with AI</h3>
                         <p className="text-gray-400 mb-6 text-sm">We'll copy a prompt for you to paste into Gemini.</p>
                         <div className="flex gap-3">
                             <button onClick={() => setShowAIModal(false)} className="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold">Cancel</button>
-                            <button onClick={openGemini} className="flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-500">Go to Gemini</button>
+                            <button onClick={openGemini} className="flex-1 py-3 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-500">Go to Gemini</button>
                         </div>
                     </div>
                 </div>
