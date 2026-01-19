@@ -492,7 +492,11 @@ export default function QuestionBank() {
         const duplicates: any[] = [];
         const unique: any[] = [];
         imported.forEach(newQ => {
-            const exists = questions.find(existing => existing.text.trim() === newQ.text.trim());
+            // Check if text exists, but exclude the question itself if IDs match
+            const exists = questions.find(existing =>
+                existing.text.trim() === newQ.text.trim() &&
+                existing.id !== newQ.id
+            );
             if (exists) duplicates.push({ new: newQ, existing: exists });
             else unique.push(newQ);
         });
@@ -783,6 +787,7 @@ export default function QuestionBank() {
     const handleEditQuestion = (question: any) => {
         // Capture current scroll position
         setEditScrollPosition(window.scrollY);
+        lastEditedId.current = question.id;
 
         // Load question into JSON editor
         const questionArray = [question];

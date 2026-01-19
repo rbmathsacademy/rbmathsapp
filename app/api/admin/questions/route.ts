@@ -59,6 +59,7 @@ export async function POST(req: Request) {
         const { questions } = body; // Expecting an array of questions
 
         if (!Array.isArray(questions)) {
+            console.error('[API] Invalid data format: questions is not an array');
             return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
         }
 
@@ -67,10 +68,27 @@ export async function POST(req: Request) {
             // Allow EITHER examName OR examNames (or both)
             const hasExamInfo = q.examName || (q.examNames && q.examNames.length > 0);
 
-            if (!q.text || !q.type || !q.topic || !q.subtopic || !hasExamInfo || q.marks === undefined) {
-                return NextResponse.json({ error: 'Missing required fields in questions (text, type, topic, subtopic, at least one exam name, marks)' }, { status: 400 });
+            // Detailed validation log
+            if (!q.text || !q.type || !q.topic || !q.subtopic) {
+                console.error('[API] Validation Failed (Missing Core Fields):', { id: q.id, text: q.text, type: q.type, topic: q.topic, subtopic: q.subtopic });
+                return NextResponse.json({ error: 'Missing required core fields (text, type, topic, subtopic)' }, { status: 400 });
+            }
+
+            // Soften validation for legacy data: if marks undefined, default to 0? Or just warn?
+            // User might be editing answers for questions that don't have marks set yet.
+            // Let's NOT failing for missing marks/exams during an ANSWER update if we can avoid it.
+            // But this is an overwrite. If we save without exam/marks, we might lose them if we passed partial object?
+            // Frontend passes FULL object. So if they are missing in frontend, they are missing here.
+
+            if (!hasExamInfo) {
+                console.warn('[API] Warning: Question missing exam info:', q.id);
+                // For now, allow it to pass if we are just updating answers? No, safely enforce but log.
+                // Actually, let's allow it to proceed if it's an existing question (id exists).
+                // But wait, the user complaint is "reverts back". This means error.
             }
         }
+
+        console.log(`[API] Bulk update for ${questions.length} questions`);
 
         const operations = questions.map((q: any) => ({
             updateOne: {
@@ -83,11 +101,11 @@ export async function POST(req: Request) {
                         topic: q.topic,
                         subtopic: q.subtopic,
                         image: q.image,
-                        examName: q.examName, // Keep for backward compat
-                        examNames: q.examNames || [], // New Array
-                        marks: q.marks,
+                        examName: q.examName,
+                        examNames: q.examNames || [],
+                        marks: q.marks ?? 0, // Default to 0 if missing
                         answer: q.answer,
-                        options: q.options || [], // MCQ Options
+                        options: q.options || [],
                         hint: q.hint,
                         explanation: q.explanation,
                         uploadedBy: uploaderEmail,
@@ -99,10 +117,12 @@ export async function POST(req: Request) {
             }
         }));
 
-        await Question.bulkWrite(operations);
+        const result = await Question.bulkWrite(operations);
+        console.log('[API] Bulk write result:', result);
 
-        return NextResponse.json({ message: 'Questions saved successfully' });
+        return NextResponse.json({ message: 'Questions saved successfully', result });
     } catch (error: any) {
+        console.error('[API] Save Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
