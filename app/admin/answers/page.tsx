@@ -19,6 +19,12 @@ interface Question {
     image?: string;
     examNames?: string[];
     marks?: number;
+    // Critical fields for persistence
+    options?: string[];
+    deployments?: any[];
+    uploadedBy?: string;
+    facultyName?: string;
+    createdAt?: string;
 }
 
 const AI_PROMPT = `You are an Answer Bank Assistant. Your task is to generate answers, hints, and explanations for the provided questions and format them into a strict JSON array.
@@ -90,7 +96,10 @@ export default function AnswerBank() {
     const fetchQuestions = async (email: string) => {
         try {
             setLoading(true);
-            const res = await fetch('/api/admin/questions', { headers: { 'X-User-Email': email } });
+            const res = await fetch('/api/admin/questions', {
+                headers: { 'X-User-Email': email },
+                cache: 'no-store'
+            });
             const data = await res.json();
             if (Array.isArray(data)) {
                 // Sort: Topic -> Subtopic -> ID (Creation)
@@ -265,11 +274,28 @@ export default function AnswerBank() {
                 if (!imported.id) return;
 
                 const idx = updatedQuestions.findIndex(q => q.id === imported.id);
+
                 if (idx !== -1) {
-                    // Update fields
-                    if (imported.answer !== undefined) updatedQuestions[idx].answer = imported.answer;
-                    if (imported.hint !== undefined) updatedQuestions[idx].hint = imported.hint;
-                    if (imported.explanation !== undefined) updatedQuestions[idx].explanation = imported.explanation;
+                    const original = updatedQuestions[idx];
+                    // MERGE: Use original as base, override with imported answer/hint/explanation
+                    // IMPORTANT: We must explicitly ensure we don't return a new object with missing keys if spread fails
+                    // But ...original works fine.
+                    // The issue might be that updatedQuestions[idx] came from state which came from FETCH.
+                    // And if Fetch didn't have fields because of Interface, spread would miss them.
+                    // But runtime JS objects have them even if TS interface hides them.
+
+                    updatedQuestions[idx] = {
+                        ...original,
+                        ...imported,
+                        // Ensure arrays are preserved if they are undefined in imported
+                        // (Note: ...imported will overwrite original.options with undefined if imported.options is undefined? 
+                        // No, spread only copies OWN properties. If imported comes from JSON.parse, missing keys are not there.
+                        // BUT if imported has explicit null/undefined, it overrides.
+                        // Safest to explicitly handle arrays if we think they might be lost.)
+                        options: imported.options || original.options || [],
+                        deployments: imported.deployments || original.deployments || [],
+                        examNames: imported.examNames || original.examNames || []
+                    };
 
                     updatesToSave.push(updatedQuestions[idx]);
                     updateCount++;

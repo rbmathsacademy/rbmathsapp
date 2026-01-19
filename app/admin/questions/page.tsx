@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle } from 'lucide-react';
+import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
@@ -189,6 +189,7 @@ export default function QuestionBank() {
     const [selectedSubtopic, setSelectedSubtopic] = useState('');
 
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Paper Generator State
     const [isPaperModalOpen, setIsPaperModalOpen] = useState(false);
@@ -237,9 +238,17 @@ export default function QuestionBank() {
         return questions.filter(q => {
             const topicMatch = selectedTopics.length === 0 || selectedTopics.includes(q.topic);
             const subtopicMatch = selectedSubtopics.length === 0 || selectedSubtopics.includes(q.subtopic);
-            return topicMatch && subtopicMatch;
+
+            const searchLower = searchQuery.toLowerCase();
+            const searchMatch = !searchQuery ||
+                (q.text || '').toLowerCase().includes(searchLower) ||
+                (q.topic || '').toLowerCase().includes(searchLower) ||
+                (q.subtopic || '').toLowerCase().includes(searchLower) ||
+                (q.id || '').toLowerCase().includes(searchLower);
+
+            return topicMatch && subtopicMatch && searchMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics]);
+    }, [questions, selectedTopics, selectedSubtopics, searchQuery]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -256,7 +265,10 @@ export default function QuestionBank() {
         try {
             // Fetch questions and students in parallel
             const [questionsRes, studentsRes] = await Promise.all([
-                fetch('/api/admin/questions', { headers: { 'X-User-Email': email } }),
+                fetch('/api/admin/questions', {
+                    headers: { 'X-User-Email': email },
+                    cache: 'no-store'
+                }),
                 fetch('/api/admin/students/all').catch(() => null)
             ]);
 
@@ -785,18 +797,28 @@ export default function QuestionBank() {
     };
 
     const handleEditQuestion = (question: any) => {
-        // Capture current scroll position
-        setEditScrollPosition(window.scrollY);
-        lastEditedId.current = question.id;
+        console.log('[DEBUG] handleEditQuestion called for:', question.id);
+        try {
+            // Capture current scroll position
+            setEditScrollPosition(window.scrollY);
+            lastEditedId.current = question.id;
 
-        // Load question into JSON editor
-        const questionArray = [question];
-        setJsonContent(JSON.stringify(questionArray, null, 2));
-        setPreviewContent(questionArray);
+            // Load question into JSON editor
+            const questionArray = [question];
+            setJsonContent(JSON.stringify(questionArray, null, 2));
+            setPreviewContent(questionArray);
 
-        // Switch to JSON editor mode
-        setEditorMode('json');
-        setIsEditorOpen(true);
+            // Switch to JSON editor mode
+            console.log('[DEBUG] Switching to JSON mode and opening editor');
+            setEditorMode('json');
+            setIsEditorOpen(true);
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            console.error('[DEBUG] Error in handleEditQuestion:', error);
+            toast.error("Failed to open editor");
+        }
     };
 
     // AI Extraction Handlers
@@ -1658,6 +1680,21 @@ export default function QuestionBank() {
                                 placeholder="All Subtopics"
                             />
                         </div>
+                        {/* Search Bar */}
+                        <div className="flex-1 relative">
+                            <label className="text-xs text-gray-400 mb-1 block">Search</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                <input
+                                    type="text"
+                                    placeholder="Search questions..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                />
+                            </div>
+                        </div>
+
                         {/* Filtered Count Box */}
                         <div className="flex flex-col justify-end">
                             <label className="text-xs text-gray-400 mb-1 block opacity-0">Count</label>
