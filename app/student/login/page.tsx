@@ -24,7 +24,7 @@ export default function StudentLogin() {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success(`Welcome back, ${data.student.studentName}!`);
+                // Remove toast to avoid stuck popup on mobile. Dashboard has greeting.
                 // Store basic info if needed, but token handles auth
                 localStorage.setItem('studentName', data.student.studentName);
                 localStorage.setItem('studentCourses', JSON.stringify(data.student.batches));

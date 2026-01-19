@@ -316,7 +316,15 @@ export default function PracticeQuestionsPage() {
                         <div className="bg-black/20 border-t border-white/5 p-3 md:p-4 flex flex-wrap gap-2 md:gap-3 justify-center">
                             {(questionHints.length > 0) && (
                                 <button
-                                    onClick={() => setShowHint(!showHint)}
+                                    onClick={() => {
+                                        if (!showHint) {
+                                            setShowHint(true);
+                                            setShowAnswer(false);
+                                            setShowExplanation(false);
+                                        } else {
+                                            setShowHint(false);
+                                        }
+                                    }}
                                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showHint ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30'}`}
                                 >
                                     <Lightbulb className="h-3 w-3 md:h-4 md:w-4" />
@@ -326,7 +334,15 @@ export default function PracticeQuestionsPage() {
 
                             {currentQuestion.answer && (
                                 <button
-                                    onClick={() => setShowAnswer(!showAnswer)}
+                                    onClick={() => {
+                                        if (!showAnswer) {
+                                            setShowAnswer(true);
+                                            setShowHint(false);
+                                            setShowExplanation(false);
+                                        } else {
+                                            setShowAnswer(false);
+                                        }
+                                    }}
                                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showAnswer ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30'}`}
                                 >
                                     <CheckCircle className="h-3 w-3 md:h-4 md:w-4" />
@@ -336,7 +352,15 @@ export default function PracticeQuestionsPage() {
 
                             {currentQuestion.explanation && (
                                 <button
-                                    onClick={() => setShowExplanation(!showExplanation)}
+                                    onClick={() => {
+                                        if (!showExplanation) {
+                                            setShowExplanation(true);
+                                            setShowHint(false);
+                                            setShowAnswer(false);
+                                        } else {
+                                            setShowExplanation(false);
+                                        }
+                                    }}
                                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showExplanation ? 'bg-blue-500 text-black shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30'}`}
                                 >
                                     <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
