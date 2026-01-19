@@ -19,7 +19,7 @@ async function getStudent(phoneNumber: string, name: string, courses: string[]) 
     );
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 
 export async function POST(req: NextRequest) {
     try {

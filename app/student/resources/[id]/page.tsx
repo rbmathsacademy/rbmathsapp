@@ -31,11 +31,6 @@ export default function PracticeQuestionsPage() {
     const resourceId = params.id as string;
 
     useEffect(() => {
-        const storedStudent = localStorage.getItem('student');
-        if (!storedStudent) {
-            router.push('/student/login');
-            return;
-        }
         fetchResource();
         fetchBookmarks();
     }, [router, resourceId]);
@@ -49,15 +44,16 @@ export default function PracticeQuestionsPage() {
 
     const fetchResource = async () => {
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch(`/api/student/resources/${resourceId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch(`/api/student/resources/${resourceId}`);
             if (res.ok) {
                 const data = await res.json();
                 setResource(data.resource);
                 setQuestions(data.questions || []);
             } else {
+                if (res.status === 401) {
+                    router.push('/student/login');
+                    return;
+                }
                 toast.error('Failed to load resource');
             }
         } catch (error) {
@@ -69,10 +65,7 @@ export default function PracticeQuestionsPage() {
 
     const fetchBookmarks = async () => {
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/student/bookmarks', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch('/api/student/bookmarks');
             if (res.ok) {
                 const data = await res.json();
                 // data is array of populated questions or IDs.
@@ -86,12 +79,10 @@ export default function PracticeQuestionsPage() {
 
     const toggleBookmark = async (questionId: string) => {
         try {
-            const token = localStorage.getItem('auth_token');
             const res = await fetch('/api/student/bookmarks', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ questionId })
             });

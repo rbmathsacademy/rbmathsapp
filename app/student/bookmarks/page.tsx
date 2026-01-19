@@ -27,11 +27,6 @@ export default function BookmarksPage() {
     const router = useRouter();
 
     useEffect(() => {
-        const storedStudent = localStorage.getItem('student');
-        if (!storedStudent) {
-            router.push('/student/login');
-            return;
-        }
         fetchBookmarks();
     }, [router]);
 
@@ -44,10 +39,7 @@ export default function BookmarksPage() {
 
     const fetchBookmarks = async () => {
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/student/bookmarks', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch('/api/student/bookmarks');
             if (res.ok) {
                 const data = await res.json();
                 // data is array of populated questions
@@ -57,6 +49,10 @@ export default function BookmarksPage() {
                 const ids = new Set<string>(data.map((q: any) => String(q._id)));
                 setBookmarkedIds(ids);
             } else {
+                if (res.status === 401) {
+                    router.push('/student/login');
+                    return;
+                }
                 toast.error('Failed to load bookmarks');
             }
         } catch (error) {
@@ -68,12 +64,10 @@ export default function BookmarksPage() {
 
     const toggleBookmark = async (questionId: string) => {
         try {
-            const token = localStorage.getItem('auth_token');
             const res = await fetch('/api/student/bookmarks', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ questionId })
             });

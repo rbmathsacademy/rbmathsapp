@@ -136,7 +136,7 @@ export default function StudentDashboard() {
                 {/* Greeting Section */}
                 <div className="mb-8 md:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <h2 className="text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400 mb-2">
-                        {getGreeting()}, <br className="sm:hidden" /> {student.studentName.split(' ')[0]}
+                        {getGreeting()}, <br className="sm:hidden" /> {student?.studentName?.split(' ')[0] || 'Student'}
                     </h2>
                     <p className="text-slate-400 text-sm md:text-lg">Ready to continue your learning journey?</p>
                 </div>
