@@ -252,7 +252,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                 <div className="p-6 bg-gray-50 flex flex-col gap-4">
                     {/* Preview Area */}
                     <div className="flex-1 border border-gray-200 rounded p-4 bg-white shadow-sm overflow-auto min-h-[200px]">
-                        <div className="font-bold text-gray-400 text-xs uppercase mb-4 border-b pb-2">Live Preview</div>
+                        <div className="font-bold text-gray-400 text-xs uppercase mb-4 border-b pb-2">Q{index + 1} Live Preview</div>
 
                         <div className="space-y-4">
                             {/* Image Preview in Context */}
@@ -351,7 +351,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
             {/* Left: JSON Editor */}
             <div className="p-4 border-r border-gray-700 flex flex-col gap-4">
                 <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-bold text-gray-500 uppercase">JSON Object</span>
+                    <span className="text-xs font-bold text-gray-500 uppercase">Q{index + 1} JSON Object</span>
                     <button onClick={onDelete} className="text-gray-600 hover:text-red-400 p-1"><Trash2 className="h-4 w-4" /></button>
                 </div>
                 {error && <span className="text-xs text-red-400 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Invalid JSON</span>}

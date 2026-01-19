@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Brain, User, BookOpen, Loader2, Lightbulb, ChevronRight, ChevronLeft, Sparkles, X, Bookmark, Eye, HelpCircle, CheckCircle, Home } from 'lucide-react';
@@ -48,7 +48,13 @@ export default function PracticeQuestionsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setResource(data.resource);
-                setQuestions(data.questions || []);
+                // Sort: Topic -> Subtopic -> ID
+                const sorted = (data.questions || []).sort((a: any, b: any) => {
+                    return (a.topic || '').localeCompare(b.topic || '') ||
+                        (a.subtopic || '').localeCompare(b.subtopic || '') ||
+                        (a._id || '').localeCompare(b._id || '');
+                });
+                setQuestions(sorted);
             } else {
                 if (res.status === 401) {
                     router.push('/student/login');
@@ -104,7 +110,7 @@ export default function PracticeQuestionsPage() {
     };
 
     const handleNext = () => {
-        if (currentIndex < questions.length - 1) {
+        if (currentIndex < filteredQuestions.length - 1) {
             setAnimating(true);
             setTimeout(() => {
                 setCurrentIndex(prev => prev + 1);
@@ -122,6 +128,35 @@ export default function PracticeQuestionsPage() {
             }, 300);
         }
     };
+
+    // Filter Logic
+    const [selectedSubtopic, setSelectedSubtopic] = useState('');
+    const [selectedExam, setSelectedExam] = useState('');
+
+    const subtopics = useMemo(() => Array.from(new Set(questions.map(q => q.subtopic))).filter(Boolean).sort(), [questions]);
+    const examNames = useMemo(() => {
+        const exams = new Set<string>();
+        questions.forEach(q => {
+            if (q.examNames && Array.isArray(q.examNames)) q.examNames.forEach((e: string) => exams.add(e));
+            else if (q.examName) exams.add(q.examName);
+        });
+        return Array.from(exams).sort();
+    }, [questions]);
+
+    const filteredQuestions = useMemo(() => {
+        return questions.filter(q => {
+            if (selectedSubtopic && q.subtopic !== selectedSubtopic) return false;
+            if (selectedExam) {
+                const exams = q.examNames || (q.examName ? [q.examName] : []);
+                if (!exams.includes(selectedExam)) return false;
+            }
+            return true;
+        });
+    }, [questions, selectedSubtopic, selectedExam]);
+
+    useEffect(() => {
+        setCurrentIndex(0);
+    }, [selectedSubtopic, selectedExam]);
 
     // AI Logic
     const generateAIPrompt = (question: any) => {
@@ -146,7 +181,17 @@ export default function PracticeQuestionsPage() {
         );
     }
 
-    if (!resource || questions.length === 0) {
+    if (!resource || filteredQuestions.length === 0) {
+        if (questions.length > 0 && filteredQuestions.length === 0) {
+            // Case where filters hide everything
+            return (
+                <div className="min-h-screen bg-[#0a0f1a] text-gray-200 p-8 flex flex-col items-center justify-center">
+                    <p className="text-gray-400 mb-4">No questions match your filters.</p>
+                    <button onClick={() => { setSelectedSubtopic(''); setSelectedExam(''); }} className="text-purple-400 hover:underline">Clear Filters</button>
+                    <Link href="/student" className="text-gray-500 hover:text-white mt-4 text-sm">Back to Dashboard</Link>
+                </div>
+            );
+        }
         return (
             <div className="min-h-screen bg-[#0a0f1a] text-gray-200 p-8 flex flex-col items-center justify-center">
                 <p className="text-gray-400 mb-4">No questions available.</p>
@@ -155,7 +200,7 @@ export default function PracticeQuestionsPage() {
         );
     }
 
-    const currentQuestion = questions[currentIndex];
+    const currentQuestion = filteredQuestions[currentIndex];
     const isBookmarked = bookmarkedIds.has(currentQuestion._id);
     // Legacy support for hints in resource object + new field in Question
     const questionHints = resource.hints?.[currentQuestion._id] || (currentQuestion.hint ? [currentQuestion.hint] : []);
@@ -170,25 +215,46 @@ export default function PracticeQuestionsPage() {
 
             {/* Header */}
             <header className="relative z-10 px-3 py-2 md:px-4 md:py-4 border-b border-white/5 bg-black/20 backdrop-blur-md">
-                <div className="max-w-5xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" title="Go Back">
-                            <ArrowLeft className="h-5 w-5" />
-                        </button>
-                        <Link href="/student" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" title="Dashboard">
-                            <Home className="h-5 w-5" />
-                        </Link>
+                <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" title="Go Back">
+                                <ArrowLeft className="h-5 w-5" />
+                            </button>
+                            <Link href="/student" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" title="Dashboard">
+                                <Home className="h-5 w-5" />
+                            </Link>
+                        </div>
+
+                        {/* Mobile Filters Toggle could go here, but let's keep it simple with dropdowns */}
                     </div>
-                    <div className="text-center">
+
+                    <div className="text-center flex-1">
                         <h1 className="text-base md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                             {resource.title}
                         </h1>
                         <p className="text-[10px] md:text-xs text-gray-500">
-                            Question {currentIndex + 1} of {questions.length}
+                            Question {currentIndex + 1} of {filteredQuestions.length}
                         </p>
                     </div>
-                    <div className="w-20 flex justify-end">
-                        {/* Placeholder for balance */}
+
+                    <div className="flex gap-2 w-full md:w-auto justify-center">
+                        <select
+                            className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500 max-w-[120px]"
+                            value={selectedSubtopic}
+                            onChange={(e) => setSelectedSubtopic(e.target.value)}
+                        >
+                            <option value="">All Topics</option>
+                            {subtopics.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select
+                            className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500 max-w-[120px]"
+                            value={selectedExam}
+                            onChange={(e) => setSelectedExam(e.target.value)}
+                        >
+                            <option value="">All Exams</option>
+                            {examNames.map(e => <option key={e} value={e}>{e}</option>)}
+                        </select>
                     </div>
                 </div>
             </header>
@@ -346,12 +412,12 @@ export default function PracticeQuestionsPage() {
                 </button>
 
                 <span className="flex items-center justify-center px-4 font-mono text-gray-500 text-sm">
-                    {currentIndex + 1} / {questions.length}
+                    {currentIndex + 1} / {filteredQuestions.length}
                 </span>
 
                 <button
                     onClick={handleNext}
-                    disabled={currentIndex === questions.length - 1}
+                    disabled={currentIndex === filteredQuestions.length - 1}
                     className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20 transition-all active:scale-95"
                 >
                     Next <ChevronRight className="h-5 w-5" />

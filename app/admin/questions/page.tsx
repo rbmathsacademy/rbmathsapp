@@ -262,8 +262,14 @@ export default function QuestionBank() {
 
             if (questionsRes.ok) {
                 const data = await questionsRes.json();
-                setQuestions(data);
-                if (data.length > 0) setCurrentFacultyName(data[0].facultyName);
+                // Sort: Topic -> Subtopic -> ID (Creation)
+                const sorted = data.sort((a: any, b: any) => {
+                    return a.topic.localeCompare(b.topic) ||
+                        a.subtopic.localeCompare(b.subtopic) ||
+                        (a.id || '').localeCompare(b.id || '');
+                });
+                setQuestions(sorted);
+                if (sorted.length > 0) setCurrentFacultyName(sorted[0].facultyName);
             }
 
             // Extract unique departments, years, and courses from students
@@ -649,15 +655,28 @@ export default function QuestionBank() {
                 setManualData({ id: '', type: 'broad', topic: '', subtopic: '', text: '' });
                 setJsonContent('');
                 setPreviewContent([]);
-                if (userEmail) fetchQuestions(userEmail);
 
-                // Restore scroll position after save
-                setTimeout(() => {
-                    if (editScrollPosition > 0) {
-                        window.scrollTo({ top: editScrollPosition, behavior: 'smooth' });
-                        setEditScrollPosition(0); // Reset
-                    }
-                }, 300); // Wait for list to re-render
+                // Get the ID of the question we just saved (if editing one)
+                // If it was a new question, we might not have the ID unless we return it from API, 
+                // but for edits we have manualData.id or lastEditedId
+                const targetId = lastEditedId.current;
+
+                if (userEmail) await fetchQuestions(userEmail);
+
+                // Auto-scroll to edited question
+                if (targetId) {
+                    setTimeout(() => {
+                        const element = document.getElementById(`q-${targetId}`);
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            // Highlight effect
+                            element.classList.add('ring-2', 'ring-purple-500');
+                            setTimeout(() => element.classList.remove('ring-2', 'ring-purple-500'), 2000);
+                        }
+                    }, 500); // Wait for list to re-render
+                }
+
+                lastEditedId.current = null;
             } else {
                 toast.error('Failed to save.');
             }

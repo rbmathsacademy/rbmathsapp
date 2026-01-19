@@ -70,6 +70,7 @@ export default function AnswerBank() {
     const [previewContent, setPreviewContent] = useState<any[]>([]); // For previewing import
     const [jsonError, setJsonError] = useState<string | null>(null);
     const [editScrollPosition, setEditScrollPosition] = useState(0);
+    const lastEditedId = useRef<string | null>(null);
 
     // Selection & Filtering
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
@@ -92,7 +93,13 @@ export default function AnswerBank() {
             const res = await fetch('/api/admin/questions', { headers: { 'X-User-Email': email } });
             const data = await res.json();
             if (Array.isArray(data)) {
-                setQuestions(data);
+                // Sort: Topic -> Subtopic -> ID (Creation)
+                const sorted = data.sort((a: Question, b: Question) => {
+                    return a.topic.localeCompare(b.topic) ||
+                        a.subtopic.localeCompare(b.subtopic) ||
+                        (a.id || '').localeCompare(b.id || '');
+                });
+                setQuestions(sorted);
             }
         } catch (error) {
             toast.error('Failed to load questions');
@@ -143,6 +150,36 @@ export default function AnswerBank() {
         }
     };
 
+    const deleteSelected = async () => {
+        if (selectedQuestionIds.size === 0) return;
+        if (!confirm(`Permanently delete ${selectedQuestionIds.size} questions and their answers?`)) return;
+
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/questions', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': userEmail || ''
+                },
+                body: JSON.stringify({ ids: Array.from(selectedQuestionIds) })
+            });
+
+            if (res.ok) {
+                toast.success('Deleted successfully');
+                setSelectedQuestionIds(new Set());
+                if (userEmail) fetchQuestions(userEmail);
+            } else {
+                toast.error('Failed to delete');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Error deleting questions');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // --- Editor Logic ---
     const handleEditAnswers = (id?: string) => {
         setEditScrollPosition(window.scrollY);
@@ -150,7 +187,10 @@ export default function AnswerBank() {
         let questionsToEdit: Question[] = [];
         if (id) {
             const q = questions.find(q => q.id === id);
-            if (q) questionsToEdit = [q];
+            if (q) {
+                questionsToEdit = [q];
+                lastEditedId.current = id;
+            }
         } else if (selectedQuestionIds.size > 0) {
             questionsToEdit = questions.filter(q => selectedQuestionIds.has(q.id));
         }
@@ -260,11 +300,23 @@ export default function AnswerBank() {
 
             // Restore Scroll
             setTimeout(() => {
-                if (editScrollPosition > 0) {
+                const targetId = lastEditedId.current;
+
+                if (editScrollPosition > 0 && !targetId) {
+                    // Bulk edit or no specific target, just restore position
                     window.scrollTo({ top: editScrollPosition, behavior: 'smooth' });
                     setEditScrollPosition(0);
+                } else if (targetId) {
+                    // Scroll to specific edited item
+                    const element = document.getElementById(`q-${targetId}`);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        element.classList.add('ring-2', 'ring-purple-500');
+                        setTimeout(() => element.classList.remove('ring-2', 'ring-purple-500'), 2000);
+                    }
+                    lastEditedId.current = null;
                 }
-            }, 300);
+            }, 500);
 
         } catch (error: any) {
             toast.error(error.message || 'Save failed');
@@ -329,6 +381,14 @@ export default function AnswerBank() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {!isEditorOpen && selectedQuestionIds.size > 0 && (
+                        <button
+                            onClick={deleteSelected}
+                            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95 animate-in fade-in"
+                        >
+                            <Trash2 className="h-4 w-4" /> Delete ({selectedQuestionIds.size})
+                        </button>
+                    )}
                     {!isEditorOpen && (
                         <>
                             <button
@@ -525,10 +585,11 @@ export default function AnswerBank() {
                                 No questions found matching your filters.
                             </div>
                         ) : (
-                            filteredQuestions.map((q) => (
-                                <div key={q.id} className={`bg-gray-900 rounded-lg border transition-all duration-200 group ${selectedQuestionIds.has(q.id) ? 'border-purple-500/50 shadow-purple-500/10 shadow-lg' : 'border-gray-800 hover:border-gray-700'}`}>
+                            filteredQuestions.map((q, index) => (
+                                <div id={`q-${q.id}`} key={q.id} className={`bg-gray-900 rounded-lg border transition-all duration-200 group ${selectedQuestionIds.has(q.id) ? 'border-purple-500/50 shadow-purple-500/10 shadow-lg' : 'border-gray-800 hover:border-gray-700'}`}>
                                     <div className="p-4 flex gap-4">
-                                        <div className="pt-1">
+                                        <div className="pt-1 flex flex-col items-center gap-2">
+                                            <span className="text-xs font-mono text-gray-500 font-bold">{index + 1}</span>
                                             <input
                                                 type="checkbox"
                                                 checked={selectedQuestionIds.has(q.id)}
