@@ -80,8 +80,9 @@ export default function AnswerBank() {
 
     // Selection & Filtering
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
-    const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+    const [selectedTopics, setSelectedTopics] = useState<string[]>(["No Topic"]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
+    const [selectedExams, setSelectedExams] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -118,19 +119,76 @@ export default function AnswerBank() {
     };
 
     // --- Filter Logic ---
-    const topics = useMemo(() => Array.from(new Set(questions.map(q => q.topic))).filter(Boolean).sort(), [questions]);
+    const topics = useMemo(() => {
+        let filtered = questions;
+        if (selectedSubtopics.length > 0) {
+            filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        }
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || [];
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
+        }
+        const actualTopics = Array.from(new Set(filtered.map(q => q.topic))).filter(Boolean).sort();
+        return ["No Topic", ...actualTopics];
+    }, [questions, selectedSubtopics, selectedExams]);
+
     const subtopics = useMemo(() => {
         let filtered = questions;
         if (selectedTopics.length > 0) {
-            filtered = filtered.filter(q => selectedTopics.includes(q.topic));
+            const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+            if (actualTopics.length > 0) {
+                filtered = filtered.filter(q => actualTopics.includes(q.topic));
+            }
+        }
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || [];
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
         }
         return Array.from(new Set(filtered.map(q => q.subtopic))).filter(Boolean).sort();
-    }, [questions, selectedTopics]);
+    }, [questions, selectedTopics, selectedExams]);
+
+    const examNames = useMemo(() => {
+        const set = new Set<string>();
+        let filtered = questions;
+
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        if (actualTopics.length > 0) {
+            filtered = filtered.filter(q => actualTopics.includes(q.topic));
+        }
+        if (selectedSubtopics.length > 0) {
+            filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        }
+
+        filtered.forEach(q => {
+            if (q.examNames && Array.isArray(q.examNames)) q.examNames.forEach(e => set.add(e));
+            else if (q.examNames && typeof q.examNames === 'string') set.add(q.examNames);
+            else if (q.examName) set.add(q.examName);
+        });
+        return Array.from(set).filter(Boolean).sort();
+    }, [questions, selectedTopics, selectedSubtopics]);
 
     const filteredQuestions = useMemo(() => {
+        // If "No Topic" is selected, return empty (unless searching)
+        if (selectedTopics.includes("No Topic") && !searchQuery) {
+            return [];
+        }
+
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+
         return questions.filter(q => {
-            if (selectedTopics.length > 0 && !selectedTopics.includes(q.topic)) return false;
+            if (actualTopics.length > 0 && !actualTopics.includes(q.topic)) return false;
             if (selectedSubtopics.length > 0 && !selectedSubtopics.includes(q.subtopic)) return false;
+
+            const qExams = q.examNames || [];
+            if (selectedExams.length > 0) {
+                const hasExam = selectedExams.some(e => qExams.includes(e));
+                if (!hasExam) return false;
+            }
+
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 return (
@@ -141,7 +199,7 @@ export default function AnswerBank() {
             }
             return true;
         });
-    }, [questions, selectedTopics, selectedSubtopics, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, searchQuery]);
 
     // --- Selection Logic ---
     const toggleSelection = (id: string) => {
@@ -577,6 +635,15 @@ export default function AnswerBank() {
                                         placeholder="All Subtopics"
                                     />
                                 </div>
+                                <div className="w-48">
+                                    <label className="text-xs text-gray-400 mb-1 block">Filter Exam</label>
+                                    <MultiSelect
+                                        options={examNames}
+                                        selected={selectedExams}
+                                        onChange={setSelectedExams}
+                                        placeholder="All Exams"
+                                    />
+                                </div>
                                 <div className="flex-1 relative">
                                     <label className="text-xs text-gray-400 mb-1 block">Search</label>
                                     <div className="relative">
@@ -660,6 +727,18 @@ export default function AnswerBank() {
                                                     </div>
                                                 )}
                                                 <Latex>{q.text}</Latex>
+
+                                                {/* MCQ Options Display */}
+                                                {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        {q.options.map((opt: string, i: number) => (
+                                                            <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
+                                                                <span className="text-gray-300"><Latex>{opt}</Latex></span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Answer Section */}

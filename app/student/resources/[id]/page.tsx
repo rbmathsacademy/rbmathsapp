@@ -132,16 +132,48 @@ export default function PracticeQuestionsPage() {
     // Filter Logic
     const [selectedSubtopic, setSelectedSubtopic] = useState('');
     const [selectedExam, setSelectedExam] = useState('');
+    const [selectedType, setSelectedType] = useState('');
 
-    const subtopics = useMemo(() => Array.from(new Set(questions.map(q => q.subtopic))).filter(Boolean).sort(), [questions]);
+    const subtopics = useMemo(() => {
+        let filtered = questions;
+        if (selectedExam) {
+            const exam = selectedExam;
+            filtered = filtered.filter(q => (q.examNames && q.examNames.includes(exam)) || q.examName === exam);
+        }
+        if (selectedType) {
+            filtered = filtered.filter(q => q.type === selectedType);
+        }
+        return Array.from(new Set(filtered.map(q => q.subtopic))).filter(Boolean).sort();
+    }, [questions, selectedExam, selectedType]);
+
     const examNames = useMemo(() => {
+        let filtered = questions;
+        if (selectedSubtopic) {
+            filtered = filtered.filter(q => q.subtopic === selectedSubtopic);
+        }
+        if (selectedType) {
+            filtered = filtered.filter(q => q.type === selectedType);
+        }
+
         const exams = new Set<string>();
-        questions.forEach(q => {
+        filtered.forEach(q => {
             if (q.examNames && Array.isArray(q.examNames)) q.examNames.forEach((e: string) => exams.add(e));
             else if (q.examName) exams.add(q.examName);
         });
         return Array.from(exams).sort();
-    }, [questions]);
+    }, [questions, selectedSubtopic, selectedType]);
+
+    const types = useMemo(() => {
+        let filtered = questions;
+        if (selectedSubtopic) {
+            filtered = filtered.filter(q => q.subtopic === selectedSubtopic);
+        }
+        if (selectedExam) {
+            const exam = selectedExam;
+            filtered = filtered.filter(q => (q.examNames && q.examNames.includes(exam)) || q.examName === exam);
+        }
+        return Array.from(new Set(filtered.map(q => q.type))).filter(Boolean).sort();
+    }, [questions, selectedSubtopic, selectedExam]);
 
     const filteredQuestions = useMemo(() => {
         return questions.filter(q => {
@@ -150,13 +182,14 @@ export default function PracticeQuestionsPage() {
                 const exams = q.examNames || (q.examName ? [q.examName] : []);
                 if (!exams.includes(selectedExam)) return false;
             }
+            if (selectedType && q.type !== selectedType) return false;
             return true;
         });
-    }, [questions, selectedSubtopic, selectedExam]);
+    }, [questions, selectedSubtopic, selectedExam, selectedType]);
 
     useEffect(() => {
         setCurrentIndex(0);
-    }, [selectedSubtopic, selectedExam]);
+    }, [selectedSubtopic, selectedExam, selectedType]);
 
     // AI Logic
     const generateAIPrompt = (question: any) => {
@@ -254,6 +287,14 @@ export default function PracticeQuestionsPage() {
                         >
                             <option value="">All Exams</option>
                             {examNames.map(e => <option key={e} value={e}>{e}</option>)}
+                        </select>
+                        <select
+                            className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500 max-w-[120px]"
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value)}
+                        >
+                            <option value="">All Types</option>
+                            {types.map(t => <option key={t} value={t}>{t === 'mcq' ? 'MCQ' : t === 'broad' ? 'Broad' : t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                         </select>
                     </div>
                 </div>

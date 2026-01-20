@@ -33,9 +33,20 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
     }, []);
 
     const toggleOption = (value: string) => {
-        const newSelected = selected.includes(value)
+        let newSelected = selected.includes(value)
             ? selected.filter((item: string) => item !== value)
             : [...selected, value];
+
+        // If selecting something other than "No Topic", remove "No Topic"
+        if (value !== "No Topic" && !selected.includes(value)) {
+            newSelected = newSelected.filter((item: string) => item !== "No Topic");
+        }
+
+        // If deselecting the last real topic, add "No Topic" back
+        if (selected.includes(value) && newSelected.length === 0) {
+            newSelected = ["No Topic"];
+        }
+
         onChange(newSelected);
     };
 
@@ -182,8 +193,9 @@ export default function QuestionBank() {
     const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
 
     // Filter State
-    const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+    const [selectedTopics, setSelectedTopics] = useState<string[]>(["No Topic"]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
+    const [selectedExams, setSelectedExams] = useState<string[]>([]);
     // Singular Selection for Modal
     const [selectedTopic, setSelectedTopic] = useState('');
     const [selectedSubtopic, setSelectedSubtopic] = useState('');
@@ -214,16 +226,57 @@ export default function QuestionBank() {
     const [availableYears, setAvailableYears] = useState<string[]>([]);
     const [availableCourses, setAvailableCourses] = useState<string[]>([]);
 
-    // Derived Lists
-    const topics = Array.from(new Set(questions.map(q => q.topic))).sort();
+    // Derived Lists - All with bidirectional cascading
+    const topics = useMemo(() => {
+        let filtered = questions;
+        if (selectedSubtopics.length > 0) {
+            filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        }
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || (q.examName ? [q.examName] : []);
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
+        }
+        const actualTopics = Array.from(new Set(filtered.map(q => q.topic))).sort();
+        return ["No Topic", ...actualTopics];
+    }, [questions, selectedSubtopics, selectedExams]);
 
-    // Cascading Subtopics: Filter based on selected topics
+    // Cascading Subtopics: Filter based on selected topics and exams
     const subtopics = useMemo(() => {
-        const filteredByTopic = selectedTopics.length > 0
-            ? questions.filter(q => selectedTopics.includes(q.topic))
-            : questions;
-        return Array.from(new Set(filteredByTopic.map(q => q.subtopic))).filter(Boolean).sort();
-    }, [questions, selectedTopics]);
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        let filtered = questions;
+        if (actualTopics.length > 0) {
+            filtered = filtered.filter(q => actualTopics.includes(q.topic));
+        }
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || (q.examName ? [q.examName] : []);
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
+        }
+        return Array.from(new Set(filtered.map(q => q.subtopic))).filter(Boolean).sort();
+    }, [questions, selectedTopics, selectedExams]);
+
+    // Cascading Exam Names: Filter based on selected topics and subtopics
+    const examNames = useMemo(() => {
+        const set = new Set<string>();
+        let filtered = questions;
+
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        if (actualTopics.length > 0) {
+            filtered = filtered.filter(q => actualTopics.includes(q.topic));
+        }
+        if (selectedSubtopics.length > 0) {
+            filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        }
+
+        filtered.forEach(q => {
+            if (q.examNames && Array.isArray(q.examNames)) q.examNames.forEach((e: string) => set.add(e));
+            else if (q.examName) set.add(q.examName);
+        });
+        return Array.from(set).filter(Boolean).sort();
+    }, [questions, selectedTopics, selectedSubtopics]);
 
     // Paper Modal Subtopics
     const paperSubtopics = useMemo(() => {
@@ -235,9 +288,20 @@ export default function QuestionBank() {
 
     // Compute filtered questions based on selected topics and subtopics
     const filteredQuestions = useMemo(() => {
+        // If "No Topic" is selected, return empty (unless searching)
+        if (selectedTopics.includes("No Topic") && !searchQuery) {
+            return [];
+        }
+
+        // Filter out "No Topic" for actual filtering
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+
         return questions.filter(q => {
-            const topicMatch = selectedTopics.length === 0 || selectedTopics.includes(q.topic);
+            const topicMatch = actualTopics.length === 0 || actualTopics.includes(q.topic);
             const subtopicMatch = selectedSubtopics.length === 0 || selectedSubtopics.includes(q.subtopic);
+
+            const qExams = q.examNames || (q.examName ? [q.examName] : []);
+            const examMatch = selectedExams.length === 0 || selectedExams.some(e => qExams.includes(e));
 
             const searchLower = searchQuery.toLowerCase();
             const searchMatch = !searchQuery ||
@@ -246,9 +310,9 @@ export default function QuestionBank() {
                 (q.subtopic || '').toLowerCase().includes(searchLower) ||
                 (q.id || '').toLowerCase().includes(searchLower);
 
-            return topicMatch && subtopicMatch && searchMatch;
+            return topicMatch && subtopicMatch && examMatch && searchMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, searchQuery]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -1680,6 +1744,15 @@ export default function QuestionBank() {
                                 placeholder="All Subtopics"
                             />
                         </div>
+                        <div className="w-48">
+                            <label className="text-xs text-gray-400 mb-1 block">Filter Exam</label>
+                            <MultiSelect
+                                options={examNames}
+                                selected={selectedExams}
+                                onChange={setSelectedExams}
+                                placeholder="All Exams"
+                            />
+                        </div>
                         {/* Search Bar */}
                         <div className="flex-1 relative">
                             <label className="text-xs text-gray-400 mb-1 block">Search</label>
@@ -1742,10 +1815,11 @@ export default function QuestionBank() {
                             No questions found.
                         </div>
                     ) : (
-                        filteredQuestions.map((q) => (
+                        filteredQuestions.map((q, index) => (
                             <div id={`q-${q.id}`} key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-gray-900 border-gray-700'} hover:border-gray-500 transition-colors group`}>
                                 <div className="flex gap-3">
-                                    <div className="pt-1">
+                                    <div className="pt-1 flex flex-col items-center gap-2">
+                                        <span className="text-xs font-mono text-gray-500 font-bold">{index + 1}</span>
                                         <input
                                             type="checkbox"
                                             checked={selectedQuestionIds.has(q.id)}
@@ -1790,6 +1864,18 @@ export default function QuestionBank() {
                                                 </div>
                                             )}
                                             <Latex>{q.text}</Latex>
+
+                                            {/* MCQ Options Display */}
+                                            {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    {q.options.map((opt: string, i: number) => (
+                                                        <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                            <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
+                                                            <span className="text-gray-300"><Latex>{opt}</Latex></span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

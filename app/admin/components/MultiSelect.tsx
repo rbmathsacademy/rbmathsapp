@@ -27,9 +27,20 @@ export default function MultiSelect({ options, selected, onChange, placeholder }
     }, []);
 
     const toggleOption = (value: string) => {
-        const newSelected = selected.includes(value)
+        let newSelected = selected.includes(value)
             ? selected.filter((item) => item !== value)
             : [...selected, value];
+
+        // If selecting something other than "No Topic", remove "No Topic"
+        if (value !== "No Topic" && !selected.includes(value)) {
+            newSelected = newSelected.filter(item => item !== "No Topic");
+        }
+
+        // If deselecting the last real topic, add "No Topic" back
+        if (selected.includes(value) && newSelected.length === 0) {
+            newSelected = ["No Topic"];
+        }
+
         onChange(newSelected);
     };
 
@@ -45,7 +56,7 @@ export default function MultiSelect({ options, selected, onChange, placeholder }
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex flex-wrap gap-1">
-                    {selected.length === 0 ? <span className="text-gray-500">{placeholder}</span> :
+                    {selected.length === 0 ? <span className="text-gray-500 italic">{placeholder}</span> :
                         selected.length > 2 ? <span className="text-white">{selected.length} selected</span> :
                             selected.map((s) => (
                                 <span key={s} className="bg-blue-900 text-blue-200 px-1.5 py-0.5 rounded text-[10px]">{s}</span>

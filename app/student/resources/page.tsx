@@ -79,15 +79,56 @@ export default function StudentResources() {
         }
     }, [courses, activeCourse]);
 
+    // Question Type Filter
+    const [selectedQType, setSelectedQType] = useState('');
+
+    const questionTypes = useMemo(() => {
+        const types = new Set<string>();
+        resources.forEach(r => {
+            // Only look at practice resources and current course
+            const course = r.targetCourse || r.course_code;
+            if (course === activeCourse && r.questions) {
+                r.questions.forEach((q: any) => {
+                    if (q.type) types.add(q.type);
+                });
+            }
+        });
+        return Array.from(types).sort();
+    }, [resources, activeCourse]);
+
     const getResourcesByType = (type: string) => {
         if (!activeCourse) return [];
-        return resources.filter(r => {
+        return resources.flatMap(r => {
             const course = r.targetCourse || r.course_code;
             const matchesCourse = course === activeCourse;
-            if (type === 'materials') return matchesCourse && (r.type === 'pdf' || r.type === 'study_material');
-            if (type === 'videos') return matchesCourse && (r.type === 'video' || r.type === 'video_resource');
-            if (type === 'practice') return matchesCourse && (r.type === 'practice' || r.type === 'hints' || r.type === 'practice_questions' || r.type === 'practice_questions_hints');
-            return false;
+            if (!matchesCourse) return [];
+
+            if (type === 'materials') {
+                if (r.type === 'pdf' || r.type === 'study_material') return [r];
+                return [];
+            }
+            if (type === 'videos') {
+                if (r.type === 'video' || r.type === 'video_resource') return [r];
+                return [];
+            }
+            if (type === 'practice') {
+                const isPractice = (r.type === 'practice' || r.type === 'hints' || r.type === 'practice_questions' || r.type === 'practice_questions_hints');
+                if (!isPractice) return [];
+
+                // Filter questions if a type is selected
+                if (selectedQType && r.questions) {
+                    const filteredQs = r.questions.filter((q: any) => q.type === selectedQType);
+                    if (filteredQs.length > 0) {
+                        return [{ ...r, questions: filteredQs }];
+                    }
+                    return [];
+                }
+                // If no questions but it's a practice resource, should we show it?
+                // Existing rendered checked length > 0.
+                // We'll return it, logic in render will handle display (or lack thereof if empty)
+                return [r];
+            }
+            return [];
         });
     };
 
@@ -188,6 +229,21 @@ export default function StudentResources() {
                                         {activeView === 'videos' && <><Video className="h-4 w-4 text-rose-400" /> Videos</>}
                                         {activeView === 'practice' && <><Brain className="h-4 w-4 text-purple-400" /> Practice</>}
                                     </h2>
+
+                                    {activeView === 'practice' && questionTypes.length > 0 && (
+                                        <div className="ml-auto">
+                                            <select
+                                                value={selectedQType}
+                                                onChange={(e) => setSelectedQType(e.target.value)}
+                                                className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500"
+                                            >
+                                                <option value="">All Types</option>
+                                                {questionTypes.map(t => (
+                                                    <option key={t} value={t}>{t === 'mcq' ? 'MCQ' : t === 'broad' ? 'Broad' : t === 'blanks' ? 'Fill in Blanks' : t === 'short' ? 'Short Answer' : t}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {getResourcesByType(activeView).length === 0 ? (
