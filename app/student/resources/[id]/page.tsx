@@ -343,7 +343,7 @@ export default function PracticeQuestionsPage() {
 
                             {/* MCQ Options Display */}
                             {currentQuestion.type === 'mcq' && currentQuestion.options && currentQuestion.options.length > 0 && (
-                                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="mt-6 grid grid-cols-2 gap-3">
                                     {currentQuestion.options.map((opt: string, i: number) => (
                                         <div
                                             key={i}
