@@ -18,6 +18,7 @@ interface Question {
     explanation?: string;
     image?: string;
     examNames?: string[];
+    examName?: string; // Legacy field for backwards compatibility
     marks?: number;
     // Critical fields for persistence
     options?: string[];
