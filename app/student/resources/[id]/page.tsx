@@ -341,6 +341,25 @@ export default function PracticeQuestionsPage() {
                                 <Latex>{currentQuestion.latex || currentQuestion.text}</Latex>
                             </div>
 
+                            {/* MCQ Options Display */}
+                            {currentQuestion.type === 'mcq' && currentQuestion.options && currentQuestion.options.length > 0 && (
+                                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {currentQuestion.options.map((opt: string, i: number) => (
+                                        <div
+                                            key={i}
+                                            className="px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-start gap-3 group cursor-default"
+                                        >
+                                            <span className="font-bold text-blue-400 text-lg uppercase min-w-[24px]">
+                                                {String.fromCharCode(65 + i)}.
+                                            </span>
+                                            <span className="text-gray-200 text-base leading-relaxed flex-1">
+                                                <Latex>{opt}</Latex>
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {/* Image */}
                             {currentQuestion.image && (
                                 <div className="mt-6">
