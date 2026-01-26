@@ -7,6 +7,7 @@ import { ArrowLeft, Brain, User, BookOpen, Loader2, Lightbulb, ChevronRight, Che
 import { toast } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
+import LatexWithImages from '@/app/components/LatexWithImages';
 
 export default function BookmarksPage() {
     const [questions, setQuestions] = useState<any[]>([]);
@@ -307,7 +308,7 @@ export default function BookmarksPage() {
                                     <BookOpen className="h-4 w-4" /> Explanation
                                 </h3>
                                 <div className="text-blue-100/90 leading-relaxed space-y-2">
-                                    <Latex>{currentQuestion.explanation}</Latex>
+                                    <LatexWithImages>{currentQuestion.explanation}</LatexWithImages>
                                 </div>
                             </div>
                         )}

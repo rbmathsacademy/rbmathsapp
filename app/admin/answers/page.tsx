@@ -5,6 +5,7 @@ import { Loader2, Copy, Save, Database, Filter, Upload, X, Search, Edit, FileTex
 import { toast } from 'react-hot-toast';
 import MultiSelect from '../components/MultiSelect';
 import Latex from 'react-latex-next';
+import LatexWithImages from '../../components/LatexWithImages';
 import 'katex/dist/katex.min.css';
 
 interface Question {
@@ -571,7 +572,7 @@ export default function AnswerBank() {
                                             {item.explanation && (
                                                 <div className="bg-blue-900/10 border border-blue-500/20 p-2 rounded">
                                                     <span className="text-[10px] uppercase font-bold text-blue-500 block mb-1">Explanation</span>
-                                                    <Latex>{item.explanation}</Latex>
+                                                    <LatexWithImages>{item.explanation}</LatexWithImages>
                                                 </div>
                                             )}
                                         </div>
@@ -762,7 +763,7 @@ export default function AnswerBank() {
                                                 <div className="space-y-1">
                                                     <div className="text-[10px] font-bold text-blue-500 uppercase">Explanation</div>
                                                     <div className="text-xs text-blue-300/80 line-clamp-3 hover:line-clamp-none cursor-help transition-all">
-                                                        {q.explanation ? <Latex>{q.explanation}</Latex> : <span className="text-gray-600 italic">-</span>}
+                                                        {q.explanation ? <LatexWithImages>{q.explanation}</LatexWithImages> : <span className="text-gray-600 italic">-</span>}
                                                     </div>
                                                 </div>
                                             </div>
