@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import MultiSelect from '../components/MultiSelect';
 import Latex from 'react-latex-next';
 import LatexWithImages from '../../components/LatexWithImages';
+import ImageUploadButton from './components/ImageUploadButton';
 import 'katex/dist/katex.min.css';
 
 interface Question {
@@ -45,8 +46,9 @@ Rules:
    - CORRECT: "x = \\frac{1}{2}" (Valid JSON)
 6. Ensure all special characters are properly escaped in JSON strings.
 7. Do NOT add markdown formatting (like \`\`\`json). Output raw JSON only.
-8. If the question implies a diagram or image that you cannot generate, describe it in text within the explanation.
-9. **Wrong Data**: If the question seems to have incorrect data or is unsolvable, set "answer", "hint", and "explanation" to: "question may have wrong data, please inform your teacher".
+8. **Images**: You can include images in explanations using base64 strings in the format: data:image/png;base64,... or administrators can upload images directly.
+9. If the question implies a diagram or image that you cannot generate, describe it in text within the explanation.
+10. **Wrong Data**: If the question seems to have incorrect data or is unsolvable, set "answer", "hint", and "explanation" to: "question may have wrong data, please inform your teacher".
 
 Example Input:
 [
@@ -79,6 +81,7 @@ export default function AnswerBank() {
     const [jsonError, setJsonError] = useState<string | null>(null);
     const [editScrollPosition, setEditScrollPosition] = useState(0);
     const lastEditedId = useRef<string | null>(null);
+    const jsonTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Selection & Filtering
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
@@ -289,6 +292,28 @@ export default function AnswerBank() {
 
     const handleJsonInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setJsonContent(e.target.value);
+    };
+
+    const insertImageIntoJson = (base64: string, field: 'answer' | 'hint' | 'explanation') => {
+        try {
+            const parsed = JSON.parse(jsonContent || '[]');
+            const arr = Array.isArray(parsed) ? parsed : [parsed];
+
+            // Add image to all items in the array or the first item
+            arr.forEach((item: any) => {
+                if (!item[field]) {
+                    item[field] = base64;
+                } else {
+                    // Append to existing content with a space separator
+                    item[field] = item[field] + ' ' + base64;
+                }
+            });
+
+            setJsonContent(JSON.stringify(arr, null, 2));
+            toast.success(`Image added to ${field}`);
+        } catch (e) {
+            toast.error('Fix JSON before adding images');
+        }
     };
 
     const handleAutoFix = () => {
@@ -505,15 +530,30 @@ export default function AnswerBank() {
                                 <span className="text-sm font-bold text-gray-400 flex items-center gap-2">
                                     <FileText className="h-4 w-4" /> JSON Answer Editor
                                 </span>
-                                <button
-                                    onClick={copyPrompt}
-                                    className="text-xs bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white px-2 py-1 rounded transition-colors flex items-center gap-1"
-                                >
-                                    <Copy className="h-3 w-3" /> Copy Prompt
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <ImageUploadButton
+                                        label="+ Answer Image"
+                                        onImageUploaded={(base64) => insertImageIntoJson(base64, 'answer')}
+                                    />
+                                    <ImageUploadButton
+                                        label="+ Hint Image"
+                                        onImageUploaded={(base64) => insertImageIntoJson(base64, 'hint')}
+                                    />
+                                    <ImageUploadButton
+                                        label="+ Explanation Image"
+                                        onImageUploaded={(base64) => insertImageIntoJson(base64, 'explanation')}
+                                    />
+                                    <button
+                                        onClick={copyPrompt}
+                                        className="text-xs bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white px-2 py-1 rounded transition-colors flex items-center gap-1"
+                                    >
+                                        <Copy className="h-3 w-3" /> Copy Prompt
+                                    </button>
+                                </div>
                             </div>
                             <div className="relative flex-1">
                                 <textarea
+                                    ref={jsonTextareaRef}
                                     className="absolute inset-0 w-full h-full bg-[#0d1117] text-gray-300 font-mono text-xs p-4 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                                     value={jsonContent}
                                     onChange={handleJsonInput}
