@@ -67,7 +67,7 @@ export default function AdminLogin() {
             }
 
             // Force hard navigation to resolve potential freeze/infinite loading issues
-            window.location.href = '/admin/deploy';
+            window.location.href = '/admin/dashboard';
         } catch (err: any) {
             setError(err.message);
         } finally {

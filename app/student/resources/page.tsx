@@ -158,7 +158,7 @@ export default function StudentResources() {
                     <Link href="/student" className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-gray-400">
                         <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Link>
-                    <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    <h1 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                         Resources
                     </h1>
                 </div>
@@ -169,8 +169,8 @@ export default function StudentResources() {
                     </div>
                 ) : courses.length === 0 ? (
                     <div className="text-center py-16">
-                        <BookOpen className="h-10 w-10 text-gray-600 mx-auto mb-3" />
-                        <p className="text-gray-500">No resources found</p>
+                        <BookOpen className="h-8 w-8 text-gray-600 mx-auto mb-3" />
+                        <p className="text-[10px] text-gray-500">No resources found</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -180,7 +180,7 @@ export default function StudentResources() {
                                 <button
                                     key={course}
                                     onClick={() => { setActiveCourse(course); setActiveView('dashboard'); }}
-                                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${activeCourse === course
+                                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm font-bold transition-all ${activeCourse === course
                                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
                                         : 'bg-white/5 text-gray-400 border border-white/10'
                                         }`}
@@ -204,11 +204,11 @@ export default function StudentResources() {
                                                 <cat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                                             </div>
                                             {cat.id !== 'mock' && (
-                                                <span className="text-lg sm:text-2xl font-black text-white">{cat.count}</span>
+                                                <span className="text-base sm:text-2xl font-black text-white">{cat.count}</span>
                                             )}
                                         </div>
-                                        <h3 className="text-xs sm:text-sm font-bold text-white">{cat.label}</h3>
-                                        <div className="flex items-center gap-1 text-gray-500 text-[10px] sm:text-xs mt-1">
+                                        <h3 className="text-[10px] sm:text-sm font-bold text-white">{cat.label}</h3>
+                                        <div className="flex items-center gap-1 text-gray-500 text-[9px] sm:text-xs mt-1">
                                             <span className="hidden sm:inline">Browse</span>
                                             <ChevronRight className="h-3 w-3" />
                                         </div>
@@ -224,7 +224,7 @@ export default function StudentResources() {
                                     <button onClick={() => setActiveView('dashboard')} className="p-2 rounded-lg bg-white/5 text-gray-400">
                                         <ArrowLeft className="h-4 w-4" />
                                     </button>
-                                    <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                                    <h2 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
                                         {activeView === 'materials' && <><FileText className="h-4 w-4 text-blue-400" /> Materials</>}
                                         {activeView === 'videos' && <><Video className="h-4 w-4 text-rose-400" /> Videos</>}
                                         {activeView === 'practice' && <><Brain className="h-4 w-4 text-purple-400" /> Practice</>}
@@ -248,8 +248,8 @@ export default function StudentResources() {
 
                                 {getResourcesByType(activeView).length === 0 ? (
                                     <div className="text-center py-10 rounded-xl bg-white/5 border border-white/10">
-                                        <Folder className="h-8 w-8 text-gray-600 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-500">No {activeView} found</p>
+                                        <Folder className="h-6 w-6 text-gray-600 mx-auto mb-2" />
+                                        <p className="text-[10px] text-gray-500">No {activeView} found</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -267,7 +267,7 @@ export default function StudentResources() {
                                                                 <Brain className="h-4 w-4 text-purple-400" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <h3 className="text-sm font-bold text-white truncate">{resource.title}</h3>
+                                                                <h3 className="text-xs font-bold text-white truncate">{resource.title}</h3>
                                                                 {resource.facultyName && (
                                                                     <p className="text-[10px] text-gray-500 flex items-center gap-1">
                                                                         <User className="h-3 w-3" /> {resource.facultyName}
@@ -289,7 +289,7 @@ export default function StudentResources() {
                                                             {activeView === 'videos' && <Video className="h-4 w-4 text-rose-400" />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="text-sm font-bold text-white truncate">{resource.title}</h3>
+                                                            <h3 className="text-xs font-bold text-white truncate">{resource.title}</h3>
                                                             {resource.facultyName && (
                                                                 <p className="text-[10px] text-gray-500 flex items-center gap-1">
                                                                     <User className="h-3 w-3" /> {resource.facultyName}

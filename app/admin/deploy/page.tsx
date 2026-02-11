@@ -80,7 +80,7 @@ export default function DeployPage() {
         try {
             const res = await fetch('/api/admin/courses');
             const data = await res.json();
-            setCourses(data);
+            setCourses(Array.isArray(data) ? data : []);
         } catch (e) {
             toast.error('Failed to load courses');
         } finally {

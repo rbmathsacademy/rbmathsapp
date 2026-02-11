@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 
 const FolderSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    course: { type: String, required: true }, // Corresponds to Batch Name from CSV
+    course: { type: String }, // For question/resource folders (Batch Name from CSV)
+    createdBy: { type: String }, // Admin email for test folders
+    type: { type: String, enum: ['question', 'resource', 'test'], default: 'question' },
     createdAt: { type: Date, default: Date.now }
 });
 

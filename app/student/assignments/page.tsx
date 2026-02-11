@@ -145,7 +145,7 @@ export default function StudentAssignments() {
                         <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Link>
                     <div className="flex-1">
-                        <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+                        <h1 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                             Assignments
                         </h1>
                     </div>
@@ -157,20 +157,20 @@ export default function StudentAssignments() {
                     </div>
                 ) : courses.length === 0 ? (
                     <div className="text-center py-16">
-                        <FileText className="h-10 w-10 text-gray-600 mx-auto mb-3" />
-                        <p className="text-gray-500">No assignments found</p>
+                        <FileText className="h-8 w-8 text-gray-600 mx-auto mb-3" />
+                        <p className="text-xs text-gray-500">No assignments found</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {/* Course Tabs - Compact */}
-                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        <div className="flex overflow-x-auto pb-2 gap-2 no-scrollbar snap-x">
                             {courses.map(course => (
                                 <button
                                     key={course}
                                     onClick={() => setActiveCourse(course)}
-                                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${activeCourse === course
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
-                                        : 'bg-white/5 text-gray-400 border border-white/10'
+                                    className={`px-4 py-2 rounded-lg text-[10px] sm:text-sm font-bold transition-all flex-shrink-0 snap-center ${activeCourse === course
+                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                                        : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                                         }`}
                                 >
                                     {course}
@@ -181,24 +181,24 @@ export default function StudentAssignments() {
                         {/* Stats - Compact Row */}
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                             <div className="p-3 rounded-xl bg-blue-900/30 border border-blue-500/20 text-center">
-                                <p className="text-lg sm:text-2xl font-black text-white">{stats.total}</p>
-                                <p className="text-[10px] sm:text-xs text-blue-400 font-semibold">Total Assigned</p>
+                                <p className="text-base sm:text-2xl font-black text-white">{stats.total}</p>
+                                <p className="text-[9px] sm:text-xs text-blue-400 font-semibold">Total Assigned</p>
                             </div>
                             <div className="p-3 rounded-xl bg-emerald-900/30 border border-emerald-500/20 text-center">
-                                <p className="text-lg sm:text-2xl font-black text-white">{stats.submitted}</p>
-                                <p className="text-[10px] sm:text-xs text-emerald-400 font-semibold">Submitted</p>
+                                <p className="text-base sm:text-2xl font-black text-white">{stats.submitted}</p>
+                                <p className="text-[9px] sm:text-xs text-emerald-400 font-semibold">Submitted</p>
                             </div>
                             <div className="p-3 rounded-xl bg-purple-900/30 border border-purple-500/20 text-center">
-                                <p className="text-lg sm:text-2xl font-black text-white">{stats.pending}</p>
-                                <p className="text-[10px] sm:text-xs text-purple-400 font-semibold">Pending</p>
+                                <p className="text-base sm:text-2xl font-black text-white">{stats.pending}</p>
+                                <p className="text-[9px] sm:text-xs text-purple-400 font-semibold">Pending</p>
                             </div>
                             <div className="p-3 rounded-xl bg-amber-900/30 border border-amber-500/20 text-center">
-                                <p className="text-lg sm:text-2xl font-black text-white">{stats.active}</p>
-                                <p className="text-[10px] sm:text-xs text-amber-400 font-semibold">Active</p>
+                                <p className="text-base sm:text-2xl font-black text-white">{stats.active}</p>
+                                <p className="text-[9px] sm:text-xs text-amber-400 font-semibold">Active</p>
                             </div>
                             <div className="p-3 rounded-xl bg-rose-900/30 border border-rose-500/20 text-center col-span-2 sm:col-span-1">
-                                <p className="text-lg sm:text-2xl font-black text-white">{stats.missed}</p>
-                                <p className="text-[10px] sm:text-xs text-rose-400 font-semibold">Missed</p>
+                                <p className="text-base sm:text-2xl font-black text-white">{stats.missed}</p>
+                                <p className="text-[9px] sm:text-xs text-rose-400 font-semibold">Missed</p>
                             </div>
                         </div>
 
@@ -207,11 +207,11 @@ export default function StudentAssignments() {
                             <div className="p-3 rounded-xl bg-rose-900/20 border border-rose-500/30">
                                 <div className="flex items-center gap-2 mb-2">
                                     <AlertCircle className="h-4 w-4 text-rose-400" />
-                                    <span className="font-bold text-rose-300 text-sm">Missed Deadlines</span>
+                                    <span className="font-bold text-rose-300 text-xs">Missed Deadlines</span>
                                 </div>
                                 <div className="space-y-1">
                                     {stats.missedList.slice(0, 3).map((a: any) => (
-                                        <div key={a._id} className="flex justify-between text-xs p-2 rounded-lg bg-rose-950/30">
+                                        <div key={a._id} className="flex justify-between text-[10px] p-2 rounded-lg bg-rose-950/30">
                                             <span className="text-gray-300 truncate flex-1">{a.title}</span>
                                             <span className="text-rose-400 shrink-0 ml-2">{formatDate(new Date(a.deadline))}</span>
                                         </div>
@@ -227,8 +227,8 @@ export default function StudentAssignments() {
                         <div className="space-y-2">
                             {filteredAssignments.filter(a => new Date(a.deadline) >= new Date()).length === 0 ? (
                                 <div className="text-center py-8 rounded-xl bg-white/5 border border-white/10">
-                                    <CheckCircle className="h-8 w-8 text-emerald-500/50 mx-auto mb-2" />
-                                    <p className="text-sm text-gray-500">All caught up!</p>
+                                    <CheckCircle className="h-6 w-6 text-emerald-500/50 mx-auto mb-2" />
+                                    <p className="text-[10px] text-gray-500">All caught up!</p>
                                 </div>
                             ) : (
                                 filteredAssignments.filter(a => new Date(a.deadline) >= new Date()).map((assignment) => {
@@ -251,7 +251,7 @@ export default function StudentAssignments() {
                                         >
                                             {/* Submitted Badge */}
                                             {isSubmitted && (
-                                                <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                                     <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                                     Submitted
                                                 </div>
@@ -267,7 +267,7 @@ export default function StudentAssignments() {
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="text-sm sm:text-base font-bold text-white truncate">{assignment.title}</h3>
+                                                    <h3 className="text-xs sm:text-base font-bold text-white truncate">{assignment.title}</h3>
                                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                                         <span className={`text-[10px] sm:text-xs ${isUrgent ? 'text-orange-400' : 'text-gray-500'}`}>
                                                             {formatDate(deadline)} • {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -277,12 +277,12 @@ export default function StudentAssignments() {
                                                         )}
                                                     </div>
                                                     {isSubmitted && assignment.submissionData?.submittedAt ? (
-                                                        <div className="flex items-center gap-1 mt-1 text-[10px] sm:text-xs font-bold text-emerald-400">
+                                                        <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-400">
                                                             <CheckCircle className="h-3 w-3" />
                                                             Submitted on {formatDate(new Date(assignment.submissionData.submittedAt))}
                                                         </div>
                                                     ) : (
-                                                        <div className={`flex items-center gap-1 mt-1 text-[10px] sm:text-xs font-bold ${isUrgent ? 'text-orange-400' : 'text-emerald-400'}`}>
+                                                        <div className={`flex items-center gap-1 mt-1 text-[10px] font-bold ${isUrgent ? 'text-orange-400' : 'text-emerald-400'}`}>
                                                             <Clock className="h-3 w-3" />
                                                             {timeRemaining}
                                                         </div>

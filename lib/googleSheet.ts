@@ -76,3 +76,45 @@ export async function getAllCourses(): Promise<string[]> {
     const batches = [...new Set(rows.map(r => r.batchName))];
     return batches.sort();
 }
+
+export async function getAllStudents(): Promise<Array<{ name: string, email: string, batchName: string }>> {
+    const rows = await fetchSheetData();
+
+    // Create unique students (by phone number as identifier, since we don't have email in sheet)
+    // We'll use phone number as a unique key and generate email from phone
+    const studentMap = new Map<string, { name: string, email: string, batchName: string }>();
+
+    rows.forEach(row => {
+        const cleanPhone = row.phoneNumber.replace(/\D/g, '');
+        if (!studentMap.has(cleanPhone)) {
+            studentMap.set(cleanPhone, {
+                name: row.studentName,
+                email: `${cleanPhone}@student.portal`, // Generate email from phone
+                batchName: row.batchName
+            });
+        }
+    });
+
+    return Array.from(studentMap.values());
+}
+
+export async function getStudentsByBatches(batches: string[]): Promise<Array<{ name: string, phone: string, batch: string }>> {
+    const rows = await fetchSheetData();
+    const batchSet = new Set(batches);
+    const studentMap = new Map<string, { name: string, phone: string, batch: string }>();
+
+    rows.forEach(row => {
+        if (batchSet.has(row.batchName)) {
+            const cleanPhone = row.phoneNumber.replace(/\D/g, '');
+            if (cleanPhone && !studentMap.has(cleanPhone)) {
+                studentMap.set(cleanPhone, {
+                    name: row.studentName,
+                    phone: cleanPhone,
+                    batch: row.batchName
+                });
+            }
+        }
+    });
+
+    return Array.from(studentMap.values());
+}

@@ -3,44 +3,47 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
-import { Folder as FolderIcon, ChevronRight, FileText, ArrowLeft, LogOut, LayoutGrid, Bookmark } from 'lucide-react';
-
-interface Folder {
-    _id: string;
-    name: string;
-    createdAt: string;
-}
-
-interface Question {
-    _id: string;
-    text: string;
-    type: string;
-    topic: string;
-    subtopic: string;
-}
+import {
+    LogOut,
+    BookOpen,
+    FileText,
+    Calendar,
+    DollarSign,
+    ClipboardCheck,
+    Menu,
+    X,
+    TrendingUp,
+    CheckCircle,
+    Clock,
+    BarChart3,
+    Award
+} from 'lucide-react';
 
 export default function StudentDashboard() {
     const router = useRouter();
     const [student, setStudent] = useState<any>(null);
-    const [activeCourse, setActiveCourse] = useState<string | null>(null);
-    const [folders, setFolders] = useState<Folder[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-
-    const [loadingCourses, setLoadingCourses] = useState(true);
-    const [loadingFolders, setLoadingFolders] = useState(false);
-
+    // Dashboard data states
+    const [testData, setTestData] = useState<any>(null);
+    const [assignmentData, setAssignmentData] = useState<any>(null);
+    const [attendanceData, setAttendanceData] = useState<any>(null);
+    const [dataLoading, setDataLoading] = useState(true);
+    const [batches, setBatches] = useState<string[]>([]);
+    const [selectedBatch, setSelectedBatch] = useState<string>('');
 
     useEffect(() => {
         fetchProfile();
+        fetchDashboardData();
+
+        // Auto-refresh data every 60 seconds
+        const interval = setInterval(() => {
+            fetchDashboardData();
+        }, 60000);
+
+        return () => clearInterval(interval);
     }, []);
-
-    useEffect(() => {
-        if (activeCourse) {
-            fetchFolders(activeCourse);
-        }
-    }, [activeCourse]);
-
-
 
     const fetchProfile = async () => {
         try {
@@ -48,35 +51,67 @@ export default function StudentDashboard() {
             if (!res.ok) throw new Error('Unauthorized');
             const data = await res.json();
             setStudent(data);
-            // Auto-select removed to let user choose
         } catch (error) {
             router.push('/student/login');
         } finally {
-            setLoadingCourses(false);
+            setLoading(false);
         }
     };
 
-    const fetchFolders = async (course: string) => {
-        setLoadingFolders(true);
+    const fetchDashboardData = async (batch?: string) => {
+        setDataLoading(true);
         try {
-            const res = await fetch(`/api/student/data?course=${encodeURIComponent(course)}`);
-            const data = await res.json();
-            setFolders(data.folders || []);
-        } catch (e) {
-            toast.error('Failed to load course content');
+            // Fetch test data (with optional batch filter)
+            const batchParam = batch || selectedBatch;
+            const url = batchParam ? `/api/student/analytics?batch=${encodeURIComponent(batchParam)}` : '/api/student/analytics';
+            const testRes = await fetch(url);
+            if (testRes.ok) {
+                const data = await testRes.json();
+                setTestData(data);
+                // Set batches/selectedBatch on first load, then re-fetch for first batch
+                if (data.batches && data.batches.length > 0 && batches.length === 0) {
+                    setBatches(data.batches);
+                    const firstBatch = data.batches[0];
+                    setSelectedBatch(firstBatch);
+                    // Re-fetch scoped to the first batch
+                    if (!batch && data.batches.length > 1) {
+                        const batchRes = await fetch(`/api/student/analytics?batch=${encodeURIComponent(firstBatch)}`);
+                        if (batchRes.ok) {
+                            const batchData = await batchRes.json();
+                            setTestData(batchData);
+                        }
+                    }
+                }
+            }
+
+            // Fetch assignment data
+            const assignmentRes = await fetch('/api/student/assignments');
+            if (assignmentRes.ok) {
+                const assignments = await assignmentRes.json();
+                const pending = assignments.filter((a: any) => !a.completed).length;
+                const completed = assignments.filter((a: any) => a.completed).length;
+                setAssignmentData({ pending, completed, total: assignments.length });
+            }
+
+            // Fetch attendance data (placeholder - will need actual endpoint)
+            // const attendanceRes = await fetch('/api/student/attendance');
+            // if (attendanceRes.ok) setAttendanceData(await attendanceRes.json());
+
+            // Note: Attendance data is still mocked as requested only test analytics to be real for now.
+            setAttendanceData({
+                percentage: 92,
+                present: 46,
+                total: 50,
+                thisWeek: 5
+            });
+        } catch (error) {
+            console.error('Failed to fetch dashboard data:', error);
         } finally {
-            setLoadingFolders(false);
+            setDataLoading(false);
         }
     };
-
-
 
     const handleLogout = () => {
-        // Clear cookie by calling a logout endpoint or just deleting checking
-        // Client side cookie deletion is tricky if httpOnly.
-        // Best to use an API route or just rely on session expiry for now, but user expects logout.
-        // I'll make a simple logout logic: redirect to login and let page handle cleanup if possible?
-        // Actually, I should delete the cookie.
         document.cookie = 'auth_token=; Max-Age=0; path=/;';
         router.push('/student/login');
     };
@@ -88,7 +123,21 @@ export default function StudentDashboard() {
         return 'Good Evening';
     };
 
-    if (loadingCourses) {
+    const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: Menu, href: '/student', gradient: 'from-blue-600 to-indigo-600' },
+        { id: 'online-test', label: 'Online Test', icon: ClipboardCheck, href: '/student/online-test', gradient: 'from-emerald-500 to-teal-500' },
+        { id: 'assignments', label: 'Assignment Submission', icon: FileText, href: '/student/assignments', gradient: 'from-blue-500 to-cyan-500' },
+        { id: 'question-bank', label: 'Question Bank', icon: BookOpen, href: '/student/question-bank', gradient: 'from-purple-500 to-violet-500' },
+        { id: 'lesson-plan', label: 'Lesson Plan', icon: Calendar, href: '/student/lesson-plan', gradient: 'from-orange-500 to-amber-500' },
+        { id: 'fees', label: 'Fees Payment Records', icon: DollarSign, href: '/student/fees', gradient: 'from-pink-500 to-rose-500' },
+    ];
+
+    // ... (skipping unchanged code)
+
+    // ... (skipping unchanged code)
+
+
+    if (loading) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute top-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px] animate-pulse"></div>
@@ -100,7 +149,7 @@ export default function StudentDashboard() {
     if (!student) return null;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden selection:bg-blue-500/30 pb-20">
+        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden selection:bg-blue-500/30">
             <Toaster position="top-center" />
 
             {/* Ambient Background */}
@@ -109,128 +158,290 @@ export default function StudentDashboard() {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
             </div>
 
-            {/* Header / Navbar - Compact */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/70 px-4 py-3">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 text-sm">
-                            {student.studentName?.[0] || 'S'}
-                        </div>
-                        <div>
-                            <h1 className="text-sm font-bold text-white leading-none">Student<span className="text-blue-400">Portal</span></h1>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="p-2 rounded-full bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all"
-                    >
-                        <LogOut className="h-4 w-4" />
-                    </button>
-                </div>
-            </header>
+            {/* Mobile Sidebar Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                ></div>
+            )}
 
-            <main className="max-w-7xl mx-auto px-4 py-6 relative z-10">
-                {/* Greeting Section - Compact */}
-                <div className="mb-6 flex items-end justify-between animate-in fade-in slide-in-from-bottom-2 duration-700">
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mb-1">{getGreeting()}</p>
-                        <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400">
-                            {student?.studentName?.split(' ')[0] || 'Student'}
-                        </h2>
-                    </div>
-                    <button
-                        onClick={() => router.push('/student/bookmarks')}
-                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 hover:border-amber-500/50 transition-all group active:scale-95"
-                    >
-                        <Bookmark className="h-5 w-5 text-amber-500 group-hover:scale-110 transition-transform mb-1" />
-                        <span className="text-[10px] font-bold text-amber-500/80">Saved</span>
-                    </button>
-                </div>
-
-
-                {!activeCourse ? (
-                    // Course Selection View
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-                        <h2 className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-4">Your Courses</h2>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                            {student?.courses?.map((course: string, idx: number) => (
-                                <button
-                                    key={course}
-                                    onClick={() => setActiveCourse(course)}
-                                    className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md border border-white/5 p-4 rounded-2xl hover:border-blue-500/50 transition-all duration-300 active:scale-95 text-left h-32 flex flex-col justify-between"
-                                    style={{ animationDelay: `${idx * 100}ms` }}
-                                >
-                                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <FolderIcon className="h-16 w-16 -mr-6 -mt-6 rotate-12" />
-                                    </div>
-
-                                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                                        {course.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-bold text-white leading-tight mb-1 line-clamp-2">{course}</h3>
-                                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                                            Open <ChevronRight className="h-2 w-2" />
-                                        </p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    // Folder Grid View
-                    <div className="animate-in fade-in duration-500">
-                        <button
-                            onClick={() => setActiveCourse(null)}
-                            className="flex items-center text-slate-400 hover:text-white transition-colors mb-4 text-xs font-medium"
-                        >
-                            <ArrowLeft className="h-3 w-3 mr-1" /> Back to Courses
-                        </button>
-
-                        <div className="flex items-center gap-2 mb-6">
-                            <h2 className="text-xl font-bold text-white truncate">{activeCourse}</h2>
-                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20 uppercase">
-                                Active
-                            </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                            {loadingFolders ? (
-                                <div className="col-span-full py-10 text-center">
-                                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                                    <p className="text-xs text-slate-500">Loading...</p>
+            {/* Sidebar */}
+            <aside className={`
+                fixed top-0 left-0 h-full w-64 bg-[#0a0f1a]/95 backdrop-blur-xl border-r border-white/10 z-50
+                transform transition-transform duration-300 ease-in-out
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0
+            `}>
+                <div className="flex flex-col h-full">
+                    {/* Sidebar Header */}
+                    <div className="p-4 border-b border-white/10">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
+                                    {student.studentName?.[0] || 'S'}
                                 </div>
-                            ) : folders.length === 0 ? (
-                                <div className="col-span-full bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
-                                    <FolderIcon className="h-8 w-8 text-slate-700 mx-auto mb-2" />
-                                    <p className="text-sm text-slate-400 font-medium">No content yet</p>
+                                <div>
+                                    <h2 className="text-[13px] font-bold text-white">Student<span className="text-blue-400">Portal</span></h2>
+                                    <p className="text-[9px] text-slate-500">{student.studentName?.split(' ')[0]}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSidebarOpen(false)}
+                                className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Navigation Items */}
+                    <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
+                        {navItems.map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    router.push(item.href);
+                                    setSidebarOpen(false);
+                                }}
+                                className="w-full group relative overflow-hidden rounded-xl p-3.5 transition-all duration-300 hover:bg-white/5 border border-transparent hover:border-white/10 active:scale-[0.98] touch-manipulation"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2.5 rounded-lg bg-gradient-to-br ${item.gradient} shadow-lg`}>
+                                        <item.icon className="h-4 w-4 text-white" />
+                                    </div>
+                                    <span className="text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
+                                        {item.label}
+                                    </span>
+                                </div>
+                            </button>
+                        ))}
+                    </nav>
+
+                    {/* Sidebar Footer */}
+                    <div className="p-4 border-t border-white/10">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 transition-all text-red-400"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            <span className="text-sm font-medium">Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="lg:ml-64 min-h-screen relative z-10">
+                {/* Top Header (Mobile) */}
+                <header className="sticky top-0 z-30 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/70 px-4 py-3 lg:hidden">
+                    <div className="flex items-center justify-between relative">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors relative z-10"
+                        >
+                            <Menu className="h-5 w-5" />
+                        </button>
+                        <h1 className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white pointer-events-none">Dashboard</h1>
+                        <div className="w-9 h-9 relative z-10"></div> {/* Placeholder to keep balance */}
+                    </div>
+                </header>
+
+                {/* Dashboard Content */}
+                <div className="p-4 lg:p-8">
+                    {/* Greeting Section */}
+                    <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                        <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase mb-1">{getGreeting()}</p>
+                        <h2 className="text-lg sm:text-2xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400">
+                            {student?.studentName || 'Student'}
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">Welcome to your learning dashboard</p>
+                    </div>
+
+                    {/* Batch Tabs */}
+                    {batches.length > 1 && (
+                        <div className="mb-6 animate-in fade-in slide-in-from-bottom-2 duration-700" style={{ animationDelay: '200ms' }}>
+                            <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 flex-nowrap snap-x">
+                                {batches.map((batch) => (
+                                    <button
+                                        key={batch}
+                                        onClick={() => {
+                                            setSelectedBatch(batch);
+                                            fetchDashboardData(batch);
+                                        }}
+                                        className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 border snap-center ${selectedBatch === batch
+                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500/50 shadow-lg shadow-blue-500/20 active:scale-95'
+                                            : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                            }`}
+                                    >
+                                        {batch}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dashboard Widgets Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                        {/* Test Marks & Performance Widget */}
+                        <div className="bg-gradient-to-br from-purple-900/40 via-violet-900/20 to-indigo-900/10 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-50">
+                                <Award className="h-16 w-16 text-purple-500/10 rotate-12" />
+                            </div>
+
+                            <div className="flex items-start justify-between mb-6 relative z-10">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg shadow-purple-500/20">
+                                    <Award className="h-6 w-6 text-white" />
+                                </div>
+                                {dataLoading ? (
+                                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <div className={`flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 ${testData?.trend === 'up' ? 'text-emerald-400' : testData?.trend === 'down' ? 'text-red-400' : 'text-slate-400'}`}>
+                                        <TrendingUp className="h-3 w-3" />
+                                        <span className="text-xs font-bold">{testData?.trend === 'up' ? 'Improving' : testData?.trend === 'down' ? 'Declining' : 'Stable'}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <h3 className="text-base font-bold text-white mb-4 relative z-10">Test Performance</h3>
+
+                            {dataLoading ? (
+                                <div className="space-y-4 mb-4">
+                                    <div className="h-16 bg-white/5 rounded-xl animate-pulse"></div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="h-12 bg-white/5 rounded-lg animate-pulse"></div>
+                                        <div className="h-12 bg-white/5 rounded-lg animate-pulse"></div>
+                                        <div className="h-12 bg-white/5 rounded-lg animate-pulse"></div>
+                                    </div>
                                 </div>
                             ) : (
-                                folders.map((folder, idx) => (
-                                    <div
-                                        key={folder._id}
-                                        onClick={() => router.push(`/student/resources/${folder._id}`)}
-                                        className="group bg-[#0f172a]/60 backdrop-blur-sm border border-white/5 hover:border-blue-500/50 p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:bg-[#0f172a] active:scale-95 relative overflow-hidden flex flex-col items-center text-center gap-3 aspect-square justify-center shadow-lg shadow-black/20"
-                                        style={{ animationDelay: `${idx * 50}ms` }}
-                                    >
-                                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-inner shadow-blue-500/20">
-                                            <FolderIcon className="h-5 w-5" />
-                                        </div>
-
-                                        <div className="w-full">
-                                            <h3 className="text-xs font-bold text-slate-200 mb-1 line-clamp-2 leading-relaxed group-hover:text-blue-300 transition-colors">{folder.name}</h3>
-                                            <p className="text-[10px] text-slate-500 font-medium">
-                                                {new Date(folder.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                            </p>
+                                <div className="relative z-10">
+                                    <div className="text-center mb-6">
+                                        <div className="text-xs text-purple-300 mb-1 font-bold tracking-wider uppercase">Average Score</div>
+                                        <div className="text-2xl sm:text-4xl lg:text-6xl font-black text-white tracking-tight drop-shadow-glow">
+                                            {testData?.averageScore || 0}%
                                         </div>
                                     </div>
-                                ))
+
+                                    <div className="bg-white/5 rounded-xl p-3 mb-4 backdrop-blur-md border border-white/5 flex justify-between items-center">
+                                        <span className="text-sm text-slate-300 font-medium">Latest Test Score</span>
+                                        <span className={`text-base font-bold ${(testData?.recentScore || 0) >= 80 ? 'text-emerald-400' :
+                                            (testData?.recentScore || 0) >= 60 ? 'text-amber-400' :
+                                                'text-red-400'
+                                            }`}>{testData?.recentScore || 0}%</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
+                                            <div className="text-base font-bold text-white">{testData?.totalTests || 0}</div>
+                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Attempted</div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
+                                            <div className="text-base font-bold text-red-400">{testData?.missed || 0}</div>
+                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Missed</div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
+                                            <div className="text-base font-bold text-amber-400">{testData?.pending || 0}</div>
+                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Pending</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Assignment Submission Record Widget */}
+                        <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/10 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-6 relative">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg">
+                                    <FileText className="h-6 w-6 text-white" />
+                                </div>
+                                {dataLoading && (
+                                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                )}
+                            </div>
+
+                            <h3 className="text-base font-bold text-white mb-2">Assignment Status</h3>
+
+                            {dataLoading ? (
+                                <div className="space-y-2">
+                                    <div className="h-8 bg-white/5 rounded animate-pulse"></div>
+                                    <div className="h-4 bg-white/5 rounded animate-pulse w-2/3"></div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-baseline gap-2 mb-3">
+                                        <span className="text-2xl sm:text-4xl font-black text-white">{assignmentData?.pending || 0}</span>
+                                        <span className="text-xs text-slate-400">Pending</span>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle className="h-4 w-4 text-green-400" />
+                                                <span className="text-sm text-slate-300">Completed</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-green-400">{assignmentData?.completed || 0}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-blue-400" />
+                                                <span className="text-sm text-slate-300">Total</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-blue-400">{assignmentData?.total || 0}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Class Attendance Widget */}
+                        <div className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 backdrop-blur-sm border border-emerald-500/20 rounded-2xl p-6 relative">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+                                    <BarChart3 className="h-6 w-6 text-white" />
+                                </div>
+                                {dataLoading && (
+                                    <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                )}
+                            </div>
+
+                            <h3 className="text-base font-bold text-white mb-2">Class Attendance</h3>
+
+                            {dataLoading ? (
+                                <div className="space-y-2">
+                                    <div className="h-8 bg-white/5 rounded animate-pulse"></div>
+                                    <div className="h-4 bg-white/5 rounded animate-pulse w-2/3"></div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-baseline gap-2 mb-3">
+                                        <span className="text-2xl sm:text-4xl font-black text-white">{attendanceData?.percentage || 0}%</span>
+                                        <span className="text-xs text-slate-400">Overall</span>
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                                            <span>Progress</span>
+                                            <span>{attendanceData?.present || 0}/{attendanceData?.total || 0} classes</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                                                style={{ width: `${attendanceData?.percentage || 0}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/5 rounded-lg p-3">
+                                        <p className="text-xs text-slate-400 mb-1">This Week</p>
+                                        <p className="text-lg font-bold text-emerald-300">{attendanceData?.thisWeek || 0}/5 days</p>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>
-                )}
+                </div>
             </main>
         </div>
     );
-
 }

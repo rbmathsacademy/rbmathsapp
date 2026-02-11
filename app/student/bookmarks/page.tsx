@@ -138,7 +138,7 @@ export default function BookmarksPage() {
                 <div className="bg-amber-500/10 p-6 rounded-full mb-6">
                     <Bookmark className="h-12 w-12 text-amber-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">No bookmarks yet</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-white mb-2">No bookmarks yet</h2>
                 <p className="text-gray-400 mb-8 text-center max-w-md">Questions you bookmark from your practice sessions will appear here for review.</p>
                 <Link href="/student" className="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all">
                     Go to Dashboard
@@ -172,10 +172,10 @@ export default function BookmarksPage() {
                         <span className="hidden sm:inline">Dashboard</span>
                     </Link>
                     <div className="text-center">
-                        <h1 className="text-base md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400">
+                        <h1 className="text-xs md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400">
                             My Bookmarks
                         </h1>
-                        <p className="text-[10px] md:text-xs text-gray-500">
+                        <p className="text-[9px] md:text-xs text-gray-500">
                             Question {currentIndex + 1} of {questions.length}
                         </p>
                     </div>
@@ -215,7 +215,7 @@ export default function BookmarksPage() {
                             </div>
 
                             {/* Question Text */}
-                            <div className="prose prose-invert max-w-none text-base md:text-lg leading-relaxed text-gray-100 font-medium">
+                            <div className="prose prose-invert max-w-none text-xs md:text-lg leading-relaxed text-gray-100 font-medium">
                                 <Latex>{currentQuestion.latex || currentQuestion.text}</Latex>
                             </div>
 
@@ -239,7 +239,7 @@ export default function BookmarksPage() {
                                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showHint ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30'}`}
                                 >
                                     <Lightbulb className="h-3 w-3 md:h-4 md:w-4" />
-                                    {showHint ? 'Hide Hint' : 'Show Hint'}
+                                    {showHint ? 'Hide' : 'Hint'}
                                 </button>
                             )}
 
@@ -249,7 +249,7 @@ export default function BookmarksPage() {
                                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showAnswer ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30'}`}
                                 >
                                     <CheckCircle className="h-3 w-3 md:h-4 md:w-4" />
-                                    {showAnswer ? 'Hide Answer' : 'Show Answer'}
+                                    {showAnswer ? 'Hide' : 'Answer'}
                                 </button>
                             )}
 
@@ -259,7 +259,7 @@ export default function BookmarksPage() {
                                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showExplanation ? 'bg-blue-500 text-black shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30'}`}
                                 >
                                     <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
-                                    {showExplanation ? 'Hide Explanation' : 'Show Explanation'}
+                                    {showExplanation ? 'Hide' : 'Explanation'}
                                 </button>
                             )}
 
@@ -268,7 +268,7 @@ export default function BookmarksPage() {
                                 className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30"
                             >
                                 <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
-                                AI Verify
+                                AI
                             </button>
                         </div>
                     </div>
@@ -296,7 +296,7 @@ export default function BookmarksPage() {
                                 <h3 className="text-emerald-400 font-bold mb-3 flex items-center gap-2">
                                     <CheckCircle className="h-4 w-4" /> Correct Answer
                                 </h3>
-                                <div className="text-emerald-100/90 text-lg font-medium">
+                                <div className="text-emerald-100/90 text-base md:text-lg font-medium">
                                     <Latex>{currentQuestion.answer}</Latex>
                                 </div>
                             </div>
@@ -322,21 +322,21 @@ export default function BookmarksPage() {
                 <button
                     onClick={handlePrev}
                     disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 transition-all active:scale-95 text-[10px] sm:text-sm"
                 >
-                    <ArrowLeft className="h-5 w-5" /> Previous
+                    <ArrowLeft className="h-4 w-4" /> Previous
                 </button>
 
-                <span className="flex items-center justify-center px-4 font-mono text-gray-500 text-sm">
+                <span className="flex items-center justify-center px-2 font-mono text-gray-500 text-[10px]">
                     {currentIndex + 1} / {questions.length}
                 </span>
 
                 <button
                     onClick={handleNext}
                     disabled={currentIndex === questions.length - 1}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 transition-all active:scale-95 text-[10px] sm:text-sm"
                 >
-                    Next <ChevronRight className="h-5 w-5" />
+                    Next <ChevronRight className="h-4 w-4" />
                 </button>
             </footer>
 

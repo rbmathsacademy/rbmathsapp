@@ -54,17 +54,17 @@ export default function StudentLogin() {
                     <div className="h-16 w-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
                         <Phone className="h-8 w-8 text-blue-400" />
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Student Login</h1>
-                    <p className="text-slate-400">Enter your registered phone number to access your courses.</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-white mb-1.5">Student Login</h1>
+                    <p className="text-xs sm:text-sm text-slate-400">Enter your registered phone number to access your courses.</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Phone Number</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1.5">Phone Number</label>
                         <input
                             type="tel"
                             placeholder="e.g. 9876543210"
-                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             required
@@ -74,7 +74,7 @@ export default function StudentLogin() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                     >
                         {loading ? (
                             <>

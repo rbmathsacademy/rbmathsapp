@@ -5,7 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
     Users, ClipboardList, CheckSquare, FileText,
-    Upload, BarChart, BookOpen, LogOut, Menu, X, GraduationCap, ChevronRight
+    Upload, BarChart, BookOpen, LogOut, Menu, X, GraduationCap, ChevronRight,
+    ClipboardCheck, Calendar, DollarSign, BookText, LayoutDashboard
 } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 
@@ -123,9 +124,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
 
     const navigation = [
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },
         { name: 'Answer Bank', href: '/admin/answers', icon: BookOpen },
-        { name: 'Deploy Questions', href: '/admin/deploy', icon: Upload }, // Reusing Upload icon for deploy
+        { name: 'Deploy Questions', href: '/admin/deploy', icon: Upload },
+        { name: 'Online Tests', href: '/admin/online-tests', icon: ClipboardCheck },
+        { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
+        { name: 'Attendance', href: '/admin/attendance', icon: Calendar },
+        { name: 'Lesson Plan', href: '/admin/lesson-plan', icon: BookText },
+        { name: 'Fees Management', href: '/admin/fees', icon: DollarSign },
     ];
 
     // Bypass auth check for login and forgot password pages
