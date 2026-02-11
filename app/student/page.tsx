@@ -204,10 +204,10 @@ export default function StudentDashboard() {
                                     router.push(item.href);
                                     setSidebarOpen(false);
                                 }}
-                                className="w-full group relative overflow-hidden rounded-xl p-3.5 transition-all duration-300 hover:bg-white/5 border border-transparent hover:border-white/10 active:scale-[0.98] touch-manipulation"
+                                className="w-full group relative overflow-hidden rounded-xl p-3.5 transition-all duration-300 hover:bg-white/5 border border-transparent hover:border-white/10 active:scale-[0.98] touch-manipulation text-left"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2.5 rounded-lg bg-gradient-to-br ${item.gradient} shadow-lg`}>
+                                <div className="flex items-center gap-3 text-left">
+                                    <div className={`p-2.5 rounded-lg bg-gradient-to-br ${item.gradient} shadow-lg shrink-0`}>
                                         <item.icon className="h-4 w-4 text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
@@ -282,67 +282,69 @@ export default function StudentDashboard() {
                     )}
 
                     {/* Dashboard Widgets Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                         {/* Test Marks & Performance Widget */}
-                        <div className="bg-gradient-to-br from-purple-900/40 via-violet-900/20 to-indigo-900/10 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-50">
-                                <Award className="h-16 w-16 text-purple-500/10 rotate-12" />
+                        <div className="bg-gradient-to-br from-purple-900/40 via-violet-900/20 to-indigo-900/10 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-3 opacity-30">
+                                <Award className="h-12 w-12 text-purple-500/10 rotate-12" />
                             </div>
 
-                            <div className="flex items-start justify-between mb-6 relative z-10">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg shadow-purple-500/20">
-                                    <Award className="h-6 w-6 text-white" />
+                            <div className="flex items-center justify-between mb-4 relative z-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg shadow-purple-500/20">
+                                        <Award className="h-4 w-4 text-white" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white">Test Performance</h3>
                                 </div>
                                 {dataLoading ? (
-                                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    <div className={`flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10 ${testData?.trend === 'up' ? 'text-emerald-400' : testData?.trend === 'down' ? 'text-red-400' : 'text-slate-400'}`}>
-                                        <TrendingUp className="h-3 w-3" />
-                                        <span className="text-xs font-bold">{testData?.trend === 'up' ? 'Improving' : testData?.trend === 'down' ? 'Declining' : 'Stable'}</span>
+                                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 ${testData?.trend === 'up' ? 'text-emerald-400' : testData?.trend === 'down' ? 'text-red-400' : 'text-slate-400'}`}>
+                                        <TrendingUp className="h-2.5 w-2.5" />
+                                        <span className="text-[10px] font-bold">{testData?.trend === 'up' ? 'Improving' : testData?.trend === 'down' ? 'Declining' : 'Stable'}</span>
                                     </div>
                                 )}
                             </div>
 
-                            <h3 className="text-base font-bold text-white mb-4 relative z-10">Test Performance</h3>
-
                             {dataLoading ? (
-                                <div className="space-y-4 mb-4">
-                                    <div className="h-16 bg-white/5 rounded-xl animate-pulse"></div>
+                                <div className="space-y-4">
+                                    <div className="h-12 bg-white/5 rounded-xl animate-pulse"></div>
                                     <div className="grid grid-cols-3 gap-2">
-                                        <div className="h-12 bg-white/5 rounded-lg animate-pulse"></div>
-                                        <div className="h-12 bg-white/5 rounded-lg animate-pulse"></div>
-                                        <div className="h-12 bg-white/5 rounded-lg animate-pulse"></div>
+                                        <div className="h-10 bg-white/5 rounded-lg animate-pulse"></div>
+                                        <div className="h-10 bg-white/5 rounded-lg animate-pulse"></div>
+                                        <div className="h-10 bg-white/5 rounded-lg animate-pulse"></div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="relative z-10">
-                                    <div className="text-center mb-6">
-                                        <div className="text-xs text-purple-300 mb-1 font-bold tracking-wider uppercase">Average Score</div>
-                                        <div className="text-2xl sm:text-4xl lg:text-6xl font-black text-white tracking-tight drop-shadow-glow">
-                                            {testData?.averageScore || 0}%
+                                    <div className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-xl border border-white/5">
+                                        <div className="text-left">
+                                            <div className="text-[10px] text-purple-300 font-bold tracking-wider uppercase mb-0.5">Avg Score</div>
+                                            <div className="text-xl font-black text-white drop-shadow-glow">
+                                                {testData?.averageScore || 0}%
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Latest Score</div>
+                                            <div className={`text-xl font-black ${(testData?.recentScore || 0) >= 80 ? 'text-emerald-400' :
+                                                (testData?.recentScore || 0) >= 60 ? 'text-amber-400' :
+                                                    'text-red-400'
+                                                }`}>{testData?.recentScore || 0}%</div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/5 rounded-xl p-3 mb-4 backdrop-blur-md border border-white/5 flex justify-between items-center">
-                                        <span className="text-sm text-slate-300 font-medium">Latest Test Score</span>
-                                        <span className={`text-base font-bold ${(testData?.recentScore || 0) >= 80 ? 'text-emerald-400' :
-                                            (testData?.recentScore || 0) >= 60 ? 'text-amber-400' :
-                                                'text-red-400'
-                                            }`}>{testData?.recentScore || 0}%</span>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                                            <div className="text-base font-bold text-white">{testData?.totalTests || 0}</div>
-                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Attempted</div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="bg-white/5 rounded-lg py-2 text-center border border-white/5">
+                                            <div className="text-sm font-bold text-white">{testData?.totalTests || 0}</div>
+                                            <div className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Attempted</div>
                                         </div>
-                                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                                            <div className="text-base font-bold text-red-400">{testData?.missed || 0}</div>
-                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Missed</div>
+                                        <div className="bg-white/5 rounded-lg py-2 text-center border border-white/5">
+                                            <div className="text-sm font-bold text-red-400">{testData?.missed || 0}</div>
+                                            <div className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Missed</div>
                                         </div>
-                                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                                            <div className="text-base font-bold text-amber-400">{testData?.pending || 0}</div>
-                                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Pending</div>
+                                        <div className="bg-white/5 rounded-lg py-2 text-center border border-white/5">
+                                            <div className="text-sm font-bold text-amber-400">{testData?.pending || 0}</div>
+                                            <div className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Pending</div>
                                         </div>
                                     </div>
                                 </div>
@@ -350,93 +352,43 @@ export default function StudentDashboard() {
                         </div>
 
                         {/* Assignment Submission Record Widget */}
-                        <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/10 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-6 relative">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg">
-                                    <FileText className="h-6 w-6 text-white" />
+                        <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/10 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-4 sm:p-5 relative">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg">
+                                        <FileText className="h-4 w-4 text-white" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white">Assignment Status</h3>
                                 </div>
                                 {dataLoading && (
-                                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                                 )}
                             </div>
 
-                            <h3 className="text-base font-bold text-white mb-2">Assignment Status</h3>
-
                             {dataLoading ? (
                                 <div className="space-y-2">
-                                    <div className="h-8 bg-white/5 rounded animate-pulse"></div>
+                                    <div className="h-10 bg-white/5 rounded animate-pulse"></div>
                                     <div className="h-4 bg-white/5 rounded animate-pulse w-2/3"></div>
                                 </div>
                             ) : (
-                                <>
-                                    <div className="flex items-baseline gap-2 mb-3">
-                                        <span className="text-2xl sm:text-4xl font-black text-white">{assignmentData?.pending || 0}</span>
-                                        <span className="text-xs text-slate-400">Pending</span>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircle className="h-4 w-4 text-green-400" />
-                                                <span className="text-sm text-slate-300">Completed</span>
-                                            </div>
-                                            <span className="text-sm font-bold text-green-400">{assignmentData?.completed || 0}</span>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between px-4 py-3 bg-white/5 rounded-xl border border-white/5">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-black text-white">{assignmentData?.pending || 0}</div>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pending</div>
                                         </div>
-                                        <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-blue-400" />
-                                                <span className="text-sm text-slate-300">Total</span>
-                                            </div>
-                                            <span className="text-sm font-bold text-blue-400">{assignmentData?.total || 0}</span>
+                                        <div className="h-8 w-px bg-white/10"></div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-black text-green-400">{assignmentData?.completed || 0}</div>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Completed</div>
+                                        </div>
+                                        <div className="h-8 w-px bg-white/10"></div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-black text-blue-400">{assignmentData?.total || 0}</div>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</div>
                                         </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Class Attendance Widget */}
-                        <div className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 backdrop-blur-sm border border-emerald-500/20 rounded-2xl p-6 relative">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
-                                    <BarChart3 className="h-6 w-6 text-white" />
                                 </div>
-                                {dataLoading && (
-                                    <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                                )}
-                            </div>
-
-                            <h3 className="text-base font-bold text-white mb-2">Class Attendance</h3>
-
-                            {dataLoading ? (
-                                <div className="space-y-2">
-                                    <div className="h-8 bg-white/5 rounded animate-pulse"></div>
-                                    <div className="h-4 bg-white/5 rounded animate-pulse w-2/3"></div>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="flex items-baseline gap-2 mb-3">
-                                        <span className="text-2xl sm:text-4xl font-black text-white">{attendanceData?.percentage || 0}%</span>
-                                        <span className="text-xs text-slate-400">Overall</span>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                                            <span>Progress</span>
-                                            <span>{attendanceData?.present || 0}/{attendanceData?.total || 0} classes</span>
-                                        </div>
-                                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                                                style={{ width: `${attendanceData?.percentage || 0}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white/5 rounded-lg p-3">
-                                        <p className="text-xs text-slate-400 mb-1">This Week</p>
-                                        <p className="text-lg font-bold text-emerald-300">{attendanceData?.thisWeek || 0}/5 days</p>
-                                    </div>
-                                </>
                             )}
                         </div>
                     </div>
