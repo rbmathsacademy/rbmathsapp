@@ -125,19 +125,11 @@ export default function TakeTestPage() {
         };
         fetchWarnings();
 
-        // Lock Orientation (Mobile)
-        const lockOrientation = async () => {
-            // @ts-ignore
-            if (screen.orientation && screen.orientation.lock) {
-                try {
-                    // @ts-ignore
-                    await screen.orientation.lock("portrait");
-                } catch (e) {
-                    console.log('Orientation lock not supported or failed', e);
-                }
-            }
+        // Orientation check (Warning only, no lock)
+        const checkOrientation = () => {
+            // We rely on CSS overlay for visual blocking, but we can log or warn if needed.
+            // No programmatic lock to avoid traps.
         };
-        lockOrientation();
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -146,13 +138,34 @@ export default function TakeTestPage() {
         };
 
         const handleResize = () => {
-            // Check for significant height reduction (keyboard usually reduces height by ~30-40%, 
-            // but split screen often reduces it by 50% or changes aspect ratio)
-            // This is heuristic-based. 
+            // Split screen detection for mobile
+            // If width drops significantly below screen width, it's likely split screen
+            const isSplitScreen = window.innerWidth < screen.width * 0.8; // < 80% width
             const isLandscape = window.innerWidth > window.innerHeight;
-            if (isLandscape) {
-                // If browser reports landscape but we want portrait, correct it or warn
-                // But CSS overlay handles visual blocking.
+
+            if (isSplitScreen && !isLandscape) {
+                // Only trigger if not landscape (landscape might naturally be wider/shorter)
+                // But in portrait split screen, width shouldn't change much? 
+                // Actually on mobile split screen:
+                // Portrait split: Width is same, Height reduces.
+                // Landscape split: Width reduces.
+
+                // If height reduces drastically (keyboard vs split screen)
+                // Keyboard: ~30-40% height loss.
+                // Split screen: ~50% height loss.
+                // Hard to distinguish?
+            }
+
+            // Robust check: Window dimensions vs Screen dimensions
+            // If window area is significantly smaller than screen area
+            const windowArea = window.innerWidth * window.innerHeight;
+            const screenArea = screen.width * screen.height;
+            if (windowArea < screenArea * 0.6) {
+                // < 60% screen area -> likely split screen or floating window
+                if (!document.activeElement?.tagName.match(/INPUT|TEXTAREA/)) {
+                    // Ignore if keyboard is likely open
+                    handleViolation();
+                }
             }
         };
 
@@ -714,31 +727,69 @@ export default function TakeTestPage() {
                 </div>
 
                 {/* Bottom Navigation Bar */}
+                {/* Bottom Navigation Bar */}
                 <div className="fixed bottom-0 left-0 right-0 bg-[#0a0f1a]/95 backdrop-blur-xl border-t border-white/5 px-4 py-3 z-40 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
-                    <div className="max-w-4xl mx-auto flex items-center justify-start gap-4">
-                        <button
-                            onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                            disabled={currentIndex === 0 || !test.config?.allowBackNavigation || !!test.config?.enablePerQuestionTimer}
-                            className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 border border-white/5"
-                        >
-                            <ChevronLeft className="h-5 w-5" /> Back
-                        </button>
+                    <div className="max-w-4xl mx-auto">
+                        {/* Mobile Layout (Stacked) */}
+                        <div className="flex sm:hidden flex-col gap-2 items-start">
+                            {/* Top Row: Back */}
+                            <button
+                                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                                disabled={currentIndex === 0 || !test.config?.allowBackNavigation || !!test.config?.enablePerQuestionTimer}
+                                className="w-24 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[10px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-white/5"
+                            >
+                                <ChevronLeft className="h-3 w-3" /> Back
+                            </button>
 
-                        <button
-                            onClick={() => setCurrentIndex(Math.min(allQuestions.length - 1, currentIndex + 1))}
-                            disabled={currentIndex === allQuestions.length - 1}
-                            className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-800 active:scale-95 shadow-lg shadow-emerald-500/20"
-                        >
-                            Next <ChevronRight className="h-5 w-5" />
-                        </button>
+                            {/* Bottom Row: Next | Submit */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentIndex(Math.min(allQuestions.length - 1, currentIndex + 1))}
+                                    disabled={currentIndex === allQuestions.length - 1}
+                                    className="w-24 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20"
+                                >
+                                    Next <ChevronRight className="h-3 w-3" />
+                                </button>
 
-                        <button
-                            onClick={() => setShowSubmitConfirm(true)}
-                            disabled={currentIndex !== allQuestions.length - 1}
-                            className="flex-none w-28 px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                        >
-                            <Send className="h-4 w-4" /> Submit
-                        </button>
+                                <button
+                                    onClick={() => setShowSubmitConfirm(true)}
+                                    // Submit is always enabled if on last question OR explicit submit allowed? 
+                                    // Usually submit is visible always or only on last. 
+                                    // Existing logic was disabled={currentIndex !== allQuestions.length - 1}
+                                    disabled={currentIndex !== allQuestions.length - 1}
+                                    className="w-24 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    <Send className="h-3 w-3" /> Submit
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Desktop Layout (Original) */}
+                        <div className="hidden sm:flex items-center justify-start gap-4">
+                            <button
+                                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                                disabled={currentIndex === 0 || !test.config?.allowBackNavigation || !!test.config?.enablePerQuestionTimer}
+                                className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 border border-white/5"
+                            >
+                                <ChevronLeft className="h-5 w-5" /> Back
+                            </button>
+
+                            <button
+                                onClick={() => setCurrentIndex(Math.min(allQuestions.length - 1, currentIndex + 1))}
+                                disabled={currentIndex === allQuestions.length - 1}
+                                className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-800 active:scale-95 shadow-lg shadow-emerald-500/20"
+                            >
+                                Next <ChevronRight className="h-5 w-5" />
+                            </button>
+
+                            <button
+                                onClick={() => setShowSubmitConfirm(true)}
+                                disabled={currentIndex !== allQuestions.length - 1}
+                                className="flex-none w-28 px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                            >
+                                <Send className="h-4 w-4" /> Submit
+                            </button>
+                        </div>
                     </div>
                 </div>
 
