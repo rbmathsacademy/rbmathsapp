@@ -24,7 +24,8 @@ const StudentTestAttemptSchema = new mongoose.Schema({
     timeSpent: { type: Number, default: 0 }, // in milliseconds
     graceMarks: { type: Number, default: 0 },
     graceReason: { type: String, default: '' },
-    warningCount: { type: Number, default: 0 }
+    warningCount: { type: Number, default: 0 },
+    terminationReason: { type: String, default: null }
 }, { timestamps: true });
 
 // Index for faster queries

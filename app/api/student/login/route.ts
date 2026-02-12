@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             role: 'student'
         })
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('24h') // 24 hour session
+            .setExpirationTime('30d') // 30 days session
             .sign(new TextEncoder().encode(JWT_SECRET));
 
         const response = NextResponse.json({ success: true, student: studentData });
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             path: '/',
-            maxAge: 60 * 60 * 24 // 24 hours
+            maxAge: 60 * 60 * 24 * 30 // 30 days
         });
 
         return response;

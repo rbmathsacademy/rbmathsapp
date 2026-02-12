@@ -64,7 +64,8 @@ export async function GET(
                     percentage: attempt.percentage,
                     submittedAt: attempt.submittedAt,
                     timeSpent: attempt.timeSpent,
-                    graceMarks: attempt.graceMarks || 0
+                    graceMarks: attempt.graceMarks || 0,
+                    terminationReason: attempt.terminationReason
                 });
             } else if (attempt.status === 'in_progress') {
                 inProgress.push({

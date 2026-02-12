@@ -22,6 +22,19 @@ interface Analytics {
     scoreDistribution?: { range: string; count: number }[];
     batchPerformance?: { batch: string; avgPercentage: number; studentCount: number }[];
     questionAnalysis?: { questionId: string; text: string; type: string; correctCount: number; totalAttempts: number; accuracy: number }[];
+    terminationReason?: string;
+}
+
+interface StudentResult {
+    name: string;
+    phone: string;
+    batch: string;
+    score: number;
+    percentage: number;
+    submittedAt: string;
+    timeSpent: number;
+    graceMarks: number;
+    terminationReason?: string;
 }
 
 export default function MonitorTestPage() {

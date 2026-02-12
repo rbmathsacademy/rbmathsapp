@@ -15,6 +15,11 @@ interface SubQuestion {
     shuffleOptions: boolean;
     marks: number;
     negativeMarks: number;
+    fillBlankAnswer?: string;
+    caseSensitive?: boolean;
+    isNumberRange?: boolean;
+    numberRangeMin?: number;
+    numberRangeMax?: number;
 }
 
 interface Question {
@@ -547,6 +552,86 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                             >
                                                 + Add Option
                                             </button>
+                                        </div>
+                                    )}
+
+                                    {subQ.type === 'fillblank' && (
+                                        <div className="space-y-3 bg-slate-900/50 p-3 rounded border border-purple-500/20">
+                                            {/* Answer Type Selection */}
+                                            <div className="flex gap-4">
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        checked={!subQ.isNumberRange}
+                                                        onChange={() => updateSubQuestion(index, { isNumberRange: false, numberRangeMin: undefined, numberRangeMax: undefined })}
+                                                        className="w-3 h-3 text-purple-500"
+                                                    />
+                                                    <span className="text-xs text-slate-300">Text Answer</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        checked={subQ.isNumberRange === true}
+                                                        onChange={() => updateSubQuestion(index, { isNumberRange: true, fillBlankAnswer: undefined, caseSensitive: false })}
+                                                        className="w-3 h-3 text-purple-500"
+                                                    />
+                                                    <span className="text-xs text-slate-300">Number Range</span>
+                                                </label>
+                                            </div>
+
+                                            {/* Text Answer Input */}
+                                            {!subQ.isNumberRange && (
+                                                <div className="space-y-2">
+                                                    <input
+                                                        type="text"
+                                                        value={subQ.fillBlankAnswer || ''}
+                                                        onChange={(e) => updateSubQuestion(index, { fillBlankAnswer: e.target.value })}
+                                                        placeholder="Enter correct answer"
+                                                        className="w-full bg-slate-900 border border-purple-500/30 rounded px-3 py-1 text-white text-sm"
+                                                    />
+                                                    <label className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={subQ.caseSensitive || false}
+                                                            onChange={(e) => updateSubQuestion(index, { caseSensitive: e.target.checked })}
+                                                            className="w-3 h-3 rounded border-slate-600 bg-slate-900 text-purple-500"
+                                                        />
+                                                        <span className="text-xs text-slate-400">Case sensitive</span>
+                                                    </label>
+                                                </div>
+                                            )}
+
+                                            {/* Number Range Input */}
+                                            {subQ.isNumberRange && (
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="text-xs text-slate-400 block mb-1">Min Value</label>
+                                                        <input
+                                                            type="number"
+                                                            value={subQ.numberRangeMin ?? ''}
+                                                            onChange={(e) => {
+                                                                const val = parseFloat(e.target.value);
+                                                                updateSubQuestion(index, { numberRangeMin: isNaN(val) ? undefined : val });
+                                                            }}
+                                                            className="w-full bg-slate-900 border border-purple-500/30 rounded px-2 py-1 text-white text-sm"
+                                                            step="any"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-xs text-slate-400 block mb-1">Max Value</label>
+                                                        <input
+                                                            type="number"
+                                                            value={subQ.numberRangeMax ?? ''}
+                                                            onChange={(e) => {
+                                                                const val = parseFloat(e.target.value);
+                                                                updateSubQuestion(index, { numberRangeMax: isNaN(val) ? undefined : val });
+                                                            }}
+                                                            className="w-full bg-slate-900 border border-purple-500/30 rounded px-2 py-1 text-white text-sm"
+                                                            step="any"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 

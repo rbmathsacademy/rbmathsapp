@@ -233,7 +233,8 @@ export async function PUT(
         await dbConnect();
         const { id: testId } = await props.params;
         const body = await req.json();
-        const { answers, timeSpent } = body;
+        const body = await req.json();
+        const { answers, timeSpent, terminationReason } = body;
 
         // Find the attempt
         const attempt = await StudentTestAttempt.findOne({

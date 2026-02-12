@@ -39,7 +39,13 @@ const OnlineTestSchema = new mongoose.Schema({
             correctIndices: [{ type: Number }],
             shuffleOptions: { type: Boolean, default: false },
             marks: { type: Number, default: 1 },
-            negativeMarks: { type: Number, default: 0 }
+            negativeMarks: { type: Number, default: 0 },
+            // Fill in the blank specific
+            fillBlankAnswer: { type: String },
+            caseSensitive: { type: Boolean, default: false },
+            isNumberRange: { type: Boolean, default: false },
+            numberRangeMin: { type: Number },
+            numberRangeMax: { type: Number }
         }]
     }],
     deployment: {

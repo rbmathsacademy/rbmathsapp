@@ -54,6 +54,7 @@ export default function TakeTestPage() {
     const [test, setTest] = useState<TestData | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Map<string, any>>(new Map());
+    const answersRef = useRef<Map<string, any>>(new Map()); // Ref to access latest answers in closures (timers/handlers)
     const [flagged, setFlagged] = useState<Set<string>>(new Set());
     const [timeLeft, setTimeLeft] = useState(0); // in seconds
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -64,6 +65,48 @@ export default function TakeTestPage() {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const startTimeRef = useRef<number>(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Flatten questions for navigation (comprehension sub-questions are inline)
+    const allQuestions = test?.questions || [];
+    const currentQuestion = allQuestions[currentIndex];
+
+    // Per-question timer state
+    const [questionTimeLeft, setQuestionTimeLeft] = useState(0);
+
+    // Initialize per-question timer when question changes
+    useEffect(() => {
+        if (!started || !test?.config?.enablePerQuestionTimer) return;
+
+        // Determine duration for current question
+        const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
+        setQuestionTimeLeft(qDuration);
+
+    }, [currentIndex, started, test, currentQuestion]);
+
+    // Per-question timer countdown
+    useEffect(() => {
+        if (!started || !test?.config?.enablePerQuestionTimer || questionTimeLeft <= 0) return;
+
+        const timer = setInterval(() => {
+            setQuestionTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    // Auto-advance
+                    if (currentIndex < allQuestions.length - 1) {
+                        toast.success('Time up for this question! Moving to next.');
+                        setCurrentIndex(prevIndex => prevIndex + 1);
+                    } else {
+                        // Last question time up
+                        toast.success('Time up for last question!');
+                    }
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [started, test, questionTimeLeft, currentIndex, allQuestions.length]);
 
     // Proctoring: Visibility Change Detection
     // Proctoring: Visibility Change & Split Screen Detection
@@ -131,7 +174,8 @@ export default function TakeTestPage() {
         // Auto-submit on 3rd warning
         if (newCount >= 3) {
             toast.error('Maximum warnings reached. Test is being auto-submitted.');
-            handleSubmit(true); // Auto-submit
+            toast.error('Maximum warnings reached. Test is being auto-submitted.');
+            handleSubmit(true, 'proctoring_violation'); // Auto-submit with reason
         }
 
         // Persist warning count
@@ -142,8 +186,7 @@ export default function TakeTestPage() {
         }
     };
 
-    // Flatten questions for navigation (comprehension sub-questions are inline)
-    const allQuestions = test?.questions || [];
+
 
     useEffect(() => {
         fetchTest();
@@ -180,6 +223,7 @@ export default function TakeTestPage() {
                 const restored = new Map<string, any>();
                 data.attempt.answers.forEach((a: any) => restored.set(a.questionId, a.answer));
                 setAnswers(restored);
+                answersRef.current = restored; // Sync ref
             }
 
             // If already started, set the time
@@ -250,7 +294,12 @@ export default function TakeTestPage() {
     const setAnswer = useCallback((questionId: string, answer: any) => {
         setAnswers(prev => {
             const next = new Map(prev);
-            next.set(questionId, answer);
+            if (answer === null || answer === undefined || (Array.isArray(answer) && answer.length === 0) || answer === '') {
+                next.delete(questionId);
+            } else {
+                next.set(questionId, answer);
+            }
+            answersRef.current = next; // Update ref!
             return next;
         });
     }, []);
@@ -264,13 +313,14 @@ export default function TakeTestPage() {
         });
     };
 
-    const handleSubmit = async (autoSubmit = false) => {
+    const handleSubmit = async (autoSubmit = false, terminationReason?: string) => {
         if (submitting) return;
         setSubmitting(true);
         setShowSubmitConfirm(false);
 
         try {
-            // Build answers array
+            // Build answers array FROM REF (Critical for auto-submit/timers)
+            const currentAnswers = answersRef.current;
             const answerArray: any[] = [];
 
             // Collect answers for all questions (including comprehension sub-questions)
@@ -279,13 +329,13 @@ export default function TakeTestPage() {
                     for (const sq of q.subQuestions) {
                         answerArray.push({
                             questionId: sq.id,
-                            answer: answers.get(sq.id) ?? null
+                            answer: currentAnswers.get(sq.id) ?? null
                         });
                     }
                 } else {
                     answerArray.push({
                         questionId: q.id,
-                        answer: answers.get(q.id) ?? null
+                        answer: currentAnswers.get(q.id) ?? null
                     });
                 }
             }
@@ -295,7 +345,11 @@ export default function TakeTestPage() {
             const res = await fetch(`/api/student/online-tests/${testId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers: answerArray, timeSpent })
+                body: JSON.stringify({
+                    answers: answerArray,
+                    timeSpent,
+                    terminationReason: terminationReason || (autoSubmit ? 'time_limit' : null)
+                })
             });
 
             if (res.ok) {
@@ -360,7 +414,6 @@ export default function TakeTestPage() {
     if (!started) {
         return (
             <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex items-center justify-center p-4">
-                <Toaster />
                 <div className="max-w-lg w-full bg-slate-900/60 border border-white/10 rounded-2xl p-6 sm:p-8 text-center">
                     <div className="mb-6">
                         <div className="inline-flex p-4 rounded-full bg-emerald-500/20 mb-4">
@@ -426,51 +479,7 @@ export default function TakeTestPage() {
         );
     }
 
-    const currentQuestion = allQuestions[currentIndex];
 
-    // Per-question timer state
-    const [questionTimeLeft, setQuestionTimeLeft] = useState(0);
-
-    // Initialize per-question timer when question changes
-    useEffect(() => {
-        if (!started || !test?.config?.enablePerQuestionTimer) return;
-
-        // Determine duration for current question
-        const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
-        setQuestionTimeLeft(qDuration);
-
-    }, [currentIndex, started, test, currentQuestion]);
-
-    // Per-question timer countdown
-    useEffect(() => {
-        if (!started || !test?.config?.enablePerQuestionTimer || questionTimeLeft <= 0) return;
-
-        const timer = setInterval(() => {
-            setQuestionTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    // Auto-advance
-                    if (currentIndex < allQuestions.length - 1) {
-                        toast.success('Time up for this question! Moving to next.');
-                        setCurrentIndex(prevIndex => prevIndex + 1);
-                    } else {
-                        // Last question time up
-                        toast.success('Time up for last question!');
-                        // Optional: auto-submit or just stop? 
-                        // User requirement: "system takes to the next question". For last question, maybe just stop or submit? 
-                        // Let's just stop the timer for now, or maybe submit if strict. 
-                        // Usually per-question timer implies strict flow.
-                        // Let's autosubmit if it's the very last one? Or just let them be.
-                        // For now, do nothing on last question end other than stop timer.
-                    }
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [started, test, questionTimeLeft, currentIndex, allQuestions.length]);
 
     return (
         <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex flex-col relative">
@@ -493,7 +502,7 @@ export default function TakeTestPage() {
                 </p>
             </div>
 
-            <Toaster />
+
 
             <div className="test-content flex flex-col min-h-screen">
                 {/* Top Bar - Timer & Progress */}
