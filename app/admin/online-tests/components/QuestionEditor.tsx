@@ -9,7 +9,7 @@ interface SubQuestion {
     id: string;
     text: string;
     latexContent: boolean;
-    type: 'mcq' | 'msq' | 'short';
+    type: 'mcq' | 'msq' | 'fillblank' | 'short';
     options: string[];
     correctIndices: number[];
     shuffleOptions: boolean;
