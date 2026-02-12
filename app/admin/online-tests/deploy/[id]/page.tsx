@@ -185,7 +185,18 @@ export default function DeployTestPage() {
     };
 
     const deployTest = async () => {
-        if (selectedBatches.length === 0) {
+        // Validation Logic
+        let finalBatches = selectedBatches;
+
+        // If deployed, trust existing batches if selection is empty
+        if (test?.status === 'deployed') {
+            if (finalBatches.length === 0 && test.deployment?.batches?.length > 0) {
+                finalBatches = test.deployment.batches;
+                // console.log('Using existing batches for update:', finalBatches);
+            }
+        }
+
+        if (test?.status !== 'deployed' && selectedBatches.length === 0) {
             toast.error('Please select at least one batch');
             return;
         }
@@ -195,9 +206,25 @@ export default function DeployTestPage() {
             return;
         }
 
-        if (!startTime) {
-            toast.error('Please set start time');
-            return;
+        let finalStartTime = startTime;
+
+        // If deployed and start time is empty (maybe not loaded correctly), use existing
+        if (test?.status === 'deployed' && !finalStartTime) {
+            // Ensure we have a valid start time from deployment
+            if (test.deployment?.startTime) {
+                finalStartTime = test.deployment.startTime;
+            }
+        }
+
+        // If still empty, try to derive from pre-filled data again or fail
+        if (!finalStartTime) {
+            // Check if we can salvage from test object
+            if (test?.deployment?.startTime) {
+                finalStartTime = test.deployment.startTime;
+            } else {
+                toast.error('Please set start time');
+                return;
+            }
         }
 
         setDeploying(true);
@@ -210,16 +237,16 @@ export default function DeployTestPage() {
                 },
                 body: JSON.stringify({
                     testId,
-                    batches: selectedBatches,
+                    batches: finalBatches,
                     students: deploymentMode === 'specific' ? selectedStudents : [],
-                    startTime,
+                    startTime: finalStartTime,
                     endTime,
                     durationMinutes: test?.deployment?.durationMinutes || 90
                 })
             });
 
             if (res.ok) {
-                toast.success('Test deployed successfully!');
+                toast.success(test?.status === 'deployed' ? 'Deployment updated successfully!' : 'Test deployed successfully!');
                 setTimeout(() => {
                     router.push('/admin/online-tests');
                 }, 1500);
@@ -284,8 +311,8 @@ export default function DeployTestPage() {
                 </div>
             )}
 
-            {/* Batch Selection - Only show if not deployed */}
-            {(!test?.status || test.status === 'draft') ? (
+            {/* Batch Selection - Show if draft OR if deployed but no batches found (repair mode) */}
+            {(!test?.status || test.status === 'draft' || (test.status === 'deployed' && (!test.deployment?.batches || test.deployment.batches.length === 0))) ? (
                 <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Users className="h-5 w-5 text-emerald-400" />
@@ -432,10 +459,10 @@ export default function DeployTestPage() {
                             type="datetime-local"
                             value={startTime}
                             onChange={(e) => setStartTime(e.target.value)}
-                            disabled={test?.status === 'deployed'}
+                            disabled={test?.status === 'deployed' && startTime !== ''}
                             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        {test?.status === 'deployed' && <p className="text-xs text-slate-500 mt-1">Start time cannot be changed for deployed tests</p>}
+                        {test?.status === 'deployed' && startTime !== '' && <p className="text-xs text-slate-500 mt-1">Start time cannot be changed for deployed tests</p>}
                     </div>
                     <div>
                         <label className="text-sm font-medium text-slate-300 mb-2 block">End Time</label>

@@ -63,9 +63,14 @@ export default function OnlineTestsPage() {
             let url = '/api/admin/online-tests';
             const params = new URLSearchParams();
 
-            if (filter !== 'all') {
+            // Smart Fetching:
+            // If filter is 'deployed' or 'completed', fetch BOTH to sort them client-side based on time
+            if (filter === 'deployed' || filter === 'completed') {
+                params.append('status', 'deployed,completed');
+            } else if (filter !== 'all') {
                 params.append('status', filter);
             }
+
             // Only add folderId param when a folder is actively selected (not viewing all tests)
             if (selectedFolder !== null) {
                 params.append('folderId', selectedFolder);
@@ -107,6 +112,36 @@ export default function OnlineTestsPage() {
             }
         } catch (error) {
             console.error('Error loading folders:', error);
+        }
+    };
+
+    const cloneTest = async (testId: string) => {
+        if (!confirm('Are you sure you want to duplicate this test?')) return;
+
+        try {
+            const res = await fetch('/api/admin/online-tests/clone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': userEmail!
+                },
+                body: JSON.stringify({ testId })
+            });
+
+            if (res.ok) {
+                toast.success('Test duplicated successfully');
+                // If current filter is not draft or all, switch to draft to see the new test
+                if (filter !== 'all' && filter !== 'draft') {
+                    setFilter('draft');
+                } else {
+                    fetchTests();
+                }
+            } else {
+                toast.error('Failed to duplicate test');
+            }
+        } catch (error) {
+            console.error('Error cloning test:', error);
+            toast.error('Error duplicating test');
         }
     };
 
@@ -163,12 +198,36 @@ export default function OnlineTestsPage() {
         }
     };
 
-    const filteredTests = tests.filter(test =>
-        test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        test.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredTests = tests.filter(test => {
+        const matchesSearch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            test.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const getStatusColor = (status: string) => {
+        if (!matchesSearch) return false;
+
+        // "Smart" Filtering logic
+        if (filter === 'all') return true;
+        if (filter === 'draft') return test.status === 'draft';
+
+        const now = new Date();
+        const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
+
+        // Deployed Tab: Show only Active deployed tests (endTime > now)
+        if (filter === 'deployed') {
+            return test.status === 'deployed' && endTime && endTime > now;
+        }
+
+        // Completed Tab: Show Completed status OR Deployed status but expired (endTime < now)
+        if (filter === 'completed') {
+            return test.status === 'completed' || (test.status === 'deployed' && endTime && endTime <= now);
+        }
+
+        return test.status === filter;
+    });
+
+    const getStatusColor = (status: string, endTime?: Date) => {
+        if (status === 'deployed' && endTime && new Date(endTime) <= new Date()) {
+            return 'bg-amber-500/20 text-amber-300 border-amber-500/30'; // Expired
+        }
         switch (status) {
             case 'draft': return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
             case 'deployed': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
@@ -176,6 +235,14 @@ export default function OnlineTestsPage() {
             default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
         }
     };
+
+    const getStatusLabel = (status: string, endTime?: Date) => {
+        if (status === 'deployed' && endTime && new Date(endTime) <= new Date()) {
+            return 'Completed';
+        }
+        return status;
+    };
+
 
     return (
         <div className="space-y-6">
@@ -214,7 +281,7 @@ export default function OnlineTestsPage() {
                 {/* Tests Content */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* Filters */}
-                    <div className="flex flex-col sm:flex-row gap-4">\
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <input
@@ -277,10 +344,19 @@ export default function OnlineTestsPage() {
                                 >
                                     {/* Status Badge */}
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className={`text-xs px-3 py-1 rounded-full font-bold border ${getStatusColor(test.status)} uppercase`}>
-                                            {test.status}
+                                        <span className={`text-xs px-3 py-1 rounded-full font-bold border ${getStatusColor(test.status, test.deployment?.endTime ? new Date(test.deployment.endTime) : undefined)} uppercase`}>
+                                            {getStatusLabel(test.status, test.deployment?.endTime ? new Date(test.deployment.endTime) : undefined)}
                                         </span>
                                         <div className="flex flex-wrap gap-2">
+                                            {/* Clone Button - Available for all tests */}
+                                            <button
+                                                onClick={() => cloneTest(test._id)}
+                                                className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+                                                title="Duplicate Test"
+                                            >
+                                                <FileText className="h-4 w-4" />
+                                            </button>
+
                                             {test.status === 'draft' && (
                                                 <>
                                                     <button

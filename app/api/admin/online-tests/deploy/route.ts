@@ -20,18 +20,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Test ID is required' }, { status: 400 });
         }
 
-        if (!batches || batches.length === 0) {
-            return NextResponse.json({ error: 'At least one batch must be selected' }, { status: 400 });
-        }
-
-        if (!startTime || !durationMinutes) {
-            return NextResponse.json({ error: 'Start time and duration are required' }, { status: 400 });
-        }
-
         // Find test and check ownership
         const test = await OnlineTest.findOne({ _id: testId, createdBy: userEmail });
         if (!test) {
             return NextResponse.json({ error: 'Test not found or unauthorized' }, { status: 404 });
+        }
+
+        // Handle batches fallback for deployed tests
+        let finalBatches = batches;
+        if (test.status === 'deployed' && (!finalBatches || finalBatches.length === 0)) {
+            finalBatches = test.deployment?.batches || [];
+        }
+
+        if (!finalBatches || finalBatches.length === 0) {
+            return NextResponse.json({ error: 'At least one batch must be selected' }, { status: 400 });
         }
 
         // Calculate end time
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
 
         // Update deployment
         test.deployment = {
-            batches,
+            batches: finalBatches,
             students: students || [], // Optional: specific students
             startTime: start,
             endTime: end,

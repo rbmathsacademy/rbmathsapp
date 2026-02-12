@@ -18,7 +18,12 @@ export async function GET(request: NextRequest) {
 
         const query: any = { createdBy: userEmail };
         if (status) {
-            query.status = status;
+            const statusArray = status.split(',');
+            if (statusArray.length > 1) {
+                query.status = { $in: statusArray };
+            } else {
+                query.status = status;
+            }
         }
         // Apply folder filter only when explicitly requested
         if (searchParams.has('folderId')) {
