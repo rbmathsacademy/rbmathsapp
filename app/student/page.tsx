@@ -259,7 +259,7 @@ export default function StudentDashboard() {
                     </div>
 
                     {/* Batch Tabs */}
-                    {batches.length > 1 && (
+                    {batches.length > 0 && (
                         <div className="mb-6 animate-in fade-in slide-in-from-bottom-2 duration-700" style={{ animationDelay: '200ms' }}>
                             <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 flex-nowrap snap-x">
                                 {batches.map((batch) => (

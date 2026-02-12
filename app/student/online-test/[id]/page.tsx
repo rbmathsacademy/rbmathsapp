@@ -57,8 +57,57 @@ export default function TakeTestPage() {
     const [submitting, setSubmitting] = useState(false);
     const [showPalette, setShowPalette] = useState(false);
     const [started, setStarted] = useState(false);
+    const [warningCount, setWarningCount] = useState(0);
+    const [showWarningModal, setShowWarningModal] = useState(false);
     const startTimeRef = useRef<number>(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Proctoring: Visibility Change Detection
+    useEffect(() => {
+        if (!started) return;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                handleViolation();
+            }
+        };
+
+        const handleBlur = () => {
+            // Blur can be too sensitive (some browsers fire it on clicks inside iframes etc), but requested.
+            // Using document.hidden is more robust for "tab switching".
+            // If "blur" is required for window minimization/clicking away:
+            if (document.hidden) return; // Already handled
+            // handleViolation(); // Uncomment if blur is strictly required, but it might be annoying
+        };
+
+        // Use visibilitychange as the primary reliable trigger for tab switching/minimizing on mobile
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        // window.addEventListener('blur', handleBlur); 
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            // window.removeEventListener('blur', handleBlur);
+        };
+    }, [started, warningCount]);
+
+    const handleViolation = async () => {
+        const newCount = warningCount + 1;
+        setWarningCount(newCount);
+        setShowWarningModal(true);
+
+        // Auto-submit on 3rd warning
+        if (newCount >= 3) {
+            toast.error('Maximum warnings reached. Test is being auto-submitted.');
+            handleSubmit(true); // Auto-submit
+        }
+
+        // Persist warning count
+        try {
+            await fetch(`/api/student/online-tests/${testId}/warning`, { method: 'POST' });
+        } catch (error) {
+            console.error('Failed to update warning count', error);
+        }
+    };
 
     // Flatten questions for navigation (comprehension sub-questions are inline)
     const allQuestions = test?.questions || [];
@@ -98,6 +147,7 @@ export default function TakeTestPage() {
                 setTimeLeft(remaining);
                 setStarted(true);
                 startTimeRef.current = Date.now() - elapsed;
+                setWarningCount(data.attempt.warningCount || 0);
             } else {
                 setTimeLeft((data.test.durationMinutes || 60) * 60);
             }
@@ -596,6 +646,54 @@ export default function TakeTestPage() {
                                 className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all disabled:opacity-50"
                             >
                                 {submitting ? 'Submitting...' : 'Submit Now'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Warning Modal */}
+            {showWarningModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <div className="p-4 rounded-full bg-red-500/10 mb-2 ring-1 ring-red-500/30">
+                                <AlertTriangle className="h-10 w-10 text-red-500 animate-pulse" />
+                            </div>
+
+                            <h3 className="text-2xl font-black text-white uppercase tracking-tight">
+                                {warningCount >= 3 ? 'Test Terminated' : 'Proctoring Warning'}
+                            </h3>
+
+                            <div className="space-y-2">
+                                <p className="text-slate-300">
+                                    {warningCount >= 3
+                                        ? "You have exceeded the maximum number of allowed warnings. Your test is being auto-submitted."
+                                        : "You moved away from the test screen. This has been recorded."
+                                    }
+                                </p>
+                                {warningCount < 3 && (
+                                    <p className="text-red-400 font-bold text-sm bg-red-500/10 py-2 px-4 rounded-lg inline-block">
+                                        Warning {warningCount} of 3
+                                    </p>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    if (warningCount < 3) {
+                                        setShowWarningModal(false);
+                                        // Request full screen again if possible
+                                        try {
+                                            document.documentElement.requestFullscreen().catch(() => { });
+                                        } catch (e) { }
+                                    }
+                                }}
+                                disabled={warningCount >= 3}
+                                className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                            >
+                                {warningCount >= 3 ? 'Submitting...' : 'I Understand, Return to Test'}
                             </button>
                         </div>
                     </div>

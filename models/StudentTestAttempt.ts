@@ -23,7 +23,8 @@ const StudentTestAttemptSchema = new mongoose.Schema({
     percentage: { type: Number, default: 0 },
     timeSpent: { type: Number, default: 0 }, // in milliseconds
     graceMarks: { type: Number, default: 0 },
-    graceReason: { type: String, default: '' }
+    graceReason: { type: String, default: '' },
+    warningCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 // Index for faster queries

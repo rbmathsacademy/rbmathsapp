@@ -114,7 +114,7 @@ export default function OnlineTestPage() {
 
                     // Default to first batch if none selected
                     // This creates the "particular batch" view by default instead of "all"
-                    if (!selectedBatch) {
+                    if (!selectedBatch && data.batches && data.batches.length > 0) {
                         setSelectedBatch(data.batches[0]);
                         // CRITICAL: Return here to avoid setting aggregate data.
                         // The useEffect[selectedBatch] will trigger the specific fetch.

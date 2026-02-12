@@ -145,7 +145,8 @@ export async function GET(
                 status: attempt.status,
                 startedAt: attempt.startedAt,
                 answers: attempt.answers,
-                timeSpent: attempt.timeSpent
+                timeSpent: attempt.timeSpent,
+                warningCount: attempt.warningCount || 0
             } : null
         });
     } catch (error: any) {
@@ -205,7 +206,8 @@ export async function POST(
             answers: [],
             score: 0,
             percentage: 0,
-            timeSpent: 0
+            timeSpent: 0,
+            warningCount: 0
         });
 
         await attempt.save();
@@ -336,6 +338,7 @@ export async function PUT(
         attempt.timeSpent = timeSpent || (Date.now() - new Date(attempt.startedAt).getTime());
         attempt.status = 'completed';
         attempt.submittedAt = new Date();
+        if (body.warningCount !== undefined) attempt.warningCount = body.warningCount;
 
         await attempt.save();
 
