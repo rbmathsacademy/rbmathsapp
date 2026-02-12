@@ -280,7 +280,7 @@ export default function OnlineTestsPage() {
                                         <span className={`text-xs px-3 py-1 rounded-full font-bold border ${getStatusColor(test.status)} uppercase`}>
                                             {test.status}
                                         </span>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap gap-2">
                                             {test.status === 'draft' && (
                                                 <>
                                                     <button

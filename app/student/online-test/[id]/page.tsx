@@ -98,6 +98,7 @@ export default function TakeTestPage() {
                     } else {
                         // Last question time up
                         toast.success('Time up for last question!');
+                        handleSubmit(true);
                     }
                     return 0;
                 }
@@ -180,6 +181,8 @@ export default function TakeTestPage() {
     }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
 
     const handleViolation = async () => {
+        if (submitting) return; // Prevent loop if already submitting
+
         const newCount = warningCount + 1;
         setWarningCount(newCount);
         setShowWarningModal(true);
@@ -187,7 +190,8 @@ export default function TakeTestPage() {
         // Auto-submit on 3rd warning
         if (newCount >= 3) {
             toast.error('Maximum warnings reached. Test is being auto-submitted.');
-            toast.error('Maximum warnings reached. Test is being auto-submitted.');
+            // Set submitting first to block further violations
+            setSubmitting(true);
             handleSubmit(true, 'proctoring_violation'); // Auto-submit with reason
         }
 
@@ -873,10 +877,7 @@ export default function TakeTestPage() {
                                     onClick={() => {
                                         if (warningCount < 3) {
                                             setShowWarningModal(false);
-                                            // Request full screen again if possible
-                                            try {
-                                                document.documentElement.requestFullscreen().catch(() => { });
-                                            } catch (e) { }
+                                            // Removed requestFullscreen to prevent rotation issues
                                         }
                                     }}
                                     disabled={warningCount >= 3}

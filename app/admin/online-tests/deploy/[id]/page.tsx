@@ -83,13 +83,34 @@ export default function DeployTestPage() {
                 toast.error('Failed to load batches: Invalid data format');
             }
 
-            // Initialize times
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + 30); // Default start: 30 min from now
-            setStartTime(now.toISOString().slice(0, 16));
+            // Pre-fill deployment data if exists
+            if (foundTest.deployment) {
+                if (foundTest.deployment.startTime) {
+                    // Adjust for local timezone offset if needed, but slice(0,16) on ISO string gives UTC usually. 
+                    // Better to construct local ISO string for input[type="datetime-local"]
+                    const start = new Date(foundTest.deployment.startTime);
+                    start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
+                    setStartTime(start.toISOString().slice(0, 16));
+                }
 
-            const end = new Date(now.getTime() + (foundTest.deployment?.durationMinutes || 90) * 60000);
-            setEndTime(end.toISOString().slice(0, 16));
+                if (foundTest.deployment.endTime) {
+                    const end = new Date(foundTest.deployment.endTime);
+                    end.setMinutes(end.getMinutes() - end.getTimezoneOffset());
+                    setEndTime(end.toISOString().slice(0, 16));
+                }
+
+                if (foundTest.deployment.batches && Array.isArray(foundTest.deployment.batches)) {
+                    setSelectedBatches(foundTest.deployment.batches);
+                }
+            } else {
+                // Initialize defaults
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset() + 30); // Local time + 30m
+                setStartTime(now.toISOString().slice(0, 16));
+
+                const end = new Date(now.getTime() + (foundTest.deployment?.durationMinutes || 90) * 60000);
+                setEndTime(end.toISOString().slice(0, 16));
+            }
         } catch (error) {
             toast.error('Failed to load data');
         } finally {

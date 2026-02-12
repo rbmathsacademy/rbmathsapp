@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax', // Changed from strict to lax for better mobile app support
             path: '/',
-            maxAge: 60 * 60 * 24 * 30 // 30 days
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000)
         });
 
         return response;
