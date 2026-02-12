@@ -14,6 +14,7 @@ interface Question {
     latexContent?: boolean;
     type: 'mcq' | 'msq' | 'fillblank' | 'comprehension' | 'broad';
     marks: number;
+    timeLimit?: number;
     negativeMarks?: number;
     options?: string[];
     shuffleOptions?: boolean;
@@ -38,6 +39,8 @@ interface TestData {
         allowBackNavigation?: boolean;
         showResults?: boolean;
         passingPercentage?: number;
+        enablePerQuestionTimer?: boolean;
+        perQuestionDuration?: number;
     };
     questions: Question[];
 }
@@ -63,8 +66,35 @@ export default function TakeTestPage() {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Proctoring: Visibility Change Detection
+    // Proctoring: Visibility Change & Split Screen Detection
     useEffect(() => {
         if (!started) return;
+
+        // Fetch existing warnings on load/resume
+        const fetchWarnings = async () => {
+            try {
+                const res = await fetch(`/api/student/online-tests/${testId}/warning`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setWarningCount(data.count || 0);
+                }
+            } catch (e) { console.error('Failed to fetch warnings', e); }
+        };
+        fetchWarnings();
+
+        // Lock Orientation (Mobile)
+        const lockOrientation = async () => {
+            // @ts-ignore
+            if (screen.orientation && screen.orientation.lock) {
+                try {
+                    // @ts-ignore
+                    await screen.orientation.lock("portrait");
+                } catch (e) {
+                    console.log('Orientation lock not supported or failed', e);
+                }
+            }
+        };
+        lockOrientation();
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -72,23 +102,26 @@ export default function TakeTestPage() {
             }
         };
 
-        const handleBlur = () => {
-            // Blur can be too sensitive (some browsers fire it on clicks inside iframes etc), but requested.
-            // Using document.hidden is more robust for "tab switching".
-            // If "blur" is required for window minimization/clicking away:
-            if (document.hidden) return; // Already handled
-            // handleViolation(); // Uncomment if blur is strictly required, but it might be annoying
+        const handleResize = () => {
+            // Check for significant height reduction (keyboard usually reduces height by ~30-40%, 
+            // but split screen often reduces it by 50% or changes aspect ratio)
+            // This is heuristic-based. 
+            const isLandscape = window.innerWidth > window.innerHeight;
+            if (isLandscape) {
+                // If browser reports landscape but we want portrait, correct it or warn
+                // But CSS overlay handles visual blocking.
+            }
         };
 
         // Use visibilitychange as the primary reliable trigger for tab switching/minimizing on mobile
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        // window.addEventListener('blur', handleBlur); 
+        window.addEventListener('resize', handleResize);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            // window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('resize', handleResize);
         };
-    }, [started, warningCount]);
+    }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
 
     const handleViolation = async () => {
         const newCount = warningCount + 1;
@@ -130,6 +163,16 @@ export default function TakeTestPage() {
                 return;
             }
             const data = await res.json();
+
+            // Calculate total duration if per-question timer is enabled
+            if (data.test.config?.enablePerQuestionTimer) {
+                const totalSeconds = data.test.questions.reduce((acc: number, q: Question) => {
+                    return acc + (q.timeLimit || data.test.config.perQuestionDuration || 60);
+                }, 0);
+                // Update duration minutes for proper global timer calculation
+                data.test.durationMinutes = Math.ceil(totalSeconds / 60);
+            }
+
             setTest(data.test);
 
             // If we have an existing attempt, restore answers
@@ -351,10 +394,24 @@ export default function TakeTestPage() {
                             <AlertTriangle className="h-4 w-4" /> Instructions
                         </div>
                         <ul className="space-y-1.5 text-xs text-amber-300/80 list-disc list-inside">
-                            <li>Once started, the timer cannot be paused</li>
-                            <li>Test will auto-submit when time runs out</li>
-                            {!test.config?.allowBackNavigation && <li>You cannot go back to previous questions</li>}
-                            {test.config?.shuffleQuestions && <li>Questions may appear in random order</li>}
+                            <li>Once started, the test cannot be paused</li>
+                            {test.config?.enablePerQuestionTimer
+                                ? (
+                                    <>
+                                        <li className="font-bold text-amber-200">PER-QUESTION TIMER ACTIVE: You have a specific time limit for each question.</li>
+                                        <li>You will be moved to the next question automatically when time runs out.</li>
+                                        <li>Global timer is hidden; focus on the question timer.</li>
+                                        <li>You cannot go back to previous questions.</li>
+                                    </>
+                                )
+                                : (
+                                    <>
+                                        <li>Test will auto-submit when the total time runs out.</li>
+                                        {test.config?.shuffleQuestions && <li>Questions may appear in random order</li>}
+                                        {!test.config?.allowBackNavigation && <li>You cannot go back to previous questions</li>}
+                                    </>
+                                )
+                            }
                         </ul>
                     </div>
 
@@ -371,334 +428,407 @@ export default function TakeTestPage() {
 
     const currentQuestion = allQuestions[currentIndex];
 
+    // Per-question timer state
+    const [questionTimeLeft, setQuestionTimeLeft] = useState(0);
+
+    // Initialize per-question timer when question changes
+    useEffect(() => {
+        if (!started || !test?.config?.enablePerQuestionTimer) return;
+
+        // Determine duration for current question
+        const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
+        setQuestionTimeLeft(qDuration);
+
+    }, [currentIndex, started, test, currentQuestion]);
+
+    // Per-question timer countdown
+    useEffect(() => {
+        if (!started || !test?.config?.enablePerQuestionTimer || questionTimeLeft <= 0) return;
+
+        const timer = setInterval(() => {
+            setQuestionTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    // Auto-advance
+                    if (currentIndex < allQuestions.length - 1) {
+                        toast.success('Time up for this question! Moving to next.');
+                        setCurrentIndex(prevIndex => prevIndex + 1);
+                    } else {
+                        // Last question time up
+                        toast.success('Time up for last question!');
+                        // Optional: auto-submit or just stop? 
+                        // User requirement: "system takes to the next question". For last question, maybe just stop or submit? 
+                        // Let's just stop the timer for now, or maybe submit if strict. 
+                        // Usually per-question timer implies strict flow.
+                        // Let's autosubmit if it's the very last one? Or just let them be.
+                        // For now, do nothing on last question end other than stop timer.
+                    }
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [started, test, questionTimeLeft, currentIndex, allQuestions.length]);
+
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex flex-col">
-            <Toaster />
-
-            {/* Top Bar - Timer & Progress */}
-            <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-4 py-3 shadow-sm">
-                <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-                    <h1 className="text-xs font-bold text-white truncate flex-1 min-w-0">{test.title}</h1>
-
-                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                        {/* Progress */}
-                        <span className="text-xs text-slate-400 hidden sm:block bg-slate-800 px-2 py-1 rounded-md">
-                            {answeredCount}/{totalQuestionCount} answered
-                        </span>
-
-                        {/* Timer */}
-                        {test.config?.showTimer !== false && (
-                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono font-bold text-[13px] shadow-inner overflow-hidden ${timeLeft <= 300 ? 'bg-red-500/20 text-red-400 animate-pulse border border-red-500/30' :
-                                timeLeft <= 600 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                                    'bg-slate-800 text-emerald-400 border border-emerald-500/20'
-                                }`}>
-                                <Clock className="h-3.5 w-3.5" />
-                                {formatTime(timeLeft)}
-                            </div>
-                        )}
-
-                        {/* Question Palette Toggle */}
-                        <button
-                            onClick={() => setShowPalette(!showPalette)}
-                            className="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 active:bg-white/15 text-slate-300 text-[10px] font-bold border border-white/10 flex items-center gap-2 transition-all"
-                        >
-                            <span className="hidden sm:inline">Questions</span>
-                            <span className="bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">{currentIndex + 1}/{allQuestions.length}</span>
-                        </button>
+        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex flex-col relative">
+            {/* Strict Orientation Lock Overlay */}
+            <style jsx global>{`
+                @media screen and (orientation: landscape) {
+                    .landscape-blocker { display: flex !important; }
+                    .test-content { display: none !important; }
+                }
+            `}</style>
+            <div className="landscape-blocker hidden fixed inset-0 z-[9999] bg-[#050b14] flex-col items-center justify-center p-8 text-center">
+                <div className="p-6 rounded-full bg-red-500/10 mb-6 animate-pulse">
+                    <div className="w-16 h-24 border-4 border-red-500 rounded-xl flex items-center justify-center">
+                        <div className="w-1 h-12 bg-red-500 rounded-full"></div>
                     </div>
                 </div>
-            </header>
+                <h2 className="text-2xl font-black text-white mb-2">Portrait Mode Required</h2>
+                <p className="text-slate-400 max-w-xs mx-auto">
+                    Please rotate your device to portrait mode to continue the test. Landscape mode is not allowed.
+                </p>
+            </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex relative">
-                {/* Question Area */}
-                <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 pb-24 sm:pb-6">
-                    {currentQuestion && (
-                        <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-                            {/* Question Header */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-bold border border-white/5">
-                                        Question {currentIndex + 1}
-                                    </span>
-                                    <span className="text-xs sm:text-sm text-slate-500 font-medium">
-                                        {currentQuestion.marks} mark{currentQuestion.marks !== 1 ? 's' : ''}
-                                        {currentQuestion.negativeMarks ? <span className="text-red-400/80 ml-1">(-{currentQuestion.negativeMarks})</span> : ''}
-                                    </span>
+            <Toaster />
+
+            <div className="test-content flex flex-col min-h-screen">
+                {/* Top Bar - Timer & Progress */}
+                <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-4 py-3 shadow-sm">
+                    <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+                        <h1 className="text-xs font-bold text-white truncate flex-1 min-w-0">{test.title}</h1>
+
+                        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                            {/* Progress */}
+                            <span className="text-xs text-slate-400 hidden sm:block bg-slate-800 px-2 py-1 rounded-md">
+                                {answeredCount}/{totalQuestionCount} answered
+                            </span>
+
+                            {/* Global Timer (Hidden if per-question enabled) */}
+                            {test.config?.showTimer !== false && !test.config?.enablePerQuestionTimer && (
+                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono font-bold text-[13px] shadow-inner overflow-hidden ${timeLeft <= 300 ? 'bg-red-500/20 text-red-400 animate-pulse border border-red-500/30' :
+                                    timeLeft <= 600 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                        'bg-slate-800 text-emerald-400 border border-emerald-500/20'
+                                    }`}>
+                                    <Clock className="h-3.5 w-3.5" />
+                                    {formatTime(timeLeft)}
                                 </div>
-                                <button
-                                    onClick={() => toggleFlag(currentQuestion.id)}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all ${flagged.has(currentQuestion.id)
-                                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-                                        : 'bg-white/5 text-slate-400 hover:text-amber-400 hover:bg-white/10'
-                                        }`}
-                                >
-                                    <Flag className={`h-4 w-4 ${flagged.has(currentQuestion.id) ? 'fill-amber-400' : ''}`} />
-                                    <span className="hidden sm:inline">{flagged.has(currentQuestion.id) ? 'Flagged' : 'Flag'}</span>
-                                </button>
-                            </div>
+                            )}
 
-                            {/* Question Text */}
-                            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-3 sm:p-6 shadow-lg">
-                                {currentQuestion.type === 'comprehension' && (
-                                    <div className="mb-8 pb-8 border-b border-white/10">
-                                        <div className="inline-block px-3 py-1 rounded-lg bg-purple-500/10 text-xs font-bold text-purple-400 uppercase tracking-wider mb-4 border border-purple-500/20">
-                                            Passage
-                                        </div>
-                                        <div className="text-xs sm:text-sm text-slate-300 prose prose-invert prose-p:leading-relaxed prose-img:rounded-xl max-w-none">
-                                            {currentQuestion.latexContent ? <Latex>{currentQuestion.comprehensionText || ''}</Latex> : (currentQuestion.comprehensionText || '')}
-                                        </div>
-                                        {currentQuestion.comprehensionImage && (
-                                            <div className="mt-4 rounded-xl overflow-hidden border border-slate-700 bg-black/20">
-                                                <img src={currentQuestion.comprehensionImage} alt="Passage" className="w-full h-auto object-contain max-h-[500px]" />
-                                            </div>
-                                        )}
+                            {/* Per-Question Timer */}
+                            {test.config?.enablePerQuestionTimer && (
+                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono font-bold text-[13px] shadow-inner overflow-hidden ${questionTimeLeft <= 10 ? 'bg-red-500/20 text-red-400 animate-pulse border border-red-500/30' :
+                                    'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                                    }`}>
+                                    <Clock className="h-3.5 w-3.5" />
+                                    {formatTime(questionTimeLeft)} (Q)
+                                </div>
+                            )}
+
+                            {/* Question Palette Toggle */}
+                            <button
+                                onClick={() => setShowPalette(!showPalette)}
+                                className="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 active:bg-white/15 text-slate-300 text-[10px] font-bold border border-white/10 flex items-center gap-2 transition-all"
+                            >
+                                <span className="hidden sm:inline">Questions</span>
+                                <span className="bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">{currentIndex + 1}/{allQuestions.length}</span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <div className="flex-1 flex relative">
+                    {/* Question Area */}
+                    <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 pb-24 sm:pb-6">
+                        {currentQuestion && (
+                            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                                {/* Question Header */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-bold border border-white/5">
+                                            Question {currentIndex + 1}
+                                        </span>
+                                        <span className="text-xs sm:text-sm text-slate-500 font-medium">
+                                            {currentQuestion.marks} mark{currentQuestion.marks !== 1 ? 's' : ''}
+                                            {currentQuestion.negativeMarks ? <span className="text-red-400/80 ml-1">(-{currentQuestion.negativeMarks})</span> : ''}
+                                        </span>
                                     </div>
-                                )}
+                                    <button
+                                        onClick={() => toggleFlag(currentQuestion.id)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all ${flagged.has(currentQuestion.id)
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                                            : 'bg-white/5 text-slate-400 hover:text-amber-400 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        <Flag className={`h-4 w-4 ${flagged.has(currentQuestion.id) ? 'fill-amber-400' : ''}`} />
+                                        <span className="hidden sm:inline">{flagged.has(currentQuestion.id) ? 'Flagged' : 'Flag'}</span>
+                                    </button>
+                                </div>
 
-                                {currentQuestion.type !== 'comprehension' ? (
-                                    <>
-                                        <div className="text-sm sm:text-base font-medium text-white leading-relaxed mb-6 prose prose-invert prose-p:text-white prose-headings:text-white max-w-none">
-                                            {currentQuestion.latexContent ? <Latex>{currentQuestion.text}</Latex> : currentQuestion.text}
-                                        </div>
-                                        {currentQuestion.image && (
-                                            <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-black/20">
-                                                <img src={currentQuestion.image} alt="Question" className="w-full h-auto object-contain max-h-[500px]" />
+                                {/* Question Text */}
+                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-3 sm:p-6 shadow-lg">
+                                    {currentQuestion.type === 'comprehension' && (
+                                        <div className="mb-8 pb-8 border-b border-white/10">
+                                            <div className="inline-block px-3 py-1 rounded-lg bg-purple-500/10 text-xs font-bold text-purple-400 uppercase tracking-wider mb-4 border border-purple-500/20">
+                                                Passage
                                             </div>
-                                        )}
-                                        {renderAnswerInput(currentQuestion, answers, setAnswer)}
-                                    </>
-                                ) : (
-                                    /* Comprehension sub-questions */
-                                    <div className="space-y-8">
-                                        {currentQuestion.subQuestions?.map((sq, i) => (
-                                            <div key={sq.id} className="bg-slate-950/50 rounded-xl p-3 sm:p-5 border border-white/5 relative">
-                                                <div className="absolute top-0 left-0 -mt-2 -ml-2 w-7 h-7 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-bold text-white shadow-lg">
-                                                    {String.fromCharCode(65 + i)}
+                                            <div className="text-xs sm:text-sm text-slate-300 prose prose-invert prose-p:leading-relaxed prose-img:rounded-xl max-w-none">
+                                                {currentQuestion.latexContent ? <Latex>{currentQuestion.comprehensionText || ''}</Latex> : (currentQuestion.comprehensionText || '')}
+                                            </div>
+                                            {currentQuestion.comprehensionImage && (
+                                                <div className="mt-4 rounded-xl overflow-hidden border border-slate-700 bg-black/20">
+                                                    <img src={currentQuestion.comprehensionImage} alt="Passage" className="w-full h-auto object-contain max-h-[500px]" />
                                                 </div>
-                                                <div className="flex items-center gap-2 mb-4 ml-4">
-                                                    <span className="text-xs text-slate-500 font-medium">({sq.marks} marks)</span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {currentQuestion.type !== 'comprehension' ? (
+                                        <>
+                                            <div className="text-sm sm:text-base font-medium text-white leading-relaxed mb-6 prose prose-invert prose-p:text-white prose-headings:text-white max-w-none">
+                                                {currentQuestion.latexContent ? <Latex>{currentQuestion.text}</Latex> : currentQuestion.text}
+                                            </div>
+                                            {currentQuestion.image && (
+                                                <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-black/20">
+                                                    <img src={currentQuestion.image} alt="Question" className="w-full h-auto object-contain max-h-[500px]" />
                                                 </div>
-                                                <div className="text-xs sm:text-sm text-white mb-4 prose prose-invert prose-p:leading-relaxed max-w-none">
-                                                    {sq.latexContent ? <Latex>{sq.text}</Latex> : sq.text}
-                                                </div>
-                                                {sq.image && (
-                                                    <div className="mb-4 rounded-lg overflow-hidden border border-slate-700 bg-black/20">
-                                                        <img src={sq.image} alt="Sub-question" className="w-full h-auto object-contain max-h-[300px]" />
+                                            )}
+                                            {renderAnswerInput(currentQuestion, answers, setAnswer)}
+                                        </>
+                                    ) : (
+                                        /* Comprehension sub-questions */
+                                        <div className="space-y-8">
+                                            {currentQuestion.subQuestions?.map((sq, i) => (
+                                                <div key={sq.id} className="bg-slate-950/50 rounded-xl p-3 sm:p-5 border border-white/5 relative">
+                                                    <div className="absolute top-0 left-0 -mt-2 -ml-2 w-7 h-7 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-bold text-white shadow-lg">
+                                                        {String.fromCharCode(65 + i)}
                                                     </div>
-                                                )}
-                                                {renderAnswerInput(sq, answers, setAnswer)}
-                                            </div>
-                                        ))}
+                                                    <div className="flex items-center gap-2 mb-4 ml-4">
+                                                        <span className="text-xs text-slate-500 font-medium">({sq.marks} marks)</span>
+                                                    </div>
+                                                    <div className="text-xs sm:text-sm text-white mb-4 prose prose-invert prose-p:leading-relaxed max-w-none">
+                                                        {sq.latexContent ? <Latex>{sq.text}</Latex> : sq.text}
+                                                    </div>
+                                                    {sq.image && (
+                                                        <div className="mb-4 rounded-lg overflow-hidden border border-slate-700 bg-black/20">
+                                                            <img src={sq.image} alt="Sub-question" className="w-full h-auto object-contain max-h-[300px]" />
+                                                        </div>
+                                                    )}
+                                                    {renderAnswerInput(sq, answers, setAnswer)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Question Palette Sidebar - Mobile Friendly */}
+                    {showPalette && (
+                        <div className="fixed inset-0 z-[100]">
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPalette(false)}></div>
+                            <div className="absolute right-0 top-0 bottom-0 w-[85vw] sm:w-80 bg-[#0a0f1a] border-l border-white/10 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+                                {/* Palette Header */}
+                                <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-900/50">
+                                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                                        <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                                            <div className="bg-emerald-400 rounded-[1px]"></div>
+                                            <div className="bg-slate-600 rounded-[1px]"></div>
+                                            <div className="bg-amber-400 rounded-[1px]"></div>
+                                            <div className="bg-slate-600 rounded-[1px]"></div>
+                                        </div>
+                                        Question Palette
+                                    </h3>
+                                    <button onClick={() => setShowPalette(false)} className="p-2 rounded-lg hover:bg-white/10">
+                                        <Minus className="h-5 w-5 text-slate-400 rotate-45" />
+                                    </button>
+                                </div>
+
+                                {/* Palette Grid */}
+                                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                                    <div className="grid grid-cols-5 gap-3">
+                                        {allQuestions.map((q, i) => {
+                                            const status = getQuestionStatus(q);
+                                            const isFlagged = flagged.has(q.id);
+                                            const isCurrent = i === currentIndex;
+
+                                            return (
+                                                <button
+                                                    key={q.id}
+                                                    onClick={() => { setCurrentIndex(i); setShowPalette(false); }}
+                                                    className={`
+                                                        relative aspect-square rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center
+                                                        ${isCurrent ? 'ring-2 ring-white scale-110 z-10' : ''} 
+                                                        ${status === 'answered' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' :
+                                                            status === 'partial' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+                                                                'bg-slate-800 text-slate-400 border border-white/5 hover:bg-slate-700'
+                                                        }
+                                                    `}
+                                                >
+                                                    {i + 1}
+                                                    {isFlagged && (
+                                                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border-2 border-[#0a0f1a]"></div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                )}
+                                </div>
+
+                                {/* Legend */}
+                                <div className="p-4 border-t border-white/10 bg-slate-900/50 text-xs text-slate-400 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Answered</div>
+                                        <span className="font-bold text-white">{answeredCount}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500/40 border border-amber-500/50"></div> Partially</div>
+                                        <span className="font-bold text-slate-300">-</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-800 border border-slate-600"></div> Unanswered</div>
+                                        <span className="font-bold text-slate-300">{totalQuestionCount - answeredCount}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-400"></div> Flagged</div>
+                                        <span className="font-bold text-white">{flagged.size}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
-                </main>
+                </div>
 
-                {/* Question Palette Sidebar - Mobile Friendly */}
-                {showPalette && (
-                    <div className="fixed inset-0 z-[100]">
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPalette(false)}></div>
-                        <div className="absolute right-0 top-0 bottom-0 w-[85vw] sm:w-80 bg-[#0a0f1a] border-l border-white/10 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-                            {/* Palette Header */}
-                            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-900/50">
-                                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                    <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                                        <div className="bg-emerald-400 rounded-[1px]"></div>
-                                        <div className="bg-slate-600 rounded-[1px]"></div>
-                                        <div className="bg-amber-400 rounded-[1px]"></div>
-                                        <div className="bg-slate-600 rounded-[1px]"></div>
-                                    </div>
-                                    Question Palette
-                                </h3>
-                                <button onClick={() => setShowPalette(false)} className="p-2 rounded-lg hover:bg-white/10">
-                                    <Minus className="h-5 w-5 text-slate-400 rotate-45" />
+                {/* Bottom Navigation Bar */}
+                <div className="fixed bottom-0 left-0 right-0 bg-[#0a0f1a]/95 backdrop-blur-xl border-t border-white/5 px-4 py-3 z-40 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+                    <div className="max-w-4xl mx-auto flex items-center justify-start gap-4">
+                        <button
+                            onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                            disabled={currentIndex === 0 || !test.config?.allowBackNavigation || !!test.config?.enablePerQuestionTimer}
+                            className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 border border-white/5"
+                        >
+                            <ChevronLeft className="h-5 w-5" /> Back
+                        </button>
+
+                        <button
+                            onClick={() => setCurrentIndex(Math.min(allQuestions.length - 1, currentIndex + 1))}
+                            disabled={currentIndex === allQuestions.length - 1}
+                            className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-800 active:scale-95 shadow-lg shadow-emerald-500/20"
+                        >
+                            Next <ChevronRight className="h-5 w-5" />
+                        </button>
+
+                        <button
+                            onClick={() => setShowSubmitConfirm(true)}
+                            disabled={currentIndex !== allQuestions.length - 1}
+                            className="flex-none w-28 px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                        >
+                            <Send className="h-4 w-4" /> Submit
+                        </button>
+                    </div>
+                </div>
+
+                {/* Submit Confirmation Modal */}
+                {showSubmitConfirm && (
+                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 rounded-xl bg-red-500/20">
+                                    <AlertTriangle className="h-6 w-6 text-red-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white">Submit Test?</h3>
+                            </div>
+
+                            <div className="bg-slate-800/50 rounded-xl p-4 mb-4 space-y-2 text-sm">
+                                <div className="flex justify-between text-slate-300">
+                                    <span className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-400" /> Answered</span>
+                                    <span className="font-bold text-emerald-400">{answeredCount}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-300">
+                                    <span className="flex items-center gap-2"><Circle className="h-3.5 w-3.5 text-slate-500" /> Unanswered</span>
+                                    <span className="font-bold text-slate-400">{totalQuestionCount - answeredCount}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-300">
+                                    <span className="flex items-center gap-2"><Flag className="h-3.5 w-3.5 text-amber-400" /> Flagged</span>
+                                    <span className="font-bold text-amber-400">{flagged.size}</span>
+                                </div>
+                            </div>
+
+                            {totalQuestionCount - answeredCount > 0 && (
+                                <p className="text-amber-300 text-xs mb-4">
+                                    ⚠️ You have {totalQuestionCount - answeredCount} unanswered question(s). Are you sure?
+                                </p>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowSubmitConfirm(false)}
+                                    className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all"
+                                >
+                                    Go Back
+                                </button>
+                                <button
+                                    onClick={() => handleSubmit(false)}
+                                    disabled={submitting}
+                                    className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all disabled:opacity-50"
+                                >
+                                    {submitting ? 'Submitting...' : 'Submit Now'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+                {/* Warning Modal */}
+                {showWarningModal && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
 
-                            {/* Palette Grid */}
-                            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                                <div className="grid grid-cols-5 gap-3">
-                                    {allQuestions.map((q, i) => {
-                                        const status = getQuestionStatus(q);
-                                        const isFlagged = flagged.has(q.id);
-                                        const isCurrent = i === currentIndex;
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <div className="p-4 rounded-full bg-red-500/10 mb-2 ring-1 ring-red-500/30">
+                                    <AlertTriangle className="h-10 w-10 text-red-500 animate-pulse" />
+                                </div>
 
-                                        return (
-                                            <button
-                                                key={q.id}
-                                                onClick={() => { setCurrentIndex(i); setShowPalette(false); }}
-                                                className={`
-                                                    relative aspect-square rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center
-                                                    ${isCurrent ? 'ring-2 ring-white scale-110 z-10' : ''} 
-                                                    ${status === 'answered' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' :
-                                                        status === 'partial' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                                                            'bg-slate-800 text-slate-400 border border-white/5 hover:bg-slate-700'
-                                                    }
-                                                `}
-                                            >
-                                                {i + 1}
-                                                {isFlagged && (
-                                                    <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border-2 border-[#0a0f1a]"></div>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">
+                                    {warningCount >= 3 ? 'Test Terminated' : warningCount === 2 ? 'Final Warning' : 'Warning'}
+                                </h3>
 
-                            {/* Legend */}
-                            <div className="p-4 border-t border-white/10 bg-slate-900/50 text-xs text-slate-400 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Answered</div>
-                                    <span className="font-bold text-white">{answeredCount}</span>
+                                <div className="space-y-2">
+                                    <p className="text-slate-300">
+                                        {warningCount >= 3
+                                            ? "You have exceeded the maximum number of allowed warnings. Your test is being auto-submitted."
+                                            : warningCount === 2
+                                                ? "You moved away from the test screen again. The next violation will result in auto-submission."
+                                                : "You moved away from the test screen. This has been recorded. Please stay on the test screen."
+                                        }
+                                    </p>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500/40 border border-amber-500/50"></div> Partially</div>
-                                    <span className="font-bold text-slate-300">-</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-800 border border-slate-600"></div> Unanswered</div>
-                                    <span className="font-bold text-slate-300">{totalQuestionCount - answeredCount}</span>
-                                </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                                    <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-400"></div> Flagged</div>
-                                    <span className="font-bold text-white">{flagged.size}</span>
-                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        if (warningCount < 3) {
+                                            setShowWarningModal(false);
+                                            // Request full screen again if possible
+                                            try {
+                                                document.documentElement.requestFullscreen().catch(() => { });
+                                            } catch (e) { }
+                                        }
+                                    }}
+                                    disabled={warningCount >= 3}
+                                    className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                                >
+                                    {warningCount >= 3 ? 'Submitting...' : 'I Understand'}
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
             </div>
-
-            {/* Bottom Navigation Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-[#0a0f1a]/95 backdrop-blur-xl border-t border-white/5 px-4 py-3 z-40 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
-                <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-                    <button
-                        onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                        disabled={currentIndex === 0 || !test.config?.allowBackNavigation}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 border border-white/5"
-                    >
-                        <ChevronLeft className="h-5 w-5" /> Back
-                    </button>
-
-                    <button
-                        onClick={() => setShowSubmitConfirm(true)}
-                        className="flex-[0.8] px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 active:scale-95"
-                    >
-                        <Send className="h-4 w-4" /> Submit
-                    </button>
-
-                    <button
-                        onClick={() => setCurrentIndex(Math.min(allQuestions.length - 1, currentIndex + 1))}
-                        disabled={currentIndex === allQuestions.length - 1}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-800 active:scale-95 shadow-lg shadow-emerald-500/20"
-                    >
-                        Next <ChevronRight className="h-5 w-5" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Submit Confirmation Modal */}
-            {showSubmitConfirm && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-3 rounded-xl bg-red-500/20">
-                                <AlertTriangle className="h-6 w-6 text-red-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Submit Test?</h3>
-                        </div>
-
-                        <div className="bg-slate-800/50 rounded-xl p-4 mb-4 space-y-2 text-sm">
-                            <div className="flex justify-between text-slate-300">
-                                <span className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-400" /> Answered</span>
-                                <span className="font-bold text-emerald-400">{answeredCount}</span>
-                            </div>
-                            <div className="flex justify-between text-slate-300">
-                                <span className="flex items-center gap-2"><Circle className="h-3.5 w-3.5 text-slate-500" /> Unanswered</span>
-                                <span className="font-bold text-slate-400">{totalQuestionCount - answeredCount}</span>
-                            </div>
-                            <div className="flex justify-between text-slate-300">
-                                <span className="flex items-center gap-2"><Flag className="h-3.5 w-3.5 text-amber-400" /> Flagged</span>
-                                <span className="font-bold text-amber-400">{flagged.size}</span>
-                            </div>
-                        </div>
-
-                        {totalQuestionCount - answeredCount > 0 && (
-                            <p className="text-amber-300 text-xs mb-4">
-                                ⚠️ You have {totalQuestionCount - answeredCount} unanswered question(s). Are you sure?
-                            </p>
-                        )}
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowSubmitConfirm(false)}
-                                className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all"
-                            >
-                                Go Back
-                            </button>
-                            <button
-                                onClick={() => handleSubmit(false)}
-                                disabled={submitting}
-                                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all disabled:opacity-50"
-                            >
-                                {submitting ? 'Submitting...' : 'Submit Now'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Warning Modal */}
-            {showWarningModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
-
-                        <div className="flex flex-col items-center text-center space-y-4">
-                            <div className="p-4 rounded-full bg-red-500/10 mb-2 ring-1 ring-red-500/30">
-                                <AlertTriangle className="h-10 w-10 text-red-500 animate-pulse" />
-                            </div>
-
-                            <h3 className="text-2xl font-black text-white uppercase tracking-tight">
-                                {warningCount >= 3 ? 'Test Terminated' : 'Proctoring Warning'}
-                            </h3>
-
-                            <div className="space-y-2">
-                                <p className="text-slate-300">
-                                    {warningCount >= 3
-                                        ? "You have exceeded the maximum number of allowed warnings. Your test is being auto-submitted."
-                                        : "You moved away from the test screen. This has been recorded."
-                                    }
-                                </p>
-                                {warningCount < 3 && (
-                                    <p className="text-red-400 font-bold text-sm bg-red-500/10 py-2 px-4 rounded-lg inline-block">
-                                        Warning {warningCount} of 3
-                                    </p>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => {
-                                    if (warningCount < 3) {
-                                        setShowWarningModal(false);
-                                        // Request full screen again if possible
-                                        try {
-                                            document.documentElement.requestFullscreen().catch(() => { });
-                                        } catch (e) { }
-                                    }
-                                }}
-                                disabled={warningCount >= 3}
-                                className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                            >
-                                {warningCount >= 3 ? 'Submitting...' : 'I Understand, Return to Test'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

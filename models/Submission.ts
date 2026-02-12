@@ -9,7 +9,7 @@ const SubmissionSchema = new mongoose.Schema({
     },
     driveLink: { type: String }, // Link to uploaded PDF in Google Drive
     marksObtained: { type: Number, default: 0 },
-    status: { type: String, enum: ['submitted', 'graded'], default: 'submitted' },
+    status: { type: String, enum: ['submitted', 'graded', 'terminated'], default: 'submitted' },
     submittedAt: { type: Date, default: Date.now },
 });
 

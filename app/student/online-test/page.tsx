@@ -217,7 +217,7 @@ export default function OnlineTestPage() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 py-6 relative z-10 space-y-8">
+            <main className="max-w-7xl mx-auto px-4 py-2 sm:py-6 relative z-10 space-y-8">
 
                 {/* ===== BATCH SELECTION TABS ===== */}
                 {batches.length > 0 && (

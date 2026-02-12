@@ -27,6 +27,7 @@ interface Question {
     subtopic?: string;
     marks: number;
     negativeMarks: number;
+    timeLimit?: number;
     options?: string[];
     correctIndices?: number[];
     shuffleOptions?: boolean;
@@ -492,16 +493,20 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
 
                                     {/* Sub-question type */}
                                     <div className="flex gap-2">
-                                        {['mcq', 'msq', 'short'].map(type => (
+                                        {[
+                                            { id: 'mcq', label: 'MCQ' },
+                                            { id: 'msq', label: 'MSQ' },
+                                            { id: 'fillblank', label: 'Fill in the blanks' }
+                                        ].map(type => (
                                             <button
-                                                key={type}
-                                                onClick={() => updateSubQuestion(index, { type: type as any })}
-                                                className={`px-3 py-1 rounded text-xs font-medium ${subQ.type === type
+                                                key={type.id}
+                                                onClick={() => updateSubQuestion(index, { type: type.id as any })}
+                                                className={`px-3 py-1 rounded text-xs font-medium ${subQ.type === type.id
                                                     ? 'bg-purple-500/30 text-purple-200'
                                                     : 'bg-slate-800 text-slate-400'
                                                     }`}
                                             >
-                                                {type.toUpperCase()}
+                                                {type.label}
                                             </button>
                                         ))}
                                     </div>
@@ -577,7 +582,7 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                     )}
 
                     {/* Marks */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="text-sm font-medium text-slate-300 mb-2 block">Marks</label>
                             <input
@@ -604,6 +609,20 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 min="0"
                                 step="0.25"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-300 mb-2 block">Time Limit (Sec)</label>
+                            <input
+                                type="number"
+                                value={question.timeLimit || ''}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    setQuestion({ ...question, timeLimit: isNaN(val) ? undefined : val });
+                                }}
+                                placeholder="Optional"
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                min="10"
                             />
                         </div>
                     </div>

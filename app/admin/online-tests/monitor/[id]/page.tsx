@@ -272,12 +272,13 @@ export default function MonitorTestPage() {
                                                 <th className="px-4 py-3 font-semibold">Student</th>
                                                 <th className="px-4 py-3 font-semibold">Batch</th>
                                                 <th className="px-4 py-3 font-semibold">Status</th>
+                                                <th className="px-4 py-3 font-semibold">Time Taken</th>
                                                 <th className="px-4 py-3 font-semibold">Score</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {[
-                                                ...completed.map(s => ({ ...s, _status: 'completed' as const })),
+                                                ...completed.map(s => ({ ...s, _status: 'completed' as const, status: s.status })),
                                                 ...inProgress.map(s => ({ ...s, _status: 'inProgress' as const })),
                                                 ...notStarted.map(s => ({ ...s, _status: 'notStarted' as const }))
                                             ].map((s, i) => (
@@ -289,12 +290,15 @@ export default function MonitorTestPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
                                                     <td className="px-4 py-3">
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? 'bg-emerald-500/15 text-emerald-300' :
-                                                                s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-300' :
-                                                                    'bg-red-500/15 text-red-300'
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? (s.status === 'terminated' ? 'bg-red-500/15 text-red-400 border border-red-500/20' : 'bg-emerald-500/15 text-emerald-300') :
+                                                            s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-300' :
+                                                                'bg-red-500/15 text-red-300'
                                                             }`}>
-                                                            {s._status === 'completed' ? 'Completed' : s._status === 'inProgress' ? 'In Progress' : 'Not Started'}
+                                                            {s._status === 'completed' ? (s.status === 'terminated' ? 'Terminated' : 'Completed') : s._status === 'inProgress' ? 'In Progress' : 'Not Started'}
                                                         </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-slate-400">
+                                                        {s._status === 'completed' ? formatTime(s.timeSpent) : s._status === 'inProgress' ? formatTime(s.timeElapsed) : '-'}
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
                                                         {s._status === 'completed' ? (
@@ -430,8 +434,20 @@ export default function MonitorTestPage() {
                                                             <div className="text-[10px] text-slate-500">{s.phone}</div>
                                                         </td>
                                                         <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
-                                                        <td className="px-4 py-3">
+                                                        <td className="px-4 py-3 flex items-center gap-4">
                                                             <span className="px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 text-xs font-medium">Not Attempted</span>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : 'soon';
+                                                                    const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
+                                                                    navigator.clipboard.writeText(text);
+                                                                    toast.success('Reminder copied!');
+                                                                }}
+                                                                className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
+                                                                title="Copy Reminder"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}

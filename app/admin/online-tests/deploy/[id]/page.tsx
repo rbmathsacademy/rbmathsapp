@@ -101,7 +101,10 @@ export default function DeployTestPage() {
         try {
             const res = await fetch('/api/admin/online-tests/students', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': userEmail!
+                },
                 body: JSON.stringify({ batches: selectedBatches })
             });
 

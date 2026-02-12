@@ -13,6 +13,7 @@ const OnlineTestSchema = new mongoose.Schema({
         subtopic: { type: String },
         marks: { type: Number, required: true, default: 1 },
         negativeMarks: { type: Number, default: 0 },
+        timeLimit: { type: Number }, // Optional override for specific question duration (seconds)
 
         // MCQ/MSQ specific
         options: [{ type: String }], // Options for MCQ/MSQ
@@ -33,7 +34,7 @@ const OnlineTestSchema = new mongoose.Schema({
             id: { type: String },
             text: { type: String },
             latexContent: { type: Boolean, default: false },
-            type: { type: String, enum: ['mcq', 'msq', 'short'] },
+            type: { type: String, enum: ['mcq', 'msq', 'fillblank'] },
             options: [{ type: String }],
             correctIndices: [{ type: Number }],
             shuffleOptions: { type: Boolean, default: false },
@@ -57,7 +58,9 @@ const OnlineTestSchema = new mongoose.Schema({
         showTimer: { type: Boolean, default: true },
         allowBackNavigation: { type: Boolean, default: true },
         showResults: { type: Boolean, default: true }, // Show results after submission
-        passingPercentage: { type: Number, default: 40 }
+        passingPercentage: { type: Number, default: 40 },
+        enablePerQuestionTimer: { type: Boolean, default: false }, // Per-question timer toggle
+        perQuestionDuration: { type: Number, default: 60 } // Default duration in seconds per question
     },
     status: { type: String, enum: ['draft', 'deployed', 'completed'], default: 'draft' },
     createdBy: { type: String, required: true }, // Admin/Faculty Email

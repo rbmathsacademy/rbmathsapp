@@ -18,6 +18,7 @@ interface Question {
     subtopic?: string;
     marks: number;
     negativeMarks: number;
+    timeLimit?: number;
     options?: string[];
     correctIndices?: number[];
     shuffleOptions?: boolean;
@@ -46,7 +47,9 @@ export default function CreateTestPage() {
         showTimer: true,
         allowBackNavigation: true,
         showResults: true,
-        passingPercentage: 40
+        passingPercentage: 40,
+        enablePerQuestionTimer: false,
+        perQuestionDuration: 60
     });
 
     const [showQuestionEditor, setShowQuestionEditor] = useState(false);
@@ -148,6 +151,14 @@ export default function CreateTestPage() {
             }
             return total + (q.marks || 0);
         }, 0);
+    };
+
+    const calculateTotalDuration = () => {
+        if (!config.enablePerQuestionTimer) return durationMinutes;
+        const totalSeconds = questions.reduce((total, q) => {
+            return total + (q.timeLimit || config.perQuestionDuration || 60);
+        }, 0);
+        return Math.ceil(totalSeconds / 60);
     };
 
     const saveTest = async (deploy: boolean = false, gMarks: number = 0, gReason: string = '', silent: boolean = false, questionsOverride?: Question[]) => {
@@ -309,13 +320,22 @@ export default function CreateTestPage() {
 
                 <div>
                     <label className="text-sm font-medium text-slate-300 mb-2 block">Duration (minutes)</label>
-                    <input
-                        type="number"
-                        value={durationMinutes}
-                        onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                        min="1"
-                    />
+                    <div className="relative">
+                        <input
+                            type="number"
+                            value={config.enablePerQuestionTimer ? calculateTotalDuration() : durationMinutes}
+                            readOnly={config.enablePerQuestionTimer}
+                            disabled={config.enablePerQuestionTimer}
+                            onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
+                            className={`w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            min="1"
+                        />
+                        {config.enablePerQuestionTimer && (
+                            <div className="absolute top-full left-0 mt-1 text-xs text-purple-400">
+                                Duration is auto-calculated from per-question limits.
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -374,6 +394,39 @@ export default function CreateTestPage() {
                             min="0"
                             max="100"
                         />
+                    </div>
+
+                    <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
+                        <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors mb-4">
+                            <input
+                                type="checkbox"
+                                checked={config.enablePerQuestionTimer || false}
+                                onChange={(e) => setConfig({ ...config, enablePerQuestionTimer: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-purple-500 focus:ring-purple-500"
+                            />
+                            <div>
+                                <span className="text-sm font-bold text-slate-200 block">Enable Per-Question Timer</span>
+                                <span className="text-xs text-slate-500">Each question will have a specific time limit. Global timer will be hidden.</span>
+                            </div>
+                        </label>
+
+                        {(config.enablePerQuestionTimer) && (
+                            <div className="animate-in fade-in slide-in-from-top-2">
+                                <label className="text-sm font-medium text-slate-300 mb-2 block">Default Time per Question (seconds)</label>
+                                <div className="flex gap-4 items-center">
+                                    <input
+                                        type="number"
+                                        value={config.perQuestionDuration || 60}
+                                        onChange={(e) => setConfig({ ...config, perQuestionDuration: parseInt(e.target.value) || 60 })}
+                                        className="w-full md:w-1/3 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                        min="10"
+                                    />
+                                    <span className="text-sm text-slate-500">
+                                        Use 'Time Limit' inside Question Editor to override this for specific questions.
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
