@@ -339,6 +339,7 @@ export async function PUT(
         attempt.status = 'completed';
         attempt.submittedAt = new Date();
         if (body.warningCount !== undefined) attempt.warningCount = body.warningCount;
+        if (terminationReason) attempt.terminationReason = terminationReason;
 
         await attempt.save();
 

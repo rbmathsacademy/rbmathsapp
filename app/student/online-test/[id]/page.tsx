@@ -62,6 +62,7 @@ export default function TakeTestPage() {
     const [showPalette, setShowPalette] = useState(false);
     const [started, setStarted] = useState(false);
     const [warningCount, setWarningCount] = useState(0);
+    const warningCountRef = useRef(0); // Ref to track warning count synchronously
     const [showWarningModal, setShowWarningModal] = useState(false);
     const startTimeRef = useRef<number>(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -121,6 +122,7 @@ export default function TakeTestPage() {
                 if (res.ok) {
                     const data = await res.json();
                     setWarningCount(data.count || 0);
+                    warningCountRef.current = data.count || 0; // Sync ref
                 }
             } catch (e) { console.error('Failed to fetch warnings', e); }
         };
@@ -146,15 +148,6 @@ export default function TakeTestPage() {
 
             if (isSplitScreen && !isLandscape) {
                 // Only trigger if not landscape (landscape might naturally be wider/shorter)
-                // But in portrait split screen, width shouldn't change much? 
-                // Actually on mobile split screen:
-                // Portrait split: Width is same, Height reduces.
-                // Landscape split: Width reduces.
-
-                // If height reduces drastically (keyboard vs split screen)
-                // Keyboard: ~30-40% height loss.
-                // Split screen: ~50% height loss.
-                // Hard to distinguish?
             }
 
             // Robust check: Window dimensions vs Screen dimensions
@@ -183,16 +176,20 @@ export default function TakeTestPage() {
     const handleViolation = async () => {
         if (submitting) return; // Prevent loop if already submitting
 
-        const newCount = warningCount + 1;
-        setWarningCount(newCount);
+        const newCount = warningCountRef.current + 1;
+        warningCountRef.current = newCount; // Update ref immediately
+        setWarningCount(newCount); // Update state for UI
+
+        // Show modal for all warnings (1st, 2nd, and 3rd/Termination)
         setShowWarningModal(true);
 
         // Auto-submit on 3rd warning
         if (newCount >= 3) {
             toast.error('Maximum warnings reached. Test is being auto-submitted.');
-            // Set submitting first to block further violations
-            setSubmitting(true);
-            handleSubmit(true, 'proctoring_violation'); // Auto-submit with reason
+
+            // FIX: Do NOT set submitting(true) here because handleSubmit checks it and will return early.
+            // handleSubmit sets it to true internally.
+            handleSubmit(true, 'proctoring_violation');
         }
 
         // Persist warning count
@@ -252,6 +249,7 @@ export default function TakeTestPage() {
                 setStarted(true);
                 startTimeRef.current = Date.now() - elapsed;
                 setWarningCount(data.attempt.warningCount || 0);
+                warningCountRef.current = data.attempt.warningCount || 0; // Sync ref
             } else {
                 setTimeLeft((data.test.durationMinutes || 60) * 60);
             }
@@ -865,9 +863,9 @@ export default function TakeTestPage() {
                                 <div className="space-y-2">
                                     <p className="text-slate-300">
                                         {warningCount >= 3
-                                            ? "You have exceeded the maximum number of allowed warnings. Your test is being auto-submitted."
+                                            ? "You have exceeded the maximum limit of moving away from the test screen. Your test is being auto-submitted."
                                             : warningCount === 2
-                                                ? "You moved away from the test screen again. The next violation will result in auto-submission."
+                                                ? "You have moved away from the test screen again. This is your FINAL WARNING. The next violation will strictly result in the test being submitted."
                                                 : "You moved away from the test screen. This has been recorded. Please stay on the test screen."
                                         }
                                     </p>
@@ -883,7 +881,7 @@ export default function TakeTestPage() {
                                     disabled={warningCount >= 3}
                                     className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
                                 >
-                                    {warningCount >= 3 ? 'Submitting...' : 'I Understand'}
+                                    {warningCount >= 3 ? 'Submitting Test...' : 'I Understand'}
                                 </button>
                             </div>
                         </div>

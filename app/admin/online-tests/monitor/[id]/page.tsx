@@ -303,11 +303,11 @@ export default function MonitorTestPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
                                                     <td className="px-4 py-3">
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? (s.status === 'terminated' ? 'bg-red-500/15 text-red-400 border border-red-500/20' : 'bg-emerald-500/15 text-emerald-300') :
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? (s.terminationReason ? 'bg-red-500/15 text-red-400 border border-red-500/20' : 'bg-emerald-500/15 text-emerald-300') :
                                                             s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-300' :
                                                                 'bg-red-500/15 text-red-300'
                                                             }`}>
-                                                            {s._status === 'completed' ? (s.status === 'terminated' ? 'Terminated' : 'Completed') : s._status === 'inProgress' ? 'In Progress' : 'Not Started'}
+                                                            {s._status === 'completed' ? (s.terminationReason ? 'Terminated' : 'Completed') : s._status === 'inProgress' ? 'In Progress' : 'Not Started'}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-slate-400">
@@ -373,6 +373,11 @@ export default function MonitorTestPage() {
                                                         <td className="px-4 py-3">
                                                             <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'
                                                                 }`}>{student.percentage}%</span>
+                                                            {student.terminationReason && (
+                                                                <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                                                                    Terminated
+                                                                </span>
+                                                            )}
                                                         </td>
                                                         <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
                                                         <td className="px-4 py-3 text-slate-400 text-xs">
