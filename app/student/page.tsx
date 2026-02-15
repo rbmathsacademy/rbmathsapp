@@ -393,7 +393,12 @@ export default function StudentDashboard() {
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+
+
+                <div className="mt-12 text-center text-xs text-slate-600">
+                    <p>Designed and Developed by Dr. Ritwick Banerjee</p>
+                </div>
+            </main >
+        </div >
     );
 }

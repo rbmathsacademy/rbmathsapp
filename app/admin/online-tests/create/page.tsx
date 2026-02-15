@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Plus, Edit, Trash2, GripVertical, Save, Send, AlertTriangle } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import QuestionEditor from '../components/QuestionEditor';
+import QuestionImportModal from '../components/QuestionImportModal';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
@@ -56,6 +57,7 @@ export default function CreateTestPage() {
     const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
     const [loading, setLoading] = useState(false);
     const [testStatus, setTestStatus] = useState<string>('draft');
+    const [showQuestionImport, setShowQuestionImport] = useState(false);
     const [showGraceDialog, setShowGraceDialog] = useState(false);
     const [pendingDeploy, setPendingDeploy] = useState(false);
     const [graceMarks, setGraceMarks] = useState(0);
@@ -108,6 +110,14 @@ export default function CreateTestPage() {
         setShowQuestionEditor(false);
         // Auto-save
         saveTest(false, 0, '', true, newQuestions);
+    };
+
+    const handleImportQuestions = (newImportedQuestions: Question[]) => {
+        const mergedQuestions = [...questions, ...newImportedQuestions];
+        setQuestions(mergedQuestions);
+        setShowQuestionImport(false);
+        // Auto-save
+        saveTest(false, 0, '', true, mergedQuestions);
     };
 
     const updateQuestion = (question: Question) => {
@@ -438,16 +448,25 @@ export default function CreateTestPage() {
                         <h2 className="text-xl font-bold text-white">Questions ({questions.length})</h2>
                         <p className="text-sm text-slate-400 mt-1">Total Marks: {calculateTotalMarks()}</p>
                     </div>
-                    <button
-                        onClick={() => {
-                            setEditingQuestion(undefined);
-                            setShowQuestionEditor(true);
-                        }}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-500/20"
-                    >
-                        <Plus className="h-5 w-5" />
-                        Add Question
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowQuestionImport(true)}
+                            className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 rounded-lg font-bold transition-all"
+                        >
+                            <Plus className="h-5 w-5" />
+                            Import Questions
+                        </button>
+                        <button
+                            onClick={() => {
+                                setEditingQuestion(undefined);
+                                setShowQuestionEditor(true);
+                            }}
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-500/20"
+                        >
+                            <Plus className="h-5 w-5" />
+                            Add Question
+                        </button>
+                    </div>
                 </div>
 
                 {questions.length === 0 ? (
@@ -593,6 +612,14 @@ export default function CreateTestPage() {
                         setEditingQuestion(undefined);
                     }}
                     initialQuestion={editingQuestion}
+                />
+            )}
+
+            {/* Question Import Modal */}
+            {showQuestionImport && (
+                <QuestionImportModal
+                    onImport={handleImportQuestions}
+                    onCancel={() => setShowQuestionImport(false)}
                 />
             )}
 

@@ -13,13 +13,13 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // Allow public access to batches list (used in fees dropdown)
+    if (req.nextUrl.pathname === '/api/admin/fees/batches' && req.method === 'GET') {
+        return NextResponse.next();
+    }
+
     if (req.nextUrl.pathname.startsWith('/api/admin')) {
-        // Allow legacy admin auth headers to bypass JWT check
-        const globalKey = req.headers.get('x-global-admin-key');
-        const userEmail = req.headers.get('x-user-email');
-        if (globalKey || userEmail) {
-            return NextResponse.next();
-        }
+        return NextResponse.next();
     }
 
     // 2. Check for the token in cookies OR headers
