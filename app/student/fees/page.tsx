@@ -319,7 +319,8 @@ export default function FeesPayment() {
                                                     <CheckCircle className="h-2 w-2 md:h-3 md:w-3" /> <span className="hidden md:inline">Paid</span>
                                                 </div>
                                                 <div className="text-sm md:text-2xl font-bold text-white">₹{record.amount}</div>
-                                                <div className="text-[8px] md:text-[10px] text-slate-400 truncate">Inv: {record.invoiceNo}</div>
+                                                <div className="hidden md:block text-[10px] text-slate-400 truncate">Inv: {record.invoiceNo}</div>
+                                                <div className="md:hidden text-[9px] text-green-400/80 mt-0.5 font-medium">Click to view</div>
                                             </div>
                                             <div className="hidden md:flex items-center gap-2 text-xs text-green-300 font-medium group-hover:underline">
                                                 <Download className="h-3 w-3" /> Click to view receipt

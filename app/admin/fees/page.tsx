@@ -94,37 +94,6 @@ export default function FeesManagementPage() {
     const [recordStudents, setRecordStudents] = useState<Student[]>([]);
     const [gridMonths, setGridMonths] = useState(generateMonthRange(new Date().getFullYear() - 1, new Date().getFullYear() + 1)); // Default range: Last year to Next year
 
-    // Scroll to current month on Grid Load
-    useEffect(() => {
-        if (activeTab === 'record' && gridMonths.length > 0) {
-            // Slight delay to ensure render
-            setTimeout(() => {
-                const now = new Date();
-                const currentMonthId = `month-header-${now.getFullYear()}-${now.getMonth()}`;
-                const element = document.getElementById(currentMonthId);
-                const container = document.getElementById('grid-container');
-
-                if (element && container) {
-                    // Calculate offset: Element position - Container position - Sticky Column Width (approx 100px) - Extra Offset (5cm ~ 180px)
-                    // We want the current month to be "more to the left", meaning we scroll it towards the start.
-                    // Actually, "5cm more to the left" usually means the *content* is shifted left, so the user sees more of the right?
-                    // Or does it mean the *viewport* is shifted left?
-                    // User said: "present calendar month should be 5 cm more to the left of the screen"
-                    // IF the element is at X, we want it to be at Left + 5cm.
-                    // Let's try to center it or place it at a fixed offset from the sticky column.
-
-                    const stickyColWidth = 100; // Mobile sticky width
-                    const targetScrollLeft = element.offsetLeft - stickyColWidth - 20; // 20px padding
-
-                    container.scrollTo({
-                        left: targetScrollLeft,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 500);
-        }
-    }, [activeTab, gridMonths]);
-
     // History State
     const [historyFilters, setHistoryFilters] = useState({
         month: '',
@@ -167,15 +136,24 @@ export default function FeesManagementPage() {
                 const now = new Date();
                 const currentId = `month-header-${now.getFullYear()}-${now.getMonth()}`;
                 const el = document.getElementById(currentId);
+                const isDesktop = window.innerWidth >= 768;
 
                 if (el && gridContainerRef.current) {
-                    // Logic: Scroll to (Element Left - Sticky Widths - Offset)
-                    // Sticky Widths = 320px
-                    // Requested Offset = 5cm ~= 190px
-                    // Total Scroll Left = el.offsetLeft - 320 - 190 = el.offsetLeft - 510
-                    // If el.offsetLeft is small (e.g. month is Jan), we clamp to 0.
-                    const targetScroll = Math.max(0, el.offsetLeft - 510);
-                    console.log(`[GridScroll] Target: ${targetScroll}, ElLeft: ${el.offsetLeft}, ID: ${currentId}`);
+                    // Sticky Widths: Mobile = ~100px, Desktop = ~320px
+                    // Desktop Request: Scroll less to left (show more past months) -> High offset subtraction (-700)
+                    // Mobile Request: Do not affect -> Standard scroll to visible (-110 for sticky col + padding)
+
+                    let targetScroll = 0;
+
+                    if (isDesktop) {
+                        targetScroll = Math.max(0, el.offsetLeft - 640);
+                    } else {
+                        // Mobile: Sticky col is 100px. We want current month clearly visible.
+                        // Scroll to element position minus sticky width minus small padding
+                        targetScroll = Math.max(0, el.offsetLeft - 110);
+                    }
+
+                    console.log(`[GridScroll] ${isDesktop ? 'Desktop' : 'Mobile'} Target: ${targetScroll}, ElLeft: ${el.offsetLeft}, ID: ${currentId}`);
 
                     gridContainerRef.current.scrollTo({
                         left: targetScroll,
