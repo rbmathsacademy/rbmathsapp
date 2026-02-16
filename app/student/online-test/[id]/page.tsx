@@ -41,6 +41,7 @@ interface TestData {
         passingPercentage?: number;
         enablePerQuestionTimer?: boolean;
         perQuestionDuration?: number;
+        maxQuestionsToAttempt?: number;
     };
     questions: Question[];
 }
@@ -274,6 +275,16 @@ export default function TakeTestPage() {
                 toast.error(data.error || 'Failed to start test');
                 return;
             }
+            const data = await res.json();
+
+            // If the backend returns a randomized set of questions (snapshot), update the test state
+            if (data.questions && data.questions.length > 0 && test) {
+                setTest({
+                    ...test,
+                    questions: data.questions
+                });
+            }
+
             setStarted(true);
             startTimeRef.current = Date.now();
             toast.success('Test started! Good luck!');
@@ -439,20 +450,25 @@ export default function TakeTestPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
+                        {/* Questions Count Display */}
                         <div className="bg-slate-800/50 rounded-xl p-3">
                             <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Questions</div>
-                            <div className="text-lg font-bold text-white">{allQuestions.length}</div>
+                            <div className="text-lg font-bold text-white">
+                                {test.config?.maxQuestionsToAttempt
+                                    ? `${test.config.maxQuestionsToAttempt} / ${allQuestions.length}`
+                                    : allQuestions.length}
+                            </div>
                         </div>
                         <div className="bg-slate-800/50 rounded-xl p-3">
-                            <div className="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Total Marks</div>
+                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Marks</div>
                             <div className="text-lg font-bold text-white">{test.totalMarks}</div>
                         </div>
                         <div className="bg-slate-800/50 rounded-xl p-3">
-                            <div className="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Duration</div>
+                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Duration</div>
                             <div className="text-lg font-bold text-white">{test.durationMinutes} min</div>
                         </div>
                         <div className="bg-slate-800/50 rounded-xl p-3">
-                            <div className="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Pass %</div>
+                            <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Pass %</div>
                             <div className="text-lg font-bold text-white">{test.config?.passingPercentage || 40}%</div>
                         </div>
                     </div>
@@ -476,6 +492,7 @@ export default function TakeTestPage() {
                                     <>
                                         <li>Test will auto-submit when the total time runs out.</li>
                                         {test.config?.shuffleQuestions && <li>Questions may appear in random order</li>}
+                                        {test.config?.maxQuestionsToAttempt && <li>You will attempt a random subset of {test.config.maxQuestionsToAttempt} questions.</li>}
                                         {!test.config?.allowBackNavigation && <li>You cannot go back to previous questions</li>}
                                     </>
                                 )
@@ -916,7 +933,7 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
                                 {currentAnswer === i && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                             </div>
                             <span className={`text-xs sm:text-sm flex-1 leading-relaxed ${currentAnswer === i ? 'text-white font-medium' : 'text-slate-300'}`}>
-                                {option}
+                                <Latex>{option}</Latex>
                             </span>
                         </label>
                     ))}
@@ -953,7 +970,7 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
                                     {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
                                 </div>
                                 <span className={`text-xs sm:text-sm flex-1 leading-relaxed ${isSelected ? 'text-white font-medium' : 'text-slate-300'}`}>
-                                    {option}
+                                    <Latex>{option}</Latex>
                                 </span>
                                 {/* Hidden checkbox for logic, but UI depends on div above */}
                                 <input
@@ -972,7 +989,6 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
                     })}
                 </div>
             );
-
         case 'fillblank':
             return (
                 <div className="pt-2">

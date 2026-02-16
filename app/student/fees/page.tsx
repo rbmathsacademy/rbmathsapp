@@ -212,8 +212,11 @@ export default function FeesPayment() {
         doc.setTextColor(100, 100, 100);
         doc.text('Disclaimer: This is a computer generated receipt. If there is any discrepancy, please contact the admin.', 105, 280, { align: 'center' });
 
-        doc.save(`Fee_Receipt_${student.studentName}_${MONTHS[record.monthIndex]}_${record.year}.pdf`);
-        toast.success('Receipt Downloaded!');
+        // Generate Blob and Open in New Window (Better for App Browsers/WebViews)
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+        toast.success('Receipt Opened!');
     };
 
     if (loading) {
@@ -283,7 +286,7 @@ export default function FeesPayment() {
                         </select>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
                         {MONTHS.map((monthName, index) => {
                             const { status, record } = getStatusForMonth(selectedYear, index);
 
@@ -301,43 +304,43 @@ export default function FeesPayment() {
                             return (
                                 <div
                                     key={monthName}
-                                    className={`relative rounded-2xl p-6 border transition-all duration-300 ${cardClass}`}
+                                    className={`relative rounded-xl md:rounded-2xl p-2 md:p-6 border transition-all duration-300 ${cardClass} flex flex-col justify-between min-h-[100px] md:min-h-auto`}
                                     onClick={() => status === 'PAID' && record ? generateReceipt(record) : null}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="text-lg font-bold text-slate-200">{monthName}</div>
-                                        <div className="text-xs font-mono text-slate-500">{selectedYear}</div>
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-2 md:mb-4">
+                                        <div className="text-xs md:text-lg font-bold text-slate-200 truncate w-full">{monthName}</div>
+                                        <div className="text-[10px] md:text-xs font-mono text-slate-500">{selectedYear}</div>
                                     </div>
 
                                     {status === 'PAID' && record ? (
                                         <>
-                                            <div className="flex flex-col gap-1 mb-4">
-                                                <div className="text-xs text-green-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                    <CheckCircle className="h-3 w-3" /> Paid
+                                            <div className="flex flex-col gap-0.5 md:gap-1 mb-1 md:mb-4">
+                                                <div className="text-[10px] md:text-xs text-green-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                    <CheckCircle className="h-2 w-2 md:h-3 md:w-3" /> <span className="hidden md:inline">Paid</span>
                                                 </div>
-                                                <div className="text-2xl font-bold text-white">₹ {record.amount}</div>
-                                                <div className="text-[10px] text-slate-400">Inv: {record.invoiceNo}</div>
+                                                <div className="text-sm md:text-2xl font-bold text-white">₹{record.amount}</div>
+                                                <div className="text-[8px] md:text-[10px] text-slate-400 truncate">Inv: {record.invoiceNo}</div>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-green-300 font-medium group-hover:underline">
+                                            <div className="hidden md:flex items-center gap-2 text-xs text-green-300 font-medium group-hover:underline">
                                                 <Download className="h-3 w-3" /> Click to view receipt
-                                            </div >
+                                            </div>
                                         </>
                                     ) : status === 'NEW_ADMISSION' ? (
-                                        <div className="h-20 flex items-center justify-center text-slate-500 text-xs text-center px-4">
-                                            Admission Month
+                                        <div className="h-10 md:h-20 flex items-center justify-center text-slate-500 text-[8px] md:text-xs text-center px-1 md:px-4 leading-tight">
+                                            New<br className="md:hidden" />Adm
                                         </div>
                                     ) : status === 'EXEMPTED' ? (
-                                        <div className="h-20 flex items-center justify-center text-slate-500 text-xs text-center px-4">
-                                            Fee Exempted
+                                        <div className="h-10 md:h-20 flex items-center justify-center text-slate-500 text-[8px] md:text-xs text-center px-1 md:px-4 leading-tight">
+                                            Exempt
                                         </div>
                                     ) : status === 'BEFORE_ADMISSION' ? (
-                                        <div className="h-20 flex items-center justify-center text-slate-600 text-xs text-center px-4">
+                                        <div className="h-10 md:h-20 flex items-center justify-center text-slate-600 text-[8px] md:text-xs text-center px-1 md:px-4">
                                             --
                                         </div>
                                     ) : (
-                                        <div className="h-20 flex flex-col items-center justify-center gap-2 text-red-400/80">
-                                            <AlertCircle className="h-6 w-6 opacity-50" />
-                                            <span className="text-xs">Unpaid</span>
+                                        <div className="h-10 md:h-20 flex flex-col items-center justify-center gap-1 md:gap-2 text-red-400/80">
+                                            <AlertCircle className="h-4 w-4 md:h-6 md:w-6 opacity-50" />
+                                            <span className="text-[8px] md:text-xs">Unpaid</span>
                                         </div>
                                     )}
                                 </div>

@@ -25,6 +25,8 @@ interface QuestionReview {
     numberRangeMin?: number;
     numberRangeMax?: number;
     comprehensionText?: string;
+    solutionText?: string;
+    solutionImage?: string;
 }
 
 interface TopicAnalysis {
@@ -55,13 +57,20 @@ export default function TestResultPage() {
 
     const fetchResult = async () => {
         try {
-            const res = await fetch(`/api/student/online-tests/${testId}/result`);
+            const res = await fetch(`/api/student/online-tests/${testId}/result`, { cache: 'no-store' });
             if (!res.ok) {
                 if (res.status === 401) { router.push('/student/login'); return; }
                 const data = await res.json();
                 if (data.resultsHidden) {
                     setTestInfo({ title: 'Test Results' });
-                    setResult({ score: data.score, percentage: data.percentage, totalMarks: data.totalMarks, resultsHidden: true });
+                    setResult({
+                        score: null,
+                        percentage: null,
+                        totalMarks: data.totalMarks,
+                        resultsHidden: true,
+                        resultsPending: data.resultsPending,
+                        message: data.message
+                    });
                     setLoading(false);
                     return;
                 }
@@ -81,17 +90,10 @@ export default function TestResultPage() {
         }
     };
 
-    const formatTime = (ms: number) => {
-        const totalSec = Math.floor(ms / 1000);
-        const h = Math.floor(totalSec / 3600);
-        const m = Math.floor((totalSec % 3600) / 60);
-        const s = totalSec % 60;
-        if (h > 0) return `${h}h ${m}m ${s}s`;
-        if (m > 0) return `${m}m ${s}s`;
-        return `${s}s`;
-    };
+    // ... helper functions ...
 
     if (loading) {
+        // ... loading state ...
         return (
             <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
@@ -103,11 +105,44 @@ export default function TestResultPage() {
     }
 
     if (error) {
+        // ... error state ...
         return (
             <div className="min-h-screen bg-[#050b14] flex items-center justify-center p-4">
                 <div className="text-center">
                     <p className="text-red-400 mb-4">{error}</p>
                     <button onClick={() => router.push('/student/online-test')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold">
+                        Back to Tests
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // PENDING RESULTS VIEW
+    if (result?.resultsPending) {
+        return (
+            <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-[#0c1220]/90 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+
+                    <div className="inline-flex p-4 rounded-full bg-emerald-500/10 mb-6 ring-4 ring-emerald-500/5">
+                        <CheckCircle className="h-12 w-12 text-emerald-400" />
+                    </div>
+
+                    <h1 className="text-2xl font-black text-white mb-2">Test Submitted!</h1>
+                    <p className="text-emerald-400 text-sm font-bold uppercase tracking-wider mb-6">Submission Successful</p>
+
+                    <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/5 mb-8">
+                        <Clock className="h-6 w-6 text-slate-400 mx-auto mb-3" />
+                        <p className="text-slate-300 text-sm leading-relaxed">
+                            {result.message || "Results will be declared after the deadline."}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => router.push('/student/online-test')}
+                        className="w-full px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-white/5 hover:border-white/10"
+                    >
                         Back to Tests
                     </button>
                 </div>
@@ -426,6 +461,31 @@ export default function TestResultPage() {
                                                 <div className="inline-flex items-center gap-2 text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold">
                                                     Manually Graded Question
                                                 </div>
+                                            </div>
+                                        )}
+
+                                        {/* Solution & Explanation */}
+                                        {(q.solutionText || q.solutionImage) && (
+                                            <div className="mt-6 bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/50"></div>
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                                                        <TrendingUp className="h-4 w-4" />
+                                                    </div>
+                                                    <span className="text-sm font-bold text-emerald-400">Explanation</span>
+                                                </div>
+
+                                                {q.solutionText && (
+                                                    <div className="text-sm text-slate-300 prose prose-invert max-w-none leading-relaxed mb-4">
+                                                        <Latex>{q.solutionText}</Latex>
+                                                    </div>
+                                                )}
+
+                                                {q.solutionImage && (
+                                                    <div className="bg-black/40 rounded-xl p-3 inline-block border border-white/10">
+                                                        <img src={q.solutionImage} alt="Solution info" className="max-w-full max-h-80 rounded-lg" />
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>

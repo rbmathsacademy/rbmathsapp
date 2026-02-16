@@ -13,6 +13,7 @@ const StudentTestAttemptSchema = new mongoose.Schema({
     },
     startedAt: { type: Date },
     submittedAt: { type: Date },
+    questions: [], // Snapshot of questions for this attempt (handled by code, mixed array)
     answers: [{
         questionId: String,
         answer: mongoose.Schema.Types.Mixed, // Can be string, array, etc.

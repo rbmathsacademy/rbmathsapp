@@ -94,6 +94,37 @@ export default function FeesManagementPage() {
     const [recordStudents, setRecordStudents] = useState<Student[]>([]);
     const [gridMonths, setGridMonths] = useState(generateMonthRange(new Date().getFullYear() - 1, new Date().getFullYear() + 1)); // Default range: Last year to Next year
 
+    // Scroll to current month on Grid Load
+    useEffect(() => {
+        if (activeTab === 'record' && gridMonths.length > 0) {
+            // Slight delay to ensure render
+            setTimeout(() => {
+                const now = new Date();
+                const currentMonthId = `month-header-${now.getFullYear()}-${now.getMonth()}`;
+                const element = document.getElementById(currentMonthId);
+                const container = document.getElementById('grid-container');
+
+                if (element && container) {
+                    // Calculate offset: Element position - Container position - Sticky Column Width (approx 100px) - Extra Offset (5cm ~ 180px)
+                    // We want the current month to be "more to the left", meaning we scroll it towards the start.
+                    // Actually, "5cm more to the left" usually means the *content* is shifted left, so the user sees more of the right?
+                    // Or does it mean the *viewport* is shifted left?
+                    // User said: "present calendar month should be 5 cm more to the left of the screen"
+                    // IF the element is at X, we want it to be at Left + 5cm.
+                    // Let's try to center it or place it at a fixed offset from the sticky column.
+
+                    const stickyColWidth = 100; // Mobile sticky width
+                    const targetScrollLeft = element.offsetLeft - stickyColWidth - 20; // 20px padding
+
+                    container.scrollTo({
+                        left: targetScrollLeft,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 500);
+        }
+    }, [activeTab, gridMonths]);
+
     // History State
     const [historyFilters, setHistoryFilters] = useState({
         month: '',
@@ -117,6 +148,17 @@ export default function FeesManagementPage() {
 
     // Status Selection Modal (New Admission / Exempted)
     const [statusModalOpen, setStatusModalOpen] = useState<{ open: boolean, student: Student, batch: string, year: number, month: number } | null>(null);
+
+    // Cell Actions Modal (Mobile/Desktop)
+    const [cellActionModal, setCellActionModal] = useState<{
+        open: boolean;
+        student: Student;
+        batch: string;
+        year: number;
+        month: number;
+        type: 'PENDING' | 'EMPTY';
+        monthName: string;
+    } | null>(null);
 
     useEffect(() => {
         if (activeTab === 'record' && gridMonths.length > 0 && gridContainerRef.current) {
@@ -532,23 +574,23 @@ export default function FeesManagementPage() {
 
 
     return (
-        <div className="min-h-screen bg-[#050b14] p-6 text-slate-200 font-sans">
+        <div className="min-h-screen bg-[#050b14] p-2 md:p-6 text-slate-200 font-sans max-w-[100vw] overflow-x-hidden">
             <Toaster position="top-right" />
 
             {/* Header */}
-            <div className="max-w-7xl mx-auto mb-8 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <DollarSign className="h-6 w-6 text-emerald-500" /> Fees Management
+            <div className="max-w-7xl mx-auto mb-6 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 md:h-6 md:w-6 text-emerald-500" /> Fees Management
                 </h1>
-                <div className="flex gap-2 bg-slate-900 rounded-lg p-1 border border-white/10">
-                    <button onClick={() => setActiveTab('entry')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'entry' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-                        <Plus className="h-4 w-4 inline mr-1" /> Entry
+                <div className="flex gap-1 md:gap-2 bg-slate-900 rounded-lg p-1 border border-white/10 w-full md:w-auto">
+                    <button onClick={() => setActiveTab('entry')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'entry' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                        <Plus className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> Entry
                     </button>
-                    <button onClick={() => setActiveTab('record')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'record' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-                        <CreditCard className="h-4 w-4 inline mr-1" /> Grid
+                    <button onClick={() => setActiveTab('record')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'record' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                        <CreditCard className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> Grid
                     </button>
-                    <button onClick={() => setActiveTab('history')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'history' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-                        <History className="h-4 w-4 inline mr-1" /> History
+                    <button onClick={() => setActiveTab('history')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'history' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                        <History className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> History
                     </button>
                 </div>
             </div>
@@ -648,7 +690,7 @@ export default function FeesManagementPage() {
                                 </div>
 
                                 {/* Batch Student List */}
-                                <div className="h-[450px] flex flex-col">
+                                <div className="w-full transition-all duration-300 ease-in-out">
                                     {entryForm.batch && (
                                         <>
                                             <div className="flex items-center justify-between mb-2 px-1">
@@ -657,11 +699,11 @@ export default function FeesManagementPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-slate-900/40 border border-white/5 rounded-xl overflow-hidden flex-1 relative">
-                                                <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                            <div className="bg-slate-900/40 border border-white/5 rounded-xl overflow-hidden relative">
+                                                <div className="max-h-[350px] md:max-h-[450px] overflow-y-auto custom-scrollbar p-2 space-y-1">
                                                     {batchStudents.length === 0 ? (
-                                                        <div className="h-full flex flex-col items-center justify-center text-slate-500 p-4">
-                                                            <User className="h-8 w-8 mb-2 opacity-20" />
+                                                        <div className="h-24 flex flex-col items-center justify-center text-slate-500 p-4">
+                                                            <User className="h-6 w-6 mb-2 opacity-20" />
                                                             <p className="text-xs">No students in this batch</p>
                                                         </div>
                                                     ) : (
@@ -722,7 +764,7 @@ export default function FeesManagementPage() {
 
                                 <div className="mb-6">
                                     <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Month(s)</label>
-                                    <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                                         {MONTHS.map((m) => {
                                             const currentGridYear = parseInt(entryForm.paidOnMonth.split('-')[0]) || new Date().getFullYear();
                                             const record = studentRecords.find(r => r.monthIndex === m.index && r.year === currentGridYear);
@@ -778,9 +820,9 @@ export default function FeesManagementPage() {
                                         ))}
                                     </div>
                                     {entryForm.mode === 'Online' && (
-                                        <div className="flex gap-4 p-4 bg-slate-800/50 rounded-lg border border-white/5">
+                                        <div className="flex gap-4 p-4 bg-slate-800/50 rounded-lg border border-white/5 flex-wrap">
                                             {['MM', 'RB'].map(r => (
-                                                <label key={r} className="flex items-center gap-2 cursor-pointer group">
+                                                <label key={r} className="flex items-center gap-2 cursor-pointer group min-w-[60px]">
                                                     <input type="radio" name="receiver" className="accent-purple-500" checked={entryForm.receiver === r} onChange={() => setEntryForm({ ...entryForm, receiver: r as PaymentReceiver })} />
                                                     <span className="text-sm font-bold group-hover:text-white">{r}</span>
                                                 </label>
@@ -809,11 +851,11 @@ export default function FeesManagementPage() {
             )}
 
             {activeTab === 'record' && (
-                <div className="space-y-4 h-[calc(100vh-100px)] flex flex-col">
-                    <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5 flex flex-wrap gap-4 items-end flex-shrink-0">
-                        <div className="space-y-1">
+                <div className="space-y-4 h-[calc(100dvh-130px)] md:h-[calc(100vh-100px)] flex flex-col">
+                    <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5 flex flex-col md:flex-row gap-3 items-stretch md:items-end flex-shrink-0">
+                        <div className="space-y-1 w-full md:w-auto">
                             <label className="text-xs font-bold text-slate-500 uppercase">Batch</label>
-                            <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-48" value={recordFilters.batch} onChange={(e) => setRecordFilters({ ...recordFilters, batch: e.target.value })}>
+                            <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full md:w-48" value={recordFilters.batch} onChange={(e) => setRecordFilters({ ...recordFilters, batch: e.target.value })}>
                                 <option value="">-- All Batches --</option>
                                 {batches.map(b => <option key={b} value={b}>{b}</option>)}
                             </select>
@@ -830,15 +872,15 @@ export default function FeesManagementPage() {
                             <table className="w-full text-sm border-collapse relative">
                                 <thead className="bg-[#0d1520] sticky top-0 z-30">
                                     <tr className="border-b border-white/10">
-                                        <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase sticky left-0 bg-[#0d1520] z-40 border-r border-white/10 w-[200px] min-w-[200px] shadow-xl">Student</th>
-                                        <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase sticky left-[200px] bg-[#0d1520] z-40 border-r border-white/10 w-[120px] min-w-[120px] shadow-xl">Batch</th>
+                                        <th className="px-2 md:px-4 py-2 md:py-3 text-left font-bold text-slate-400 uppercase sticky left-0 bg-[#0d1520] z-40 border-r border-white/10 w-[100px] md:w-[200px] min-w-[100px] md:min-w-[200px] shadow-xl">Student</th>
+                                        <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase hidden md:table-cell md:sticky md:left-[200px] bg-[#0d1520] z-30 border-r border-white/10 w-[120px] min-w-[120px] shadow-xl">Batch</th>
                                         {gridMonths.map(m => (
                                             <th
                                                 key={`${m.year}-${m.monthIndex}`}
                                                 id={`month-header-${m.year}-${m.monthIndex}`}
-                                                className={`px-2 py-3 text-center border-l border-white/5 font-bold uppercase min-w-[100px] ${m.year === new Date().getFullYear() && m.monthIndex === new Date().getMonth() ? 'text-emerald-400 bg-emerald-500/5' : 'text-slate-400'}`}
+                                                className={`px-1 md:px-2 py-2 md:py-3 text-center border-l border-white/5 font-bold uppercase min-w-[70px] md:min-w-[100px] ${m.year === new Date().getFullYear() && m.monthIndex === new Date().getMonth() ? 'text-emerald-400 bg-emerald-500/5' : 'text-slate-400'}`}
                                             >
-                                                {m.name}
+                                                {m.name.substring(0, 3)}
                                             </th>
                                         ))}
                                     </tr>
@@ -880,11 +922,11 @@ export default function FeesManagementPage() {
                                         })
                                         .map(({ student, batch }) => (
                                             <tr key={`${student._id}-${batch}`} className="hover:bg-white/5 group">
-                                                <td className="px-4 py-3 sticky left-0 bg-[#0d1520] group-hover:bg-[#151e2d] border-r border-white/10 z-20">
-                                                    <div className="font-medium text-white">{student.name}</div>
-                                                    <div className="text-[10px] text-slate-500">{student.phoneNumber}</div>
+                                                <td className="px-2 md:px-4 py-2 md:py-3 sticky left-0 bg-[#0d1520] group-hover:bg-[#151e2d] border-r border-white/10 z-30">
+                                                    <div className="font-medium text-white text-xs md:text-sm truncate w-[90px] md:w-auto">{student.name}</div>
+                                                    <div className="text-[9px] md:text-[10px] text-slate-500 truncate md:block hidden">{student.phoneNumber}</div>
                                                 </td>
-                                                <td className="px-4 py-3 sticky left-[200px] bg-[#0d1520] group-hover:bg-[#151e2d] border-r border-white/10 z-20">
+                                                <td className="px-4 py-3 hidden md:table-cell md:sticky md:left-[200px] bg-[#0d1520] group-hover:bg-[#151e2d] border-r border-white/10 z-20">
                                                     <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-1 rounded">{batch}</span>
                                                 </td>
                                                 {gridMonths.map(m => {
@@ -900,9 +942,9 @@ export default function FeesManagementPage() {
                                                     // 1. Is New Admission?
                                                     if (record && record.recordType === 'NEW_ADMISSION') {
                                                         return (
-                                                            <td key={`${m.year}-${m.monthIndex}`} onClick={() => openEditModal(record)} className="p-1 border-l border-white/5 h-24 cursor-pointer">
-                                                                <div className="w-full h-full bg-orange-500 border border-orange-400 text-white rounded flex items-center justify-center text-[10px] font-bold uppercase text-center leading-tight shadow-lg hover:bg-orange-400 transition-colors">
-                                                                    New<br />Admission
+                                                            <td key={`${m.year}-${m.monthIndex}`} onClick={() => openEditModal(record)} className="p-0.5 md:p-1 border-l border-white/5 h-16 md:h-24 cursor-pointer">
+                                                                <div className="w-full h-full bg-orange-500 border border-orange-400 text-white rounded flex items-center justify-center text-[8px] md:text-[10px] font-bold uppercase text-center leading-tight shadow-lg hover:bg-orange-400 transition-colors">
+                                                                    New<br />Adm
                                                                 </div>
                                                             </td>
                                                         );
@@ -911,9 +953,9 @@ export default function FeesManagementPage() {
                                                     // 2. Is Exempted?
                                                     if (record && record.recordType === 'EXEMPTED') {
                                                         return (
-                                                            <td key={`${m.year}-${m.monthIndex}`} onClick={() => openEditModal(record)} className="p-1 border-l border-white/5 h-24 cursor-pointer">
-                                                                <div className="w-full h-full bg-purple-500 border border-purple-400 text-white rounded flex items-center justify-center text-[10px] font-bold uppercase shadow-lg hover:bg-purple-400 transition-colors">
-                                                                    Exempted
+                                                            <td key={`${m.year}-${m.monthIndex}`} onClick={() => openEditModal(record)} className="p-0.5 md:p-1 border-l border-white/5 h-16 md:h-24 cursor-pointer">
+                                                                <div className="w-full h-full bg-purple-500 border border-purple-400 text-white rounded flex items-center justify-center text-[8px] md:text-[10px] font-bold uppercase shadow-lg hover:bg-purple-400 transition-colors">
+                                                                    Exempt
                                                                 </div>
                                                             </td>
                                                         );
@@ -922,10 +964,10 @@ export default function FeesManagementPage() {
                                                     // 3. Is Payment?
                                                     if (record) {
                                                         return (
-                                                            <td key={`${m.year}-${m.monthIndex}`} className="p-1 border-l border-white/5 h-24">
+                                                            <td key={`${m.year}-${m.monthIndex}`} className="p-0.5 md:p-1 border-l border-white/5 h-16 md:h-24">
                                                                 <div onClick={() => openEditModal(record)} className="w-full h-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded flex flex-col items-center justify-center cursor-pointer relative transition-all">
-                                                                    <span className="font-bold text-xs">₹{record.amount}</span>
-                                                                    <span className="text-[9px] opacity-70 leading-none mt-1">{new Date(record.entryDate).toLocaleDateString('default', { day: 'numeric', month: 'short' })}</span>
+                                                                    <span className="font-bold text-[10px] md:text-xs">₹{record.amount}</span>
+                                                                    <span className="text-[8px] md:text-[9px] opacity-70 leading-none mt-0.5 md:mt-1">{new Date(record.entryDate).toLocaleDateString('default', { day: 'numeric', month: 'short' })}</span>
                                                                     {record.remarks && <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                                                                 </div>
                                                             </td>
@@ -978,22 +1020,9 @@ export default function FeesManagementPage() {
 
                                                     if (isPending) {
                                                         return (
-                                                            <td key={`${m.year}-${m.monthIndex}`} className="p-1 border-l border-white/5 h-24 relative group/cell">
-                                                                <div className="w-full h-full bg-red-500/10 border border-red-500/20 rounded flex items-center justify-center">
-                                                                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Pending</span>
-
-                                                                    {/* Hover Actions for Pending */}
-                                                                    <div className="absolute inset-0 bg-slate-900/95 hidden group-hover/cell:flex flex-col items-center justify-center p-2 gap-1.5 z-50 transition-all border border-white/10 rounded">
-                                                                        <button onClick={() => { navigator.clipboard.writeText(student.phoneNumber); toast.success('Phone Copied!'); }} className="w-full bg-slate-700 hover:bg-slate-600 text-white text-[9px] py-1.5 rounded flex items-center justify-center gap-1">
-                                                                            Copy Phone
-                                                                        </button>
-                                                                        <button onClick={() => copyPendingMessage(student, batch, m.name)} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] py-1.5 rounded flex items-center justify-center gap-1">
-                                                                            Reminder
-                                                                        </button>
-                                                                        <button onClick={() => setStatusModalOpen({ open: true, student, batch, year: m.year, month: m.monthIndex })} className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[9px] py-1.5 px-1 rounded truncate flex items-center justify-center gap-1">
-                                                                            Set Status
-                                                                        </button>
-                                                                    </div>
+                                                            <td key={`${m.year}-${m.monthIndex}`} className="p-0.5 md:p-1 border-l border-white/5 h-16 md:h-24 relative" onClick={() => setCellActionModal({ open: true, student, batch, year: m.year, month: m.monthIndex, type: 'PENDING', monthName: m.name })}>
+                                                                <div className="w-full h-full bg-red-500/10 border border-red-500/20 rounded flex items-center justify-center cursor-pointer hover:bg-red-500/20 active:scale-95 transition-all">
+                                                                    <span className="text-[8px] md:text-[10px] font-bold text-red-500 uppercase tracking-wider">Pending</span>
                                                                 </div>
                                                             </td>
                                                         );
@@ -1001,16 +1030,9 @@ export default function FeesManagementPage() {
 
                                                     // Future / Pre-Admission (Empty)
                                                     return (
-                                                        <td key={`${m.year}-${m.monthIndex}`} className="p-1 border-l border-white/5 h-24 group/cell relative">
-                                                            <div className="w-full h-full rounded hover:bg-white/5 flex items-center justify-center text-slate-700 text-xs">
+                                                        <td key={`${m.year}-${m.monthIndex}`} className="p-0.5 md:p-1 border-l border-white/5 h-16 md:h-24 relative" onClick={() => setCellActionModal({ open: true, student, batch, year: m.year, month: m.monthIndex, type: 'EMPTY', monthName: m.name })}>
+                                                            <div className="w-full h-full rounded hover:bg-white/5 flex items-center justify-center text-slate-700 text-xs cursor-pointer active:scale-95 transition-all">
                                                                 -
-                                                                {/* Hover Actions for Empty (New Student / Exempted) */}
-                                                                {/* Requirement: "allow to click an option New student... Fees exempted" */}
-                                                                <div className="absolute inset-0 bg-slate-900/90 hidden group-hover/cell:flex flex-col items-center justify-center p-1 gap-1 z-10">
-                                                                    <button onClick={() => setStatusModalOpen({ open: true, student, batch, year: m.year, month: m.monthIndex })} className="px-2 py-1 bg-slate-700 hover:bg-white text-white hover:text-slate-900 text-[10px] rounded font-medium">
-                                                                        Set Status
-                                                                    </button>
-                                                                </div>
                                                             </div>
                                                         </td>
                                                     );
@@ -1027,8 +1049,9 @@ export default function FeesManagementPage() {
 
             {/* Status Modal */}
             {statusModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm" onClick={() => setStatusModalOpen(null)}>
+                    <div className="bg-slate-900 border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in-0 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
                         <h3 className="text-lg font-bold text-white mb-4">Set Status for {MONTHS[statusModalOpen.month].name} {statusModalOpen.year}</h3>
                         <div className="space-y-3">
                             <button onClick={() => handleCreateStatusRecord('NEW_ADMISSION')} className="w-full py-3 bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-xl font-bold transition-all">
@@ -1049,49 +1072,55 @@ export default function FeesManagementPage() {
 
             {activeTab === 'history' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900/40 p-4 rounded-xl border border-white/5 flex flex-wrap gap-4 items-end">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
-                            <input type="month" className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white"
-                                value={historyFilters.month} onChange={(e) => setHistoryFilters({ ...historyFilters, month: e.target.value })} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Batch</label>
-                            <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-32" value={historyFilters.batch} onChange={(e) => setHistoryFilters({ ...historyFilters, batch: e.target.value })}>
-                                <option value="">All</option>
-                                {batches.map(b => <option key={b} value={b}>{b}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Mode</label>
-                            <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white" value={historyFilters.mode} onChange={(e) => setHistoryFilters({ ...historyFilters, mode: e.target.value })}>
-                                <option value="">All</option>
-                                <option value="Online">Online</option>
-                                <option value="Offline">Offline</option>
-                            </select>
-                        </div>
-                        {historyFilters.mode === 'Online' && (
+                    <div className="bg-slate-900/40 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row flex-wrap gap-4 items-stretch md:items-end">
+                        <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 uppercase">Receiver</label>
-                                <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white" value={historyFilters.receiver} onChange={(e) => setHistoryFilters({ ...historyFilters, receiver: e.target.value })}>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
+                                <input type="month" className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full"
+                                    value={historyFilters.month} onChange={(e) => setHistoryFilters({ ...historyFilters, month: e.target.value })} />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Batch</label>
+                                <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full md:w-32" value={historyFilters.batch} onChange={(e) => setHistoryFilters({ ...historyFilters, batch: e.target.value })}>
                                     <option value="">All</option>
-                                    <option value="MM">MM</option>
-                                    <option value="RB">RB</option>
+                                    {batches.map(b => <option key={b} value={b}>{b}</option>)}
                                 </select>
                             </div>
-                        )}
-                        <div className="space-y-1 flex-1">
+                        </div>
+
+                        <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Mode</label>
+                                <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full" value={historyFilters.mode} onChange={(e) => setHistoryFilters({ ...historyFilters, mode: e.target.value })}>
+                                    <option value="">All</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Offline">Offline</option>
+                                </select>
+                            </div>
+                            {historyFilters.mode === 'Online' && (
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-slate-500 uppercase">Receiver</label>
+                                    <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full" value={historyFilters.receiver} onChange={(e) => setHistoryFilters({ ...historyFilters, receiver: e.target.value })}>
+                                        <option value="">All</option>
+                                        <option value="MM">MM</option>
+                                        <option value="RB">RB</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-1 flex-1 min-w-[200px]">
                             <label className="text-xs font-bold text-slate-500 uppercase">Search</label>
                             <input type="text" placeholder="Student Name/Phone..." className="w-full bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white"
                                 value={historyFilters.search} onChange={(e) => setHistoryFilters({ ...historyFilters, search: e.target.value })} />
                         </div>
-                        <button onClick={exportHistory} className="px-4 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/20 rounded-lg text-sm font-medium flex items-center gap-2">
+                        <button onClick={exportHistory} className="px-4 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/20 rounded-lg text-sm font-medium flex items-center justify-center gap-2 w-full md:w-auto">
                             <Download className="h-4 w-4" /> Export CSV
                         </button>
                     </div>
 
                     <div className="bg-slate-900/60 border border-white/10 rounded-xl overflow-x-auto">
-                        <table className="w-full text-sm text-left">
+                        <table className="w-full text-sm text-left hidden md:table">
                             <thead className="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-white/10">
                                 <tr>
                                     <th className="px-6 py-3">Invoice</th>
@@ -1127,6 +1156,41 @@ export default function FeesManagementPage() {
                                 ))}
                             </tbody>
                         </table>
+
+                        {/* Mobile Card View for History */}
+                        <div className="md:hidden space-y-4 p-4">
+                            {historyRecords.map((record) => (
+                                <div key={record._id} onClick={() => openEditModal(record)} className="bg-slate-800/50 border border-white/5 rounded-xl p-4 space-y-3 cursor-pointer active:scale-98 transition-all">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-bold text-white text-base">
+                                                {typeof record.student === 'object' ? record.student?.name : 'Unknown'}
+                                            </div>
+                                            <div className="text-xs text-slate-400 mt-0.5">{record.batch}</div>
+                                        </div>
+                                        <div className="text-emerald-400 font-bold text-lg">₹{record.amount}</div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 text-xs text-slate-500 border-t border-white/5 pt-3">
+                                        <div className="bg-slate-900 px-2 py-1 rounded font-mono text-slate-400">
+                                            {record.invoiceNo}
+                                        </div>
+                                        <div className="flex-1 text-right">
+                                            {new Date(record.entryDate).toLocaleDateString()}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-xs">
+                                        <div className="text-slate-300">
+                                            For <span className="text-white font-medium">{new Date(record.feesMonth).toLocaleDateString('default', { month: 'long', year: 'numeric' })}</span>
+                                        </div>
+                                        <span className={`px-2 py-1 rounded ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-700 text-slate-300'}`}>
+                                            {record.paymentMode} {record.paymentReceiver ? `(${record.paymentReceiver})` : ''}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
@@ -1194,6 +1258,132 @@ export default function FeesManagementPage() {
                                 <button onClick={handleDeleteRecord} className="px-4 py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold flex items-center gap-2"><Trash2 className="h-4 w-4" /> Delete</button>
                                 <button onClick={handleUpdateRecord} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"><Save className="h-4 w-4" /> Save Changes</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editModalOpen && editingRecord && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setEditModalOpen(false)}>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+
+                        <div className="p-4 md:p-6 border-b border-white/5 flex justify-between items-center shrink-0">
+                            <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2"><Edit2 className="h-4 w-4 md:h-5 md:w-5 text-blue-400" /> Edit Record</h3>
+                            <button onClick={() => setEditModalOpen(false)} className="p-1 hover:bg-white/5 rounded-full transition-colors"><X className="h-5 w-5 text-slate-400" /></button>
+                        </div>
+
+                        <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar">
+                            {/* Invoice No at top */}
+                            <div className="text-center mb-4 bg-slate-800/50 p-2 rounded-lg border border-white/5">
+                                <span className="text-[10px] text-slate-500 uppercase tracking-widest block mb-0.5">Invoice Number</span>
+                                <span className="text-lg md:text-xl font-mono font-bold text-white tracking-widest">{editingRecord.invoiceNo}</span>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Amount</label>
+                                        <input type="number" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white font-bold text-sm" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Fees Month</label>
+                                        <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Payment Mode</label>
+                                    <div className="flex gap-2">
+                                        {['Offline', 'Online'].map(mode => (
+                                            <label key={mode} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${editForm.mode === mode ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                                <input type="radio" className="hidden" checked={editForm.mode === mode} onChange={() => setEditForm({ ...editForm, mode: mode as PaymentMode })} />
+                                                {mode}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {editForm.mode === 'Online' && (
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Receiver</label>
+                                        <div className="flex gap-2">
+                                            {['MM', 'RB'].map(r => (
+                                                <label key={r} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${editForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                                    <input type="radio" className="hidden" checked={editForm.receiver === r} onChange={() => setEditForm({ ...editForm, receiver: r as PaymentReceiver })} />
+                                                    {r}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Remarks</label>
+                                    <textarea className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm h-16 resize-none" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 md:p-6 border-t border-white/5 shrink-0 flex gap-3">
+                            <button onClick={handleDeleteRecord} className="px-3 md:px-4 py-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"><Trash2 className="h-4 w-4" /> Delete</button>
+                            <button onClick={handleUpdateRecord} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs md:text-sm flex items-center justify-center gap-2 transition-colors"><Save className="h-4 w-4" /> Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cell Actions Modal */}
+            {cellActionModal && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm" onClick={() => setCellActionModal(null)}>
+                    <div className="bg-slate-900 border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in-0 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
+
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-white leading-tight">Actions</h3>
+                            <p className="text-sm text-slate-400">
+                                {cellActionModal.student.name} • {cellActionModal.monthName}
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            {cellActionModal.type === 'PENDING' && (
+                                <>
+                                    <button onClick={() => {
+                                        navigator.clipboard.writeText(cellActionModal.student.phoneNumber);
+                                        toast.success('Phone Copied!');
+                                        setCellActionModal(null);
+                                    }} className="w-full py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
+                                        <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><User className="h-4 w-4" /></div>
+                                        Copy Phone Number
+                                    </button>
+
+                                    <button onClick={() => {
+                                        copyPendingMessage(cellActionModal.student, cellActionModal.batch, cellActionModal.monthName);
+                                        setCellActionModal(null);
+                                    }} className="w-full py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
+                                        <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><RefreshCw className="h-4 w-4" /></div>
+                                        Copy Reminder Message
+                                    </button>
+                                </>
+                            )}
+
+                            <button onClick={() => {
+                                setStatusModalOpen({
+                                    open: true,
+                                    student: cellActionModal.student,
+                                    batch: cellActionModal.batch,
+                                    year: cellActionModal.year,
+                                    month: cellActionModal.month
+                                });
+                                setCellActionModal(null);
+                            }} className="w-full py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
+                                <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg"><Edit2 className="h-4 w-4" /></div>
+                                Set Status (Admission/Exempt)
+                            </button>
+
+                            <button onClick={() => setCellActionModal(null)} className="w-full py-3.5 text-slate-500 font-medium hover:text-white transition-colors mt-2">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -19,6 +19,7 @@ interface Question {
     options?: string[];
     correctIndices?: number[];
     fillBlankAnswer?: string;
+    explanation?: string;
 }
 
 interface QuestionImportModalProps {
@@ -103,7 +104,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
             if (type === 'blanks') type = 'fillblank';
             if (type === 'short') type = 'broad';
 
-            const testQ: Question = {
+            const testQ: any = { // Using any broadly here to match target Question type
                 id: `q_imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                 text: q.text,
                 image: q.image,
@@ -115,7 +116,8 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 negativeMarks: 0,
                 options: q.options && q.options.length > 0 ? q.options : (type === 'mcq' ? ['', '', '', ''] : []),
                 correctIndices: [],
-                fillBlankAnswer: type === 'fillblank' ? q.answer : undefined
+                fillBlankAnswer: type === 'fillblank' ? q.answer : undefined,
+                solutionText: q.explanation // Map explanation to solutionText
             };
 
             // Attempt to derive correct indices for MCQ
@@ -131,7 +133,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 }
             }
 
-            return testQ;
+            return testQ as Question;
         });
 
         onImport(mappedQuestions);
@@ -210,8 +212,8 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                                     key={q.id}
                                     onClick={() => toggleSelection(q.id)}
                                     className={`relative p-4 rounded-xl border transition-all cursor-pointer group ${selectedIds.has(q.id)
-                                            ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5'
-                                            : 'bg-slate-950/50 border-white/5 hover:border-white/10'
+                                        ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5'
+                                        : 'bg-slate-950/50 border-white/5 hover:border-white/10'
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">

@@ -69,16 +69,23 @@ export async function GET(req: NextRequest) {
             const startTime = test.deployment?.startTime ? new Date(test.deployment.startTime) : null;
 
             if (attempt?.status === 'completed') {
+                const resultsPending = endTime ? now < endTime : false;
+
                 completedAttempts.push({
                     testId,
                     title: test.title,
-                    percentage: Math.round(attempt.percentage || 0),
-                    score: attempt.score || 0,
+                    percentage: resultsPending ? null : Math.round(attempt.percentage || 0),
+                    score: resultsPending ? null : (attempt.score || 0),
                     totalMarks: test.totalMarks || 0,
-                    date: attempt.submittedAt
+                    date: attempt.submittedAt,
+                    resultsPending,
+                    originalPercentage: attempt.percentage || 0 // Keep internal for sorting if needed, but safe to ignore for now as we sort by date
                 });
-                totalScore += (attempt.percentage || 0);
-                if ((attempt.percentage || 0) > highestScore) highestScore = Math.round(attempt.percentage || 0);
+
+                if (!resultsPending) {
+                    totalScore += (attempt.percentage || 0);
+                    if ((attempt.percentage || 0) > highestScore) highestScore = Math.round(attempt.percentage || 0);
+                }
             } else {
                 if (endTime && now > endTime) {
                     missed++;
@@ -93,14 +100,17 @@ export async function GET(req: NextRequest) {
 
         completedAttempts.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        const totalTests = completedAttempts.length;
+        // Filter valid attempts for statistics
+        const validAttempts = completedAttempts.filter(a => !a.resultsPending);
+
+        const totalTests = validAttempts.length;
         const averageScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
-        const recentScore = completedAttempts.length > 0 ? completedAttempts[completedAttempts.length - 1].percentage : 0;
+        const recentScore = validAttempts.length > 0 ? validAttempts[validAttempts.length - 1].percentage : 0;
 
         let trend = 'neutral';
-        if (completedAttempts.length >= 2) {
-            const current = completedAttempts[completedAttempts.length - 1].percentage;
-            const prev = completedAttempts[completedAttempts.length - 2].percentage;
+        if (validAttempts.length >= 2) {
+            const current = validAttempts[validAttempts.length - 1].percentage;
+            const prev = validAttempts[validAttempts.length - 2].percentage;
             if (current > prev) trend = 'up';
             else if (current < prev) trend = 'down';
         }
@@ -172,8 +182,8 @@ export async function GET(req: NextRequest) {
         // 6. Per-test comparison: student score vs highest score in batch for that test
         let testComparison: { testId: string; title: string; studentScore: number; highestScore: number }[] = [];
 
-        if (completedAttempts.length > 0 && batchPhones.length > 0) {
-            const completedTestObjectIds = completedAttempts.map(a => new mongoose.Types.ObjectId(a.testId));
+        if (validAttempts.length > 0 && batchPhones.length > 0) {
+            const completedTestObjectIds = validAttempts.map(a => new mongoose.Types.ObjectId(a.testId));
 
             const highestPerTest = await StudentTestAttempt.aggregate([
                 {
@@ -195,7 +205,7 @@ export async function GET(req: NextRequest) {
             highestPerTest.forEach((h: any) => highestMap.set(h._id.toString(), Math.round(h.maxPercentage || 0)));
 
             // Build comparison for ALL completed tests
-            testComparison = completedAttempts.map(a => ({
+            testComparison = validAttempts.map(a => ({
                 testId: a.testId,
                 title: a.title,
                 studentScore: a.percentage,

@@ -17,6 +17,7 @@ interface TestInfo {
     score?: number;
     percentage?: number;
     submittedAt?: string;
+    resultsPending?: boolean;
 }
 
 interface AnalyticsData {
@@ -143,8 +144,9 @@ export default function OnlineTestPage() {
 
     const formatDate = (dateStr: string) => {
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) +
-            ', ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        return `${date} & ${time}`;
     };
 
     const getTimeRemaining = (dateStr: string) => {
@@ -568,8 +570,8 @@ export default function OnlineTestPage() {
                             return (
                                 <div
                                     key={test._id}
-                                    className="relative group cursor-pointer"
-                                    onClick={() => router.push(`/student/online-test/${test._id}/result`)}
+                                    className={`relative group ${test.resultsPending ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}
+                                    onClick={() => !test.resultsPending && router.push(`/student/online-test/${test._id}/result`)}
                                 >
                                     <div className="relative bg-slate-900/40 border border-blue-500/10 rounded-2xl p-5 hover:bg-slate-900/60 hover:border-blue-500/30 transition-all active:scale-[0.98]">
                                         <div className="flex items-start justify-between gap-4">
@@ -582,17 +584,32 @@ export default function OnlineTestPage() {
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <div className={`text-lg font-black ${pct >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                    {pct}%
-                                                </div>
-                                                <span className="text-[9px] text-blue-400 font-bold mt-1 flex items-center gap-1">
-                                                    View Result <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                                                </span>
+                                                {test.resultsPending ? (
+                                                    // Pending State
+                                                    <div className="flex flex-col items-end">
+                                                        <div className="px-2 py-1 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 uppercase tracking-wider mb-1">
+                                                            Pending
+                                                        </div>
+                                                        <span className="text-[9px] text-slate-500 text-right w-32">
+                                                            Come back at {test.endTime ? formatDate(test.endTime) : 'Later'} to view your results.
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    // Published State
+                                                    <>
+                                                        <div className={`text-lg font-black ${pct >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                            {pct}%
+                                                        </div>
+                                                        <span className="text-[9px] text-blue-400 font-bold mt-1 flex items-center gap-1">
+                                                            View Result <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                                                        </span>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
 
-                                        {/* Per-test comparison: You vs Batch Highest */}
-                                        {batchHighest !== undefined && (
+                                        {/* Per-test comparison: You vs Batch Highest (Only if not pending) */}
+                                        {!test.resultsPending && batchHighest !== undefined && (
                                             <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[9px] text-slate-500 w-24 flex-shrink-0">Your score</span>

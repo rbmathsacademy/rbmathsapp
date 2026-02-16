@@ -51,13 +51,43 @@ export async function GET(
         }
 
         // Check if results should be shown
-        if (!test.config?.showResults) {
+        const showResults = test.config?.showResults ?? true;
+        const showResultsImmediately = test.config?.showResultsImmediately ?? true;
+
+        if (!showResults) {
             return NextResponse.json({
                 error: 'Results are not available for this test',
                 score: attempt.score,
                 percentage: attempt.percentage,
                 totalMarks: test.totalMarks,
                 resultsHidden: true
+            }, { status: 200 });
+        }
+
+        // Check for deadline-based visibility (Results stored but hidden until deadline)
+        const now = new Date();
+        const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
+
+        if (endTime && now < endTime) {
+            const dateStr = endTime.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit'
+            });
+            const timeStr = endTime.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            return NextResponse.json({
+                error: `Results will be declared after the deadline`,
+                score: null, // Redact score
+                percentage: null,
+                totalMarks: test.totalMarks,
+                resultsHidden: true,
+                resultsPending: true, // Specific flag for frontend
+                message: `Come back at ${dateStr} & ${timeStr} to view your results.`
             }, { status: 200 });
         }
 
@@ -89,7 +119,9 @@ export async function GET(
                 isCorrect: ans.isCorrect,
                 marksAwarded: ans.marksAwarded,
                 topic: question.topic,
-                subtopic: question.subtopic
+                subtopic: question.subtopic,
+                solutionText: question.solutionText,
+                solutionImage: question.solutionImage
             };
 
             // Include correct answers for review

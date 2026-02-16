@@ -15,6 +15,10 @@ const OnlineTestSchema = new mongoose.Schema({
         negativeMarks: { type: Number, default: 0 },
         timeLimit: { type: Number }, // Optional override for specific question duration (seconds)
 
+        // Solution / Explanation
+        solutionText: { type: String }, // Latex enabled detailed solution
+        solutionImage: { type: String }, // Base64 image for solution
+
         // MCQ/MSQ specific
         options: [{ type: String }], // Options for MCQ/MSQ
         correctIndices: [{ type: Number }], // Indices of correct options (0-based)
@@ -64,6 +68,8 @@ const OnlineTestSchema = new mongoose.Schema({
         showTimer: { type: Boolean, default: true },
         allowBackNavigation: { type: Boolean, default: true },
         showResults: { type: Boolean, default: true }, // Show results after submission
+        showResultsImmediately: { type: Boolean, default: true }, // New: If false, hide results until exam end time
+        maxQuestionsToAttempt: { type: Number, default: null }, // New: If set, pick X random questions per student
         passingPercentage: { type: Number, default: 40 },
         enablePerQuestionTimer: { type: Boolean, default: false }, // Per-question timer toggle
         perQuestionDuration: { type: Number, default: 60 } // Default duration in seconds per question

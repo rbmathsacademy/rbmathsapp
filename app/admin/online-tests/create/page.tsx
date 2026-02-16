@@ -31,6 +31,8 @@ interface Question {
     comprehensionText?: string;
     comprehensionImage?: string;
     subQuestions?: any[];
+    solutionText?: string;
+    solutionImage?: string;
 }
 
 export default function CreateTestPage() {
@@ -43,14 +45,26 @@ export default function CreateTestPage() {
     const [description, setDescription] = useState('');
     const [durationMinutes, setDurationMinutes] = useState(90);
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [config, setConfig] = useState({
+    const [config, setConfig] = useState<{
+        shuffleQuestions: boolean;
+        showTimer: boolean;
+        allowBackNavigation: boolean;
+        showResults: boolean;
+        showResultsImmediately: boolean;
+        passingPercentage: number;
+        enablePerQuestionTimer: boolean;
+        perQuestionDuration: number;
+        maxQuestionsToAttempt: number | null;
+    }>({
         shuffleQuestions: false,
         showTimer: true,
         allowBackNavigation: true,
         showResults: true,
+        showResultsImmediately: true,
         passingPercentage: 40,
         enablePerQuestionTimer: false,
-        perQuestionDuration: 60
+        perQuestionDuration: 60,
+        maxQuestionsToAttempt: null
     });
 
     const [showQuestionEditor, setShowQuestionEditor] = useState(false);
@@ -384,16 +398,6 @@ export default function CreateTestPage() {
                         <span className="text-sm font-medium text-slate-300">Allow Back Navigation</span>
                     </label>
 
-                    <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
-                        <input
-                            type="checkbox"
-                            checked={config.showResults}
-                            onChange={(e) => setConfig({ ...config, showResults: e.target.checked })}
-                            className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-sm font-medium text-slate-300">Show Results After</span>
-                    </label>
-
                     <div className="col-span-2 md:col-span-1">
                         <label className="text-sm font-medium text-slate-300 mb-2 block">Passing %</label>
                         <input
@@ -404,6 +408,69 @@ export default function CreateTestPage() {
                             min="0"
                             max="100"
                         />
+                    </div>
+
+                    {/* Show Results Config */}
+                    <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                                <input
+                                    type="checkbox"
+                                    checked={config.showResults}
+                                    onChange={(e) => setConfig({ ...config, showResults: e.target.checked })}
+                                    className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                                />
+                                <span className="text-sm font-medium text-slate-300">Show Results to Student</span>
+                            </label>
+
+                            {config.showResults && (
+                                <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors animate-in fade-in">
+                                    <input
+                                        type="checkbox"
+                                        checked={config.showResultsImmediately}
+                                        onChange={(e) => setConfig({ ...config, showResultsImmediately: e.target.checked })}
+                                        className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                                    />
+                                    <div>
+                                        <span className="text-sm font-bold text-slate-200 block">Show Immediately</span>
+                                        <span className="text-xs text-slate-500">
+                                            {config.showResultsImmediately
+                                                ? "Results shown right after submission"
+                                                : "Results hidden until test deadline"}
+                                        </span>
+                                    </div>
+                                </label>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Randomization Config */}
+                    <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
+                        <div className="flex gap-4 items-center">
+                            <div className="flex-1">
+                                <label className="text-sm font-medium text-slate-300 mb-2 block">
+                                    Max Questions to Attempt (Randomized)
+                                    <span className="text-slate-500 font-normal ml-2">(Optional)</span>
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        value={config.maxQuestionsToAttempt || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value ? parseInt(e.target.value) : null;
+                                            setConfig({ ...config, maxQuestionsToAttempt: val });
+                                        }}
+                                        placeholder={`All ${questions.length} questions`}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                        min="1"
+                                        max={questions.length}
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    If set, each student will get a random subset of {config.maxQuestionsToAttempt || 'all'} questions from the pool of {questions.length}.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">

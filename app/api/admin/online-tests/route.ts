@@ -62,7 +62,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title and questions are required' }, { status: 400 });
         }
 
-        // Validate questions
+        // Validate questions - STRICT VALIDATION SKIPPED FOR DRAFTS
+        // We allow saving incomplete questions as drafts to improve user experience (e.g., auto-save).
+        // Validation should be performed before DEPLOYMENT.
+
+        /*
         for (const q of questions) {
             if (!q.text || !q.type) {
                 return NextResponse.json({ error: 'Each question must have text and type' }, { status: 400 });
@@ -98,6 +102,7 @@ export async function POST(request: NextRequest) {
                 }
             }
         }
+        */
 
         // Create test
         const test = new OnlineTest({

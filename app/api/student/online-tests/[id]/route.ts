@@ -74,8 +74,16 @@ export async function GET(
             }, { status: 400 });
         }
 
+        // Determine source of questions
+        let sourceQuestions = [];
+        if (attempt && attempt.questions && attempt.questions.length > 0) {
+            sourceQuestions = attempt.questions;
+        } else {
+            sourceQuestions = test.questions;
+        }
+
         // Strip answers from questions
-        let questions = test.questions.map((q: any) => {
+        let questions = sourceQuestions.map((q: any) => {
             const stripped: any = {
                 id: q.id,
                 text: q.text,
@@ -124,8 +132,9 @@ export async function GET(
             return stripped;
         });
 
-        // Shuffle questions if configured
-        if (test.config?.shuffleQuestions) {
+        // Shuffle questions if configured AND using original test questions (not attempt snapshot)
+        // If it's an attempt snapshot, order is preserved from creation
+        if (!attempt && test.config?.shuffleQuestions) {
             questions = shuffleArray(questions);
         }
 
@@ -193,6 +202,20 @@ export async function POST(
             return NextResponse.json({ attempt, message: 'Resuming existing attempt' });
         }
 
+        // Prepare questions for this attempt
+        let attemptQuestions = [...test.questions];
+
+        // 1. Shuffle if maxQuestionsToAttempt is set OR shuffleQuestions is true
+        // If max questions is set, we MUST shuffle to get a random subset
+        if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
+            attemptQuestions = shuffleArray(attemptQuestions);
+        }
+
+        // 2. Slice if maxQuestionsToAttempt is set
+        if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
+            attemptQuestions = attemptQuestions.slice(0, test.config.maxQuestionsToAttempt);
+        }
+
         // Create new attempt
         const batchName = studentCourses[0] || '';
         attempt = new StudentTestAttempt({
@@ -204,6 +227,7 @@ export async function POST(
             status: 'in_progress',
             startedAt: new Date(),
             answers: [],
+            questions: attemptQuestions, // Store the snapshot of questions!
             score: 0,
             percentage: 0,
             timeSpent: 0,
@@ -212,7 +236,57 @@ export async function POST(
 
         await attempt.save();
 
-        return NextResponse.json({ attempt, message: 'Test started successfully' }, { status: 201 });
+        // Strip answers for the response (same logic as GET)
+        const strippedQuestions = attemptQuestions.map((q: any) => {
+            const stripped: any = {
+                id: q.id,
+                text: q.text,
+                image: q.image,
+                latexContent: q.latexContent,
+                type: q.type,
+                topic: q.topic,
+                subtopic: q.subtopic,
+                marks: q.marks,
+                negativeMarks: q.negativeMarks,
+                shuffleOptions: q.shuffleOptions
+            };
+
+            if (q.type === 'mcq' || q.type === 'msq') {
+                stripped.options = q.options;
+            } else if (q.type === 'fillblank') {
+                stripped.caseSensitive = q.caseSensitive;
+                stripped.isNumberRange = q.isNumberRange;
+            } else if (q.type === 'comprehension') {
+                stripped.comprehensionText = q.comprehensionText;
+                stripped.comprehensionImage = q.comprehensionImage;
+                stripped.subQuestions = q.subQuestions?.map((sq: any) => {
+                    const subStripped: any = {
+                        id: sq.id,
+                        text: sq.text,
+                        image: sq.image,
+                        latexContent: sq.latexContent,
+                        type: sq.type,
+                        marks: sq.marks,
+                        negativeMarks: sq.negativeMarks
+                    };
+                    if (sq.type === 'mcq' || sq.type === 'msq') {
+                        subStripped.options = sq.options;
+                    }
+                    if (sq.type === 'fillblank') {
+                        subStripped.caseSensitive = sq.caseSensitive;
+                        subStripped.isNumberRange = sq.isNumberRange;
+                    }
+                    return subStripped;
+                });
+            }
+            return stripped;
+        });
+
+        return NextResponse.json({
+            attempt,
+            questions: strippedQuestions, // Return the randomized questions
+            message: 'Test started successfully'
+        }, { status: 201 });
     } catch (error: any) {
         console.error('Error starting test:', error);
         return NextResponse.json({ error: 'Failed to start test' }, { status: 500 });

@@ -71,6 +71,10 @@ export async function GET(req: NextRequest) {
             const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
             const attempt = attemptMap.get(test._id.toString());
 
+            // Determine result visibility
+            // Results are pending if the test has an end time and the current time is before that end time
+            const resultsPending = endTime ? now < endTime : false;
+
             const testInfo = {
                 _id: test._id,
                 title: test.title,
@@ -82,9 +86,11 @@ export async function GET(req: NextRequest) {
                 endTime: test.deployment?.endTime,
                 config: test.config,
                 attemptStatus: attempt?.status || 'not_started',
-                score: attempt?.score,
-                percentage: attempt?.percentage,
-                submittedAt: attempt?.submittedAt
+                // Redact score if results are pending
+                score: resultsPending ? null : attempt?.score,
+                percentage: resultsPending ? null : attempt?.percentage,
+                submittedAt: attempt?.submittedAt,
+                resultsPending // Add flag for frontend
             };
 
             if (attempt?.status === 'completed') {
