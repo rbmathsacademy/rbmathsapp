@@ -1,46 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchSheetData } from '@/lib/googleSheet';
+import dbConnect from '@/lib/db';
+import BatchStudent from '@/models/BatchStudent';
 
-// POST - Get students from Google Sheets based on selected batches
+// POST - Get students from MongoDB based on selected batches
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { batches } = body;
 
         if (!batches || !Array.isArray(batches)) {
-            console.error('❌ Invalid batches payload:', batches);
             return NextResponse.json({ error: 'Batches must be an array' }, { status: 400 });
         }
 
-        console.log('🔍 Fetching students for batches:', batches.length, 'batches');
+        await dbConnect();
 
-        // Fetch all data from Google Sheets
-        const sheetData = await fetchSheetData();
+        // Query BatchStudent collection directly
+        const students = await BatchStudent.find({
+            courses: { $in: batches }
+        }).select('phoneNumber name courses').lean();
 
-        if (!Array.isArray(sheetData)) {
-            console.error('❌ fetchSheetData returned non-array:', sheetData);
-            return NextResponse.json({ error: 'Failed to load student data from source' }, { status: 500 });
-        }
+        // Map to expected format, picking first matching batch as the primary
+        const result = (students as any[]).map(s => {
+            const matchingBatch = s.courses?.find((c: string) => batches.includes(c)) || s.courses?.[0] || '';
+            return {
+                phoneNumber: s.phoneNumber,
+                studentName: s.name || 'Unknown',
+                batchName: matchingBatch
+            };
+        });
 
-        console.log('📄 Sheet data rows:', sheetData.length);
-
-        // Filter students by selected batches
-        const students = sheetData
-            .filter(row => row && row.batchName && batches.includes(row.batchName))
-            .map(row => ({
-                phoneNumber: row.phoneNumber,
-                studentName: row.studentName,
-                batchName: row.batchName
-            }));
-
-        console.log('✅ Found', students.length, 'matching students');
-
-        // Remove duplicates based on phone number
-        const uniqueStudents = students.filter((student, index, self) =>
-            index === self.findIndex(s => s.phoneNumber === student.phoneNumber)
-        );
-
-        return NextResponse.json(uniqueStudents);
+        return NextResponse.json(result);
     } catch (error: any) {
         console.error('Error in students API:', error);
         return NextResponse.json({ error: error.message || 'Failed to fetch students' }, { status: 500 });

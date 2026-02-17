@@ -8,6 +8,9 @@ const BatchStudentSchema = new mongoose.Schema({
     },
     name: String,
     courses: [String],
+    guardianPhone: { type: String, trim: true },
+    guardianName: { type: String, trim: true },
+    email: { type: String, sparse: true, trim: true, lowercase: true },
     bookmarks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Question',

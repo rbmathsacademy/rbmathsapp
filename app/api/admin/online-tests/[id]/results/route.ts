@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
-import { getStudentsByBatches } from '@/lib/googleSheet';
+import BatchStudent from '@/models/BatchStudent';
 
 export async function GET(
     request: NextRequest,
@@ -25,16 +25,17 @@ export async function GET(
 
         const deployedBatches = test.deployment?.batches || [];
 
-        // Get all students from Google Sheet for the deployed batches
-        const sheetStudents = await getStudentsByBatches(deployedBatches);
+        // Get all students from MongoDB for the deployed batches
+        const dbStudents = await BatchStudent.find({ courses: { $in: deployedBatches } }).select('phoneNumber name courses').lean() as any[];
 
         // Create student map
         const studentMap = new Map<string, any>();
-        sheetStudents.forEach(s => {
-            studentMap.set(s.phone, {
-                name: s.name,
-                phone: s.phone,
-                batch: s.batch
+        dbStudents.forEach(s => {
+            const matchingBatch = s.courses?.find((c: string) => deployedBatches.includes(c)) || s.courses?.[0] || '';
+            studentMap.set(s.phoneNumber, {
+                name: s.name || 'Unknown',
+                phone: s.phoneNumber,
+                batch: matchingBatch
             });
         });
 

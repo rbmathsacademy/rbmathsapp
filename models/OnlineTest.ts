@@ -14,6 +14,7 @@ const OnlineTestSchema = new mongoose.Schema({
         marks: { type: Number, required: true, default: 1 },
         negativeMarks: { type: Number, default: 0 },
         timeLimit: { type: Number }, // Optional override for specific question duration (seconds)
+        isGrace: { type: Boolean, default: false }, // Grace question flag
 
         // Solution / Explanation
         solutionText: { type: String }, // Latex enabled detailed solution
@@ -81,11 +82,19 @@ const OnlineTestSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Calculate total marks before saving
+// Calculate total marks before saving
 OnlineTestSchema.pre('save', function () {
     let total = 0;
-    this.questions.forEach(q => {
+
+    // Determine questions to count
+    let questionsToCount: any[] = this.questions;
+    if (this.config && this.config.maxQuestionsToAttempt && this.config.maxQuestionsToAttempt > 0) {
+        questionsToCount = this.questions.slice(0, this.config.maxQuestionsToAttempt);
+    }
+
+    questionsToCount.forEach(q => {
         if (q.type === 'comprehension' && q.subQuestions) {
-            q.subQuestions.forEach(sq => total += sq.marks || 0);
+            q.subQuestions.forEach((sq: any) => total += sq.marks || 0);
         } else {
             total += q.marks || 0;
         }

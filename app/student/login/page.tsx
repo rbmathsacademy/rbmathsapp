@@ -13,6 +13,8 @@ export default function StudentLogin() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        // Clear any previous session data to prevent role conflicts
+        localStorage.clear();
 
         try {
             const res = await fetch('/api/student/login', {
@@ -24,12 +26,22 @@ export default function StudentLogin() {
             const data = await res.json();
 
             if (res.ok) {
-                // Remove toast to avoid stuck popup on mobile. Dashboard has greeting.
-                // Store basic info if needed, but token handles auth
-                localStorage.setItem('studentName', data.student.studentName);
-                localStorage.setItem('studentCourses', JSON.stringify(data.student.batches));
+                // If student data exists, store it (Staff/Guardian might not return this)
+                if (data.student) {
+                    localStorage.setItem('studentName', data.student.studentName);
+                    localStorage.setItem('studentCourses', JSON.stringify(data.student.batches));
+                }
 
-                router.push('/student');
+                // If getting redirected to Admin/Guardian, we might want to store a dummy User object for the UI to not crash if it checks localStorage
+                // But the Admin/Guardian apps fetch profile or check token.
+                // Admin Dashboard does check 'user' in localStorage for stats fetching email!
+                if (data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // Start session timer for Admin/Guardian layouts
+                    localStorage.setItem('adminSessionStart', Date.now().toString());
+                }
+
+                router.push(data.redirectUrl || '/student');
             } else {
                 toast.error(data.error || 'Login failed. Please check your number.');
             }

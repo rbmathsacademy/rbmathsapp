@@ -4,7 +4,7 @@ import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
-import { getStudentCourses } from '@/lib/googleSheet';
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -50,8 +50,9 @@ export async function GET(
         }
 
         // Check student is in a deployed batch
-        const sheetData = await getStudentCourses(student.phoneNumber);
-        const studentCourses = sheetData?.batches || student.courses || [];
+        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
+        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const studentCourses = (dbStudent as any)?.courses || student.courses || [];
         const deployedBatches = test.deployment?.batches || [];
         const hasAccess = studentCourses.some((c: string) => deployedBatches.includes(c));
         if (!hasAccess) {
@@ -184,8 +185,9 @@ export async function POST(
         }
 
         // Check access
-        const sheetData = await getStudentCourses(student.phoneNumber);
-        const studentCourses = sheetData?.batches || student.courses || [];
+        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
+        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const studentCourses = (dbStudent as any)?.courses || student.courses || [];
         const deployedBatches = test.deployment?.batches || [];
         const hasAccess = studentCourses.some((c: string) => deployedBatches.includes(c));
         if (!hasAccess) {
@@ -222,7 +224,7 @@ export async function POST(
             testId,
             studentEmail: student.phoneNumber, // Using phone as identifier
             studentPhone: student.phoneNumber,
-            studentName: student.studentName || sheetData?.studentName || 'Unknown',
+            studentName: student.studentName || (dbStudent as any)?.name || 'Unknown',
             batchName,
             status: 'in_progress',
             startedAt: new Date(),
@@ -326,9 +328,14 @@ export async function PUT(
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
-        // Build question lookup (including sub-questions)
+        // Build question lookup from the ATTEMPT's questions (which may be a subset)
+        // This ensures scoring uses the actually-served questions, not the full pool
+        const sourceQuestions = (attempt.questions && attempt.questions.length > 0)
+            ? attempt.questions
+            : test.questions;
+
         const questionMap = new Map<string, any>();
-        for (const q of test.questions) {
+        for (const q of sourceQuestions) {
             questionMap.set(q.id, q);
             if (q.type === 'comprehension' && q.subQuestions) {
                 for (const sq of q.subQuestions) {
@@ -402,7 +409,18 @@ export async function PUT(
 
         // Ensure score doesn't go below 0
         totalScore = Math.max(0, totalScore);
-        const totalMarks = test.totalMarks || 1;
+        // Calculate totalMarks from the served questions (not the full pool)
+        let servedTotalMarks = 0;
+        for (const q of sourceQuestions) {
+            if (q.type === 'comprehension' && q.subQuestions) {
+                for (const sq of q.subQuestions) {
+                    servedTotalMarks += sq.marks || 1;
+                }
+            } else {
+                servedTotalMarks += q.marks || 1;
+            }
+        }
+        const totalMarks = servedTotalMarks || test.totalMarks || 1;
         const percentage = Math.round((totalScore / totalMarks) * 100);
 
         // Update attempt
@@ -417,12 +435,17 @@ export async function PUT(
 
         await attempt.save();
 
+        const showResultsImmediately = test.config?.showResultsImmediately ?? true;
+        const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
+        const resultsPending = !showResultsImmediately && endTime ? new Date() < endTime : false;
+
         return NextResponse.json({
             message: 'Test submitted successfully',
-            score: totalScore,
-            totalMarks,
-            percentage,
-            passed: percentage >= (test.config?.passingPercentage || 40)
+            score: resultsPending ? null : totalScore,
+            totalMarks: resultsPending ? null : totalMarks,
+            percentage: resultsPending ? null : percentage,
+            passed: resultsPending ? null : (percentage >= (test.config?.passingPercentage || 40)),
+            resultsPending
         });
     } catch (error: any) {
         console.error('Error submitting test:', error);

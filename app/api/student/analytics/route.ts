@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import OnlineTest from '@/models/OnlineTest';
-import { getStudentCourses, getStudentsByBatches } from '@/lib/googleSheet';
+import BatchStudent from '@/models/BatchStudent';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
 
         await dbConnect();
 
-        // 1. Get student's batches
-        const sheetData = await getStudentCourses(phoneNumber);
-        const studentCourses = sheetData?.batches || (payload.courses as string[]) || [];
+        // 1. Get student's batches from MongoDB
+        const cleanPhone = phoneNumber.replace(/\D/g, '');
+        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean() as any;
+        const studentCourses = dbStudent?.courses || (payload.courses as string[]) || [];
 
         // 1b. Determine selected batch (default to ALL batches if not specified)
         const requestedBatch = req.nextUrl.searchParams.get('batch');
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
         const allTests = await OnlineTest.find({
             status: 'deployed',
             'deployment.batches': { $in: batchFilter }
-        }).select('_id title totalMarks deployment');
+        }).select('_id title totalMarks deployment config');
 
         // 3. Fetch all attempts by this student
         const attempts = await StudentTestAttempt.find({
@@ -60,7 +61,16 @@ export async function GET(req: NextRequest) {
         let pending = 0;
 
         const testIds = allTests.map(t => t._id.toString());
-        const testObjectIds = allTests.map(t => t._id);
+        // Filter tests that should be visible in analytics (exclude deferred tests still pending OR properly hidden)
+        const visibleTestIds = allTests.filter(t => {
+            const showResults = t.config?.showResults ?? true;
+            const showImmediately = t.config?.showResultsImmediately ?? true;
+            const end = t.deployment?.endTime ? new Date(t.deployment.endTime) : null;
+
+            // Visible if: Global Show is TRUE AND (Immediate OR Deadline Passed)
+            if (!showResults) return false;
+            return showImmediately || (end && now >= end);
+        }).map(t => t._id.toString());
 
         for (const test of allTests) {
             const testId = test._id.toString();
@@ -69,7 +79,12 @@ export async function GET(req: NextRequest) {
             const startTime = test.deployment?.startTime ? new Date(test.deployment.startTime) : null;
 
             if (attempt?.status === 'completed') {
-                const resultsPending = endTime ? now < endTime : false;
+                const showResults = test.config?.showResults ?? true;
+                const showResultsImmediately = test.config?.showResultsImmediately ?? true;
+
+                // Pending if: Global Show is FALSE OR (Deferred AND Before Deadline)
+                const isDeferred = !showResultsImmediately && (!endTime || now < endTime);
+                const resultsPending = !showResults || isDeferred;
 
                 completedAttempts.push({
                     testId,
@@ -122,15 +137,18 @@ export async function GET(req: NextRequest) {
         let totalBatchStudents = 0;
         let leaderboard: { name: string; phone: string; average: number; testsAttempted: number }[] = [];
 
-        // Fetch batch students once
-        const batchStudents = batchFilter.length > 0 ? await getStudentsByBatches(batchFilter) : [];
+        // Fetch batch students from MongoDB
+        const batchStudentDocs = batchFilter.length > 0
+            ? await BatchStudent.find({ courses: { $in: batchFilter } }).select('phoneNumber name').lean() as any[]
+            : [];
+        const batchStudents = batchStudentDocs.map((s: any) => ({ phone: s.phoneNumber, name: s.name || 'Unknown' }));
         const batchPhones = batchStudents.map(s => s.phone);
 
         if (studentCourses.length > 0 && testIds.length > 0) {
-            // Fetch all completed attempts for ALL batch students for the SAME tests
+            // Fetch all completed attempts for ALL batch students for the VISIBLE tests only
             const allBatchAttempts = await StudentTestAttempt.find({
                 studentPhone: { $in: batchPhones },
-                testId: { $in: testIds },
+                testId: { $in: visibleTestIds },
                 status: 'completed'
             });
 

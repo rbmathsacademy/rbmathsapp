@@ -9,21 +9,50 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         const year = body.year || new Date().getFullYear();
-        // Get base count for invoice generation
-        const baseCount = await FeeRecord.countDocuments({ year });
+
+        // Determine if we need an invoice number
+        const isPayment = !body.recordType || body.recordType === 'PAYMENT';
+        let lastInvoiceNum = 0;
+        let invoiceBaseFn = (num: number) => ``;
+
+        // Only generate invoice for payments
+        // Format: YYYY-MM-InvNumber (e.g., 2026-02-00001)
+
+        if (isPayment) {
+            // Get last invoice number for the year to ensure uniqueness (robust against deletions)
+            const lastRecord = await FeeRecord.findOne({
+                year,
+                invoiceNo: { $exists: true, $ne: null }
+            }).sort({ invoiceNo: -1 }).select('invoiceNo').lean();
+
+            if (lastRecord && lastRecord.invoiceNo) {
+                const parts = lastRecord.invoiceNo.split('-');
+                if (parts.length >= 3) {
+                    // Robustly get the last part
+                    lastInvoiceNum = parseInt(parts[parts.length - 1], 10) || 0;
+                }
+            }
+
+            invoiceBaseFn = (seq: number) => {
+                const entryDate = body.entryDate ? new Date(body.entryDate) : new Date();
+                const entryMonth = (entryDate.getMonth() + 1).toString().padStart(2, '0');
+                const entryYear = entryDate.getFullYear();
+                return `${entryYear}-${entryMonth}-${seq.toString().padStart(5, '0')}`;
+            };
+        }
 
         // Check if multi-month or single
         if (body.months && Array.isArray(body.months) && body.months.length > 0) {
             const recordsToCreate = body.months.map((monthStr: string, index: number) => {
                 const feesMonth = new Date(monthStr);
+                const isPay = !body.recordType || body.recordType === 'PAYMENT';
+
                 return {
                     ...body,
                     feesMonth: feesMonth,
                     monthIndex: feesMonth.getMonth(),
-                    // year: feesMonth.getFullYear(), // Use the year from the month? Or the session year?
-                    // Usually fee year follows the month year.
                     year: feesMonth.getFullYear(),
-                    invoiceNo: `FEE-${year}-${(baseCount + index + 1).toString().padStart(5, '0')}`
+                    invoiceNo: isPay ? invoiceBaseFn(lastInvoiceNum + index + 1) : undefined
                 };
             });
 
@@ -33,7 +62,8 @@ export async function POST(req: Request) {
 
         } else {
             // Single Record Fallback (or if months not provided)
-            const invoiceNo = `FEE-${year}-${(baseCount + 1).toString().padStart(5, '0')}`;
+            const invoiceNo = isPayment ? invoiceBaseFn(lastInvoiceNum + 1) : undefined;
+
             const newRecord = await FeeRecord.create({
                 ...body,
                 invoiceNo

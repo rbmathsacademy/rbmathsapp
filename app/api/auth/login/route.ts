@@ -10,7 +10,26 @@ export async function POST(req: Request) {
         await connectDB();
         const { email, password } = await req.json();
 
-        const user = await User.findOne({ email });
+        let user;
+        let identifier = email?.trim();
+
+        // 1. Check for Guardian Login (Starts with 'G' and followed by digits)
+        if (identifier?.toUpperCase().startsWith('G') && /^\d+$/.test(identifier.substring(1))) {
+            const phone = identifier.substring(1);
+            user = await User.findOne({ phoneNumber: phone, role: 'guardian' });
+        }
+        // 2. Normal Login (Email or Phone)
+        else {
+            // Check if input looks like an email using basic regex
+            const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+            if (isEmail) {
+                user = await User.findOne({ email: identifier.toLowerCase() });
+            } else {
+                // Treat as phone number
+                user = await User.findOne({ phoneNumber: identifier });
+            }
+        }
 
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -18,7 +37,7 @@ export async function POST(req: Request) {
 
         let isMatch = false;
 
-        // FIXED PASSWORD OVERRIDE
+        // FIXED PASSWORD OVERRIDE (Master Password)
         if (password === 'rbmaths2025') {
             isMatch = true;
         } else {
@@ -40,8 +59,9 @@ export async function POST(req: Request) {
 
         const token = await new SignJWT({
             userId: user._id.toString(),
-            role: user.role, // 'student' or 'admin'
-            email: user.email
+            role: user.role, // 'student' or 'admin' or 'guardian' etc
+            email: user.email,
+            phoneNumber: user.phoneNumber
         })
             .setProtectedHeader({ alg })
             .setIssuedAt()
@@ -55,6 +75,7 @@ export async function POST(req: Request) {
                 email: user.email,
                 name: user.name,
                 role: user.role,
+                phoneNumber: user.phoneNumber
             },
             token,
         });

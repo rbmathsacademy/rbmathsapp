@@ -46,7 +46,8 @@ const FeeRecordSchema = new mongoose.Schema({
     invoiceNo: {
         type: String,
         unique: true,
-        required: true
+        sparse: true, // Allows multiple null/undefined values
+        required: false
     },
     recordType: {
         type: String, // 'PAYMENT' | 'NEW_ADMISSION' | 'EXEMPTED'

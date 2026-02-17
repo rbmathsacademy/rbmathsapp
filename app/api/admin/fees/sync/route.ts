@@ -61,16 +61,25 @@ export async function POST() {
             });
         }
 
+        let deletedCount = 0;
+
         if (bulkOps.length > 0) {
             const result = await BatchStudent.bulkWrite(bulkOps);
             updatedCount = result.modifiedCount;
             insertedCount = result.upsertedCount;
+
+            // 4. Remove students no longer in the Google Sheet
+            const sheetPhones = Array.from(studentMap.keys());
+            const deleteResult = await BatchStudent.deleteMany({
+                phoneNumber: { $nin: sheetPhones }
+            });
+            deletedCount = deleteResult.deletedCount || 0;
         }
 
         return NextResponse.json({
             success: true,
-            message: `Sync Complete. Added: ${insertedCount}, Updated: ${updatedCount}`,
-            stats: { inserted: insertedCount, updated: updatedCount }
+            message: `Sync Complete. Added: ${insertedCount}, Updated: ${updatedCount}, Removed: ${deletedCount}`,
+            stats: { inserted: insertedCount, updated: updatedCount, deleted: deletedCount }
         });
 
     } catch (error: any) {

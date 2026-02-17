@@ -1,309 +1,449 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { Clock, CheckCircle, AlertTriangle, Upload, FileText, ExternalLink, XCircle, ArrowLeft } from 'lucide-react';
+import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, FileText, Calendar, Clock, CheckCircle, AlertCircle, User, Loader2, XCircle, ChevronRight } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 
-export default function StudentAssignments() {
-    const [student, setStudent] = useState<any>(null);
-    const [assignments, setAssignments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [activeCourse, setActiveCourse] = useState<string | null>(null);
+interface Assignment {
+    _id: string;
+    title: string;
+    type: 'PDF' | 'QUESTIONS';
+    batch: string;
+    content: any;
+    deadline: string;
+    cooldownDuration: number;
+    cooldownEndDate: string;
+    status: 'PENDING' | 'LATE_ALLOWED' | 'SUBMITTED' | 'LATE_SUBMITTED' | 'CLOSED';
+    submissionLink?: string;
+    correctionStatus: 'PENDING' | 'CORRECTED';
+}
+
+type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
+
+
+export default function StudentAssignmentsPage() {
     const router = useRouter();
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [activeTab, setActiveTab] = useState<TabType>('PENDING');
+    const [loading, setLoading] = useState(true);
+    const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [profile, setProfile] = useState<any>(null);
 
     useEffect(() => {
-        const storedStudent = localStorage.getItem('student');
-        if (!storedStudent) {
-            router.push('/student/login');
-            return;
-        }
-        const parsedStudent = JSON.parse(storedStudent);
-        setStudent(parsedStudent);
+        fetchProfile();
+        fetchAssignments();
+    }, []);
 
-        if (!parsedStudent.department || !parsedStudent.year) {
-            toast.error('Session data missing. Please log in again.');
-            localStorage.removeItem('student');
-            router.push('/student/login');
-            return;
-        }
-
-        fetchAssignments(parsedStudent);
-    }, [router]);
-
-    const fetchAssignments = async (studentData: any) => {
+    const fetchProfile = async () => {
         try {
-            const params = new URLSearchParams({
-                department: studentData.department,
-                year: studentData.year,
-            });
-            if (studentData.course_code) {
-                const courses = Array.isArray(studentData.course_code)
-                    ? studentData.course_code.join(',')
-                    : studentData.course_code;
-                params.append('course_code', courses);
-            }
-            if (studentData._id) params.append('studentId', studentData._id);
+            const res = await fetch('/api/student/me');
+            if (!res.ok) return;
+            const data = await res.json();
+            setProfile(data);
+        } catch (e) { }
+    };
 
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch(`/api/student/assignments?${params.toString()}`, {
-                credentials: 'include',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+    const fetchAssignments = async () => {
+        try {
+            const res = await fetch('/api/student/assignments');
+            if (!res.ok) {
+                if (res.status === 401) {
+                    toast.error('Session expired. Please login again.');
+                    return;
                 }
-            });
-            if (res.ok) {
-                setAssignments(await res.json());
-            } else {
-                toast.error('Failed to fetch assignments');
+                throw new Error('Failed to fetch');
+            }
+            const data = await res.json();
+            if (data.assignments) {
+                setAssignments(data.assignments);
             }
         } catch (error) {
-            toast.error('Something went wrong');
+            toast.error('Failed to load assignments');
         } finally {
             setLoading(false);
         }
     };
 
-    // Format date as DD/MM/YYYY
-    const formatDate = (date: Date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+    const handleFileUpload = async (assignment: Assignment, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            toast.error('Only PDF files are allowed');
+            e.target.value = '';
+            return;
+        }
+
+        if (file.size > 3 * 1024 * 1024) {
+            toast.error('File too large (Max 3MB). Compress at ilovepdf.com', { duration: 5000 });
+            e.target.value = '';
+            return;
+        }
+
+        setUploadingId(assignment._id);
+        const toastId = toast.loading('Uploading to Google Drive...');
+
+        try {
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsDataURL(file);
+            });
+
+            const payload = {
+                batchName: assignment.batch || profile?.courses?.[0] || 'General',
+                assignmentTitle: assignment.title,
+                studentName: profile?.studentName || 'Unknown',
+                phoneNumber: profile?.phoneNumber || 'Unknown',
+                fileData: base64,
+                mimeType: 'application/pdf',
+                fileName: `${profile?.studentName || 'Student'}_${profile?.phoneNumber || 'NA'}.pdf`
+            };
+
+            const gasRes = await fetch('/api/student/assignments/upload-to-drive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const gasData = await gasRes.json();
+
+            if (gasData.status === 'success') {
+                const driveLink = gasData.fileUrl || gasData.downloadUrl;
+                const subRes = await fetch('/api/student/assignments/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ assignmentId: assignment._id, driveLink })
+                });
+
+                const subData = await subRes.json();
+                if (subRes.ok) {
+                    toast.success('Assignment submitted successfully!', { id: toastId });
+                    fetchAssignments();
+                } else {
+                    toast.error(subData.error || 'Failed to save submission', { id: toastId });
+                }
+            } else {
+                throw new Error(gasData.message || 'Google Drive upload failed');
+            }
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            toast.error(error.message || 'Upload failed. Please try again.', { id: toastId });
+        } finally {
+            setUploadingId(null);
+            e.target.value = '';
+        }
     };
 
-    // Calculate precise time remaining
-    const getTimeRemaining = (deadline: Date) => {
-        const now = new Date();
-        const diffMs = deadline.getTime() - now.getTime();
-
-        if (diffMs <= 0) return "Expired";
-
-        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-        if (days > 0) {
-            return `${days} day${days > 1 ? 's' : ''} ${hours} hr${hours !== 1 ? 's' : ''} left`;
+    const openAssignment = (assignment: Assignment) => {
+        if (assignment.type === 'QUESTIONS') {
+            router.push(`/student/assignments/${assignment._id}`);
         } else {
-            return `${hours} hr${hours !== 1 ? 's' : ''} left`;
+            // Check if content is a URL
+            if (typeof assignment.content === 'string' && assignment.content.startsWith('http')) {
+                window.open(assignment.content, '_blank', 'noopener,noreferrer');
+            } else if (assignment.content && !assignment.content.startsWith('http')) {
+                // Backward compatibility for base64 content
+                fetchAndOpenPdf(assignment._id);
+            } else {
+                toast.error('Assignment content not available');
+            }
         }
     };
 
-    const courses = useMemo(() => {
-        const courseSet = new Set<string>();
-        assignments.forEach(a => {
-            const course = a.targetCourse || a.course_code;
-            if (course) courseSet.add(course);
-        });
-        return Array.from(courseSet).sort();
-    }, [assignments]);
-
-    useEffect(() => {
-        if (courses.length > 0 && activeCourse === null) {
-            setActiveCourse(courses[0]);
+    const fetchAndOpenPdf = async (id: string) => {
+        const toastId = toast.loading('Loading PDF...');
+        try {
+            const res = await fetch(`/api/student/assignments/${id}/pdf`);
+            if (!res.ok) throw new Error('Failed to load PDF');
+            const data = await res.json();
+            if (data.content) {
+                const blob = base64ToBlob(data.content, 'application/pdf');
+                const url = URL.createObjectURL(blob);
+                window.location.href = url;
+                toast.dismiss(toastId);
+            } else {
+                toast.error('PDF content not available', { id: toastId });
+            }
+        } catch (err) {
+            toast.error('Failed to load PDF', { id: toastId });
         }
-    }, [courses, activeCourse]);
+    };
 
-    const filteredAssignments = useMemo(() => {
-        if (!activeCourse) return [];
-        return assignments.filter(a => {
-            const course = a.targetCourse || a.course_code;
-            return course === activeCourse;
-        }).sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-    }, [assignments, activeCourse]);
+    const base64ToBlob = (b64: string, type: string) => {
+        const bytes = atob(b64);
+        const buf = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i);
+        return new Blob([buf], { type });
+    };
 
-    const stats = useMemo(() => {
-        const now = new Date();
-        const active = filteredAssignments.filter(a => new Date(a.deadline) >= now);
-        const missed = filteredAssignments.filter(a => new Date(a.deadline) < now && !a.submitted);
-        const submitted = filteredAssignments.filter(a => a.submitted);
-        const pending = filteredAssignments.filter(a => new Date(a.deadline) >= now && !a.submitted);
-        return {
-            total: filteredAssignments.length,
-            submitted: submitted.length,
-            pending: pending.length,
-            active: active.length,
-            missed: missed.length,
-            missedList: missed
-        };
-    }, [filteredAssignments]);
+    // Tab Filters:
+    // Pending = PENDING + LATE_ALLOWED (can still submit)
+    // Completed = SUBMITTED + LATE_SUBMITTED (has submitted)
+    // Missed = CLOSED (deadline + cooldown expired, never submitted)
+    const pendingAssignments = assignments.filter(a => ['PENDING', 'LATE_ALLOWED'].includes(a.status));
+    const completedAssignments = assignments.filter(a => ['SUBMITTED', 'LATE_SUBMITTED'].includes(a.status));
+    const missedAssignments = assignments.filter(a => a.status === 'CLOSED');
 
-    if (!student) return null;
+    const getDisplayed = () => {
+        if (activeTab === 'PENDING') return pendingAssignments;
+        if (activeTab === 'COMPLETED') return completedAssignments;
+        return missedAssignments;
+    };
+    const displayedAssignments = getDisplayed();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans">
-            {/* Background */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-emerald-900/20 via-transparent to-transparent rounded-full blur-3xl"></div>
+        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200">
+            <Toaster position="top-center" />
+
+            {/* Back Button */}
+            <button
+                onClick={() => router.push('/student')}
+                className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
+            >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Dashboard
+            </button>
+
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6">
+                My Assignments
+            </h1>
+
+            {/* 3 Tabs */}
+            <div className="flex bg-[#1a1f2e] p-1 rounded-xl mb-6 border border-white/5">
+                <button
+                    onClick={() => setActiveTab('PENDING')}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'PENDING'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                        : 'text-gray-400 hover:text-white'
+                        }`}
+                >
+                    Pending ({pendingAssignments.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('COMPLETED')}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'COMPLETED'
+                        ? 'bg-green-600 text-white shadow-lg shadow-green-900/20'
+                        : 'text-gray-400 hover:text-white'
+                        }`}
+                >
+                    Completed ({completedAssignments.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('MISSED')}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'MISSED'
+                        ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                        : 'text-gray-400 hover:text-white'
+                        }`}
+                >
+                    Missed ({missedAssignments.length})
+                </button>
             </div>
 
-            <div className="relative z-10 max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-                {/* Header - Compact */}
-                <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                    <Link href="/student" className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-gray-400">
-                        <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </Link>
-                    <div className="flex-1">
-                        <h1 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                            Assignments
-                        </h1>
-                    </div>
-                </div>
+            {/* Assignment List */}
+            <div className="space-y-4">
+                {displayedAssignments.map(assignment => (
+                    <AssignmentCard
+                        key={assignment._id}
+                        assignment={assignment}
+                        uploadingId={uploadingId}
+                        onUpload={handleFileUpload}
+                        onOpen={() => openAssignment(assignment)}
+                    />
+                ))}
 
-                {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                    </div>
-                ) : courses.length === 0 ? (
-                    <div className="text-center py-16">
-                        <FileText className="h-8 w-8 text-gray-600 mx-auto mb-3" />
-                        <p className="text-xs text-gray-500">No assignments found</p>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {/* Course Tabs - Compact */}
-                        <div className="flex overflow-x-auto pb-2 gap-2 no-scrollbar snap-x">
-                            {courses.map(course => (
-                                <button
-                                    key={course}
-                                    onClick={() => setActiveCourse(course)}
-                                    className={`px-4 py-2 rounded-lg text-[10px] sm:text-sm font-bold transition-all flex-shrink-0 snap-center ${activeCourse === course
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-                                        : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-                                        }`}
-                                >
-                                    {course}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Stats - Compact Row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                            <div className="p-3 rounded-xl bg-blue-900/30 border border-blue-500/20 text-center">
-                                <p className="text-base sm:text-2xl font-black text-white">{stats.total}</p>
-                                <p className="text-[9px] sm:text-xs text-blue-400 font-semibold">Total Assigned</p>
-                            </div>
-                            <div className="p-3 rounded-xl bg-emerald-900/30 border border-emerald-500/20 text-center">
-                                <p className="text-base sm:text-2xl font-black text-white">{stats.submitted}</p>
-                                <p className="text-[9px] sm:text-xs text-emerald-400 font-semibold">Submitted</p>
-                            </div>
-                            <div className="p-3 rounded-xl bg-purple-900/30 border border-purple-500/20 text-center">
-                                <p className="text-base sm:text-2xl font-black text-white">{stats.pending}</p>
-                                <p className="text-[9px] sm:text-xs text-purple-400 font-semibold">Pending</p>
-                            </div>
-                            <div className="p-3 rounded-xl bg-amber-900/30 border border-amber-500/20 text-center">
-                                <p className="text-base sm:text-2xl font-black text-white">{stats.active}</p>
-                                <p className="text-[9px] sm:text-xs text-amber-400 font-semibold">Active</p>
-                            </div>
-                            <div className="p-3 rounded-xl bg-rose-900/30 border border-rose-500/20 text-center col-span-2 sm:col-span-1">
-                                <p className="text-base sm:text-2xl font-black text-white">{stats.missed}</p>
-                                <p className="text-[9px] sm:text-xs text-rose-400 font-semibold">Missed</p>
-                            </div>
-                        </div>
-
-                        {/* Missed Warning - Compact */}
-                        {stats.missed > 0 && (
-                            <div className="p-3 rounded-xl bg-rose-900/20 border border-rose-500/30">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <AlertCircle className="h-4 w-4 text-rose-400" />
-                                    <span className="font-bold text-rose-300 text-xs">Missed Deadlines</span>
-                                </div>
-                                <div className="space-y-1">
-                                    {stats.missedList.slice(0, 3).map((a: any) => (
-                                        <div key={a._id} className="flex justify-between text-[10px] p-2 rounded-lg bg-rose-950/30">
-                                            <span className="text-gray-300 truncate flex-1">{a.title}</span>
-                                            <span className="text-rose-400 shrink-0 ml-2">{formatDate(new Date(a.deadline))}</span>
-                                        </div>
-                                    ))}
-                                    {stats.missedList.length > 3 && (
-                                        <p className="text-[10px] text-rose-400 text-center">+{stats.missedList.length - 3} more</p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Assignment List - Compact Cards */}
-                        <div className="space-y-2">
-                            {filteredAssignments.filter(a => new Date(a.deadline) >= new Date()).length === 0 ? (
-                                <div className="text-center py-8 rounded-xl bg-white/5 border border-white/10">
-                                    <CheckCircle className="h-6 w-6 text-emerald-500/50 mx-auto mb-2" />
-                                    <p className="text-[10px] text-gray-500">All caught up!</p>
-                                </div>
-                            ) : (
-                                filteredAssignments.filter(a => new Date(a.deadline) >= new Date()).map((assignment) => {
-                                    const deadline = new Date(assignment.deadline);
-                                    const hoursLeft = Math.floor((deadline.getTime() - Date.now()) / (1000 * 60 * 60));
-                                    const isUrgent = hoursLeft < 24;
-                                    const timeRemaining = getTimeRemaining(deadline);
-                                    const isSubmitted = assignment.submitted;
-
-                                    return (
-                                        <div
-                                            key={assignment._id}
-                                            onClick={() => router.push(`/student/assignments/${assignment._id}`)}
-                                            className={`p-3 sm:p-4 rounded-xl cursor-pointer transition-all active:scale-[0.98] relative ${isSubmitted
-                                                ? 'bg-gradient-to-r from-emerald-900/40 to-green-900/30 border border-emerald-500/30'
-                                                : isUrgent
-                                                    ? 'bg-gradient-to-r from-orange-900/40 to-amber-900/30 border border-orange-500/30'
-                                                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                                                }`}
-                                        >
-                                            {/* Submitted Badge */}
-                                            {isSubmitted && (
-                                                <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                                    Submitted
-                                                </div>
-                                            )}
-
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg shrink-0 ${isSubmitted ? 'bg-emerald-500/20' : isUrgent ? 'bg-orange-500/20' : 'bg-emerald-500/20'
-                                                    }`}>
-                                                    {isSubmitted ? (
-                                                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
-                                                    ) : (
-                                                        <FileText className={`h-4 w-4 sm:h-5 sm:w-5 ${isUrgent ? 'text-orange-400' : 'text-emerald-400'}`} />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="text-xs sm:text-base font-bold text-white truncate">{assignment.title}</h3>
-                                                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                        <span className={`text-[10px] sm:text-xs ${isUrgent ? 'text-orange-400' : 'text-gray-500'}`}>
-                                                            {formatDate(deadline)} • {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                        {assignment.facultyName && (
-                                                            <span className="text-[10px] text-gray-600 hidden sm:inline">• {assignment.facultyName}</span>
-                                                        )}
-                                                    </div>
-                                                    {isSubmitted && assignment.submissionData?.submittedAt ? (
-                                                        <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-400">
-                                                            <CheckCircle className="h-3 w-3" />
-                                                            Submitted on {formatDate(new Date(assignment.submissionData.submittedAt))}
-                                                        </div>
-                                                    ) : (
-                                                        <div className={`flex items-center gap-1 mt-1 text-[10px] font-bold ${isUrgent ? 'text-orange-400' : 'text-emerald-400'}`}>
-                                                            <Clock className="h-3 w-3" />
-                                                            {timeRemaining}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <ChevronRight className="h-4 w-4 text-gray-600 shrink-0" />
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
+                {displayedAssignments.length === 0 && (
+                    <div className="text-center py-12 text-gray-500 bg-[#1a1f2e] rounded-xl border border-white/5">
+                        <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>
+                            {activeTab === 'PENDING' && 'No pending assignments'}
+                            {activeTab === 'COMPLETED' && 'No completed assignments yet'}
+                            {activeTab === 'MISSED' && 'No missed assignments — great!'}
+                        </p>
                     </div>
                 )}
             </div>
+        </div>
+    );
+}
 
-            <style jsx>{`
-                .bg-gradient-radial {
-                    background: radial-gradient(circle, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 70%);
-                }
-            `}</style>
+function AssignmentCard({
+    assignment,
+    uploadingId,
+    onUpload,
+    onOpen
+}: {
+    assignment: Assignment;
+    uploadingId: string | null;
+    onUpload: (a: Assignment, e: React.ChangeEvent<HTMLInputElement>) => void;
+    onOpen: () => void;
+}) {
+    const isLateAllowed = assignment.status === 'LATE_ALLOWED';
+    const isClosed = assignment.status === 'CLOSED';
+    const isSubmitted = assignment.status === 'SUBMITTED' || assignment.status === 'LATE_SUBMITTED';
+    const isLateSubmitted = assignment.status === 'LATE_SUBMITTED';
+
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        if (isSubmitted || isClosed) return;
+
+        const target = isLateAllowed ? new Date(assignment.cooldownEndDate) : new Date(assignment.deadline);
+        let timerId: ReturnType<typeof setInterval>;
+        const tick = () => {
+            const now = new Date();
+            const diff = target.getTime() - now.getTime();
+            if (diff <= 0) {
+                setTimeLeft('Time\'s Up');
+                clearInterval(timerId);
+            } else {
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                if (d > 0) setTimeLeft(`${d}d ${h}h ${m}m`);
+                else setTimeLeft(`${h}h ${m}m ${s}s`);
+            }
+        };
+        tick();
+        timerId = setInterval(tick, 1000);
+        return () => clearInterval(timerId);
+    }, [assignment.deadline, assignment.cooldownEndDate, isLateAllowed, isSubmitted, isClosed]);
+
+    const deadlineDate = new Date(assignment.deadline);
+
+    return (
+        <div className={`bg-[#1a1f2e] border rounded-xl overflow-hidden transition-all ${isLateAllowed ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
+            isSubmitted ? 'border-green-500/20' :
+                isClosed ? 'border-red-500/10 opacity-70' :
+                    'border-white/5 hover:border-blue-500/30'
+            }`}>
+            <div className="p-5">
+                {/* Top Row */}
+                <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg ${assignment.type === 'PDF' ? 'bg-red-500/10' : 'bg-purple-500/10'
+                            }`}>
+                            <FileText className={`w-5 h-5 ${assignment.type === 'PDF' ? 'text-red-400' : 'text-purple-400'
+                                }`} />
+                        </div>
+                        <span className="text-xs px-2 py-0.5 rounded bg-white/5 text-gray-400">
+                            {assignment.batch}
+                        </span>
+                    </div>
+
+
+                    {/* Status Badge */}
+                    {isSubmitted && (
+                        <div className="flex flex-col items-end gap-1">
+                            <span className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 ${isLateSubmitted
+                                ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                                : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                }`}>
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                {isLateSubmitted ? 'Late Submitted' : 'Completed'}
+                            </span>
+                            <span className={`text-[10px] font-bold px-1 ${assignment.correctionStatus === 'CORRECTED'
+                                ? 'text-green-400 animate-pulse'
+                                : 'text-gray-500'
+                                }`}>
+                                Status: {assignment.correctionStatus === 'CORRECTED' ? 'Corrected' : 'Not Corrected'}
+                            </span>
+                        </div>
+                    )}
+                    {isClosed && (
+                        <span className="px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold flex items-center gap-1.5 border border-red-500/20">
+                            <XCircle className="w-3.5 h-3.5" />
+                            Missed
+                        </span>
+                    )}
+                    {!isSubmitted && !isClosed && (
+                        <div className="text-right">
+                            <p className="text-[10px] text-gray-500 mb-0.5">
+                                {isLateAllowed ? 'Cooldown Remaining' : 'Time Remaining'}
+                            </p>
+                            <div className={`font-mono text-sm font-bold tracking-wide ${isLateAllowed ? 'text-red-400' : 'text-white'
+                                }`}>
+                                {timeLeft || '...'}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Title & Deadline */}
+                <h3 className="text-lg font-bold text-white mb-1">{assignment.title}</h3>
+                <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-4">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Due: {deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at {deadlineDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+
+                {/* Late Warning */}
+                {isLateAllowed && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4 flex gap-3">
+                        <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                        <p className="text-xs text-red-200">
+                            Deadline passed! You are in the cooldown period.
+                            Submit now — your assignment will be marked as <b>LATE</b>.
+                        </p>
+                    </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                    {/* View Button */}
+                    <button
+                        onClick={onOpen}
+                        className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm font-medium transition-colors border border-white/5"
+                    >
+                        View Assignment
+                    </button>
+
+                    {/* Upload / View Submission / Missed */}
+                    {isSubmitted ? (
+                        <a
+                            href={assignment.submissionLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-2.5 bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-lg text-sm font-medium transition-colors border border-green-500/30 flex items-center justify-center gap-2"
+                        >
+                            View Submission <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                    ) : isClosed ? (
+                        <button disabled className="flex-1 py-2.5 bg-red-900/20 text-red-400/60 rounded-lg text-sm font-medium cursor-not-allowed border border-red-500/10">
+                            Missed
+                        </button>
+                    ) : (
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors shadow-lg ${isLateAllowed
+                            ? 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-900/20'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'
+                            } ${uploadingId === assignment._id ? 'opacity-70 pointer-events-none' : ''}`}>
+                            {uploadingId === assignment._id ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <Upload className="w-4 h-4" />
+                            )}
+                            {uploadingId === assignment._id ? 'Uploading...' : 'Upload PDF'}
+                            <input
+                                type="file"
+                                accept="application/pdf"
+                                className="hidden"
+                                onChange={(e) => onUpload(assignment, e)}
+                                disabled={!!uploadingId}
+                            />
+                        </label>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

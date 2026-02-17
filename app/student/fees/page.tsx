@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Download, AlertCircle, CheckCircle, Calendar, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
+import FeesReceiptModal from './FeesReceiptModal';
 
 interface FeeRecord {
     _id: string;
@@ -37,6 +38,18 @@ export default function FeesPayment() {
     const [loading, setLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+    const [selectedReceipt, setSelectedReceipt] = useState<FeeRecord | null>(null);
+
+    useEffect(() => {
+        // Initial detection
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+
+        // Listener
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         fetchData();
@@ -113,9 +126,16 @@ export default function FeesPayment() {
         return { status: 'PENDING', record: null };
     };
 
-    const generateReceipt = async (record: FeeRecord) => {
+    const handleReceiptClick = async (record: FeeRecord) => {
         if (!student) return;
 
+        // Mobile: Open Modal
+        if (isMobile) {
+            setSelectedReceipt(record);
+            return;
+        }
+
+        // Desktop: Generate PDF (Existing Logic)
         const doc = new jsPDF();
 
         // Load Logo
@@ -305,7 +325,7 @@ export default function FeesPayment() {
                                 <div
                                     key={monthName}
                                     className={`relative rounded-xl md:rounded-2xl p-2 md:p-6 border transition-all duration-300 ${cardClass} flex flex-col justify-between min-h-[100px] md:min-h-auto`}
-                                    onClick={() => status === 'PAID' && record ? generateReceipt(record) : null}
+                                    onClick={() => status === 'PAID' && record ? handleReceiptClick(record) : null}
                                 >
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-2 md:mb-4">
                                         <div className="text-xs md:text-lg font-bold text-slate-200 truncate w-full">{monthName}</div>
@@ -355,6 +375,17 @@ export default function FeesPayment() {
                 </main>
             )
             }
+
+
+            {/* Start of Modal Render Logic */}
+            {selectedReceipt && student && (
+                <FeesReceiptModal
+                    record={selectedReceipt}
+                    student={student}
+                    onClose={() => setSelectedReceipt(null)}
+                />
+            )}
+            {/* End of Modal Render Logic */}
         </div >
     );
 }

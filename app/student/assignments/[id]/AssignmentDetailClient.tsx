@@ -85,7 +85,7 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
     };
 
     const handleSubmit = async () => {
-        if (!selectedFile || !data?.scriptUrl) {
+        if (!selectedFile) {
             toast.error('Please select a file first');
             return;
         }
@@ -95,56 +95,38 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
 
         try {
             const { assignment, student: studentData } = data;
-            const folderPath = [
-                studentData.course_code,
-                studentData.year,
-                studentData.department,
-                assignment.title.replace(/[^a-z0-9]/gi, '_'),
-            ].join('/');
 
-            const fileName = [
-                studentData.roll,
-                studentData.name.replace(/ /g, '_'),
-                studentData.department,
-                studentData.course_code,
-                studentData.year,
-            ].join('_') + '.pdf';
+            // Convert file to base64 (strip the data:...;base64, prefix)
+            const fullBase64 = await fileToBase64(selectedFile);
+            const base64Data = fullBase64.includes(',') ? fullBase64.split(',')[1] : fullBase64;
 
-            const fileData = await fileToBase64(selectedFile);
-
-            // Debug logging
-            console.log('Upload Debug:', {
-                scriptUrl: data.scriptUrl,
-                fileName,
-                folderPath,
-                fileDataLength: fileData.length
-            });
+            // Build payload matching the GAS script format
+            const payload = {
+                batchName: studentData.course_code || 'General',
+                assignmentTitle: assignment.title,
+                studentName: studentData.name || 'Unknown',
+                phoneNumber: studentData.roll || 'Unknown',
+                fileData: base64Data,
+                mimeType: 'application/pdf',
+            };
 
             // Use server-side proxy to avoid CORS issues
-            const token = localStorage.getItem('auth_token');
-            const response = await fetch('/api/student/upload-to-drive', {
+            const response = await fetch('/api/student/assignments/upload-to-drive', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ scriptUrl: data.scriptUrl, fileData, fileName, folderPath }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
             });
 
-            const text = await response.text();
-            let result;
-            try {
-                result = JSON.parse(text);
-            } catch {
-                throw new Error('Invalid response from server');
-            }
+            const result = await response.json();
 
-            if (result.status !== 'success' || !result.driveLink) {
-                // Show the detailed message from server if available
+            if (result.status !== 'success') {
                 const errorMsg = result.message || result.error || 'Upload failed';
                 throw new Error(errorMsg);
             }
 
+            const driveLink = result.downloadUrl || result.fileUrl;
+
+            const token = localStorage.getItem('auth_token');
             const saveRes = await fetch('/api/student/submissions', {
                 method: 'POST',
                 headers: {
@@ -154,7 +136,7 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                 body: JSON.stringify({
                     assignmentId: assignment._id,
                     studentId: studentData._id,
-                    driveLink: result.driveLink,
+                    driveLink,
                 }),
             });
 
@@ -515,32 +497,23 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                                 </div>
 
                                 {/* Submit Button */}
-                                {scriptUrl ? (
-                                    <button
-                                        onClick={handleSubmit}
-                                        disabled={!selectedFile || uploading}
-                                        className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-lg shadow-emerald-500/25 disabled:shadow-none"
-                                    >
-                                        {uploading ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                                                <span className="text-sm sm:text-base">Uploading...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
-                                                <span className="text-sm sm:text-base">Step 3: {hasSubmitted ? 'Resubmit' : 'Submit'}</span>
-                                            </>
-                                        )}
-                                    </button>
-                                ) : (
-                                    <div className="p-3 sm:p-4 rounded-xl bg-amber-900/20 border border-amber-500/30 text-center">
-                                        <p className="text-amber-300 text-xs sm:text-sm flex items-center justify-center gap-2">
-                                            <AlertTriangle className="h-4 w-4" />
-                                            Faculty hasn&apos;t configured their Google Drive yet.
-                                        </p>
-                                    </div>
-                                )}
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={!selectedFile || uploading}
+                                    className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-lg shadow-emerald-500/25 disabled:shadow-none"
+                                >
+                                    {uploading ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                                            <span className="text-sm sm:text-base">Uploading...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+                                            <span className="text-sm sm:text-base">Step 3: {hasSubmitted ? 'Resubmit' : 'Submit'}</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
 
                             {/* Submitted File Link */}

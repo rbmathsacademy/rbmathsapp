@@ -154,8 +154,8 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
 
     const readyCount = uploadedFiles.filter(f => f.status === 'ready').length;
 
-    const totalOriginalSize = uploadedFiles.reduce((acc, f) => acc + f.originalSize, 0);
-    const totalCompressedSize = uploadedFiles.reduce((acc, f) => acc + (f.compressedSize || f.originalSize), 0);
+    const totalOriginalSize = uploadedFiles.reduce((acc: number, f: UploadedFile) => acc + f.originalSize, 0);
+    const totalCompressedSize = uploadedFiles.reduce((acc: number, f: UploadedFile) => acc + (f.compressedSize || f.originalSize), 0);
     const totalSaved = totalOriginalSize - totalCompressedSize;
 
     return (

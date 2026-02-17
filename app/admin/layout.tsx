@@ -3,11 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import {
-    Users, ClipboardList, CheckSquare, FileText,
-    Upload, BarChart, BookOpen, LogOut, Menu, X, GraduationCap, ChevronRight,
-    ClipboardCheck, Calendar, DollarSign, BookText, LayoutDashboard
-} from 'lucide-react';
+import { LayoutDashboard, Users, FileText, BookOpen, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -50,7 +46,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             } else {
                 try {
                     const parsedUser = JSON.parse(storedUser);
-                    if (parsedUser.role !== 'admin') {
+                    // Allow admin, manager, and copy_checker
+                    if (!['admin', 'manager', 'copy_checker', 'superadmin'].includes(parsedUser.role)) {
                         router.push('/admin/login');
                     } else {
                         setUser(parsedUser);
@@ -67,8 +64,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         // Ensure loading is turned off quickly to allow redirect or render
         setLoading(false);
 
+        // STICT ROUTE GUARD: Check if current path is allowed for the role
+        if (storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                const allowedRoutes: Record<string, string[]> = {
+                    'manager': ['/admin/fees'],
+                    'copy_checker': ['/admin/assignments'],
+                    'admin': [], // Admin allows all
+                    'superadmin': []
+                };
+
+                const role = user.role;
+                // If role has restrictions (manager/copy_checker) and the list is not empty
+                if (allowedRoutes[role] && allowedRoutes[role].length > 0) {
+                    // Check if current path is allowed
+                    if (!allowedRoutes[role].some(allowed => pathname === allowed || pathname.startsWith(allowed + '/'))) {
+                        console.warn(`[RouteGuard] Blocked access to ${pathname} for role ${role}`);
+                        // Redirect to their main page
+                        if (role === 'manager') router.push('/admin/fees');
+                        else if (role === 'copy_checker') router.push('/admin/assignments');
+                        else router.push('/admin/dashboard');
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
         return () => clearTimeout(timer);
-    }, [router]);
+    }, [router, pathname]); // Re-run on pathname change to protect navigation
 
     const handleLogout = () => {
         localStorage.removeItem('user');
@@ -123,17 +148,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
     };
 
-    const navigation = [
+    // Full Navigation List
+    const allNavigation = [
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: 'Students', href: '/admin/students', icon: Users },
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },
         { name: 'Answer Bank', href: '/admin/answers', icon: BookOpen },
         { name: 'Deploy Questions', href: '/admin/deploy', icon: Upload },
         { name: 'Online Tests', href: '/admin/online-tests', icon: ClipboardCheck },
         { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
-        { name: 'Attendance', href: '/admin/attendance', icon: Calendar },
         { name: 'Lesson Plan', href: '/admin/lesson-plan', icon: BookText },
         { name: 'Fees Management', href: '/admin/fees', icon: DollarSign },
     ];
+
+    // Filter Navigation based on Role
+    const navigation = allNavigation.filter(item => {
+        if (!user) return false;
+        if (user.role === 'admin' || user.role === 'superadmin') return true;
+
+        if (user.role === 'manager') {
+            // Manager: Fees Only
+            return ['Fees Management'].includes(item.name);
+        }
+
+        if (user.role === 'copy_checker') {
+            // Copy Checker: Assignments Only
+            return ['Assignments'].includes(item.name);
+        }
+
+        return false;
+    });
 
     // Bypass auth check for login and forgot password pages
     if (pathname === '/admin/login' || pathname === '/admin/forgot-password') {
@@ -177,9 +222,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     {/* Navigation */}
                     <nav className="flex-1 overflow-y-auto py-8 px-4 space-y-2 no-scrollbar">
-                        <div className="mb-2 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                            Management
-                        </div>
 
                         {navigation.map((item) => {
                             const Icon = item.icon;
@@ -190,6 +232,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <Link
                                     key={item.href}
                                     href={item.href}
+                                    onClick={() => setSidebarOpen(false)}
                                     className={`group flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 relative overflow-hidden ${isActive
                                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 translate-x-1'
                                         : 'text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1'

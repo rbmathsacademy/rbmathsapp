@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
-import { getStudentCourses } from '@/lib/googleSheet';
+import BatchStudent from '@/models/BatchStudent';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -30,9 +30,10 @@ export async function GET(req: NextRequest) {
 
         await dbConnect();
 
-        // Get student's batches from Google Sheet for most up-to-date data
-        const sheetData = await getStudentCourses(student.phoneNumber);
-        const studentCourses = sheetData?.batches || student.courses || [];
+        // Get student's batches from MongoDB for most up-to-date data
+        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
+        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const studentCourses = (dbStudent as any)?.courses || student.courses || [];
 
         if (studentCourses.length === 0) {
             return NextResponse.json({ available: [], upcoming: [], completed: [], expired: [] });
@@ -71,26 +72,31 @@ export async function GET(req: NextRequest) {
             const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
             const attempt = attemptMap.get(test._id.toString());
 
-            // Determine result visibility
-            // Results are pending if the test has an end time and the current time is before that end time
-            const resultsPending = endTime ? now < endTime : false;
+            // Determine result visibility: only pending if showResultsImmediately is false AND before deadline
+            const showResults = test.config?.showResults ?? true;
+            const showResultsImmediately = test.config?.showResultsImmediately ?? true;
+
+            // FIX: Pending if: Global ShowResult is FALSE, OR (Deferred AND Before Deadline)
+            const isDeferred = !showResultsImmediately && (!endTime || now < endTime);
+            const resultsPending = !showResults || isDeferred;
 
             const testInfo = {
                 _id: test._id,
                 title: test.title,
                 description: test.description,
                 totalMarks: test.totalMarks,
-                questionCount: test.questions?.length || 0,
+                questionCount: (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0)
+                    ? test.config.maxQuestionsToAttempt
+                    : (test.questions?.length || 0),
                 durationMinutes: test.deployment?.durationMinutes,
                 startTime: test.deployment?.startTime,
                 endTime: test.deployment?.endTime,
                 config: test.config,
                 attemptStatus: attempt?.status || 'not_started',
-                // Redact score if results are pending
                 score: resultsPending ? null : attempt?.score,
                 percentage: resultsPending ? null : attempt?.percentage,
                 submittedAt: attempt?.submittedAt,
-                resultsPending // Add flag for frontend
+                resultsPending
             };
 
             if (attempt?.status === 'completed') {
@@ -105,7 +111,6 @@ export async function GET(req: NextRequest) {
             ) {
                 available.push(testInfo);
             } else if (attempt?.status === 'in_progress') {
-                // Student started but time window ended - still show as available to submit
                 available.push(testInfo);
             } else {
                 expired.push(testInfo);

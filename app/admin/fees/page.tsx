@@ -6,7 +6,9 @@ import {
     Plus, CheckCircle, User, ChevronDown,
     CreditCard, RefreshCw, Edit2, Save, X, CheckSquare, Square, History, Trash2, Download
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
+import { Suspense } from 'react';
 
 interface Student {
     _id: string;
@@ -21,7 +23,7 @@ type PaymentReceiver = 'MM' | 'RB';
 
 interface FeeRecord {
     _id: string;
-    invoiceNo: string;
+    invoiceNo?: string; // Optional now
     student: Student | string;
     batch: string;
     amount: number;
@@ -34,6 +36,7 @@ interface FeeRecord {
     remarks?: string;
     createdAt?: string;
     recordType: 'PAYMENT' | 'NEW_ADMISSION' | 'EXEMPTED';
+    status?: 'PENDING' | 'EMPTY'; // For grid cell logic if needed
 }
 
 const MONTHS = [
@@ -55,7 +58,24 @@ const generateMonthRange = (startYear: number, endYear: number) => {
 };
 
 export default function FeesManagementPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#050b14] flex items-center justify-center text-white">Loading...</div>}>
+            <FeesManagementContent />
+        </Suspense>
+    );
+}
+
+function FeesManagementContent() {
+    const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<'entry' | 'record' | 'history'>('entry');
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab === 'record' || tab === 'entry' || tab === 'history') {
+            setActiveTab(tab as any);
+        }
+    }, [searchParams]);
+
     const [loading, setLoading] = useState(false);
 
     // Common Data
@@ -500,8 +520,8 @@ export default function FeesManagementPage() {
                     entryDate: new Date(),
                     months: [feesMonth.toISOString()],
                     remarks: type,
-                    recordType: type,
-                    invoiceNo: `SYS-${Date.now()}` // Dummy invoice
+                    recordType: type
+                    // invoiceNo: No invoice for status updates
                 })
             });
 

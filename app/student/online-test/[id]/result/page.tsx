@@ -27,6 +27,7 @@ interface QuestionReview {
     comprehensionText?: string;
     solutionText?: string;
     solutionImage?: string;
+    isGraceAwarded?: boolean;
 }
 
 interface TopicAnalysis {
@@ -58,27 +59,30 @@ export default function TestResultPage() {
     const fetchResult = async () => {
         try {
             const res = await fetch(`/api/student/online-tests/${testId}/result`, { cache: 'no-store' });
+            const data = await res.json();
+
+            // Handle results-pending/hidden (API returns 200 with these flags)
+            if (data.resultsHidden || data.resultsPending) {
+                setTestInfo({ title: 'Test Results' });
+                setResult({
+                    score: null,
+                    percentage: null,
+                    totalMarks: data.totalMarks,
+                    resultsHidden: true,
+                    resultsPending: data.resultsPending,
+                    message: data.message
+                });
+                setLoading(false);
+                return;
+            }
+
             if (!res.ok) {
                 if (res.status === 401) { router.push('/student/login'); return; }
-                const data = await res.json();
-                if (data.resultsHidden) {
-                    setTestInfo({ title: 'Test Results' });
-                    setResult({
-                        score: null,
-                        percentage: null,
-                        totalMarks: data.totalMarks,
-                        resultsHidden: true,
-                        resultsPending: data.resultsPending,
-                        message: data.message
-                    });
-                    setLoading(false);
-                    return;
-                }
                 setError(data.error || 'Failed to load results');
                 setLoading(false);
                 return;
             }
-            const data = await res.json();
+
             setTestInfo(data.test);
             setResult(data.result);
             setQuestionReview(data.questionReview || []);
@@ -183,53 +187,67 @@ export default function TestResultPage() {
                         <div className="grid md:grid-cols-2 gap-8 items-center h-full relative z-10 flex-1">
                             {/* LEFT HALF: Score & Rank */}
                             <div className="flex flex-col items-center justify-center space-y-6 border-b md:border-b-0 md:border-r border-white/5 pb-6 md:pb-0 md:pr-8">
-                                {/* Score Circle */}
-                                <div className="relative group">
-                                    <div className="absolute -inset-4 bg-emerald-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
-                                    <div className="relative w-40 h-40">
-                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
-                                            <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="6" fill="none" className="text-slate-800" />
-                                            <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="6" fill="none"
-                                                strokeDasharray={`${(result?.percentage || 0) * 3.267} 326.7`}
-                                                strokeLinecap="round"
-                                                className={result?.passed ? 'text-emerald-500 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]'}
-                                            />
-                                        </svg>
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-3xl font-black tracking-tight {result?.passed ? 'text-white' : 'text-red-100'}">
-                                                {result?.percentage}%
-                                            </span>
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Your Score</span>
+                                {result?.resultsHidden ? (
+                                    <div className="flex flex-col items-center justify-center text-center p-8">
+                                        <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-white/5">
+                                            <Clock className="w-10 h-10 text-slate-500" />
                                         </div>
+                                        <h3 className="text-xl font-bold text-white mb-2">Results Hidden</h3>
+                                        <p className="text-sm text-slate-400 max-w-[200px]">
+                                            Scores and analysis are currently hidden for this test.
+                                        </p>
                                     </div>
-                                </div>
-
-                                {/* Pass Badge */}
-                                <div className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg ${result?.passed ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/30' : 'bg-red-900/30 text-red-400 border border-red-500/30'
-                                    }`}>
-                                    {result?.passed ? 'Passed' : 'Failed'}
-                                </div>
-
-                                {/* Global Rank */}
-                                {result?.rank && (
-                                    <div className="text-center w-full pt-2">
-                                        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Global Class Rank</div>
-                                        <div className="relative inline-block">
-                                            {/* Rank Glow Effect */}
-                                            <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full opacity-50 animate-pulse"></div>
-                                            <div className="relative flex items-baseline justify-center gap-1.5">
-                                                <span className="text-xl sm:text-5xl font-black text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">#{result.rank}</span>
-                                                <span className="text-xs sm:text-xl text-slate-600 font-bold">/ {result.totalStudents}</span>
+                                ) : (
+                                    <>
+                                        {/* Score Circle */}
+                                        <div className="relative group">
+                                            <div className="absolute -inset-4 bg-emerald-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
+                                            <div className="relative w-40 h-40">
+                                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                                                    <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="6" fill="none" className="text-slate-800" />
+                                                    <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="6" fill="none"
+                                                        strokeDasharray={`${(result?.percentage || 0) * 3.267} 326.7`}
+                                                        strokeLinecap="round"
+                                                        className={result?.passed ? 'text-emerald-500 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]'}
+                                                    />
+                                                </svg>
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                    <span className={`text-3xl font-black tracking-tight ${result?.passed ? 'text-white' : 'text-red-100'}`}>
+                                                        {result?.percentage}%
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Your Score</span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {result.rank <= 3 && (
-                                            <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                                                <Trophy className="h-3.5 w-3.5" />
-                                                {result.rank === 1 ? 'Top of the Class!' : 'Podium Finish!'}
+                                        {/* Pass Badge */}
+                                        <div className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg ${result?.passed ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/30' : 'bg-red-900/30 text-red-400 border border-red-500/30'
+                                            }`}>
+                                            {result?.passed ? 'Passed' : 'Failed'}
+                                        </div>
+
+                                        {/* Global Rank */}
+                                        {result?.rank && (
+                                            <div className="text-center w-full pt-2">
+                                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Global Class Rank</div>
+                                                <div className="relative inline-block">
+                                                    {/* Rank Glow Effect */}
+                                                    <div className="absolute -inset-4 bg-amber-500/20 blur-xl rounded-full opacity-50 animate-pulse"></div>
+                                                    <div className="relative flex items-baseline justify-center gap-1.5">
+                                                        <span className="text-xl sm:text-5xl font-black text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">#{result.rank}</span>
+                                                        <span className="text-xs sm:text-xl text-slate-600 font-bold">/ {result.totalStudents}</span>
+                                                    </div>
+                                                </div>
+
+                                                {result.rank <= 3 && (
+                                                    <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                                                        <Trophy className="h-3.5 w-3.5" />
+                                                        {result.rank === 1 ? 'Top of the Class!' : 'Podium Finish!'}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
-                                    </div>
+                                    </>
                                 )}
                             </div>
 
@@ -461,6 +479,14 @@ export default function TestResultPage() {
                                                 <div className="inline-flex items-center gap-2 text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold">
                                                     Manually Graded Question
                                                 </div>
+                                            </div>
+                                        )}
+
+                                        {/* Grace Badge */}
+                                        {q.isGraceAwarded && (
+                                            <div className="mt-4 flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400 text-sm font-bold">
+                                                <Award className="h-4 w-4" />
+                                                Grace Marks Awarded: Full marks given to all students.
                                             </div>
                                         )}
 

@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getAllCourses } from '@/lib/googleSheet';
+import dbConnect from '@/lib/db';
+import BatchStudent from '@/models/BatchStudent';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const courses = await getAllCourses();
-        return NextResponse.json(courses);
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 });
+        await dbConnect();
+
+        // Get all unique course names from BatchStudent collection
+        const courses = await BatchStudent.distinct('courses');
+        const sortedCourses = courses.filter(Boolean).sort();
+
+        return NextResponse.json(sortedCourses);
+    } catch (error: any) {
+        console.error('Error fetching courses:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

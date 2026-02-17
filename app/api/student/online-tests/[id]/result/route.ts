@@ -3,6 +3,7 @@ import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
+import BatchStudent from '@/models/BatchStudent';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -64,21 +65,22 @@ export async function GET(
             }, { status: 200 });
         }
 
-        // Check for deadline-based visibility (Results stored but hidden until deadline)
+        // Check for deadline-based visibility (only block if showResultsImmediately is false)
         const now = new Date();
         const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
 
-        if (endTime && now < endTime) {
-            const dateStr = endTime.toLocaleDateString('en-IN', {
+        if (!showResultsImmediately && (!endTime || now < endTime)) {
+            const dateStr = endTime ? endTime.toLocaleDateString('en-IN', {
                 day: '2-digit',
                 month: '2-digit',
                 year: '2-digit'
-            });
-            const timeStr = endTime.toLocaleTimeString('en-IN', {
+            }) : 'a later date';
+
+            const timeStr = endTime ? endTime.toLocaleTimeString('en-IN', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
-            });
+            }) : '';
 
             return NextResponse.json({
                 error: `Results will be declared after the deadline`,
@@ -87,13 +89,19 @@ export async function GET(
                 totalMarks: test.totalMarks,
                 resultsHidden: true,
                 resultsPending: true, // Specific flag for frontend
-                message: `Come back at ${dateStr} & ${timeStr} to view your results.`
+                message: endTime
+                    ? `Come back at ${dateStr} & ${timeStr} to view your results.`
+                    : `Results will be declared by the administrator later.`
             }, { status: 200 });
         }
 
-        // Build question map including sub-questions
+        // Build question map from attempt's questions (accounts for random subsets)
+        const sourceQuestions = (attempt.questions && attempt.questions.length > 0)
+            ? attempt.questions
+            : test.questions;
+
         const questionMap = new Map<string, any>();
-        for (const q of test.questions) {
+        for (const q of sourceQuestions) {
             questionMap.set(q.id, q);
             if (q.type === 'comprehension' && q.subQuestions) {
                 for (const sq of q.subQuestions) {
@@ -101,6 +109,19 @@ export async function GET(
                 }
             }
         }
+
+        // Compute actual total marks from served questions
+        let servedTotalMarks = 0;
+        for (const q of sourceQuestions) {
+            if (q.type === 'comprehension' && q.subQuestions) {
+                for (const sq of q.subQuestions) {
+                    servedTotalMarks += sq.marks || 1;
+                }
+            } else {
+                servedTotalMarks += q.marks || 1;
+            }
+        }
+        const actualTotalMarks = servedTotalMarks || test.totalMarks;
 
         // Build detailed question-by-question review
         const questionReview = attempt.answers.map((ans: any) => {
@@ -118,6 +139,7 @@ export async function GET(
                 studentAnswer: ans.answer,
                 isCorrect: ans.isCorrect,
                 marksAwarded: ans.marksAwarded,
+                isGraceAwarded: ans.isGraceAwarded || question.isGrace, // Fallback to question def
                 topic: question.topic,
                 subtopic: question.subtopic,
                 solutionText: question.solutionText,
@@ -174,13 +196,12 @@ export async function GET(
         });
         const rank = betterScoresCount + 1;
 
-        // Get total students assigned to this test (deployed batches) to show Rank X/Total
-        const { getStudentsByBatches } = await import('@/lib/googleSheet');
-        const assignedStudents = await getStudentsByBatches(test.deployment?.batches || []);
+        // Get total students assigned to this test (deployed batches)
+        const assignedStudentDocs = await BatchStudent.find({ courses: { $in: test.deployment?.batches || [] } }).select('phoneNumber').lean() as any[];
 
         // Count all completed attempts as fallback for total
         const completedAttemptsCount = await StudentTestAttempt.countDocuments({ testId, status: 'completed' });
-        const totalStudents = assignedStudents.length > 0 ? assignedStudents.length : completedAttemptsCount;
+        const totalStudents = assignedStudentDocs.length > 0 ? assignedStudentDocs.length : completedAttemptsCount;
 
         // Get topper score for this test
         const topperAttempt = await StudentTestAttempt.findOne({
@@ -219,7 +240,7 @@ export async function GET(
             test: {
                 title: test.title,
                 description: test.description,
-                totalMarks: test.totalMarks,
+                totalMarks: actualTotalMarks,
                 durationMinutes: test.deployment?.durationMinutes,
                 passingPercentage: test.config?.passingPercentage || 40
             },

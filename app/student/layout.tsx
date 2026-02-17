@@ -1,4 +1,6 @@
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast'; // Removed to avoid duplicate with root layout
+// actually just remove the line or comment it out if safe
+// Just remove it.
 
 export default function StudentLayout({
     children,
@@ -7,7 +9,7 @@ export default function StudentLayout({
 }) {
     return (
         <div className="min-h-screen flex flex-col bg-[#0a0f1a]">
-            <Toaster position="top-center" />
+
             <div className="flex-1 w-full">
                 {children}
             </div>

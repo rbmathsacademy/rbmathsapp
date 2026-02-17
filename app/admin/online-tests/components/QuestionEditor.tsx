@@ -46,6 +46,7 @@ interface Question {
     subQuestions?: SubQuestion[];
     solutionText?: string;
     solutionImage?: string;
+    isGrace?: boolean;
 }
 
 interface QuestionEditorProps {
@@ -66,7 +67,8 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
         correctIndices: [],
         shuffleOptions: false,
         solutionText: '',
-        solutionImage: ''
+        solutionImage: '',
+        isGrace: false
     });
 
     const [activeTab, setActiveTab] = useState<'question' | 'solution'>('question');
@@ -339,16 +341,29 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                     <label className="text-sm font-medium text-slate-300">
                                         {question.type === 'comprehension' ? 'Comprehension Instruction' : 'Question Text'}
                                     </label>
-                                    <button
-                                        onClick={() => setQuestion({ ...question, latexContent: !question.latexContent })}
-                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-colors"
-                                    >
-                                        {question.latexContent ? (
-                                            <><ToggleRight className="h-4 w-4 text-emerald-400" /> LaTeX Enabled</>
-                                        ) : (
-                                            <><ToggleLeft className="h-4 w-4 text-slate-400" /> Enable LaTeX</>
-                                        )}
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setQuestion({ ...question, isGrace: !question.isGrace })}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${question.isGrace
+                                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
+                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                                }`}
+                                            title="If enabled, all students will receive full marks for this question."
+                                        >
+                                            <ToggleRight className={`h-4 w-4 ${question.isGrace ? "rotate-0" : "rotate-180"}`} />
+                                            Grace Question
+                                        </button>
+                                        <button
+                                            onClick={() => setQuestion({ ...question, latexContent: !question.latexContent })}
+                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-colors"
+                                        >
+                                            {question.latexContent ? (
+                                                <><ToggleRight className="h-4 w-4 text-emerald-400" /> LaTeX Enabled</>
+                                            ) : (
+                                                <><ToggleLeft className="h-4 w-4 text-slate-400" /> Enable LaTeX</>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                                 <textarea
                                     value={question.text}

@@ -48,9 +48,12 @@ export async function middleware(req: NextRequest) {
         console.log(`[Middleware] Authenticated User: ${payload.userId} (${payload.role})`);
 
         // 4. Return response with new headers
-        if (req.nextUrl.pathname.startsWith('/api/admin') && payload.role !== 'admin') {
-            console.log(`[Middleware] Blocked unauthorized admin access from ${payload.userId} (${payload.role})`);
-            return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+        if (req.nextUrl.pathname.startsWith('/api/admin')) {
+            const allowedRoles = ['admin', 'superadmin', 'manager', 'copy_checker'];
+            if (!allowedRoles.includes(payload.role as string)) {
+                console.log(`[Middleware] Blocked unauthorized admin access from ${payload.userId} (${payload.role})`);
+                return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+            }
         }
 
         return NextResponse.next({

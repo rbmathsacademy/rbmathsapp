@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Clock, ChevronLeft, ChevronRight, Flag, Send, AlertTriangle, CheckCircle, Circle, Minus } from 'lucide-react';
-import { toast, Toaster } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
@@ -224,7 +224,13 @@ export default function TakeTestPage() {
 
             // Calculate total duration if per-question timer is enabled
             if (data.test.config?.enablePerQuestionTimer) {
-                const totalSeconds = data.test.questions.reduce((acc: number, q: Question) => {
+                // Respect maxQuestionsToAttempt for duration calculation
+                const maxQ = data.test.config.maxQuestionsToAttempt;
+                const questionsToCount = (maxQ && maxQ > 0)
+                    ? data.test.questions.slice(0, maxQ)
+                    : data.test.questions;
+
+                const totalSeconds = questionsToCount.reduce((acc: number, q: Question) => {
                     return acc + (q.timeLimit || data.test.config.perQuestionDuration || 60);
                 }, 0);
                 // Update duration minutes for proper global timer calculation
@@ -455,7 +461,7 @@ export default function TakeTestPage() {
                             <div className="text-slate-400 text-xs uppercase tracking-wider mb-1">Questions</div>
                             <div className="text-lg font-bold text-white">
                                 {test.config?.maxQuestionsToAttempt
-                                    ? `${test.config.maxQuestionsToAttempt} / ${allQuestions.length}`
+                                    ? test.config.maxQuestionsToAttempt
                                     : allQuestions.length}
                             </div>
                         </div>
@@ -502,9 +508,10 @@ export default function TakeTestPage() {
 
                     <button
                         onClick={startTest}
-                        className="w-full px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-black text-sm sm:text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                        disabled={loading || started}
+                        className="w-full px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-black text-sm sm:text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Start Test
+                        {started ? 'Starting...' : 'Start Test'}
                     </button>
                 </div>
             </div>
@@ -754,7 +761,7 @@ export default function TakeTestPage() {
                             {/* Top Row: Back */}
                             <button
                                 onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                                disabled={currentIndex === 0 || !test.config?.allowBackNavigation || !!test.config?.enablePerQuestionTimer}
+                                disabled={currentIndex === 0 || test.config?.allowBackNavigation === false || test.config?.enablePerQuestionTimer === true}
                                 className="w-24 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[10px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-white/5"
                             >
                                 <ChevronLeft className="h-3 w-3" /> Back
@@ -787,7 +794,7 @@ export default function TakeTestPage() {
                         <div className="hidden sm:flex items-center justify-start gap-4">
                             <button
                                 onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                                disabled={currentIndex === 0 || !test.config?.allowBackNavigation || !!test.config?.enablePerQuestionTimer}
+                                disabled={currentIndex === 0 || test.config?.allowBackNavigation === false || test.config?.enablePerQuestionTimer === true}
                                 className="flex-none w-28 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 border border-white/5"
                             >
                                 <ChevronLeft className="h-5 w-5" /> Back

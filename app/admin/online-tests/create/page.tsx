@@ -108,7 +108,7 @@ export default function CreateTestPage() {
                 setTitle(test.title);
                 setDescription(test.description || '');
                 setQuestions(test.questions || []);
-                setConfig(test.config || config);
+                setConfig({ ...(test.config || config), showResults: true });
                 setDurationMinutes(test.deployment?.durationMinutes || 90);
                 setTestStatus(test.status || 'draft');
             }
@@ -169,7 +169,12 @@ export default function CreateTestPage() {
     };
 
     const calculateTotalMarks = () => {
-        return questions.reduce((total, q) => {
+        const maxQ = config.maxQuestionsToAttempt;
+        const questionsToCount = (maxQ && maxQ > 0)
+            ? questions.slice(0, maxQ)
+            : questions;
+
+        return questionsToCount.reduce((total: number, q: Question) => {
             if (q.type === 'comprehension' && q.subQuestions) {
                 return total + q.subQuestions.reduce((subTotal: number, sq: any) => subTotal + (sq.marks || 0), 0);
             }
@@ -179,7 +184,18 @@ export default function CreateTestPage() {
 
     const calculateTotalDuration = () => {
         if (!config.enablePerQuestionTimer) return durationMinutes;
-        const totalSeconds = questions.reduce((total, q) => {
+
+        const maxQ = config.maxQuestionsToAttempt;
+        const questionsToCount = (maxQ && maxQ > 0)
+            ? questions.slice(0, maxQ)
+            : questions;
+
+        const totalSeconds = questionsToCount.reduce((total: number, q: Question) => {
+            if (q.type === 'comprehension' && q.subQuestions?.length) {
+                return total + q.subQuestions.reduce((subTotal: number, sq: any) => {
+                    return subTotal + (sq.timeLimit || config.perQuestionDuration || 60);
+                }, 0);
+            }
             return total + (q.timeLimit || config.perQuestionDuration || 60);
         }, 0);
         return Math.ceil(totalSeconds / 60);
@@ -218,7 +234,9 @@ export default function CreateTestPage() {
                 description,
                 questions: currentQuestions,
                 config,
-                deployment: { durationMinutes }
+                deployment: {
+                    durationMinutes: config.enablePerQuestionTimer ? calculateTotalDuration() : durationMinutes
+                }
             };
 
             if (testId) {
@@ -393,7 +411,8 @@ export default function CreateTestPage() {
                             type="checkbox"
                             checked={config.allowBackNavigation}
                             onChange={(e) => setConfig({ ...config, allowBackNavigation: e.target.checked })}
-                            className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                            disabled={config.enablePerQuestionTimer}
+                            className={`w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         <span className="text-sm font-medium text-slate-300">Allow Back Navigation</span>
                     </label>
@@ -416,31 +435,19 @@ export default function CreateTestPage() {
                             <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
                                 <input
                                     type="checkbox"
-                                    checked={config.showResults}
-                                    onChange={(e) => setConfig({ ...config, showResults: e.target.checked })}
+                                    checked={config.showResultsImmediately}
+                                    onChange={(e) => setConfig({ ...config, showResultsImmediately: e.target.checked, showResults: true })}
                                     className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
                                 />
-                                <span className="text-sm font-medium text-slate-300">Show Results to Student</span>
+                                <div>
+                                    <span className="text-sm font-bold text-slate-200 block">Show Results Immediately</span>
+                                    <span className="text-xs text-slate-500">
+                                        {config.showResultsImmediately
+                                            ? "Results shown right after submission"
+                                            : "Results hidden until test deadline"}
+                                    </span>
+                                </div>
                             </label>
-
-                            {config.showResults && (
-                                <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors animate-in fade-in">
-                                    <input
-                                        type="checkbox"
-                                        checked={config.showResultsImmediately}
-                                        onChange={(e) => setConfig({ ...config, showResultsImmediately: e.target.checked })}
-                                        className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
-                                    />
-                                    <div>
-                                        <span className="text-sm font-bold text-slate-200 block">Show Immediately</span>
-                                        <span className="text-xs text-slate-500">
-                                            {config.showResultsImmediately
-                                                ? "Results shown right after submission"
-                                                : "Results hidden until test deadline"}
-                                        </span>
-                                    </div>
-                                </label>
-                            )}
                         </div>
                     </div>
 
@@ -478,7 +485,14 @@ export default function CreateTestPage() {
                             <input
                                 type="checkbox"
                                 checked={config.enablePerQuestionTimer || false}
-                                onChange={(e) => setConfig({ ...config, enablePerQuestionTimer: e.target.checked })}
+                                onChange={(e) => {
+                                    const isEnabled = e.target.checked;
+                                    setConfig({
+                                        ...config,
+                                        enablePerQuestionTimer: isEnabled,
+                                        allowBackNavigation: isEnabled ? false : config.allowBackNavigation // Auto-disable back nav
+                                    });
+                                }}
                                 className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-purple-500 focus:ring-purple-500"
                             />
                             <div>

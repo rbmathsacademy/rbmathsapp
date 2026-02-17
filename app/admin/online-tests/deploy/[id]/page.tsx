@@ -26,6 +26,7 @@ export default function DeployTestPage() {
 
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
+    const [durationMinutes, setDurationMinutes] = useState<number>(60);
     const [loading, setLoading] = useState(true);
     const [deploying, setDeploying] = useState(false);
 
@@ -68,6 +69,30 @@ export default function DeployTestPage() {
 
             setTest(foundTest);
 
+            // Compute duration: per-question timer takes priority, then deployment, then fallback
+            let defaultDuration = 60; // ultimate fallback
+            if (foundTest.config?.enablePerQuestionTimer && foundTest.questions?.length) {
+                // Per-question timer: sum up timers for the questions that will be served
+                const maxQ = foundTest.config?.maxQuestionsToAttempt;
+                const questionsToCount = (maxQ && maxQ > 0)
+                    ? foundTest.questions.slice(0, maxQ)
+                    : foundTest.questions;
+                let totalSeconds = 0;
+                for (const q of questionsToCount) {
+                    if (q.type === 'comprehension' && q.subQuestions?.length) {
+                        for (const sq of q.subQuestions) {
+                            totalSeconds += sq.timeLimit || foundTest.config.perQuestionDuration || 60;
+                        }
+                    } else {
+                        totalSeconds += q.timeLimit || foundTest.config.perQuestionDuration || 60;
+                    }
+                }
+                defaultDuration = Math.ceil(totalSeconds / 60);
+            } else if (foundTest.deployment?.durationMinutes) {
+                defaultDuration = foundTest.deployment.durationMinutes;
+            }
+            setDurationMinutes(defaultDuration);
+
             // Fetch batches from Google Sheets
             const batchesRes = await fetch('/api/admin/courses', {
                 headers: { 'X-User-Email': userEmail! }
@@ -86,8 +111,6 @@ export default function DeployTestPage() {
             // Pre-fill deployment data if exists
             if (foundTest.deployment) {
                 if (foundTest.deployment.startTime) {
-                    // Adjust for local timezone offset if needed, but slice(0,16) on ISO string gives UTC usually. 
-                    // Better to construct local ISO string for input[type="datetime-local"]
                     const start = new Date(foundTest.deployment.startTime);
                     start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
                     setStartTime(start.toISOString().slice(0, 16));
@@ -108,7 +131,7 @@ export default function DeployTestPage() {
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset() + 30); // Local time + 30m
                 setStartTime(now.toISOString().slice(0, 16));
 
-                const end = new Date(now.getTime() + (foundTest.deployment?.durationMinutes || 90) * 60000);
+                const end = new Date(now.getTime() + defaultDuration * 60000);
                 setEndTime(end.toISOString().slice(0, 16));
             }
         } catch (error) {
@@ -241,7 +264,7 @@ export default function DeployTestPage() {
                     students: deploymentMode === 'specific' ? selectedStudents : [],
                     startTime: finalStartTime,
                     endTime,
-                    durationMinutes: test?.deployment?.durationMinutes || 90
+                    durationMinutes
                 })
             });
 
@@ -297,15 +320,44 @@ export default function DeployTestPage() {
                     <div className="grid grid-cols-3 gap-4">
                         <div className="bg-white/5 rounded-lg p-3">
                             <p className="text-xs text-slate-400 mb-1">Questions</p>
-                            <p className="text-lg font-bold text-white">{test.questions?.length || 0}</p>
+                            <p className="text-lg font-bold text-white">
+                                {(test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0)
+                                    ? test.config.maxQuestionsToAttempt
+                                    : (test.questions?.length || 0)}
+                                {test.config?.maxQuestionsToAttempt > 0 && test.config.maxQuestionsToAttempt < (test.questions?.length || 0) && (
+                                    <span className="text-xs text-slate-500 font-normal ml-1">/ {test.questions?.length} pool</span>
+                                )}
+                            </p>
                         </div>
                         <div className="bg-white/5 rounded-lg p-3">
                             <p className="text-xs text-slate-400 mb-1">Total Marks</p>
-                            <p className="text-lg font-bold text-white">{test.totalMarks || 0}</p>
+                            <p className="text-lg font-bold text-white">
+                                {(() => {
+                                    const maxQ = test.config?.maxQuestionsToAttempt;
+                                    const questions = test.questions || [];
+
+                                    if (maxQ && maxQ > 0 && questions.length > 0 && maxQ < questions.length) {
+                                        // Calculate sum of marks for the first N questions (subset)
+                                        // This is consistent with Create page logic and backend pre-save hook
+                                        const subset = questions.slice(0, maxQ);
+                                        const subsetTotal = subset.reduce((total: number, q: any) => {
+                                            if (q.type === 'comprehension' && q.subQuestions) {
+                                                return total + q.subQuestions.reduce((st: number, sq: any) => st + (sq.marks || 0), 0);
+                                            }
+                                            return total + (q.marks || 0);
+                                        }, 0);
+
+                                        // If questions have varying marks, this is an estimate (first N)
+                                        // If all have same marks, it's exact.
+                                        return subsetTotal;
+                                    }
+                                    return test.totalMarks || 0;
+                                })()}
+                            </p>
                         </div>
                         <div className="bg-white/5 rounded-lg p-3">
                             <p className="text-xs text-slate-400 mb-1">Duration</p>
-                            <p className="text-lg font-bold text-white">{test.deployment?.durationMinutes || 0} min</p>
+                            <p className="text-lg font-bold text-white">{durationMinutes} min</p>
                         </div>
                     </div>
                 </div>
@@ -475,11 +527,15 @@ export default function DeployTestPage() {
                     </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                    <div className="flex items-center gap-2 text-purple-300 text-sm">
-                        <Clock className="h-4 w-4" />
-                        <span>Test Duration: {test?.deployment?.durationMinutes || 0} minutes</span>
+                <div className="mt-4">
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                        <Clock className="h-4 w-4 text-purple-400" />
+                        <span className="text-sm text-slate-300">
+                            Each student gets <span className="font-bold text-white">{durationMinutes} minutes</span> after starting
+                            {test?.config?.enablePerQuestionTimer && <span className="text-purple-400 ml-1">(auto-calculated from per-question timers)</span>}
+                        </span>
                     </div>
+                    <p className="text-xs text-slate-500 mt-2">Duration is configured on the test creation page.</p>
                 </div>
             </div>
 
