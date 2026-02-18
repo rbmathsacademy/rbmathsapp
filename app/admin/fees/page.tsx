@@ -387,7 +387,8 @@ function FeesManagementContent() {
     };
 
     const toggleMonth = (year: number, monthIndex: number) => {
-        const date = new Date(year, monthIndex, 1);
+        // Use UTC noon to avoid timezone shifts when collecting/displaying
+        const date = new Date(Date.UTC(year, monthIndex, 1, 12, 0, 0));
         const exists = selectedMonths.find(d => d.getTime() === date.getTime());
         if (exists) {
             setSelectedMonths(prev => prev.filter(d => d.getTime() !== date.getTime()));
@@ -406,7 +407,7 @@ function FeesManagementContent() {
         const toastId = toast.loading('Recording payment...');
         try {
             const [entryYear, entryMonth] = entryForm.paidOnMonth.split('-').map(Number);
-            const entryDate = new Date(entryYear, entryMonth - 1, 1);
+            const entryDate = new Date(Date.UTC(entryYear, entryMonth - 1, 1, 12, 0, 0));
 
             const payload = {
                 student: selectedStudent._id,
@@ -450,7 +451,12 @@ function FeesManagementContent() {
         setEditForm({
             amount: record.amount.toString(),
             remarks: record.remarks || '',
-            feesMonth: new Date(record.feesMonth).toISOString().slice(0, 7), // YYYY-MM
+            feesMonth: (() => {
+                const d = new Date(record.feesMonth);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                return `${yyyy}-${mm}`;
+            })(), // YYYY-MM in Local Time
             mode: record.paymentMode,
             receiver: (record.paymentReceiver as PaymentReceiver) || ''
         });
@@ -486,7 +492,7 @@ function FeesManagementContent() {
                     id: editingRecord._id,
                     amount: parseFloat(editForm.amount),
                     remarks: editForm.remarks,
-                    feesMonth: editForm.feesMonth, // YYYY-MM
+                    feesMonth: `${editForm.feesMonth}-01T12:00:00.000Z`, // Force UTC Noon to avoid timezone shifts
                     paymentMode: editForm.mode,
                     paymentReceiver: editForm.mode === 'Online' ? editForm.receiver : null
                 })
@@ -506,7 +512,7 @@ function FeesManagementContent() {
     const handleCreateStatusRecord = async (type: 'NEW_ADMISSION' | 'EXEMPTED') => {
         if (!statusModalOpen) return;
         const { student, batch, year, month } = statusModalOpen;
-        const feesMonth = new Date(year, month, 1);
+        const feesMonth = new Date(Date.UTC(year, month, 1, 12, 0, 0));
 
         try {
             const res = await fetch('/api/admin/fees', {
