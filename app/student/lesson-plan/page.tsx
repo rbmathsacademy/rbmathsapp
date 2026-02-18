@@ -159,7 +159,9 @@ export default function StudentLessonPlan() {
                                             </div>
                                             <div className={`px-2 py-1 rounded-lg border flex items-center gap-1.5 shrink-0 ${getTypeColor(plan.type)}`}>
                                                 {getTypeIcon(plan.type)}
-                                                <span className="text-[9px] font-black uppercase tracking-widest leading-none">{plan.type}</span>
+                                                <span className="text-[9px] font-black uppercase tracking-widest leading-none">
+                                                    {plan.type === 'Online' ? 'Online Test' : plan.type === 'Offline' ? 'Offline Test' : plan.type}
+                                                </span>
                                             </div>
                                         </div>
 

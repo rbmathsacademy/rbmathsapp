@@ -111,7 +111,7 @@ export default function StudentDashboard() {
     ];
 
     const navItems = userRole === 'guardian'
-        ? allNavItems.filter(item => ['dashboard', 'fees'].includes(item.id))
+        ? allNavItems.filter(item => ['dashboard', 'fees', 'lesson-plan'].includes(item.id))
         : allNavItems;
 
     if (loading) {

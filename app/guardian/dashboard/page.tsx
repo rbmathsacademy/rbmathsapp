@@ -225,8 +225,8 @@ export default function GuardianDashboard() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all min-w-[100px] ${activeTab === tab.id
-                                ? 'bg-blue-600 text-white shadow-lg'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         <tab.icon className="h-4 w-4" />
@@ -359,7 +359,7 @@ export default function GuardianDashboard() {
                                                 {new Date(plan.date).getFullYear()}
                                             </span>
                                             <div className={`mt-2 px-2 py-0.5 rounded-lg border text-[9px] font-black uppercase text-center ${getTypeColor(plan.type)}`}>
-                                                {plan.type}
+                                                {plan.type === 'Online' ? 'Online Test' : plan.type === 'Offline' ? 'Offline Test' : plan.type}
                                             </div>
                                         </div>
                                         <div className="flex-1 text-slate-300 text-sm font-medium leading-relaxed">
@@ -393,9 +393,9 @@ export default function GuardianDashboard() {
                             const { status, record } = getFeeStatusForMonth(selectedYear, idx);
                             return (
                                 <div key={month} className={`p-4 rounded-xl border text-center transition-all ${status === 'PAID' ? 'bg-emerald-500/10 border-emerald-500/30' :
-                                        status === 'EXEMPTED' ? 'bg-purple-500/10 border-purple-500/30' :
-                                            status === 'NEW_ADMISSION' ? 'bg-amber-500/10 border-amber-500/30' :
-                                                'bg-slate-900/40 border-white/5 opacity-50'
+                                    status === 'EXEMPTED' ? 'bg-purple-500/10 border-purple-500/30' :
+                                        status === 'NEW_ADMISSION' ? 'bg-amber-500/10 border-amber-500/30' :
+                                            'bg-slate-900/40 border-white/5 opacity-50'
                                     }`}>
                                     <p className="text-[10px] font-black text-slate-500 uppercase mb-1">{month}</p>
                                     <div className="flex justify-center mb-1">
@@ -404,7 +404,7 @@ export default function GuardianDashboard() {
                                                 <AlertCircle className="h-4 w-4 text-blue-400" />}
                                     </div>
                                     <p className={`text-[10px] font-bold ${status === 'PAID' ? 'text-emerald-400' :
-                                            status === 'PENDING' ? 'text-slate-600' : 'text-blue-400'
+                                        status === 'PENDING' ? 'text-slate-600' : 'text-blue-400'
                                         }`}>
                                         {status === 'PAID' ? `₹${record?.amount}` : status}
                                     </p>

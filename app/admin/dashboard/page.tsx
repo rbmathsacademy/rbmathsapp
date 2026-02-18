@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                         <div
                             key={index}
                             onClick={() => isClickable && router.push(stat.href!)}
-                            className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-6 transition-all duration-300 group ${isClickable
+                            className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6 transition-all duration-300 group ${isClickable
                                 ? 'hover:border-white/20 cursor-pointer hover:scale-[1.02]'
                                 : ''
                                 }`}
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
                             {loading ? (
                                 <div className="h-10 bg-white/5 rounded animate-pulse"></div>
                             ) : (
-                                <p className="text-4xl font-black text-white">{stat.value.toLocaleString()}</p>
+                                <p className="text-2xl sm:text-4xl font-black text-white">{stat.value.toLocaleString()}</p>
                             )}
                         </div>
                     );
@@ -192,34 +192,34 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <button
                             onClick={() => router.push('/admin/online-tests/create')}
-                            className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition-all text-left group"
+                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition-all text-left group"
                         >
-                            <ClipboardCheck className="h-6 w-6 text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-sm font-bold text-white">Create Test</p>
+                            <ClipboardCheck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
+                            <p className="text-xs sm:text-sm font-bold text-white">Create Test</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/assignments/create')}
-                            className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/30 hover:border-blue-500/50 transition-all text-left group"
+                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/30 hover:border-blue-500/50 transition-all text-left group"
                         >
-                            <PenTool className="h-6 w-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-sm font-bold text-white">Create Assign.</p>
+                            <PenTool className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
+                            <p className="text-xs sm:text-sm font-bold text-white">Create Assign.</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/fees?tab=record')}
-                            className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30 hover:border-purple-500/50 transition-all text-left group"
+                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30 hover:border-purple-500/50 transition-all text-left group"
                         >
-                            <CreditCard className="h-6 w-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-sm font-bold text-white">Fees Grid</p>
+                            <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+                            <p className="text-xs sm:text-sm font-bold text-white">Fees Grid</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/questions')}
-                            className="p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 hover:border-orange-500/50 transition-all text-left group"
+                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 hover:border-orange-500/50 transition-all text-left group"
                         >
-                            <FileQuestion className="h-6 w-6 text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-sm font-bold text-white">Add Questions</p>
+                            <FileQuestion className="h-5 w-5 sm:h-6 sm:w-6 text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
+                            <p className="text-xs sm:text-sm font-bold text-white">Add Questions</p>
                         </button>
                     </div>
                 </div>
@@ -282,8 +282,8 @@ export default function AdminDashboard() {
                                         type="button"
                                         onClick={() => setNewStaff({ ...newStaff, role: 'manager' })}
                                         className={`p-3 rounded-xl border text-sm font-medium transition-all ${newStaff.role === 'manager'
-                                                ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
-                                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                             }`}
                                     >
                                         Manager
@@ -293,8 +293,8 @@ export default function AdminDashboard() {
                                         type="button"
                                         onClick={() => setNewStaff({ ...newStaff, role: 'copy_checker' })}
                                         className={`p-3 rounded-xl border text-sm font-medium transition-all ${newStaff.role === 'copy_checker'
-                                                ? 'bg-pink-500/20 border-pink-500/50 text-pink-400'
-                                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                            ? 'bg-pink-500/20 border-pink-500/50 text-pink-400'
+                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                             }`}
                                     >
                                         Copy Checker

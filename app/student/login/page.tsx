@@ -74,7 +74,7 @@ export default function StudentLogin() {
                     <div>
                         <label className="block text-xs font-medium text-slate-300 mb-1.5">Phone Number</label>
                         <input
-                            type="tel"
+                            type="text"
                             placeholder="e.g. 9876543210"
                             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={phone}

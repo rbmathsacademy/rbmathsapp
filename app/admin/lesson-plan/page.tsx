@@ -142,18 +142,18 @@ export default function AdminLessonPlan() {
             {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 flex items-center gap-3">
-                        <BookText className="h-8 w-8 text-blue-500" />
+                    <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 flex items-center gap-3">
+                        <BookText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
                         Lesson Plan Management
                     </h1>
-                    <p className="text-slate-400 text-sm mt-1">Design and schedule the curriculum for each batch</p>
+                    <p className="text-slate-400 text-xs sm:text-sm mt-1">Design and schedule the curriculum for each batch</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center md:justify-end gap-2 sm:gap-3 w-full md:w-auto">
                     <button
                         onClick={handleSave}
                         disabled={saving || !selectedBatch}
-                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 md:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Save Plan
@@ -161,7 +161,7 @@ export default function AdminLessonPlan() {
                     <button
                         onClick={handleAddRow}
                         disabled={!selectedBatch}
-                        className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all border border-white/10 flex items-center gap-2 disabled:opacity-50"
+                        className="flex-1 md:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs sm:text-sm font-bold transition-all border border-white/10 flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         <Plus className="h-4 w-4 text-emerald-500" />
                         Add Row
@@ -170,7 +170,7 @@ export default function AdminLessonPlan() {
             </div>
 
             {/* Batch Selector */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="w-full md:w-72">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Select Batch</label>
@@ -187,9 +187,9 @@ export default function AdminLessonPlan() {
                         </div>
                     </div>
                     {selectedBatch && (
-                        <div className="flex-1 flex items-center gap-4 text-sm text-slate-400 bg-blue-500/5 border border-blue-500/10 rounded-xl px-4 py-3">
-                            <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
-                            Editing plan for <span className="text-blue-400 font-bold">{selectedBatch}</span>
+                        <div className="flex-1 flex items-center gap-3 sm:gap-4 text-[10px] sm:text-sm text-slate-400 bg-blue-500/5 border border-blue-500/10 rounded-xl px-3 sm:px-4 py-2 sm:py-3 mt-2 md:mt-0">
+                            <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse shrink-0"></div>
+                            <span>Editing plan for <span className="text-blue-400 font-bold">{selectedBatch}</span></span>
                         </div>
                     )}
                 </div>
@@ -208,7 +208,8 @@ export default function AdminLessonPlan() {
                 </div>
             ) : (
                 <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr className="bg-slate-800/80 border-b border-white/10">
@@ -240,8 +241,8 @@ export default function AdminLessonPlan() {
                                                     className={`w-full appearance-none bg-slate-800 border-white/5 rounded-lg pl-3 pr-8 py-2 text-sm font-bold outline-none transition-all border ${getTypeColor(plan.type)}`}
                                                 >
                                                     <option value="Class">Class</option>
-                                                    <option value="Online">Online Exam</option>
-                                                    <option value="Offline">Offline Exam</option>
+                                                    <option value="Online">Online Test</option>
+                                                    <option value="Offline">Offline Test</option>
                                                 </select>
                                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                                                     {getTypeIcon(plan.type)}
@@ -267,23 +268,74 @@ export default function AdminLessonPlan() {
                                         </td>
                                     </tr>
                                 ))}
-                                {plans.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-slate-500 italic">
-                                            No plans created for this batch. Click "Add Row" to start.
-                                        </td>
-                                    </tr>
-                                )}
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden divide-y divide-white/5">
+                        {plans.map((plan, index) => (
+                            <div key={plan._id || plan.tempId || index} className="p-3 space-y-3 bg-slate-900/40">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex-1 mr-4">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Date</label>
+                                        <div className="relative">
+                                            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                                            <input
+                                                type="date"
+                                                value={plan.date}
+                                                onChange={(e) => handleChange(index, 'date', e.target.value)}
+                                                className="w-full bg-slate-800 border border-white/5 rounded-lg pl-10 pr-3 py-2 text-sm text-white focus:ring-1 focus:ring-blue-500/50 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleRemoveRow(index)}
+                                        className="p-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20"
+                                    >
+                                        <Trash2 className="h-5 w-5" />
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Type</label>
+                                    <div className="relative">
+                                        <select
+                                            value={plan.type}
+                                            onChange={(e) => handleChange(index, 'type', e.target.value as any)}
+                                            className={`w-full appearance-none bg-slate-800 border-white/5 rounded-lg pl-3 pr-8 py-2.5 text-sm font-bold outline-none transition-all border ${getTypeColor(plan.type)}`}
+                                        >
+                                            <option value="Class">Class</option>
+                                            <option value="Online">Online Test</option>
+                                            <option value="Offline">Offline Test</option>
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            {getTypeIcon(plan.type)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Description</label>
+                                    <textarea
+                                        value={plan.description}
+                                        onChange={(e) => handleChange(index, 'description', e.target.value)}
+                                        placeholder="Enter details..."
+                                        className="w-full bg-slate-800/50 border border-white/5 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm text-slate-300 focus:text-white focus:bg-slate-800 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all min-h-[70px]"
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {plans.length === 0 && (
+                        <div className="px-6 py-12 text-center text-slate-500 italic">
+                            No plans created for this batch. Click "Add Row" to start.
+                        </div>
+                    )}
                 </div>
             )}
 
-            {/* Mobile Helper Message */}
-            <div className="md:hidden bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
-                <p className="text-xs text-amber-400 font-medium">Tip: Swipe horizontally on the table to see all columns</p>
-            </div>
         </div>
     );
 }
