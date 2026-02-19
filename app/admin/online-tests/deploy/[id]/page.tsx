@@ -109,30 +109,47 @@ export default function DeployTestPage() {
             }
 
             // Pre-fill deployment data if exists
+            // TIMEZONE FIX: Convert Database UTC time to IST string for display
+            // We want the input to show the IST time corresponding to the stored UTC time.
+            // Stored: UTC (e.g. 04:30Z) -> Want Input: "10:00" (IST)
+            // Logic: UTC Timestamp + 5.5 hours -> ISO String -> slice to YYYY-MM-DDTHH:mm
+            const toISTString = (dateStr: string) => {
+                if (!dateStr) return '';
+                const date = new Date(dateStr);
+                const istOffset = 5.5 * 60 * 60 * 1000;
+                const istDate = new Date(date.getTime() + istOffset);
+                return istDate.toISOString().slice(0, 16);
+            };
+
             if (foundTest.deployment) {
                 if (foundTest.deployment.startTime) {
-                    const start = new Date(foundTest.deployment.startTime);
-                    start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
-                    setStartTime(start.toISOString().slice(0, 16));
+                    setStartTime(toISTString(foundTest.deployment.startTime));
                 }
 
                 if (foundTest.deployment.endTime) {
-                    const end = new Date(foundTest.deployment.endTime);
-                    end.setMinutes(end.getMinutes() - end.getTimezoneOffset());
-                    setEndTime(end.toISOString().slice(0, 16));
+                    setEndTime(toISTString(foundTest.deployment.endTime));
                 }
 
                 if (foundTest.deployment.batches && Array.isArray(foundTest.deployment.batches)) {
                     setSelectedBatches(foundTest.deployment.batches);
                 }
             } else {
-                // Initialize defaults
+                // Initialize defaults (IST based)
+                // Current IST time
                 const now = new Date();
-                now.setMinutes(now.getMinutes() - now.getTimezoneOffset() + 30); // Local time + 30m
-                setStartTime(now.toISOString().slice(0, 16));
+                const istOffset = 5.5 * 60 * 60 * 1000;
+                // Adjust 'now' to be IST based on current system time (assuming system is roughly correct or we just default)
+                // Actually, if we want "Now + 30 mins" in IST:
+                // We just take current UTC, add offset, format.
+                // But better: Just take current time, add 30 mins, display in IST.
+                const targetTime = new Date(now.getTime() + 30 * 60000);
+                // Display as IST string
+                const istTime = new Date(targetTime.getTime() + istOffset); // Shift for display
+                setStartTime(istTime.toISOString().slice(0, 16));
 
-                const end = new Date(now.getTime() + defaultDuration * 60000);
-                setEndTime(end.toISOString().slice(0, 16));
+                const end = new Date(targetTime.getTime() + defaultDuration * 60000);
+                const istEnd = new Date(end.getTime() + istOffset);
+                setEndTime(istEnd.toISOString().slice(0, 16));
             }
         } catch (error) {
             toast.error('Failed to load data');
@@ -231,12 +248,39 @@ export default function DeployTestPage() {
 
         let finalStartTime = startTime;
 
-        // If deployed and start time is empty (maybe not loaded correctly), use existing
+        // TIMEZONE FIX: Interpret input string as IST and convert to UTC ISO String
+        const fromISTString = (dateStr: string) => {
+            if (!dateStr) return null;
+            // Append IST offset and let Date constructor parse it
+            // Format: YYYY-MM-DDTHH:mm+05:30
+            const istDateStr = `${dateStr}+05:30`;
+            return new Date(istDateStr).toISOString();
+        };
+
         if (test?.status === 'deployed' && !finalStartTime) {
             // Ensure we have a valid start time from deployment
             if (test.deployment?.startTime) {
+                // It's already UTC string from DB
                 finalStartTime = test.deployment.startTime;
             }
+        } else if (finalStartTime && !finalStartTime.endsWith('Z')) {
+            // It's an input string, convert to UTC assuming IST input
+            const iso = fromISTString(finalStartTime);
+            if (!iso) {
+                toast.error('Invalid Start Time');
+                return;
+            }
+            finalStartTime = iso;
+        }
+
+        let finalEndTime = endTime;
+        if (finalEndTime && !finalEndTime.endsWith('Z')) {
+            const iso = fromISTString(finalEndTime);
+            if (!iso) {
+                toast.error('Invalid End Time');
+                return;
+            }
+            finalEndTime = iso;
         }
 
         // If still empty, try to derive from pre-filled data again or fail
@@ -263,7 +307,7 @@ export default function DeployTestPage() {
                     batches: finalBatches,
                     students: deploymentMode === 'specific' ? selectedStudents : [],
                     startTime: finalStartTime,
-                    endTime,
+                    endTime: finalEndTime,
                     durationMinutes
                 })
             });
@@ -305,7 +349,7 @@ export default function DeployTestPage() {
                     <ArrowLeft className="h-5 w-5 text-slate-400" />
                 </button>
                 <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
+                    <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                         Deploy Test
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">Configure deployment settings and select target batches/students</p>
@@ -314,10 +358,10 @@ export default function DeployTestPage() {
 
             {/* Test Info */}
             {test && (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                     <h2 className="text-xl font-bold text-white mb-2">{test.title}</h2>
                     {test.description && <p className="text-slate-400 text-sm mb-4">{test.description}</p>}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white/5 rounded-lg p-3">
                             <p className="text-xs text-slate-400 mb-1">Questions</p>
                             <p className="text-lg font-bold text-white">
@@ -338,7 +382,6 @@ export default function DeployTestPage() {
 
                                     if (maxQ && maxQ > 0 && questions.length > 0 && maxQ < questions.length) {
                                         // Calculate sum of marks for the first N questions (subset)
-                                        // This is consistent with Create page logic and backend pre-save hook
                                         const subset = questions.slice(0, maxQ);
                                         const subsetTotal = subset.reduce((total: number, q: any) => {
                                             if (q.type === 'comprehension' && q.subQuestions) {
@@ -346,9 +389,6 @@ export default function DeployTestPage() {
                                             }
                                             return total + (q.marks || 0);
                                         }, 0);
-
-                                        // If questions have varying marks, this is an estimate (first N)
-                                        // If all have same marks, it's exact.
                                         return subsetTotal;
                                     }
                                     return test.totalMarks || 0;
@@ -365,7 +405,7 @@ export default function DeployTestPage() {
 
             {/* Batch Selection - Show if draft OR if deployed but no batches found (repair mode) */}
             {(!test?.status || test.status === 'draft' || (test.status === 'deployed' && (!test.deployment?.batches || test.deployment.batches.length === 0))) ? (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Users className="h-5 w-5 text-emerald-400" />
                         <h2 className="text-xl font-bold text-white">Select Batches</h2>
@@ -375,11 +415,11 @@ export default function DeployTestPage() {
                     {batches.length === 0 ? (
                         <p className="text-slate-500 text-sm">No batches found in Google Sheets</p>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {Array.isArray(batches) && batches.map(batch => (
                                 <label
                                     key={batch}
-                                    className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-all border ${selectedBatches.includes(batch)
+                                    className={`flex items-center gap-3 p-3 md:p-4 rounded-lg cursor-pointer transition-all border ${selectedBatches.includes(batch)
                                         ? 'bg-emerald-500/20 border-emerald-500/50'
                                         : 'bg-slate-950/50 border-white/5 hover:border-white/20'
                                         }`}
@@ -388,16 +428,16 @@ export default function DeployTestPage() {
                                         type="checkbox"
                                         checked={selectedBatches.includes(batch)}
                                         onChange={() => toggleBatch(batch)}
-                                        className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                                        className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500 flex-shrink-0"
                                     />
-                                    <span className="text-sm font-medium text-slate-300 flex-1">{batch}</span>
+                                    <span className="text-sm font-medium text-slate-300 flex-1 break-words">{batch}</span>
                                 </label>
                             ))}
                         </div>
                     )}
                 </div>
             ) : (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Users className="h-5 w-5 text-emerald-400" />
                         <h2 className="text-xl font-bold text-white">Deployed Batches</h2>
@@ -410,7 +450,7 @@ export default function DeployTestPage() {
                         ))}
                     </div>
                     <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm flex items-start gap-2">
-                        <div className="mt-0.5"><Users className="h-4 w-4" /></div>
+                        <div className="mt-0.5 min-w-[16px]"><Users className="h-4 w-4" /></div>
                         <p>Batches cannot be changed for a deployed test. To assign to new batches, please duplicate the test.</p>
                     </div>
                 </div>
@@ -418,7 +458,7 @@ export default function DeployTestPage() {
 
             {/* Student Selection - Only show if not deployed */}
             {(!test?.status || test.status === 'draft') && selectedBatches.length > 0 && (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Users className="h-5 w-5 text-blue-400" />
                         <h2 className="text-xl font-bold text-white">Student Selection</h2>
@@ -432,7 +472,7 @@ export default function DeployTestPage() {
                                 name="deploymentMode"
                                 checked={deploymentMode === 'all'}
                                 onChange={() => setDeploymentMode('all')}
-                                className="w-4 h-4"
+                                className="w-4 h-4 flex-shrink-0"
                             />
                             <span className="text-sm font-medium text-slate-300">
                                 All students in selected batches ({students.length} students)
@@ -444,7 +484,7 @@ export default function DeployTestPage() {
                                 name="deploymentMode"
                                 checked={deploymentMode === 'specific'}
                                 onChange={() => setDeploymentMode('specific')}
-                                className="w-4 h-4"
+                                className="w-4 h-4 flex-shrink-0"
                             />
                             <span className="text-sm font-medium text-slate-300">
                                 Specific students only
@@ -455,39 +495,39 @@ export default function DeployTestPage() {
                     {/* Student List (if specific mode) */}
                     {deploymentMode === 'specific' && (
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <p className="text-sm text-slate-400">{selectedStudents.length} of {students.length} selected</p>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={selectAllStudents}
-                                        className="text-xs px-3 py-1.5 bg-emerald-500/20 text-emerald-300 rounded hover:bg-emerald-500/30 transition-colors"
+                                        className="text-xs px-3 py-1.5 bg-emerald-500/20 text-emerald-300 rounded hover:bg-emerald-500/30 transition-colors flex-1 sm:flex-none justify-center"
                                     >
                                         Select All
                                     </button>
                                     <button
                                         onClick={deselectAllStudents}
-                                        className="text-xs px-3 py-1.5 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 transition-colors"
+                                        className="text-xs px-3 py-1.5 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 transition-colors flex-1 sm:flex-none justify-center"
                                     >
                                         Deselect All
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="max-h-64 overflow-y-auto space-y-2 bg-slate-950/30 rounded-lg p-3">
+                            <div className="max-h-64 overflow-y-auto space-y-2 bg-slate-950/30 rounded-lg p-2 md:p-3">
                                 {students.map(student => (
                                     <label
                                         key={student.phoneNumber}
-                                        className="flex items-center gap-3 p-2 hover:bg-slate-800/50 rounded cursor-pointer transition-colors"
+                                        className="flex items-start gap-3 p-2 hover:bg-slate-800/50 rounded cursor-pointer transition-colors"
                                     >
                                         <input
                                             type="checkbox"
                                             checked={selectedStudents.some(s => s.phoneNumber === student.phoneNumber)}
                                             onChange={() => toggleStudent(student)}
-                                            className="w-4 h-4 rounded border-slate-600 bg-slate-950 text-blue-500 focus:ring-blue-500"
+                                            className="w-4 h-4 mt-1 rounded border-slate-600 bg-slate-950 text-blue-500 focus:ring-blue-500 flex-shrink-0"
                                         />
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-slate-300">{student.studentName}</p>
-                                            <p className="text-xs text-slate-500">{student.batchName} · {student.phoneNumber}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-slate-300 truncate">{student.studentName}</p>
+                                            <p className="text-xs text-slate-500 break-words">{student.batchName} · {student.phoneNumber}</p>
                                         </div>
                                     </label>
                                 ))}
@@ -498,13 +538,13 @@ export default function DeployTestPage() {
             )}
 
             {/* Schedule */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Calendar className="h-5 w-5 text-purple-400" />
                     <h2 className="text-xl font-bold text-white">Schedule</h2>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="text-sm font-medium text-slate-300 mb-2 block">Start Time</label>
                         <input
@@ -529,10 +569,10 @@ export default function DeployTestPage() {
 
                 <div className="mt-4">
                     <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                        <Clock className="h-4 w-4 text-purple-400" />
+                        <Clock className="h-4 w-4 text-purple-400 flex-shrink-0" />
                         <span className="text-sm text-slate-300">
                             Each student gets <span className="font-bold text-white">{durationMinutes} minutes</span> after starting
-                            {test?.config?.enablePerQuestionTimer && <span className="text-purple-400 ml-1">(auto-calculated from per-question timers)</span>}
+                            {test?.config?.enablePerQuestionTimer && <span className="text-purple-400 ml-1 block sm:inline">(auto-calculated from per-question timers)</span>}
                         </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-2">Duration is configured on the test creation page.</p>
@@ -540,17 +580,17 @@ export default function DeployTestPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pb-8">
+            <div className="flex flex-col md:flex-row justify-end gap-3 pb-8">
                 <button
                     onClick={() => router.back()}
-                    className="px-6 py-3 text-slate-400 hover:text-white transition-colors font-medium"
+                    className="px-6 py-3 text-slate-400 hover:text-white transition-colors font-medium border border-transparent hover:border-slate-800 rounded-xl"
                 >
                     Cancel
                 </button>
                 <button
                     onClick={deployTest}
                     disabled={deploying || (test?.status !== 'deployed' && selectedBatches.length === 0)}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     <Send className="h-5 w-5" />
                     {deploying ? 'Saving...' : (test?.status === 'deployed' ? 'Update Deployment' : 'Deploy Test')}

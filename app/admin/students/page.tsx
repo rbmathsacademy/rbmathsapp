@@ -311,18 +311,28 @@ export default function AdminStudents() {
             <Toaster position="top-center" />
 
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400">
-                        Student Database
-                    </h1>
-                    <p className="text-slate-400 text-sm mt-1">{total} students total</p>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => window.history.back()}
+                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors bg-slate-800/50 md:bg-transparent"
+                    >
+                        <ChevronLeft className="h-5 w-5 text-slate-400" />
+                    </button>
+                    <div>
+                        <h1 className="text-xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400">
+                            Student Database
+                        </h1>
+                        <p className="text-slate-400 text-xs md:text-sm mt-0.5">{total} students total</p>
+                    </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                     <button onClick={handleSyncFromSheet} disabled={syncing}
-                        className="px-4 py-2 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold text-sm hover:bg-amber-600/30 transition-all flex items-center gap-2 disabled:opacity-50">
-                        <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                        Sync from Sheet
+                        className="col-span-1 px-3 py-2 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold text-xs md:text-sm hover:bg-amber-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                        <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${syncing ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">Sync Sheet</span>
+                        <span className="sm:hidden">Sync</span>
                     </button>
                     <button onClick={async () => {
                         if (!confirm('This will create guardian accounts for all students who do not have one. Continue?')) return;
@@ -336,19 +346,21 @@ export default function AdminStudents() {
                             toast.error('Failed to sync guardians', { id: toastId });
                         }
                     }}
-                        className="px-4 py-2 rounded-xl bg-green-600/20 border border-green-500/30 text-green-300 font-bold text-sm hover:bg-green-600/30 transition-all flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Sync Guardians
+                        className="col-span-1 px-3 py-2 rounded-xl bg-green-600/20 border border-green-500/30 text-green-300 font-bold text-xs md:text-sm hover:bg-green-600/30 transition-all flex items-center justify-center gap-2">
+                        <Shield className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">Sync Guardians</span>
+                        <span className="sm:hidden">Guardians</span>
                     </button>
                     <button onClick={() => setShowBulkModal(true)}
-                        className="px-4 py-2 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold text-sm hover:bg-purple-600/30 transition-all flex items-center gap-2">
-                        <Upload className="h-4 w-4" />
-                        Bulk Import
+                        className="col-span-1 px-3 py-2 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold text-xs md:text-sm hover:bg-purple-600/30 transition-all flex items-center justify-center gap-2">
+                        <Upload className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">Bulk Import</span>
+                        <span className="sm:hidden">Import</span>
                     </button>
                     <button onClick={() => { resetForm(); setShowAddModal(true); }}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
-                        <Plus className="h-4 w-4" />
-                        Add Student
+                        className="col-span-1 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                        <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                        <span>Add</span>
                     </button>
                 </div>
             </div>
@@ -367,7 +379,7 @@ export default function AdminStudents() {
                 <select
                     value={batchFilter}
                     onChange={e => { setBatchFilter(e.target.value); setPage(1); }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 min-w-[180px]"
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 w-full sm:w-auto min-w-[180px]"
                 >
                     <option value="" className="bg-slate-800 text-white">All Batches</option>
                     {batches.map(b => <option key={b} value={b} className="bg-slate-800 text-white">{b}</option>)}
@@ -380,11 +392,11 @@ export default function AdminStudents() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-white/10 bg-white/5">
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Student</th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Batches</th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Guardian</th>
-                                <th className="text-right px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
+                                <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Student</th>
+                                <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Phone</th>
+                                <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Batches</th>
+                                <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Guardian</th>
+                                <th className="text-right px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -400,24 +412,25 @@ export default function AdminStudents() {
                                 </td></tr>
                             ) : students.map(student => (
                                 <tr key={student._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 md:px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                            <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
                                                 {student.name?.[0]?.toUpperCase() || '?'}
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-white">{student.name}</p>
-                                                {student.email && <p className="text-[10px] text-slate-500">{student.email}</p>}
+                                            <div className="max-w-[120px] sm:max-w-none truncate">
+                                                <p className="font-bold text-white truncate">{student.name}</p>
+                                                <p className="text-[10px] text-slate-500 sm:hidden">{student.phoneNumber}</p>
+                                                {student.email && <p className="text-[10px] text-slate-500 truncate hidden sm:block">{student.email}</p>}
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 md:px-4 py-3 hidden sm:table-cell">
                                         <div className="flex items-center gap-1.5 text-slate-300">
                                             <Phone className="h-3 w-3 text-slate-500" />
                                             {student.phoneNumber}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 hidden md:table-cell">
+                                    <td className="px-3 md:px-4 py-3 hidden md:table-cell">
                                         <div className="flex flex-wrap gap-1">
                                             {student.courses.map(c => (
                                                 <span key={c} className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 text-[10px] font-semibold border border-blue-500/10">
@@ -426,7 +439,7 @@ export default function AdminStudents() {
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 hidden lg:table-cell">
+                                    <td className="px-3 md:px-4 py-3 hidden lg:table-cell">
                                         {student.guardianName ? (
                                             <div className="text-xs">
                                                 <div className="flex items-center gap-1 text-slate-300">
@@ -441,7 +454,7 @@ export default function AdminStudents() {
                                             <span className="text-slate-600 text-xs">—</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-3 md:px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <button onClick={() => openEditModal(student)}
                                                 className="p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-all" title="Edit">
@@ -459,19 +472,19 @@ export default function AdminStudents() {
                     </table>
                 </div>
 
-                {/* Pagination */}
+                {/* Pagination (Same as before but ensured styling) */}
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
                         <p className="text-xs text-slate-500">
-                            Page {page} of {totalPages} ({total} students)
+                            {page} / {totalPages}
                         </p>
                         <div className="flex gap-1">
                             <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-                                className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30 transition-all">
+                                className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30 transition-all bg-white/5">
                                 <ChevronLeft className="h-4 w-4" />
                             </button>
                             <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
-                                className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30 transition-all">
+                                className="p-2 rounded-lg hover:bg-white/10 text-slate-400 disabled:opacity-30 transition-all bg-white/5">
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Loader2, Copy, Save, Database, Filter, Upload, X, Search, Edit, FileText, Download, Trash2, RefreshCw } from 'lucide-react';
+import { Loader2, Copy, Save, Database, Filter, Upload, X, Search, Edit, FileText, Download, Trash2, RefreshCw, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import MultiSelect from '../components/MultiSelect';
 import Latex from 'react-latex-next';
@@ -478,26 +478,34 @@ export default function AnswerBank() {
     return (
         <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gray-950 text-white font-sans selection:bg-purple-500/30">
             {/* Header */}
-            <header className="flex justify-between items-center px-6 py-4 bg-gray-900 border-b border-gray-800 shadow-sm relative z-20">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg shadow-green-500/20">
-                        <Database className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                            Answer Bank
-                        </h1>
-                        <p className="text-xs text-gray-500 font-medium">Manage Answers, Hints & Explanations</p>
+            <header className="flex flex-col gap-4 px-4 py-4 md:px-6 bg-gray-900 border-b border-gray-800 shadow-sm relative z-20">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => window.history.back()}
+                            className="p-2 hover:bg-slate-800 rounded-lg transition-colors bg-slate-800/50 md:bg-transparent"
+                        >
+                            <ArrowLeft className="h-5 w-5 text-slate-400" />
+                        </button>
+                        <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg shadow-green-500/20 hidden md:block">
+                            <Database className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                                Answer Bank
+                            </h1>
+                            <p className="text-xs text-gray-500 font-medium">Manage Answers, Hints & Explanations</p>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-2">
                     {!isEditorOpen && selectedQuestionIds.size > 0 && (
                         <button
                             onClick={deleteSelected}
-                            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95 animate-in fade-in"
+                            className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95 animate-in fade-in"
                         >
-                            <Trash2 className="h-4 w-4" /> Delete ({selectedQuestionIds.size})
+                            <Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Delete</span> ({selectedQuestionIds.size})
                         </button>
                     )}
                     {!isEditorOpen && (
@@ -505,15 +513,15 @@ export default function AnswerBank() {
                             <button
                                 onClick={copyPrompt}
                                 disabled={selectedQuestionIds.size === 0}
-                                className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                                className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex-1 justify-center sm:flex-none"
                             >
-                                <Copy className="h-4 w-4" /> Copy Prompt ({selectedQuestionIds.size})
+                                <Copy className="h-4 w-4" /> <span className="hidden sm:inline">Copy Prompt</span><span className="sm:hidden">Prompt</span> ({selectedQuestionIds.size})
                             </button>
                             <button
                                 onClick={() => handleEditAnswers()}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95"
+                                className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95 flex-1 justify-center sm:flex-none"
                             >
-                                <Upload className="h-4 w-4" /> Bulk Import Answers
+                                <Upload className="h-4 w-4" /> <span className="hidden sm:inline">Bulk Import Answers</span><span className="sm:hidden">Import</span>
                             </button>
                         </>
                     )}
@@ -647,10 +655,11 @@ export default function AnswerBank() {
                 <>
                     {/* Viewer Mode */}
                     {/* Filters & Actions */}
-                    <div className="bg-gray-900 border-b border-gray-800 p-4">
-                        <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
-                            <div className="flex gap-4 w-full md:w-auto items-end">
-                                <div className="flex items-center h-[38px] px-2">
+                    <div className="bg-gray-900 border-b border-gray-800 p-3 md:p-4">
+                        <div className="flex flex-col gap-4">
+                            {/* Mobile Stacked Filters */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                                <div className="flex items-center h-[38px] px-2 bg-gray-800 rounded border border-gray-700 w-fit">
                                     <input
                                         type="checkbox"
                                         checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
@@ -658,9 +667,10 @@ export default function AnswerBank() {
                                         className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
                                         title="Select All"
                                     />
+                                    <span className="ml-2 text-xs text-gray-400 font-medium sm:hidden">Select All</span>
                                 </div>
-                                <div className="w-48">
-                                    <label className="text-xs text-gray-400 mb-1 block">Filter Topic</label>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1 block">Topic</label>
                                     <MultiSelect
                                         options={topics}
                                         selected={selectedTopics}
@@ -668,8 +678,8 @@ export default function AnswerBank() {
                                         placeholder="All Topics"
                                     />
                                 </div>
-                                <div className="w-48">
-                                    <label className="text-xs text-gray-400 mb-1 block">Filter Subtopic</label>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1 block">Subtopic</label>
                                     <MultiSelect
                                         options={subtopics}
                                         selected={selectedSubtopics}
@@ -677,8 +687,8 @@ export default function AnswerBank() {
                                         placeholder="All Subtopics"
                                     />
                                 </div>
-                                <div className="w-48">
-                                    <label className="text-xs text-gray-400 mb-1 block">Filter Exam</label>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1 block">Exam</label>
                                     <MultiSelect
                                         options={examNames}
                                         selected={selectedExams}
@@ -686,8 +696,8 @@ export default function AnswerBank() {
                                         placeholder="All Exams"
                                     />
                                 </div>
-                                <div className="flex-1 relative">
-                                    <label className="text-xs text-gray-400 mb-1 block">Search</label>
+                                <div className="space-y-1 relative">
+                                    <label className="text-xs text-gray-400 ml-1 block">Search</label>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                                         <input
@@ -695,22 +705,16 @@ export default function AnswerBank() {
                                             placeholder="Search questions..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                            className="w-full bg-gray-800 border border-gray-700 rounded h-[40px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
                                         />
                                     </div>
-                                </div>
-                            </div>
-                            <div className="flex flex-col justify-end">
-                                <label className="text-xs text-gray-400 mb-1 block opacity-0">Count</label>
-                                <div className="h-[38px] px-3 bg-blue-900/30 border border-blue-500/30 rounded flex items-center justify-center min-w-[60px]">
-                                    <span className="text-blue-300 font-bold text-sm">{filteredQuestions.length}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Question List */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-950 pb-20">
+                    <div className="flex-1 overflow-y-auto p-2 md:p-6 space-y-3 md:space-y-4 bg-gray-950 pb-20">
                         {loading ? (
                             <div className="flex items-center justify-center h-full">
                                 <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -722,7 +726,7 @@ export default function AnswerBank() {
                         ) : (
                             filteredQuestions.map((q, index) => (
                                 <div id={`q-${q.id}`} key={q.id} className={`bg-gray-900 rounded-lg border transition-all duration-200 group ${selectedQuestionIds.has(q.id) ? 'border-purple-500/50 shadow-purple-500/10 shadow-lg' : 'border-gray-800 hover:border-gray-700'}`}>
-                                    <div className="p-4 flex gap-4">
+                                    <div className="p-3 md:p-4 flex gap-3 md:gap-4">
                                         <div className="pt-1 flex flex-col items-center gap-2">
                                             <span className="text-xs font-mono text-gray-500 font-bold">{index + 1}</span>
                                             <input
@@ -732,37 +736,37 @@ export default function AnswerBank() {
                                                 className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
                                             />
                                         </div>
-                                        <div className="flex-1">
-                                            {/* Header Tags */}
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="flex flex-wrap gap-2">
-                                                    <span className="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-gray-700">{q.topic}</span>
-                                                    <span className="bg-gray-800 text-gray-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-gray-700">{q.subtopic}</span>
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
+                                        <div className="flex-1 overflow-hidden">
+                                            {/* Header Tags - Wrap correctly on mobile */}
+                                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
+                                                <div className="flex flex-wrap gap-1.5 md:gap-2">
+                                                    <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider border border-gray-700">{q.topic}</span>
+                                                    <span className="bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider border border-gray-700">{q.subtopic}</span>
+                                                    <span className={`text-[9px] md:text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
                                                         {q.type}
                                                     </span>
                                                     {q.examNames && q.examNames.length > 0 && q.examNames.map((exam, idx) => (
-                                                        <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                        <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[9px] md:text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
                                                             {exam}
                                                         </span>
                                                     ))}
                                                     {q.marks && (
-                                                        <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
-                                                            {q.marks} marks
+                                                        <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[9px] md:text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                            {q.marks} m
                                                         </span>
                                                     )}
                                                 </div>
                                                 <button
                                                     onClick={() => handleEditAnswers(q.id)}
-                                                    className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                    className="self-end sm:self-auto flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                                                 >
                                                     <Edit className="h-3 w-3" />
-                                                    Edit
+                                                    <span className="sm:inline">Edit</span>
                                                 </button>
                                             </div>
 
                                             {/* Question Text */}
-                                            <div className="mb-4 text-sm text-gray-200 prose prose-invert max-w-none">
+                                            <div className="mb-4 text-xs md:text-sm text-gray-200 prose prose-invert max-w-none w-full overflow-x-auto">
                                                 {q.image && (
                                                     <div className="mb-2">
                                                         <img src={q.image} alt="Q" className="max-h-24 rounded border border-gray-700" />
@@ -772,37 +776,37 @@ export default function AnswerBank() {
 
                                                 {/* MCQ Options Display */}
                                                 {q.type === 'mcq' && q.options && q.options.length > 0 && (
-                                                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    <div className="mt-2 grid grid-cols-1 gap-1.5">
                                                         {q.options.map((opt: string, i: number) => (
-                                                            <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
-                                                                <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
-                                                                <span className="text-gray-300"><Latex>{opt}</Latex></span>
+                                                            <div key={i} className={`text-xs px-2 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                <span className="font-bold text-gray-500 uppercase flex-shrink-0">{String.fromCharCode(65 + i)}.</span>
+                                                                <span className="text-gray-300 break-words w-full"><Latex>{opt}</Latex></span>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* Answer Section */}
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-800 bg-gray-950/30 -mx-4 -mb-4 px-4 py-3 rounded-b-lg">
+                                            {/* Answer Section for Editors */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-4 pt-4 border-t border-gray-800 bg-gray-950/30 -mx-3 md:-mx-4 -mb-3 md:-mb-4 px-3 md:px-4 py-3 rounded-b-lg">
                                                 <div className="space-y-1">
                                                     <div className="text-[10px] font-bold text-green-500 uppercase flex items-center gap-1">
                                                         Answer
                                                         {!q.answer && <span className="text-red-500 ml-auto text-[9px] lowercase italic">(missing)</span>}
                                                     </div>
-                                                    <div className="text-xs text-green-300/90 font-mono">
+                                                    <div className="text-xs text-green-300/90 font-mono break-words overflow-x-auto">
                                                         {q.answer ? <Latex>{q.answer}</Latex> : <span className="text-gray-600 italic">No answer provided</span>}
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="text-[10px] font-bold text-yellow-500 uppercase">Hint</div>
-                                                    <div className="text-xs text-yellow-300/80">
+                                                    <div className="text-xs text-yellow-300/80 break-words overflow-x-auto">
                                                         {q.hint ? <Latex>{q.hint}</Latex> : <span className="text-gray-600 italic">-</span>}
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="text-[10px] font-bold text-blue-500 uppercase">Explanation</div>
-                                                    <div className="text-xs text-blue-300/80 line-clamp-3 hover:line-clamp-none cursor-help transition-all">
+                                                    <div className="text-xs text-blue-300/80 line-clamp-3 hover:line-clamp-none cursor-help transition-all break-words overflow-x-auto">
                                                         {q.explanation ? <LatexWithImages>{q.explanation}</LatexWithImages> : <span className="text-gray-600 italic">-</span>}
                                                     </div>
                                                 </div>

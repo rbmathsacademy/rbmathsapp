@@ -322,7 +322,7 @@ export default function CreateTestPage() {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => router.back()}
-                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors mr-2"
                     >
                         <ArrowLeft className="h-5 w-5 text-slate-400" />
                     </button>
@@ -336,7 +336,7 @@ export default function CreateTestPage() {
             </div>
 
             {/* Test Metadata */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 space-y-4">
+            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6 space-y-4">
                 <h2 className="text-xl font-bold text-white mb-4">Test Information</h2>
 
                 <div>
@@ -382,11 +382,11 @@ export default function CreateTestPage() {
             </div>
 
             {/* Test Configuration */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                 <h2 className="text-xl font-bold text-white mb-4">Test Settings</h2>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
                         <input
                             type="checkbox"
                             checked={config.shuffleQuestions}
@@ -396,7 +396,7 @@ export default function CreateTestPage() {
                         <span className="text-sm font-medium text-slate-300">Shuffle Questions</span>
                     </label>
 
-                    <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                    <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
                         <input
                             type="checkbox"
                             checked={config.showTimer}
@@ -406,7 +406,7 @@ export default function CreateTestPage() {
                         <span className="text-sm font-medium text-slate-300">Show Timer</span>
                     </label>
 
-                    <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                    <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
                         <input
                             type="checkbox"
                             checked={config.allowBackNavigation}
@@ -414,7 +414,7 @@ export default function CreateTestPage() {
                             disabled={config.enablePerQuestionTimer}
                             className={`w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
-                        <span className="text-sm font-medium text-slate-300">Allow Back Navigation</span>
+                        <span className="text-sm font-medium text-slate-300">Allow Back Nav</span>
                     </label>
 
                     <div className="col-span-2 md:col-span-1">
@@ -432,7 +432,7 @@ export default function CreateTestPage() {
                     {/* Show Results Config */}
                     <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                            <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
                                 <input
                                     type="checkbox"
                                     checked={config.showResultsImmediately}
@@ -481,7 +481,7 @@ export default function CreateTestPage() {
                     </div>
 
                     <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
-                        <label className="flex items-center gap-3 p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors mb-4">
+                        <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors mb-4">
                             <input
                                 type="checkbox"
                                 checked={config.enablePerQuestionTimer || false}
@@ -523,29 +523,29 @@ export default function CreateTestPage() {
             </div>
 
             {/* Questions Section */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
+            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-white">Questions ({questions.length})</h2>
                         <p className="text-sm text-slate-400 mt-1">Total Marks: {calculateTotalMarks()}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3 flex-wrap">
                         <button
                             onClick={() => setShowQuestionImport(true)}
-                            className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 rounded-lg font-bold transition-all"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 rounded-lg font-bold transition-all text-sm md:text-base"
                         >
-                            <Plus className="h-5 w-5" />
-                            Import Questions
+                            <Plus className="h-4 w-4 md:h-5 md:w-5" />
+                            <span className="whitespace-nowrap">Import</span>
                         </button>
                         <button
                             onClick={() => {
                                 setEditingQuestion(undefined);
                                 setShowQuestionEditor(true);
                             }}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-500/20"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-500/20 text-sm md:text-base"
                         >
-                            <Plus className="h-5 w-5" />
-                            Add Question
+                            <Plus className="h-4 w-4 md:h-5 md:w-5" />
+                            <span className="whitespace-nowrap">Add New</span>
                         </button>
                     </div>
                 </div>
@@ -565,53 +565,53 @@ export default function CreateTestPage() {
                         {questions.map((q, index) => (
                             <div
                                 key={q.id}
-                                className="bg-slate-950/50 border border-white/5 hover:border-emerald-500/30 rounded-xl p-4 transition-all group"
+                                className="bg-slate-950/50 border border-white/5 hover:border-emerald-500/30 rounded-xl p-3 md:p-4 transition-all group relative"
                             >
-                                <div className="flex items-start gap-4">
-                                    {/* Question Number & Drag Handle */}
-                                    <div className="flex flex-col items-center gap-2">
+                                <div className="flex flex-col sm:flex-row items-start gap-4">
+                                    {/* Question Number & Drag Handle - Horizontal on mobile */}
+                                    <div className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 w-full sm:w-auto border-b sm:border-b-0 border-white/5 pb-2 sm:pb-0">
                                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-slate-300 font-bold text-sm">
                                             {index + 1}
                                         </div>
-                                        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex flex-row sm:flex-col gap-1 ml-auto sm:ml-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => moveQuestion(index, 'up')}
                                                 disabled={index === 0}
                                                 className="p-1 hover:bg-slate-800 rounded disabled:opacity-30"
                                             >
-                                                <GripVertical className="h-3 w-3 text-slate-500 rotate-180" />
+                                                <GripVertical className="h-3 w-3 text-slate-500 sm:rotate-180 rotate-90" />
                                             </button>
                                             <button
                                                 onClick={() => moveQuestion(index, 'down')}
                                                 disabled={index === questions.length - 1}
                                                 className="p-1 hover:bg-slate-800 rounded disabled:opacity-30"
                                             >
-                                                <GripVertical className="h-3 w-3 text-slate-500" />
+                                                <GripVertical className="h-3 w-3 text-slate-500 rotate-90 sm:rotate-0" />
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Question Content */}
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className={`text-xs px-2 py-0.5 rounded-full font-bold border uppercase ${getQuestionTypeColor(q.type)}`}>
+                                    <div className="flex-1 w-full min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                            <span className={`text-[10px] md:text-xs px-2 py-0.5 rounded-full font-bold border uppercase ${getQuestionTypeColor(q.type)}`}>
                                                 {getQuestionTypeLabel(q.type)}
                                             </span>
                                             {q.shuffleOptions && (
-                                                <span className="text-xs px-2 py-0.5 rounded-full border border-emerald-500/30 text-emerald-400 bg-emerald-500/10">
-                                                    Shuffle Options
+                                                <span className="text-[10px] md:text-xs px-2 py-0.5 rounded-full border border-emerald-500/30 text-emerald-400 bg-emerald-500/10">
+                                                    Shuffle
                                                 </span>
                                             )}
-                                            <span className="text-xs text-slate-500 ml-auto">{q.marks} mark{q.marks !== 1 ? 's' : ''}</span>
+                                            <span className="text-xs text-slate-500 ml-auto whitespace-nowrap">{q.marks} m</span>
                                         </div>
 
-                                        <div className="text-sm text-slate-300 line-clamp-2 mb-2 prose prose-invert prose-sm max-w-none">
+                                        <div className="text-sm text-slate-300 line-clamp-2 mb-2 prose prose-invert prose-sm max-w-none break-words">
                                             {q.latexContent ? <Latex>{q.text}</Latex> : q.text}
                                         </div>
 
                                         {q.image && (
                                             <div className="mt-2 mb-2">
-                                                <img src={q.image} alt="Question" className="h-20 rounded border border-slate-700" />
+                                                <img src={q.image} alt="Question" className="h-16 md:h-20 rounded border border-slate-700" />
                                             </div>
                                         )}
 
@@ -626,10 +626,20 @@ export default function CreateTestPage() {
                                                 {q.options?.length || 0} options, {q.correctIndices?.length || 0} correct
                                             </div>
                                         )}
+
+                                        {/* Mobile-only actions visible always */}
+                                        <div className="flex sm:hidden gap-3 mt-3 pt-3 border-t border-white/5">
+                                            <button onClick={() => editQuestion(q)} className="text-xs text-blue-400 font-medium flex items-center gap-1">
+                                                <Edit className="h-3 w-3" /> Edit
+                                            </button>
+                                            <button onClick={() => deleteQuestion(q.id)} className="text-xs text-red-400 font-medium flex items-center gap-1">
+                                                <Trash2 className="h-3 w-3" /> Delete
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    {/* Actions */}
-                                    <div className="flex gap-2">
+                                    {/* Desktop Actions */}
+                                    <div className="hidden sm:flex gap-2 self-start">
                                         <button
                                             onClick={() => editQuestion(q)}
                                             className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
@@ -651,34 +661,42 @@ export default function CreateTestPage() {
             </div>
 
             {/* Fixed Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-white/10 p-4 md:p-6 backdrop-blur-lg z-50">
-                <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
-                    <div className="text-sm text-slate-400">
+            <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-white/10 p-3 md:p-6 backdrop-blur-lg z-50 transition-all">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="text-xs md:text-sm text-slate-400 hidden md:block">
                         {questions.length} question{questions.length !== 1 ? 's' : ''} · {calculateTotalMarks()} marks
                         {isAutoSaving && <span className="ml-4 text-emerald-400 animate-pulse font-medium">Saving changes...</span>}
                     </div>
-                    <div className="flex gap-3">
+                    {/* Mobile Stats */}
+                    <div className="md:hidden w-full flex justify-between text-xs text-slate-400 border-b border-white/5 pb-2">
+                        <span>{questions.length} Questions</span>
+                        <span>{calculateTotalMarks()} Marks</span>
+                    </div>
+
+                    <div className="flex gap-2 md:gap-3 w-full md:w-auto">
                         <button
                             onClick={() => router.back()}
-                            className="px-6 py-2.5 text-slate-400 hover:text-white transition-colors font-medium"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 text-slate-400 hover:text-white transition-colors font-medium text-sm md:text-base border border-transparent hover:border-slate-700 rounded-lg"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={() => saveTest(false)}
                             disabled={loading}
-                            className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all disabled:opacity-50 flex items-center gap-2"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
                         >
                             <Save className="h-4 w-4" />
-                            Save Draft
+                            <span className="hidden sm:inline">Save Draft</span>
+                            <span className="sm:hidden">Draft</span>
                         </button>
                         <button
                             onClick={() => saveTest(true)}
                             disabled={loading}
-                            className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
                         >
                             <Send className="h-4 w-4" />
-                            Save & Deploy
+                            <span className="hidden sm:inline">Save & Deploy</span>
+                            <span className="sm:hidden">Deploy</span>
                         </button>
                     </div>
                 </div>

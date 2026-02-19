@@ -1,8 +1,8 @@
 {
-    "name": "RB Maths Question Bank",
-    "short_name": "RB Maths",
-    "description": "RB Maths Question Bank Portal",
-    "start_url": "/",
+    "name": "RB Maths Admin",
+    "short_name": "RB Maths Admin",
+    "description": "RB Maths Question Bank Admin Portal",
+    "start_url": "/admin",
     "display": "standalone",
     "background_color": "#0a0f1a",
     "theme_color": "#0a0f1a",

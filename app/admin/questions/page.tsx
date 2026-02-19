@@ -1165,335 +1165,186 @@ export default function QuestionBank() {
             <datalist id="subtopics-list">
                 {subtopics.map(t => <option key={t} value={t} />)}
             </datalist>
-            {/* Header Buttons */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-                {/* Left Side Buttons */}
-                <div className="flex gap-2 flex-wrap w-full md:w-auto items-center">
-                    <span className="bg-gray-800 text-gray-300 px-3 py-1.5 rounded-md text-xs font-bold border border-gray-700">
-                        Total: {questions.length}
-                    </span>
-                    <button onClick={() => handleModeSwitch('json')} className="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
-                        JSON
-                    </button>
-                    <button onClick={() => handleModeSwitch('latex')} className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
-                        Latex
-                    </button>
-                </div>
-
-                {/* Right Side Buttons */}
-                <div className="flex gap-2 flex-wrap w-full md:w-auto justify-end">
-                    <button onClick={openMockTestModal} className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
-                        <GraduationCap className="h-3 w-3 md:h-4 md:w-4" /> Enable Mock Test
-                    </button>
-                    <button onClick={() => { setPaperStep(0); setPaperQuestions([]); setIsPaperModalOpen(true); }} className="bg-orange-600 hover:bg-orange-500 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium flex items-center gap-2">
-                        <ArrowRightCircle className="h-3 w-3 md:h-4 md:w-4" /> Generate Question Paper
-                    </button>
-                </div>
-            </div>
-
-            {/* Mock Test Modal - Complete Replacement */}
-            {
-                isMockTestModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <div className="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                            <div className="p-4 border-b border-gray-700 bg-gray-900 flex justify-between items-center">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <GraduationCap className="h-5 w-5 text-indigo-400" /> Enable Mock Test
-                                </h3>
-                                <button onClick={() => setIsMockTestModalOpen(false)} className="text-gray-400 hover:text-white">
-                                    <X className="h-5 w-5" />
+            {/* Question Bank View (Visible when Editor is closed) */}
+            {!isEditorOpen && (
+                <div className="space-y-6 h-full flex flex-col">
+                    {/* Header */}
+                    <div className="flex flex-col gap-4 border-b border-gray-800 pb-4 md:pb-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => window.history.back()} className="p-2 hover:bg-slate-800 rounded-lg transition-colors bg-slate-800/50 md:bg-transparent">
+                                    <ArrowLeft className="h-5 w-5 text-slate-400" />
                                 </button>
+                                <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20 hidden md:block">
+                                    <FileText className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                                        Question Bank
+                                    </h1>
+                                    <p className="text-xs text-slate-400 font-medium">{questions.length} questions • {selectedQuestionIds.size} selected</p>
+                                </div>
                             </div>
-                            <div className="p-6 overflow-y-auto flex-1">
-                                <p className="text-sm text-gray-400 mb-4">
-                                    Enable topics and configure deployment for specific courses. Students will only see topics deployed to their course/department/year.
-                                </p>
+                        </div>
 
-                                {mockConfigLoading ? (
-                                    <div className="text-center py-8">
-                                        <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-2" />
-                                        <p className="text-gray-400">Loading Configuration...</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {topics.length === 0 ? (
-                                            <p className="text-center py-4 text-gray-400 italic">No topics found. Add questions first.</p>
-                                        ) : (
-                                            topics.map(topic => {
-                                                const config = mockTopicConfigs.find(t => t.topic === topic) || { topic, enabled: false, deployments: [] };
-                                                const isEnabled = config.enabled;
-                                                const isExpanded = expandedTopics.has(topic);
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                            <button onClick={() => handleModeSwitch('json')} className="col-span-1 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                                <FileJson className="h-3 w-3 md:h-4 md:w-4" />
+                                <span className="hidden sm:inline">Import JSON</span>
+                                <span className="sm:hidden">Import</span>
+                            </button>
+                            <button onClick={() => handleModeSwitch('latex')} className="col-span-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/30 px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                                <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                                <span className="hidden sm:inline">Add New</span>
+                                <span className="sm:hidden">Add</span>
+                            </button>
 
-                                                return (
-                                                    <div key={topic} className="bg-gray-900/50 rounded-lg border border-gray-700">
-                                                        <div className="flex items-center justify-between p-3">
-                                                            <div className="flex items-center gap-3 flex-1">
-                                                                <button
-                                                                    onClick={() => toggleTopicEnabled(topic)}
-                                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isEnabled ? 'bg-indigo-600' : 'bg-gray-600'}`}
-                                                                >
-                                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                                                                </button>
-                                                                <span className="text-white font-medium">{topic}</span>
-                                                                {isEnabled && config.deployments && config.deployments.length > 0 && (
-                                                                    <span className="text-xs bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded">
-                                                                        {config.deployments.length} deployment{config.deployments.length !== 1 ? 's' : ''}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            {isEnabled && (
-                                                                <button
-                                                                    onClick={() => setExpandedTopics(prev => {
-                                                                        const next = new Set(prev);
-                                                                        if (next.has(topic)) next.delete(topic);
-                                                                        else next.add(topic);
-                                                                        return next;
-                                                                    })}
-                                                                    className="text-gray-400 hover:text-white"
-                                                                >
-                                                                    <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                                                </button>
-                                                            )}
-                                                        </div>
+                        </div>
+                    </div>
 
-                                                        {isEnabled && isExpanded && (
-                                                            <div className="px-4 pb-4 border-t border-gray-700 pt-3 space-y-3">
-                                                                <div className="flex justify-between items-center mb-2">
-                                                                    <p className="text-xs text-gray-400">Configure where this topic is deployed:</p>
-                                                                    <button
-                                                                        onClick={() => addDeployment(topic)}
-                                                                        className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded flex items-center gap-1"
-                                                                    >
-                                                                        <Plus className="h-3 w-3" /> Add Deployment
-                                                                    </button>
-                                                                </div>
-
-                                                                {config.deployments && config.deployments.length > 0 ? (
-                                                                    config.deployments.map((dep: any, idx: number) => (
-                                                                        <div key={idx} className="grid grid-cols-3 gap-2 bg-gray-800 p-3 rounded">
-                                                                            <div>
-                                                                                <label className="text-xs text-gray-400 mb-1 block">Department</label>
-                                                                                <select
-                                                                                    value={dep.department}
-                                                                                    onChange={(e) => updateDeployment(topic, idx, 'department', e.target.value)}
-                                                                                    className="w-full bg-gray-900 border border-gray-600 text-white rounded px-2 py-1 text-xs"
-                                                                                >
-                                                                                    <option value="">Select...</option>
-                                                                                    {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
-                                                                                </select>
-                                                                            </div>
-                                                                            <div>
-                                                                                <label className="text-xs text-gray-400 mb-1 block">Year</label>
-                                                                                <select
-                                                                                    value={dep.year}
-                                                                                    onChange={(e) => updateDeployment(topic, idx, 'year', e.target.value)}
-                                                                                    className="w-full bg-gray-900 border border-gray-600 text-white rounded px-2 py-1 text-xs"
-                                                                                >
-                                                                                    <option value="">Select...</option>
-                                                                                    {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-                                                                                </select>
-                                                                            </div>
-                                                                            <div className="relative">
-                                                                                <label className="text-xs text-gray-400 mb-1 block">Course</label>
-                                                                                <div className="flex gap-1">
-                                                                                    <select
-                                                                                        value={dep.course}
-                                                                                        onChange={(e) => updateDeployment(topic, idx, 'course', e.target.value)}
-                                                                                        className="flex-1 bg-gray-900 border border-gray-600 text-white rounded px-2 py-1 text-xs"
-                                                                                    >
-                                                                                        <option value="">Select...</option>
-                                                                                        {availableCourses.map(c => <option key={c} value={c}>{c}</option>)}
-                                                                                    </select>
-                                                                                    <button
-                                                                                        onClick={() => removeDeployment(topic, idx)}
-                                                                                        className="text-red-400 hover:text-red-300 px-2"
-                                                                                        title="Remove"
-                                                                                    >
-                                                                                        <X className="h-3 w-3" />
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <p className="text-xs text-gray-500 italic text-center py-2">
-                                                                        No deployments configured. Click "Add Deployment" to deploy this topic.
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-4 border-t border-gray-700 bg-gray-900 flex justify-end gap-3">
-                                <button
-                                    onClick={() => setIsMockTestModalOpen(false)}
-                                    className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 font-medium"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={saveMockSettings}
-                                    disabled={mockConfigLoading}
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500 font-bold flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {mockConfigLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                    Save Changes
-                                </button>
+                    {/* Filters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Topic</label>
+                            <MultiSelect options={topics} selected={selectedTopics} onChange={setSelectedTopics} placeholder="All Topics" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Subtopic</label>
+                            <MultiSelect options={subtopics} selected={selectedSubtopics} onChange={setSelectedSubtopics} placeholder="All Subtopics" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Exam</label>
+                            <MultiSelect options={examNames} selected={selectedExams} onChange={setSelectedExams} placeholder="All Exams" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Search</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search questions..."
+                                    className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                />
                             </div>
                         </div>
                     </div>
-                )
-            }
 
-            {/* Paper Modal */}
-            {isPaperModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-[95vw] h-[95vh] shadow-2xl overflow-hidden flex flex-col relative md:ml-64">
-                        {/* Header */}
-                        <div className="p-4 border-b border-gray-700 bg-gray-900 flex justify-between items-center">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                <FileText className="h-5 w-5 text-orange-500" /> Question Paper Generator
-                            </h3>
-                            <button onClick={() => setIsPaperModalOpen(false)} className="text-gray-400 hover:text-white">
-                                <X className="h-5 w-5" />
-                            </button>
+                    {/* Bulk Actions */}
+                    {/* List Toolbar (Select All, Stats, Bulk Actions) */}
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-gray-900/50 p-3 rounded-lg border border-gray-800 mb-2">
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                            <label className="flex items-center gap-2 cursor-pointer hover:text-white text-gray-400 transition-colors select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
+                                    onChange={toggleSelectAll}
+                                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500/50"
+                                />
+                                <span className="text-sm font-medium">Select All</span>
+                            </label>
+
+                            <div className="h-4 w-px bg-gray-700 hidden md:block"></div>
+
+                            <div className="flex items-center gap-3 text-sm">
+                                <span className="text-gray-500"><b className="text-gray-300">{filteredQuestions.length}</b> questions</span>
+                                {selectedQuestionIds.size > 0 && (
+                                    <span className="text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded text-xs font-bold border border-blue-500/20">
+                                        {selectedQuestionIds.size} selected
+                                    </span>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 overflow-hidden flex flex-col">
-                            {paperStep === 0 && (
+                        {/* Bulk Action Buttons */}
+                        <div className={`flex items-center gap-2 transition-all duration-300 flex-wrap ${selectedQuestionIds.size > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+                            {selectedQuestionIds.size > 0 && (
                                 <>
-                                    <div className="mb-4 bg-blue-900/20 border border-blue-500/30 p-4 rounded text-blue-200 text-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-                                        <span>Use filters to find questions. Current Selection: <strong>{selectedQuestionIds.size}</strong> questions.</span>
-                                        <div className="flex gap-2">
-                                            <select
-                                                className="bg-gray-900 border border-gray-600 text-white text-xs rounded p-1.5"
-                                                value={selectedTopic}
-                                                onChange={e => setSelectedTopic(e.target.value)}
-                                            >
-                                                <option value="">All Topics</option>
-                                                {topics.map(t => <option key={t} value={t}>{t}</option>)}
-                                            </select>
-                                            <select
-                                                className="bg-gray-900 border border-gray-600 text-white text-xs rounded p-1.5"
-                                                value={selectedSubtopic}
-                                                onChange={e => setSelectedSubtopic(e.target.value)}
-                                                disabled={!selectedTopic}
-                                            >
-                                                <option value="">All Subtopics</option>
-                                                {paperSubtopics.map(s => <option key={s} value={s}>{s}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2 mb-4 border border-gray-700 rounded p-2 flex-1 overflow-y-auto custom-scrollbar bg-gray-900/50">
-                                        {paperModalFilteredQuestions.length === 0 ? (
-                                            <p className="text-gray-500 text-center py-4 text-xs italic">No questions found matching current filters.</p>
-                                        ) : (
-                                            paperModalFilteredQuestions.map(q => (
-                                                <div key={q.id} className="flex gap-3 p-3 rounded border border-gray-800 hover:border-gray-600 hover:bg-gray-800/50 transition-all">
-                                                    <div className="pt-1">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedQuestionIds.has(q.id)}
-                                                            onChange={() => toggleSelection(q.id)}
-                                                            className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex gap-2 mb-1">
-                                                            <span className="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
-                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>{q.type}</span>
-                                                        </div>
-                                                        <div className="text-xs text-gray-300 line-clamp-3">
-                                                            <Latex>{q.text}</Latex>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                    <div className="flex justify-end mt-4">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedQuestionIds.size === 0) {
-                                                    toast.error('Please select at least one question');
-                                                    return;
-                                                }
-                                                setPaperStep(1);
-                                            }}
-                                            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold"
-                                        >
-                                            Next: Paper Details
-                                        </button>
-                                    </div>
+                                    <button onClick={downloadJson} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-blue-400 border border-gray-700 rounded text-xs font-medium transition-colors">
+                                        <Download className="h-3.5 w-3.5" /> JSON
+                                    </button>
+                                    <button onClick={downloadPdf} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-purple-400 border border-gray-700 rounded text-xs font-medium transition-colors">
+                                        <Printer className="h-3.5 w-3.5" /> Print
+                                    </button>
+                                    <button onClick={deleteSelected} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-red-900/30 text-red-400 border border-gray-700 hover:border-red-500/30 rounded text-xs font-medium transition-colors">
+                                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                                    </button>
                                 </>
                             )}
+                        </div>
+                    </div>
 
-                            {paperStep === 1 && (
-                                <div className="p-6 overflow-y-auto h-full">
-                                    <h4 className="text-lg font-bold text-white mb-4">Paper Details</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                                        <div><label className="block text-xs text-gray-400 mb-1">Paper Name</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.paperName} onChange={e => setPaperConfig({ ...paperConfig, paperName: e.target.value })} placeholder="e.g. End Semester Examination" /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Paper Code</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.code} onChange={e => setPaperConfig({ ...paperConfig, code: e.target.value })} placeholder="e.g. HMTS-101" /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Course</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.course} onChange={e => setPaperConfig({ ...paperConfig, course: e.target.value })} /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Semester</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.sem} onChange={e => setPaperConfig({ ...paperConfig, sem: e.target.value })} /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Stream/Dept</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.stream} onChange={e => setPaperConfig({ ...paperConfig, stream: e.target.value })} placeholder="e.g. CSE / ECE" /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Session</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.session} onChange={e => setPaperConfig({ ...paperConfig, session: e.target.value })} placeholder="e.g. 2024-2025" /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Exam Type</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.exam} onChange={e => setPaperConfig({ ...paperConfig, exam: e.target.value })} placeholder="e.g. Mid Term" /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Date</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" type="date" value={paperConfig.date} onChange={e => setPaperConfig({ ...paperConfig, date: e.target.value })} /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Time</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.time} onChange={e => setPaperConfig({ ...paperConfig, time: e.target.value })} placeholder="e.g. 3 Hours" /></div>
-                                        <div><label className="block text-xs text-gray-400 mb-1">Full Marks</label><input className="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" value={paperConfig.marks} onChange={e => setPaperConfig({ ...paperConfig, marks: e.target.value })} placeholder="e.g. 70" /></div>
-                                    </div>
+                    {/* Question List */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 md:space-y-4 pr-1 md:pr-2">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-40">
+                                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                            </div>
+                        ) : filteredQuestions.length === 0 ? (
+                            <div className="text-center py-20 text-gray-500">
+                                <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                <p>No questions found matching your filters.</p>
+                            </div>
+                        ) : (
+                            filteredQuestions.map((q, i) => (
+                                <div key={q.id} className="group bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-xl p-3 md:p-4 transition-all hover:shadow-lg hover:shadow-indigo-500/5 relative">
+                                    <div className="flex items-start gap-3 md:gap-4">
+                                        <div className="pt-1 select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedQuestionIds.has(q.id)}
+                                                onChange={() => {
+                                                    const newSet = new Set(selectedQuestionIds);
+                                                    if (newSet.has(q.id)) newSet.delete(q.id);
+                                                    else newSet.add(q.id);
+                                                    setSelectedQuestionIds(newSet);
+                                                }}
+                                                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500/20 cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="flex-1 space-y-2 md:space-y-3 overflow-hidden">
+                                            <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 border border-gray-700">
+                                                    {q.type}
+                                                </span>
+                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-indigo-900/30 text-indigo-300 border border-indigo-500/30">
+                                                    {q.topic}
+                                                </span>
+                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-purple-900/30 text-purple-300 border border-purple-500/30">
+                                                    {q.subtopic}
+                                                </span>
+                                                {q.examNames && q.examNames.map((exam: string) => (
+                                                    <span key={exam} className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-emerald-900/30 text-emerald-300 border border-emerald-500/30">
+                                                        {exam}
+                                                    </span>
+                                                ))}
+                                                <span className="ml-auto text-xs font-mono text-gray-500 hidden sm:block">
+                                                    {q.id.substring(0, 8)}...
+                                                </span>
+                                            </div>
 
-                                    <div className="flex justify-between mt-auto pt-4 border-t border-gray-700">
-                                        <button onClick={() => setPaperStep(0)} className="px-6 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 font-medium">
-                                            &larr; Back
-                                        </button>
-                                        <button onClick={generatePreview} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold flex items-center gap-2">
-                                            Preview <FileText className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                                            <div className="text-gray-200 text-xs md:text-sm leading-relaxed prose prose-invert max-w-none overflow-x-auto">
+                                                <Latex>{q.text}</Latex>
+                                            </div>
 
-                            {paperStep === 2 && (
-                                <div className="flex-1 flex flex-col md:flex-row overflow-hidden h-full">
-                                    <div className="w-full md:w-1/2 p-4 border-r border-gray-700 flex flex-col h-full bg-gray-900">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="text-xs text-gray-400">JSON Structure (Editable)</label>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => setPaperStep(1)} className="bg-gray-700 text-white px-3 py-1 rounded text-xs hover:bg-gray-600">Back</button>
-                                                <button onClick={printPaper} className="bg-blue-600 text-white px-3 py-1 rounded text-xs flex items-center gap-1 hover:bg-blue-500"><Printer className="h-3 w-3" /> Print / Save PDF</button>
+                                            {/* Action Buttons (Always show edit on mobile, hover on desktop) */}
+                                            <div className="flex items-center gap-2 pt-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => editQuestion(q)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded flex items-center gap-1 transition-colors">
+                                                    <Edit className="h-3 w-3" /> Edit
+                                                </button>
                                             </div>
                                         </div>
-                                        <textarea
-                                            className="flex-1 bg-gray-950 p-2 text-green-400 font-mono text-xs rounded border border-gray-700 resize-none header-json focus:outline-none focus:border-blue-500"
-                                            value={paperJson}
-                                            onChange={handlePaperJsonChange}
-                                        />
-                                    </div>
-                                    <div className="w-full md:w-1/2 bg-gray-500 overflow-hidden relative h-full">
-                                        <iframe
-                                            id="paper-preview-frame"
-                                            key={paperPreviewKey}
-                                            srcDoc={paperHtml}
-                                            className="w-full h-full bg-white"
-                                            title="Paper Preview"
-                                            sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-popups-to-escape-sandbox"
-                                        />
                                     </div>
                                 </div>
-                            )}
-                        </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}
+
+            {/* Mock Test Modal - Complete Replacement */}
+
 
             {/* Editor Panel */}
             {isEditorOpen && (
@@ -1713,177 +1564,179 @@ export default function QuestionBank() {
 
 
 
-            {/* Viewer Panel */}
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex-1 flex flex-col shadow-lg">
-                <div className="sticky top-0 z-20 bg-gray-800 pb-4 pt-2 -mt-2 flex flex-col md:flex-row gap-4 justify-between items-end border-b border-gray-700 mb-4">
-                    <div className="flex gap-4 w-full md:w-auto items-end">
-                        <div className="flex items-center h-[38px] px-2">
-                            <input
-                                type="checkbox"
-                                checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
-                                onChange={toggleSelectAll}
-                                className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
-                                title="Select All"
-                            />
-                        </div>
-                        <div className="w-48">
-                            <label className="text-xs text-gray-400 mb-1 block">Filter Topic</label>
-                            <MultiSelect
-                                options={topics}
-                                selected={selectedTopics}
-                                onChange={setSelectedTopics}
-                                placeholder="All Topics"
-                            />
-                        </div>
-                        <div className="w-48">
-                            <label className="text-xs text-gray-400 mb-1 block">Filter Subtopic</label>
-                            <MultiSelect
-                                options={subtopics}
-                                selected={selectedSubtopics}
-                                onChange={setSelectedSubtopics}
-                                placeholder="All Subtopics"
-                            />
-                        </div>
-                        <div className="w-48">
-                            <label className="text-xs text-gray-400 mb-1 block">Filter Exam</label>
-                            <MultiSelect
-                                options={examNames}
-                                selected={selectedExams}
-                                onChange={setSelectedExams}
-                                placeholder="All Exams"
-                            />
-                        </div>
-                        {/* Search Bar */}
-                        <div className="flex-1 relative">
-                            <label className="text-xs text-gray-400 mb-1 block">Search</label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            {/* Viewer Panel - Only visible when Editor is Open */}
+            {isEditorOpen && (
+                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex-1 flex flex-col shadow-lg">
+                    <div className="sticky top-0 z-20 bg-gray-800 pb-4 pt-2 -mt-2 flex flex-col items-stretch gap-4 border-b border-gray-700 mb-4">
+                        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end w-full">
+                            <div className="flex items-center h-[38px] px-2">
                                 <input
-                                    type="text"
-                                    placeholder="Search questions..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-700 rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                    type="checkbox"
+                                    checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
+                                    onChange={toggleSelectAll}
+                                    className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
+                                    title="Select All"
                                 />
                             </div>
-                        </div>
+                            <div className="w-full md:w-48">
+                                <label className="text-xs text-gray-400 mb-1 block">Filter Topic</label>
+                                <MultiSelect
+                                    options={topics}
+                                    selected={selectedTopics}
+                                    onChange={setSelectedTopics}
+                                    placeholder="All Topics"
+                                />
+                            </div>
+                            <div className="w-full md:w-48">
+                                <label className="text-xs text-gray-400 mb-1 block">Filter Subtopic</label>
+                                <MultiSelect
+                                    options={subtopics}
+                                    selected={selectedSubtopics}
+                                    onChange={setSelectedSubtopics}
+                                    placeholder="All Subtopics"
+                                />
+                            </div>
+                            <div className="w-full md:w-48">
+                                <label className="text-xs text-gray-400 mb-1 block">Filter Exam</label>
+                                <MultiSelect
+                                    options={examNames}
+                                    selected={selectedExams}
+                                    onChange={setSelectedExams}
+                                    placeholder="All Exams"
+                                />
+                            </div>
+                            {/* Search Bar */}
+                            <div className="flex-1 relative">
+                                <label className="text-xs text-gray-400 mb-1 block">Search</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search questions..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-gray-800 border border-gray-700 rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                    />
+                                </div>
+                            </div>
 
-                        {/* Filtered Count Box */}
-                        <div className="flex flex-col justify-end">
-                            <label className="text-xs text-gray-400 mb-1 block opacity-0">Count</label>
-                            <div className="h-[38px] px-3 bg-blue-900/30 border border-blue-500/30 rounded flex items-center justify-center min-w-[60px]">
-                                <span className="text-blue-300 font-bold text-sm">{filteredQuestions.length}</span>
+                            {/* Filtered Count Box */}
+                            <div className="flex flex-col justify-end">
+                                <label className="text-xs text-gray-400 mb-1 block opacity-0">Count</label>
+                                <div className="h-[38px] px-3 bg-blue-900/30 border border-blue-500/30 rounded flex items-center justify-center min-w-[60px]">
+                                    <span className="text-blue-300 font-bold text-sm">{filteredQuestions.length}</span>
+                                </div>
                             </div>
                         </div>
+
+                        {/* Floating Action Buttons (Always Floating) */}
+                        {/* Floating Action Buttons */}
+                        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+                            {!isEditorOpen ? (
+                                <>
+                                    <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                        <Printer className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Print Selected</span>
+                                    </button>
+                                    <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                        <Download className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Export JSON</span>
+                                    </button>
+                                    <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                        <Trash2 className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Delete ({selectedQuestionIds.size})</span>
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={saveToDatabase}
+                                    disabled={loading}
+                                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 rounded-full shadow-lg text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 animate-in fade-in zoom-in duration-300"
+                                >
+                                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
+                                    <span className="hidden md:inline">{loading ? 'Saving...' : 'Save Changes'}</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Floating Action Buttons (Always Floating) */}
-                    {/* Floating Action Buttons */}
-                    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
-                        {!isEditorOpen ? (
-                            <>
-                                <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
-                                    <Printer className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Print Selected</span>
-                                </button>
-                                <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
-                                    <Download className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Export JSON</span>
-                                </button>
-                                <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
-                                    <Trash2 className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Delete ({selectedQuestionIds.size})</span>
-                                </button>
-                            </>
+                    <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pb-24">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-64 text-gray-400">
+                                <Loader2 className="h-8 w-8 animate-spin mr-2" /> Loading...
+                            </div>
+                        ) : filteredQuestions.length === 0 ? (
+                            <div className="flex items-center justify-center h-64 text-gray-500 italic">
+                                No questions found.
+                            </div>
                         ) : (
-                            <button
-                                onClick={saveToDatabase}
-                                disabled={loading}
-                                className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 rounded-full shadow-lg text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 animate-in fade-in zoom-in duration-300"
-                            >
-                                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
-                                <span className="hidden md:inline">{loading ? 'Saving...' : 'Save Changes'}</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
+                            filteredQuestions.map((q, index) => (
+                                <div id={`q-${q.id}`} key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-gray-900 border-gray-700'} hover:border-gray-500 transition-colors group`}>
+                                    <div className="flex gap-3">
+                                        <div className="pt-1 flex flex-col items-center gap-2">
+                                            <span className="text-xs font-mono text-gray-500 font-bold">{index + 1}</span>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedQuestionIds.has(q.id)}
+                                                onChange={() => toggleSelection(q.id)}
+                                                className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex flex-wrap gap-1.5 mb-1">
+                                                    <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
+                                                    <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.subtopic}</span>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
+                                                        {q.type}
+                                                    </span>
+                                                    {q.examNames && q.examNames.length > 0 && q.examNames.map((exam: string, idx: number) => (
+                                                        <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                            {exam}
+                                                        </span>
+                                                    ))}
+                                                    {q.marks && (
+                                                        <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                            {q.marks} marks
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEditQuestion(q);
+                                                    }}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                >
+                                                    <Edit className="h-3 w-3" />
+                                                    Edit
+                                                </button>
+                                            </div>
+                                            <div className="text-gray-300 text-sm leading-relaxed">
+                                                {q.image && (
+                                                    <div className="mb-2">
+                                                        <img src={q.image} alt="Question" className="max-h-32 rounded border border-gray-700 hover:scale-105 transition-transform origin-left" />
+                                                    </div>
+                                                )}
+                                                <Latex>{q.text}</Latex>
 
-                <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-                    {loading ? (
-                        <div className="flex items-center justify-center h-64 text-gray-400">
-                            <Loader2 className="h-8 w-8 animate-spin mr-2" /> Loading...
-                        </div>
-                    ) : filteredQuestions.length === 0 ? (
-                        <div className="flex items-center justify-center h-64 text-gray-500 italic">
-                            No questions found.
-                        </div>
-                    ) : (
-                        filteredQuestions.map((q, index) => (
-                            <div id={`q-${q.id}`} key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-gray-900 border-gray-700'} hover:border-gray-500 transition-colors group`}>
-                                <div className="flex gap-3">
-                                    <div className="pt-1 flex flex-col items-center gap-2">
-                                        <span className="text-xs font-mono text-gray-500 font-bold">{index + 1}</span>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedQuestionIds.has(q.id)}
-                                            onChange={() => toggleSelection(q.id)}
-                                            className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="flex flex-wrap gap-1.5 mb-1">
-                                                <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
-                                                <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.subtopic}</span>
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
-                                                    {q.type}
-                                                </span>
-                                                {q.examNames && q.examNames.length > 0 && q.examNames.map((exam: string, idx: number) => (
-                                                    <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
-                                                        {exam}
-                                                    </span>
-                                                ))}
-                                                {q.marks && (
-                                                    <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
-                                                        {q.marks} marks
-                                                    </span>
+                                                {/* MCQ Options Display */}
+                                                {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        {q.options.map((opt: string, i: number) => (
+                                                            <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
+                                                                <span className="text-gray-300"><Latex>{opt}</Latex></span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 )}
                                             </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleEditQuestion(q);
-                                                }}
-                                                className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded transition-colors opacity-0 group-hover:opacity-100"
-                                            >
-                                                <Edit className="h-3 w-3" />
-                                                Edit
-                                            </button>
-                                        </div>
-                                        <div className="text-gray-300 text-sm leading-relaxed">
-                                            {q.image && (
-                                                <div className="mb-2">
-                                                    <img src={q.image} alt="Question" className="max-h-32 rounded border border-gray-700 hover:scale-105 transition-transform origin-left" />
-                                                </div>
-                                            )}
-                                            <Latex>{q.text}</Latex>
-
-                                            {/* MCQ Options Display */}
-                                            {q.type === 'mcq' && q.options && q.options.length > 0 && (
-                                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                    {q.options.map((opt: string, i: number) => (
-                                                        <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
-                                                            <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
-                                                            <span className="text-gray-300"><Latex>{opt}</Latex></span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
-                    )}
+                            ))
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Duplicate Modal */}
             {
