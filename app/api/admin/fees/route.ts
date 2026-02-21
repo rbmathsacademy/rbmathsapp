@@ -19,25 +19,29 @@ export async function POST(req: Request) {
         // Format: YYYY-MM-InvNumber (e.g., 2026-02-00001)
 
         if (isPayment) {
-            // Get last invoice number for the year to ensure uniqueness (robust against deletions)
-            const lastRecord = await FeeRecord.findOne({
-                year,
-                invoiceNo: { $exists: true, $ne: null }
-            }).sort({ invoiceNo: -1 }).select('invoiceNo').lean();
+            const entryDate = body.entryDate ? new Date(body.entryDate) : new Date();
+            const entryYear = entryDate.getFullYear();
 
-            if (lastRecord && lastRecord.invoiceNo) {
-                const parts = lastRecord.invoiceNo.split('-');
-                if (parts.length >= 3) {
-                    // Robustly get the last part
-                    lastInvoiceNum = parseInt(parts[parts.length - 1], 10) || 0;
+            // Find all records whose invoice starts with the entryYear (e.g. "2026-")
+            // This ensures we find the absolute max sequence for this year's invoices
+            const records = await FeeRecord.find({
+                invoiceNo: { $regex: `^${entryYear}-` }
+            }).select('invoiceNo').lean();
+
+            let maxSeq = 0;
+            records.forEach(r => {
+                if (r.invoiceNo) {
+                    const parts = r.invoiceNo.split('-');
+                    const seq = parseInt(parts[parts.length - 1], 10);
+                    if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
                 }
-            }
+            });
+            lastInvoiceNum = maxSeq;
 
             invoiceBaseFn = (seq: number) => {
-                const entryDate = body.entryDate ? new Date(body.entryDate) : new Date();
-                const entryMonth = (entryDate.getMonth() + 1).toString().padStart(2, '0');
-                const entryYear = entryDate.getFullYear();
-                return `${entryYear}-${entryMonth}-${seq.toString().padStart(5, '0')}`;
+                const invoiceMonth = (entryDate.getMonth() + 1).toString().padStart(2, '0');
+                const invoiceYear = entryDate.getFullYear();
+                return `${invoiceYear}-${invoiceMonth}-${seq.toString().padStart(5, '0')}`;
             };
         }
 
