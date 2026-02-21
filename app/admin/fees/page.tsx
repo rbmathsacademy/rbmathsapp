@@ -784,7 +784,11 @@ function FeesManagementContent() {
                                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                                         {MONTHS.map((m) => {
                                             const currentGridYear = entryGridYear;
-                                            const record = studentRecords.find(r => r.monthIndex === m.index && r.year === currentGridYear);
+                                            const record = studentRecords.find(r =>
+                                                r.monthIndex === m.index &&
+                                                r.year === currentGridYear &&
+                                                String(r.batch).trim() === String(entryForm.batch).trim()
+                                            );
                                             const isSelected = selectedMonths.some(d => d.getMonth() === m.index && d.getFullYear() === currentGridYear);
 
                                             const isPaid = !!(record?.recordType === 'PAYMENT' || (!record?.recordType && record));
