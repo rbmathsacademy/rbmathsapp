@@ -89,8 +89,7 @@ function FeesManagementContent() {
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [studentRecords, setStudentRecords] = useState<FeeRecord[]>([]);
     const [selectedMonths, setSelectedMonths] = useState<Date[]>([]);
-
-    // Refs
+    const [entryGridYear, setEntryGridYear] = useState(new Date().getFullYear());
     const dropdownRef = useRef<HTMLDivElement>(null);
     const gridContainerRef = useRef<HTMLDivElement>(null);
 
@@ -767,10 +766,24 @@ function FeesManagementContent() {
                                 </div>
 
                                 <div className="mb-6">
-                                    <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Month(s)</label>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Select Month(s)</label>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase">Year:</span>
+                                            <select
+                                                value={entryGridYear}
+                                                onChange={(e) => setEntryGridYear(parseInt(e.target.value))}
+                                                className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-blue-500 transition-all font-bold"
+                                            >
+                                                {[new Date().getFullYear() + 1, new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(y => (
+                                                    <option key={y} value={y}>{y}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                                         {MONTHS.map((m) => {
-                                            const currentGridYear = parseInt(entryForm.paidOnMonth.split('-')[0]) || new Date().getFullYear();
+                                            const currentGridYear = entryGridYear;
                                             const record = studentRecords.find(r => r.monthIndex === m.index && r.year === currentGridYear);
                                             const isSelected = selectedMonths.some(d => d.getMonth() === m.index && d.getFullYear() === currentGridYear);
 
