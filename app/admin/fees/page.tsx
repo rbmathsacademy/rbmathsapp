@@ -124,6 +124,9 @@ function FeesManagementContent() {
         receiver: ''
     });
     const [historyRecords, setHistoryRecords] = useState<FeeRecord[]>([]);
+    const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+    const [monthPickerYear, setMonthPickerYear] = useState(new Date().getFullYear());
+    const monthPickerRef = useRef<HTMLDivElement>(null);
 
     // Edit Modal
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -209,6 +212,9 @@ function FeesManagementContent() {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsDropdownOpen(false);
+            }
+            if (monthPickerRef.current && !monthPickerRef.current.contains(event.target as Node)) {
+                setMonthPickerOpen(false);
             }
         };
 
@@ -1172,10 +1178,77 @@ function FeesManagementContent() {
                 <div className="space-y-6">
                     <div className="bg-slate-900/40 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row flex-wrap gap-4 items-stretch md:items-end">
                         <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
-                            <div className="space-y-1">
+                            <div className="space-y-1 relative" ref={monthPickerRef}>
                                 <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
-                                <input type="month" className="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full [color-scheme:dark] cursor-pointer"
-                                    value={historyFilters.month} onChange={(e) => setHistoryFilters({ ...historyFilters, month: e.target.value })} />
+                                <button
+                                    type="button"
+                                    onClick={() => setMonthPickerOpen(!monthPickerOpen)}
+                                    className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${historyFilters.month
+                                        ? 'border-blue-500/50 text-white'
+                                        : 'border-white/10 text-slate-400'
+                                        }`}
+                                >
+                                    <span>{historyFilters.month
+                                        ? `${MONTHS[parseInt(historyFilters.month.split('-')[1]) - 1]?.name} ${historyFilters.month.split('-')[0]}`
+                                        : 'All Months'}
+                                    </span>
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${monthPickerOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {/* Month Picker Dropdown */}
+                                {monthPickerOpen && (
+                                    <div className="absolute top-full left-0 mt-2 w-64 bg-[#0d1520] border border-white/10 rounded-xl shadow-2xl z-50 p-3 animate-in fade-in-0 slide-in-from-top-2 duration-150">
+                                        {/* Year Navigation */}
+                                        <div className="flex items-center justify-between mb-3 px-1">
+                                            <button type="button" onClick={() => setMonthPickerYear(y => y - 1)}
+                                                className="p-1 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
+                                                <ChevronDown className="h-4 w-4 rotate-90" />
+                                            </button>
+                                            <span className="text-sm font-bold text-white">{monthPickerYear}</span>
+                                            <button type="button" onClick={() => setMonthPickerYear(y => y + 1)}
+                                                className="p-1 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
+                                                <ChevronDown className="h-4 w-4 -rotate-90" />
+                                            </button>
+                                        </div>
+                                        {/* Month Grid */}
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {MONTHS.map(m => {
+                                                const val = `${monthPickerYear}-${(m.index + 1).toString().padStart(2, '0')}`;
+                                                const isActive = historyFilters.month === val;
+                                                return (
+                                                    <button
+                                                        key={m.index}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isActive) {
+                                                                setHistoryFilters({ ...historyFilters, month: '' });
+                                                            } else {
+                                                                setHistoryFilters({ ...historyFilters, month: val });
+                                                            }
+                                                            setMonthPickerOpen(false);
+                                                        }}
+                                                        className={`py-2 rounded-lg text-xs font-bold transition-all ${isActive
+                                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
+                                                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
+                                                            }`}
+                                                    >
+                                                        {m.name}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {/* Clear Button */}
+                                        {historyFilters.month && (
+                                            <button
+                                                type="button"
+                                                onClick={() => { setHistoryFilters({ ...historyFilters, month: '' }); setMonthPickerOpen(false); }}
+                                                className="w-full mt-2 py-1.5 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-all font-medium"
+                                            >
+                                                Clear Filter
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Batch</label>
