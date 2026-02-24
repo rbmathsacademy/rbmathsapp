@@ -37,6 +37,8 @@ interface FeeRecord {
     createdAt?: string;
     recordType: 'PAYMENT' | 'NEW_ADMISSION' | 'EXEMPTED';
     status?: 'PENDING' | 'EMPTY'; // For grid cell logic if needed
+    isAdhoc?: boolean;
+    adhocStudentName?: string;
 }
 
 const MONTHS = [
@@ -148,6 +150,19 @@ function FeesManagementContent() {
         monthName: string;
     } | null>(null);
 
+    // Quick Entry (Ad-hoc) Modal
+    const [showQuickEntry, setShowQuickEntry] = useState(false);
+    const [quickEntryForm, setQuickEntryForm] = useState({
+        studentName: '',
+        batch: '',
+        amount: '',
+        mode: 'Offline' as PaymentMode,
+        receiver: '' as PaymentReceiver | '',
+        paidOnMonth: `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`,
+        feesMonth: `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`,
+        remarks: ''
+    });
+
     useEffect(() => {
         if (activeTab === 'record' && gridMonths.length > 0 && gridContainerRef.current) {
             // Small delay to ensure DOM is fully rendered
@@ -253,8 +268,8 @@ function FeesManagementContent() {
             const params = new URLSearchParams();
             if (recordFilters.batch) params.append('batch', recordFilters.batch);
             if (recordFilters.search) params.append('studentName', recordFilters.search);
-            // Fetch ALL records for the grid timeframe
-            // In a real app with infinite scroll, we'd fetch chunks. currently fetching all for simplicity + filter.
+            // Exclude ad-hoc records from the grid view
+            params.append('excludeAdhoc', 'true');
 
             const res = await fetch(`/api/admin/fees?${params.toString()}`, { cache: 'no-store' });
             const data = await res.json();
@@ -546,11 +561,67 @@ function FeesManagementContent() {
         toast.success('Message copied!');
     };
 
+    // --- Quick Entry (Ad-hoc) Handler ---
+    const handleQuickEntrySubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!quickEntryForm.studentName.trim() || !quickEntryForm.batch.trim() || !quickEntryForm.amount) {
+            toast.error('Student name, batch, and amount are required');
+            return;
+        }
+        setLoading(true);
+        const toastId = toast.loading('Creating ad-hoc entry...');
+        try {
+            const [paidYear, paidMonth] = quickEntryForm.paidOnMonth.split('-').map(Number);
+            const entryDate = new Date(Date.UTC(paidYear, paidMonth - 1, 15, 12, 0, 0));
+
+            const [feesYear, feesMonthNum] = quickEntryForm.feesMonth.split('-').map(Number);
+            const feesMonthDate = new Date(Date.UTC(feesYear, feesMonthNum - 1, 1, 12, 0, 0));
+
+            const payload = {
+                isAdhoc: true,
+                adhocStudentName: quickEntryForm.studentName.trim(),
+                batch: quickEntryForm.batch.trim(),
+                amount: parseFloat(quickEntryForm.amount),
+                paymentMode: quickEntryForm.mode,
+                paymentReceiver: quickEntryForm.mode === 'Online' ? quickEntryForm.receiver : null,
+                entryDate: entryDate.toISOString(),
+                months: [feesMonthDate.toISOString()],
+                remarks: quickEntryForm.remarks
+            };
+
+            const res = await fetch('/api/admin/fees', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            toast.success('Ad-hoc entry created!', { id: toastId });
+            setShowQuickEntry(false);
+            setQuickEntryForm({
+                studentName: '',
+                batch: '',
+                amount: '',
+                mode: 'Offline',
+                receiver: '',
+                paidOnMonth: `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`,
+                feesMonth: `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`,
+                remarks: ''
+            });
+            // Refresh history if we're on that tab
+            if (activeTab === 'history') fetchHistoryRecords();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to create entry', { id: toastId });
+        }
+        setLoading(false);
+    };
+
     const exportHistory = () => {
         if (!historyRecords.length) return;
         const headers = ['Invoice', 'Student', 'Batch', 'Amount', 'Fees Month', 'Paid On', 'Mode', 'Receiver', 'Remarks'];
         const rows = historyRecords.map(r => {
-            const sName = typeof r.student === 'object' ? r.student?.name : 'Unknown';
+            const sName = r.isAdhoc ? `${r.adhocStudentName || 'Unknown'} (Ad-hoc)` : (typeof r.student === 'object' ? r.student?.name : 'Unknown');
             return [
                 r.invoiceNo,
                 sName,
@@ -596,6 +667,12 @@ function FeesManagementContent() {
                         <History className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> History
                     </button>
                 </div>
+                {activeTab === 'entry' && (
+                    <button onClick={() => setShowQuickEntry(true)}
+                        className="px-3 py-2 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold text-xs hover:bg-amber-600/30 transition-all flex items-center gap-2">
+                        <Plus className="h-3 w-3" /> Quick Entry (Ad-hoc)
+                    </button>
+                )}
             </div>
 
             {/* ERROR BOUNDARY for Tabs */}
@@ -1158,7 +1235,9 @@ function FeesManagementContent() {
                                     <tr key={record._id} onClick={() => openEditModal(record)} className="hover:bg-white/5 cursor-pointer">
                                         <td className="px-6 py-4 font-mono text-xs text-slate-500">{record.invoiceNo}</td>
                                         <td className="px-6 py-4 font-medium text-white">
-                                            {typeof record.student === 'object' ? record.student?.name : 'Unknown'}
+                                            {record.isAdhoc ? (
+                                                <span>{record.adhocStudentName || 'Unknown'} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">Ad-hoc</span></span>
+                                            ) : (typeof record.student === 'object' ? record.student?.name : 'Unknown')}
                                         </td>
                                         <td className="px-6 py-4 text-slate-400">{record.batch}</td>
                                         <td className="px-6 py-4 text-white">
@@ -1185,7 +1264,9 @@ function FeesManagementContent() {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <div className="font-bold text-white text-base">
-                                                {typeof record.student === 'object' ? record.student?.name : 'Unknown'}
+                                                {record.isAdhoc ? (
+                                                    <span>{record.adhocStudentName || 'Unknown'} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">Ad-hoc</span></span>
+                                                ) : (typeof record.student === 'object' ? record.student?.name : 'Unknown')}
                                             </div>
                                             <div className="text-xs text-slate-400 mt-0.5">{record.batch}</div>
                                         </div>
@@ -1349,6 +1430,106 @@ function FeesManagementContent() {
                             <button onClick={handleDeleteRecord} className="px-3 md:px-4 py-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"><Trash2 className="h-4 w-4" /> Delete</button>
                             <button onClick={handleUpdateRecord} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs md:text-sm flex items-center justify-center gap-2 transition-colors"><Save className="h-4 w-4" /> Save Changes</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Quick Entry (Ad-hoc) Modal */}
+            {showQuickEntry && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowQuickEntry(false)}>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 md:p-6 border-b border-white/5 flex justify-between items-center shrink-0">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2"><Plus className="h-5 w-5 text-amber-400" /> Quick Entry (Ad-hoc)</h3>
+                            <button onClick={() => setShowQuickEntry(false)} className="p-1 hover:bg-white/5 rounded-full"><X className="h-5 w-5 text-slate-400" /></button>
+                        </div>
+                        <form onSubmit={handleQuickEntrySubmit} className="p-4 md:p-6 overflow-y-auto custom-scrollbar space-y-4">
+                            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                                <p>For one-time payments or students not in the system. This entry will <strong>not</strong> appear in the fees grid but <strong>will</strong> appear in fee history and generate an invoice.</p>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Student Name *</label>
+                                <input type="text" required className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                    placeholder="Enter student name" value={quickEntryForm.studentName}
+                                    onChange={e => setQuickEntryForm({ ...quickEntryForm, studentName: e.target.value })} />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Batch *</label>
+                                <div className="flex gap-2">
+                                    <select className="flex-1 bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                        value={quickEntryForm.batch}
+                                        onChange={e => setQuickEntryForm({ ...quickEntryForm, batch: e.target.value })}>
+                                        <option value="">Select batch...</option>
+                                        {batches.map(b => <option key={b} value={b}>{b}</option>)}
+                                    </select>
+                                    <input type="text" placeholder="or type..." className="w-32 bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                        value={!batches.includes(quickEntryForm.batch) ? quickEntryForm.batch : ''}
+                                        onChange={e => setQuickEntryForm({ ...quickEntryForm, batch: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Amount (₹) *</label>
+                                    <input type="number" required className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm font-bold"
+                                        value={quickEntryForm.amount}
+                                        onChange={e => setQuickEntryForm({ ...quickEntryForm, amount: e.target.value })} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Fees Month *</label>
+                                    <input type="month" required className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                        value={quickEntryForm.feesMonth}
+                                        onChange={e => setQuickEntryForm({ ...quickEntryForm, feesMonth: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Paid On Month</label>
+                                <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                    value={quickEntryForm.paidOnMonth}
+                                    onChange={e => setQuickEntryForm({ ...quickEntryForm, paidOnMonth: e.target.value })} />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Payment Mode</label>
+                                <div className="flex gap-2">
+                                    {['Offline', 'Online'].map(mode => (
+                                        <label key={mode} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${quickEntryForm.mode === mode ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                            <input type="radio" className="hidden" checked={quickEntryForm.mode === mode}
+                                                onChange={() => setQuickEntryForm({ ...quickEntryForm, mode: mode as PaymentMode })} />
+                                            {mode}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            {quickEntryForm.mode === 'Online' && (
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Receiver</label>
+                                    <div className="flex gap-2">
+                                        {['MM', 'RB'].map(r => (
+                                            <label key={r} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${quickEntryForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                                <input type="radio" className="hidden" checked={quickEntryForm.receiver === r}
+                                                    onChange={() => setQuickEntryForm({ ...quickEntryForm, receiver: r as PaymentReceiver })} />
+                                                {r}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Remarks</label>
+                                <textarea className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm h-16 resize-none"
+                                    value={quickEntryForm.remarks}
+                                    onChange={e => setQuickEntryForm({ ...quickEntryForm, remarks: e.target.value })} />
+                            </div>
+
+                            <button type="submit" disabled={loading}
+                                className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all">
+                                {loading ? 'Saving...' : 'Create Ad-hoc Entry'}
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}

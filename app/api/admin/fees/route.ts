@@ -8,7 +8,13 @@ export async function POST(req: Request) {
         await dbConnect();
         const body = await req.json();
 
-        const year = body.year || new Date().getFullYear();
+        // Determine if this is an adhoc entry (no real student)
+        const isAdhoc = !!body.isAdhoc;
+
+        // For adhoc entries, student is null; for regular entries, student is required
+        if (!isAdhoc && !body.student) {
+            return NextResponse.json({ error: 'Student is required for non-adhoc entries' }, { status: 400 });
+        }
 
         // Determine if we need an invoice number
         const isPayment = !body.recordType || body.recordType === 'PAYMENT';
@@ -45,6 +51,14 @@ export async function POST(req: Request) {
             };
         }
 
+        // Build the base record fields
+        const baseRecord: any = {
+            ...body,
+            isAdhoc,
+            adhocStudentName: isAdhoc ? (body.adhocStudentName || 'Unknown') : null,
+            student: isAdhoc ? null : body.student,
+        };
+
         // Check if multi-month or single
         if (body.months && Array.isArray(body.months) && body.months.length > 0) {
             const recordsToCreate = body.months.map((monthStr: string, index: number) => {
@@ -52,7 +66,7 @@ export async function POST(req: Request) {
                 const isPay = !body.recordType || body.recordType === 'PAYMENT';
 
                 return {
-                    ...body,
+                    ...baseRecord,
                     feesMonth: feesMonth,
                     monthIndex: feesMonth.getMonth(),
                     year: feesMonth.getFullYear(),
@@ -69,7 +83,7 @@ export async function POST(req: Request) {
             const invoiceNo = isPayment ? invoiceBaseFn(lastInvoiceNum + 1) : undefined;
 
             const newRecord = await FeeRecord.create({
-                ...body,
+                ...baseRecord,
                 invoiceNo
             });
             return NextResponse.json({ success: true, record: newRecord });
@@ -119,6 +133,12 @@ export async function GET(req: Request) {
 
         const query: any = {};
 
+        // Exclude adhoc from grid view
+        const excludeAdhoc = searchParams.get('excludeAdhoc');
+        if (excludeAdhoc === 'true') {
+            query.isAdhoc = { $ne: true };
+        }
+
         if (batch) query.batch = batch;
 
         if (year) {
@@ -153,7 +173,12 @@ export async function GET(req: Request) {
             }).select('_id');
 
             const studentIds = students.map(s => s._id);
-            query.student = { $in: studentIds };
+            // Also include adhoc records matching the name
+            const fuzzyAdhocRegex = { $regex: fuzzyName, $options: 'i' };
+            query.$or = [
+                { student: { $in: studentIds } },
+                { isAdhoc: true, adhocStudentName: fuzzyAdhocRegex }
+            ];
         }
 
         const records = await FeeRecord.find(query)

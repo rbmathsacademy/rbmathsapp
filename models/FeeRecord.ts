@@ -4,11 +4,21 @@ const FeeRecordSchema = new mongoose.Schema({
     student: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'BatchStudent',
-        required: true
+        required: false,
+        default: null
     },
     batch: {
         type: String,
         required: true
+    },
+    isAdhoc: {
+        type: Boolean,
+        default: false
+    },
+    adhocStudentName: {
+        type: String,
+        trim: true,
+        default: null
     },
     amount: {
         type: Number,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, Search, Trash2, Edit3, X, Upload, RefreshCw, ChevronLeft, ChevronRight, Phone, Shield } from 'lucide-react';
+import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Student {
@@ -29,8 +29,14 @@ export default function AdminStudents() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showBulkModal, setShowBulkModal] = useState(false);
+    const [showRenameBatchModal, setShowRenameBatchModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-    const [syncing, setSyncing] = useState(false);
+
+    // Selection state
+    const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+
+    // Rename batch form
+    const [renameBatchForm, setRenameBatchForm] = useState({ oldBatch: '', newBatch: '' });
 
     // Form state
     const [form, setForm] = useState({
@@ -185,20 +191,84 @@ export default function AdminStudents() {
         }
     };
 
-    const handleSyncFromSheet = async () => {
-        setSyncing(true);
+    // --- Selection Handlers ---
+    const toggleStudentSelection = (id: string) => {
+        setSelectedStudents(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedStudents.size === students.length && students.length > 0) {
+            setSelectedStudents(new Set());
+        } else {
+            setSelectedStudents(new Set(students.map(s => s._id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedStudents.size === 0) return;
+        if (!confirm(`Are you sure you want to permanently delete ${selectedStudents.size} student(s)? This cannot be undone.`)) return;
+        const toastId = toast.loading(`Deleting ${selectedStudents.size} student(s)...`);
         try {
-            const res = await fetch('/api/admin/fees/sync', { method: 'POST' });
+            const res = await fetch('/api/admin/students/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentIds: Array.from(selectedStudents) })
+            });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            toast.success(data.message || 'Sync complete');
+            toast.success(data.message, { id: toastId });
+            setSelectedStudents(new Set());
+            fetchStudents();
+        } catch (error: any) {
+            toast.error(error.message || 'Bulk delete failed', { id: toastId });
+        }
+    };
+
+    const handleRenameBatch = async () => {
+        if (!renameBatchForm.oldBatch || !renameBatchForm.newBatch.trim()) {
+            toast.error('Please select old batch and enter new batch name');
+            return;
+        }
+        if (renameBatchForm.oldBatch === renameBatchForm.newBatch.trim()) {
+            toast.error('Old and new batch names are the same');
+            return;
+        }
+        const toastId = toast.loading('Renaming batch...');
+        try {
+            const res = await fetch('/api/admin/students/rename-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentIds: Array.from(selectedStudents),
+                    oldBatch: renameBatchForm.oldBatch,
+                    newBatch: renameBatchForm.newBatch.trim()
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            toast.success(data.message, { id: toastId });
+            setShowRenameBatchModal(false);
+            setRenameBatchForm({ oldBatch: '', newBatch: '' });
+            setSelectedStudents(new Set());
             fetchStudents();
             fetchBatches();
         } catch (error: any) {
-            toast.error(error.message || 'Sync failed');
-        } finally {
-            setSyncing(false);
+            toast.error(error.message || 'Rename failed', { id: toastId });
         }
+    };
+
+    // Get common batches among selected students (for rename batch modal)
+    const getCommonBatches = (): string[] => {
+        const selected = students.filter(s => selectedStudents.has(s._id));
+        if (selected.length === 0) return [];
+        const allBatches = new Set<string>();
+        selected.forEach(s => s.courses.forEach(c => allBatches.add(c)));
+        return Array.from(allBatches);
     };
 
     const addCourseToForm = () => {
@@ -328,29 +398,6 @@ export default function AdminStudents() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                    <button onClick={handleSyncFromSheet} disabled={syncing}
-                        className="col-span-1 px-3 py-2 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold text-xs md:text-sm hover:bg-amber-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                        <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${syncing ? 'animate-spin' : ''}`} />
-                        <span className="hidden sm:inline">Sync Sheet</span>
-                        <span className="sm:hidden">Sync</span>
-                    </button>
-                    <button onClick={async () => {
-                        if (!confirm('This will create guardian accounts for all students who do not have one. Continue?')) return;
-                        const toastId = toast.loading('Syncing guardians...');
-                        try {
-                            const res = await fetch('/api/admin/students/sync-guardians', { method: 'POST' });
-                            const data = await res.json();
-                            if (res.ok) toast.success(data.message, { id: toastId });
-                            else toast.error(data.error, { id: toastId });
-                        } catch (err) {
-                            toast.error('Failed to sync guardians', { id: toastId });
-                        }
-                    }}
-                        className="col-span-1 px-3 py-2 rounded-xl bg-green-600/20 border border-green-500/30 text-green-300 font-bold text-xs md:text-sm hover:bg-green-600/30 transition-all flex items-center justify-center gap-2">
-                        <Shield className="h-3 w-3 md:h-4 md:w-4" />
-                        <span className="hidden sm:inline">Sync Guardians</span>
-                        <span className="sm:hidden">Guardians</span>
-                    </button>
                     <button onClick={() => setShowBulkModal(true)}
                         className="col-span-1 px-3 py-2 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold text-xs md:text-sm hover:bg-purple-600/30 transition-all flex items-center justify-center gap-2">
                         <Upload className="h-3 w-3 md:h-4 md:w-4" />
@@ -386,12 +433,47 @@ export default function AdminStudents() {
                 </select>
             </div>
 
+            {/* Floating Action Bar */}
+            {selectedStudents.size > 0 && (
+                <div className="bg-blue-600/20 border border-blue-500/30 rounded-2xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
+                    <p className="text-sm text-blue-300 font-bold">
+                        {selectedStudents.size} student(s) selected
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => {
+                            setRenameBatchForm({ oldBatch: '', newBatch: '' });
+                            setShowRenameBatchModal(true);
+                        }}
+                            className="px-3 py-2 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold text-xs hover:bg-amber-600/30 transition-all flex items-center gap-2">
+                            <RefreshCw className="h-3 w-3" />
+                            Rename Batch
+                        </button>
+                        <button onClick={handleBulkDelete}
+                            className="px-3 py-2 rounded-xl bg-red-600/20 border border-red-500/30 text-red-300 font-bold text-xs hover:bg-red-600/30 transition-all flex items-center gap-2">
+                            <Trash2 className="h-3 w-3" />
+                            Delete Selected
+                        </button>
+                        <button onClick={() => setSelectedStudents(new Set())}
+                            className="px-3 py-2 rounded-xl bg-slate-700/50 border border-white/10 text-slate-400 font-bold text-xs hover:bg-slate-700 transition-all">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Student Table */}
             <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-white/10 bg-white/5">
+                                <th className="px-2 md:px-3 py-3 w-10">
+                                    <button onClick={toggleSelectAll} className="p-1 rounded hover:bg-white/10 transition-colors">
+                                        {selectedStudents.size === students.length && students.length > 0
+                                            ? <CheckSquare className="h-4 w-4 text-blue-400" />
+                                            : <Square className="h-4 w-4 text-slate-500" />}
+                                    </button>
+                                </th>
                                 <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Student</th>
                                 <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Phone</th>
                                 <th className="text-left px-3 md:px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Batches</th>
@@ -401,17 +483,24 @@ export default function AdminStudents() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-500">
+                                <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-500">
                                     <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                                     Loading students...
                                 </td></tr>
                             ) : students.length === 0 ? (
-                                <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-500">
+                                <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-500">
                                     <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                     No students found
                                 </td></tr>
                             ) : students.map(student => (
-                                <tr key={student._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <tr key={student._id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedStudents.has(student._id) ? 'bg-blue-500/5' : ''}`}>
+                                    <td className="px-2 md:px-3 py-3 w-10">
+                                        <button onClick={() => toggleStudentSelection(student._id)} className="p-1 rounded hover:bg-white/10 transition-colors">
+                                            {selectedStudents.has(student._id)
+                                                ? <CheckSquare className="h-4 w-4 text-blue-400" />
+                                                : <Square className="h-4 w-4 text-slate-600" />}
+                                        </button>
+                                    </td>
                                     <td className="px-3 md:px-4 py-3">
                                         <div className="flex items-center gap-3">
                                             <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
@@ -572,6 +661,56 @@ export default function AdminStudents() {
                                 <button onClick={handleBulkImport}
                                     className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 text-white font-bold text-sm hover:from-purple-500 hover:to-violet-500 shadow-lg shadow-purple-500/20">
                                     Import Students
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rename Batch Modal */}
+            {showRenameBatchModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRenameBatchModal(false)}>
+                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-5 border-b border-white/10">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <RefreshCw className="h-5 w-5 text-amber-400" /> Rename Batch
+                            </h2>
+                            <button onClick={() => setShowRenameBatchModal(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400"><X className="h-5 w-5" /></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                                <p className="font-bold mb-1">This will rename the batch for {selectedStudents.size} selected student(s).</p>
+                                <p className="text-slate-400">All existing fee records under the old batch will also be migrated to the new batch name.</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Current Batch *</label>
+                                <select
+                                    value={renameBatchForm.oldBatch}
+                                    onChange={e => setRenameBatchForm({ ...renameBatchForm, oldBatch: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-amber-500"
+                                >
+                                    <option value="" className="bg-slate-800 text-white">Select batch to rename...</option>
+                                    {getCommonBatches().map(b => (
+                                        <option key={b} value={b} className="bg-slate-800 text-white">{b}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">New Batch Name *</label>
+                                <input
+                                    type="text" value={renameBatchForm.newBatch}
+                                    onChange={e => setRenameBatchForm({ ...renameBatchForm, newBatch: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50"
+                                    placeholder="Enter new batch name"
+                                />
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button onClick={() => setShowRenameBatchModal(false)}
+                                    className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-400 font-bold text-sm hover:bg-white/5">Cancel</button>
+                                <button onClick={handleRenameBatch}
+                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-sm hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-500/20">
+                                    Rename Batch
                                 </button>
                             </div>
                         </div>
