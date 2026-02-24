@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import FeeRecord from '@/models/FeeRecord';
+import LessonPlan from '@/models/LessonPlan';
 
 export async function POST(req: NextRequest) {
     try {
@@ -45,11 +46,35 @@ export async function POST(req: NextRequest) {
             }
         );
 
+        // 3. Update LessonPlan.batch — rename the lesson plan document for this batch
+        //    Check if a lesson plan already exists for the new batch name
+        const existingNewPlan = await LessonPlan.findOne({ batch: trimmedNew });
+        let lessonPlanUpdated = 0;
+
+        if (existingNewPlan) {
+            // Merge: append old batch's plans into the existing new batch's plans
+            const oldPlan = await LessonPlan.findOne({ batch: trimmedOld });
+            if (oldPlan && oldPlan.plans.length > 0) {
+                existingNewPlan.plans.push(...oldPlan.plans);
+                await existingNewPlan.save();
+                await LessonPlan.deleteOne({ batch: trimmedOld });
+                lessonPlanUpdated = 1;
+            }
+        } else {
+            // Simply rename the batch field
+            const lpResult = await LessonPlan.updateOne(
+                { batch: trimmedOld },
+                { $set: { batch: trimmedNew } }
+            );
+            lessonPlanUpdated = lpResult.modifiedCount;
+        }
+
         return NextResponse.json({
             success: true,
-            message: `Renamed batch for ${studentUpdateResult.modifiedCount} student(s). Updated ${feeUpdateResult.modifiedCount} fee record(s).`,
+            message: `Renamed batch for ${studentUpdateResult.modifiedCount} student(s). Updated ${feeUpdateResult.modifiedCount} fee record(s). Updated ${lessonPlanUpdated} lesson plan(s).`,
             studentsUpdated: studentUpdateResult.modifiedCount,
-            feeRecordsUpdated: feeUpdateResult.modifiedCount
+            feeRecordsUpdated: feeUpdateResult.modifiedCount,
+            lessonPlansUpdated: lessonPlanUpdated
         });
     } catch (error: any) {
         console.error('Rename batch failed:', error);

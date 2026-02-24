@@ -1174,7 +1174,7 @@ function FeesManagementContent() {
                         <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
-                                <input type="month" className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full"
+                                <input type="month" className="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full [color-scheme:dark] cursor-pointer"
                                     value={historyFilters.month} onChange={(e) => setHistoryFilters({ ...historyFilters, month: e.target.value })} />
                             </div>
                             <div className="space-y-1">
@@ -1216,6 +1216,19 @@ function FeesManagementContent() {
                             <Download className="h-4 w-4" /> Export CSV
                         </button>
                     </div>
+
+                    {/* Total Amount Summary */}
+                    {historyRecords.length > 0 && (historyFilters.month || historyFilters.batch || historyFilters.mode || historyFilters.receiver || historyFilters.search) && (
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+                            <div className="text-sm text-emerald-300">
+                                <span className="font-bold text-white">{historyRecords.length}</span> record{historyRecords.length !== 1 ? 's' : ''} found
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400 uppercase font-bold">Total Amount:</span>
+                                <span className="text-2xl font-bold text-emerald-400">₹{historyRecords.reduce((sum, r) => sum + (r.amount || 0), 0).toLocaleString('en-IN')}</span>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-slate-900/60 border border-white/10 rounded-xl overflow-x-auto">
                         <table className="w-full text-sm text-left hidden md:table">
