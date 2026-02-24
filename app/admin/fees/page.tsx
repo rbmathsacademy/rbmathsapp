@@ -297,7 +297,7 @@ function FeesManagementContent() {
             if (historyFilters.mode) params.append('mode', historyFilters.mode);
             if (historyFilters.receiver) params.append('receiver', historyFilters.receiver);
             if (historyFilters.search) params.append('studentName', historyFilters.search);
-            if (historyFilters.month) params.append('paymentMonth', historyFilters.month);
+            if (historyFilters.month) params.append('entryMonth', historyFilters.month);
 
             const res = await fetch(`/api/admin/fees?${params.toString()}`, { cache: 'no-store' });
             const data = await res.json();
@@ -1179,7 +1179,7 @@ function FeesManagementContent() {
                     <div className="bg-slate-900/40 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row flex-wrap gap-4 items-stretch md:items-end">
                         <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
                             <div className="space-y-1 relative" ref={monthPickerRef}>
-                                <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Paid On</label>
                                 <button
                                     type="button"
                                     onClick={() => setMonthPickerOpen(!monthPickerOpen)}

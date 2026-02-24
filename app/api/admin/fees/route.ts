@@ -124,7 +124,8 @@ export async function GET(req: Request) {
         const batch = searchParams.get('batch');
         const sessionYear = searchParams.get('sessionYear');
         const year = searchParams.get('year');
-        const paymentMonth = searchParams.get('paymentMonth'); // YYYY-MM
+        const paymentMonth = searchParams.get('paymentMonth'); // YYYY-MM (fees paid FOR)
+        const entryMonth = searchParams.get('entryMonth'); // YYYY-MM (fees paid ON)
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
         const mode = searchParams.get('mode');
@@ -153,6 +154,13 @@ export async function GET(req: Request) {
             const start = new Date(y, m - 1, 1);
             const end = new Date(y, m, 0, 23, 59, 59);
             query.feesMonth = { $gte: start, $lte: end };
+        }
+
+        if (entryMonth) {
+            const [y, m] = entryMonth.split('-').map(Number);
+            const start = new Date(y, m - 1, 1);
+            const end = new Date(y, m, 0, 23, 59, 59);
+            query.entryDate = { $gte: start, $lte: end };
         } else if (startDate || endDate) {
             query.entryDate = {};
             if (startDate) query.entryDate.$gte = new Date(startDate);
