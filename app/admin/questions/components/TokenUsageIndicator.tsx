@@ -48,9 +48,6 @@ export default function TokenUsageIndicator({ userEmail, onQuotaExhausted, refre
     useEffect(() => {
         if (userEmail) {
             fetchUsage();
-            // Refresh every minute
-            const interval = setInterval(fetchUsage, 60000);
-            return () => clearInterval(interval);
         }
     }, [userEmail, refreshTrigger]);
 

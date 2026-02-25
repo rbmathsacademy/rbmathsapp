@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertTriangle, Upload, FileText, ExternalLink, XCircle, ArrowLeft } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useStudentProfile } from '../StudentProfileContext';
 
 interface Assignment {
     _id: string;
@@ -28,21 +29,11 @@ export default function StudentAssignmentsPage() {
     const [activeTab, setActiveTab] = useState<TabType>('PENDING');
     const [loading, setLoading] = useState(true);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
-    const [profile, setProfile] = useState<any>(null);
+    const { profile, loading: profileLoading } = useStudentProfile();
 
     useEffect(() => {
-        fetchProfile();
         fetchAssignments();
     }, []);
-
-    const fetchProfile = async () => {
-        try {
-            const res = await fetch('/api/student/me');
-            if (!res.ok) return;
-            const data = await res.json();
-            setProfile(data);
-        } catch (e) { }
-    };
 
     const fetchAssignments = async () => {
         try {

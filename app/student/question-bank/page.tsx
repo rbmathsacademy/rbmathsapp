@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
 import { Folder as FolderIcon, ChevronRight, FileText, ArrowLeft, LogOut, LayoutGrid, Bookmark } from 'lucide-react';
+import { useStudentProfile } from '../StudentProfileContext';
 
 interface Folder {
     _id: string;
@@ -22,14 +23,14 @@ interface Question {
 
 export default function QuestionBank() {
     const router = useRouter();
-    const [student, setStudent] = useState<any>(null);
+    const { profile: student, loading: profileLoading, error: profileError } = useStudentProfile();
     const [activeCourse, setActiveCourse] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
 
     // Folder navigation stack for sub-folder support
     const [folderStack, setFolderStack] = useState<Folder[]>([]);
 
-    const [loadingCourses, setLoadingCourses] = useState(true);
+    const loadingCourses = profileLoading;
     const [loadingFolders, setLoadingFolders] = useState(false);
 
     // Check if a folder has deployed questions
@@ -39,8 +40,10 @@ export default function QuestionBank() {
     const currentFolder = folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
 
     useEffect(() => {
-        fetchProfile();
-    }, []);
+        if (profileError) {
+            router.push('/student/login');
+        }
+    }, [profileError]);
 
     useEffect(() => {
         if (activeCourse) {
@@ -48,20 +51,6 @@ export default function QuestionBank() {
             fetchFolders(activeCourse, null);
         }
     }, [activeCourse]);
-
-
-    const fetchProfile = async () => {
-        try {
-            const res = await fetch('/api/student/me');
-            if (!res.ok) throw new Error('Unauthorized');
-            const data = await res.json();
-            setStudent(data);
-        } catch (error) {
-            router.push('/student/login');
-        } finally {
-            setLoadingCourses(false);
-        }
-    };
 
     const fetchFolders = async (course: string, parentId: string | null) => {
         setLoadingFolders(true);

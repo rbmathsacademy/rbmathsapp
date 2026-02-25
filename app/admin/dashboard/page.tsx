@@ -32,39 +32,26 @@ export default function AdminDashboard() {
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
-            const user = JSON.parse(storedUser);
-            fetchStats(user.email);
-            fetchStaff();
+            fetchDashboard();
         }
     }, []);
 
-    const fetchStats = async (email: string) => {
+    const fetchDashboard = async () => {
         try {
-            const res = await fetch('/api/admin/dashboard/stats', {
-                headers: { 'X-User-Email': email },
-            });
+            const res = await fetch('/api/admin/dashboard');
             if (res.ok) {
                 const data = await res.json();
-                setStats(data);
-            }
-        } catch (error) {
-            console.error('Error fetching dashboard stats:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchStaff = async () => {
-        setStaffLoading(true);
-        try {
-            const res = await fetch('/api/admin/staff');
-            if (res.ok) {
-                const data = await res.json();
+                setStats({
+                    totalStudents: data.totalStudents,
+                    totalQuestions: data.totalQuestions,
+                    activeTests: data.activeTests,
+                });
                 setStaffList(data.staff || []);
             }
         } catch (error) {
-            console.error('Error fetching staff:', error);
+            console.error('Error fetching dashboard:', error);
         } finally {
+            setLoading(false);
             setStaffLoading(false);
         }
     };
@@ -84,7 +71,7 @@ export default function AdminDashboard() {
                 toast.success(`${newStaff.role === 'manager' ? 'Manager' : 'Copy Checker'} added successfully`);
                 setNewStaff({ name: '', phoneNumber: '', role: 'manager' });
                 setShowAddStaffModal(false);
-                fetchStaff();
+                fetchDashboard();
             } else {
                 toast.error(data.error || 'Failed to add staff');
             }
@@ -101,7 +88,7 @@ export default function AdminDashboard() {
             const res = await fetch(`/api/admin/staff?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
                 toast.success('Staff removed successfully');
-                fetchStaff();
+                fetchDashboard();
             } else {
                 toast.error('Failed to remove staff');
             }

@@ -6,6 +6,7 @@ import { ArrowLeft, Download, AlertCircle, CheckCircle, Calendar, FileText } fro
 import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
 import FeesReceiptModal from './FeesReceiptModal';
+import { useStudentProfile } from '../StudentProfileContext';
 
 interface FeeRecord {
     _id: string;
@@ -33,7 +34,8 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export default function FeesPayment() {
     const router = useRouter();
-    const [student, setStudent] = useState<Student | null>(null);
+    const { profile, loading: profileLoading, error: profileError } = useStudentProfile();
+    const student = profile ? { studentName: profile.studentName, phoneNumber: profile.phoneNumber, courses: profile.courses, createdAt: '' } : null;
     const [records, setRecords] = useState<FeeRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -52,18 +54,17 @@ export default function FeesPayment() {
     }, []);
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (profileError) {
+            router.push('/student/login');
+            return;
+        }
+        if (!profileLoading) {
+            fetchFees();
+        }
+    }, [profileLoading, profileError]);
 
-    const fetchData = async () => {
+    const fetchFees = async () => {
         try {
-            // 1. Fetch Profile
-            const profileRes = await fetch('/api/student/me');
-            if (!profileRes.ok) throw new Error('Unauthorized');
-            const profileData = await profileRes.json();
-            setStudent(profileData);
-
-            // 2. Fetch Fees
             const feesRes = await fetch('/api/student/fees');
             if (feesRes.ok) {
                 const data = await feesRes.json();
@@ -71,7 +72,6 @@ export default function FeesPayment() {
             }
         } catch (error) {
             console.error(error);
-            router.push('/student/login');
         } finally {
             setLoading(false);
         }
