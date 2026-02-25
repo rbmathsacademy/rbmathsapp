@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "RB Maths Question Bank",
   description: "RB Maths Question Bank Portal",
-  manifest: "/manifest.json",
+  manifest: "/manifest.json?v=2",
   icons: {
     icon: "/icons/icon-192x192.png",
     apple: "/icons/apple-touch-icon.png",
