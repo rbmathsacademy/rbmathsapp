@@ -135,19 +135,40 @@ export default function TakeTestPage() {
             // No programmatic lock to avoid traps.
         };
 
+        let visibilityTimer: NodeJS.Timeout | null = null;
+
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                handleViolation();
+                // Guard 1: If an input/textarea is focused, the keyboard is opening — skip entirely.
+                // On some mobile devices, the keyboard opening briefly fires visibilitychange(hidden=true)
+                // in a tight loop, preventing the keyboard from ever completing its open animation.
+                const tag = document.activeElement?.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                    return;
+                }
+
+                // Guard 2: Debounce — wait 800ms and re-verify the page is still hidden.
+                // This catches any remaining transient hidden states from system UI overlays.
+                visibilityTimer = setTimeout(() => {
+                    if (document.hidden) {
+                        handleViolation();
+                    }
+                }, 800);
+            } else {
+                // Page became visible again within the delay window — cancel pending violation
+                if (visibilityTimer) {
+                    clearTimeout(visibilityTimer);
+                    visibilityTimer = null;
+                }
             }
         };
 
         // Use visibilitychange as the sole reliable trigger for tab switching/app switching on mobile.
-        // NOTE: The resize event was intentionally removed — it caused false positives on tablets
-        // when the virtual keyboard opened and reduced the visible viewport area.
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (visibilityTimer) clearTimeout(visibilityTimer);
         };
     }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
 
