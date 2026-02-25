@@ -8,6 +8,7 @@ import { Folder as FolderIcon, ChevronRight, FileText, ArrowLeft, LogOut, Layout
 interface Folder {
     _id: string;
     name: string;
+    parentId?: string | null;
     createdAt: string;
 }
 
@@ -25,10 +26,17 @@ export default function QuestionBank() {
     const [activeCourse, setActiveCourse] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
 
+    // Folder navigation stack for sub-folder support
+    const [folderStack, setFolderStack] = useState<Folder[]>([]);
 
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [loadingFolders, setLoadingFolders] = useState(false);
 
+    // Check if a folder has deployed questions
+    const [folderHasQuestions, setFolderHasQuestions] = useState(false);
+    const [checkingQuestions, setCheckingQuestions] = useState(false);
+
+    const currentFolder = folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
 
     useEffect(() => {
         fetchProfile();
@@ -36,10 +44,10 @@ export default function QuestionBank() {
 
     useEffect(() => {
         if (activeCourse) {
-            fetchFolders(activeCourse);
+            setFolderStack([]);
+            fetchFolders(activeCourse, null);
         }
     }, [activeCourse]);
-
 
 
     const fetchProfile = async () => {
@@ -48,7 +56,6 @@ export default function QuestionBank() {
             if (!res.ok) throw new Error('Unauthorized');
             const data = await res.json();
             setStudent(data);
-            // Auto-select removed to let user choose
         } catch (error) {
             router.push('/student/login');
         } finally {
@@ -56,10 +63,11 @@ export default function QuestionBank() {
         }
     };
 
-    const fetchFolders = async (course: string) => {
+    const fetchFolders = async (course: string, parentId: string | null) => {
         setLoadingFolders(true);
         try {
-            const res = await fetch(`/api/student/data?course=${encodeURIComponent(course)}`);
+            const parentParam = parentId ? `&parentId=${parentId}` : '';
+            const res = await fetch(`/api/student/data?course=${encodeURIComponent(course)}${parentParam}`);
             const data = await res.json();
             setFolders(data.folders || []);
         } catch (e) {
@@ -69,7 +77,55 @@ export default function QuestionBank() {
         }
     };
 
+    const enterFolder = async (folder: Folder) => {
+        // First check if this folder has sub-folders
+        const newStack = [...folderStack, folder];
+        setFolderStack(newStack);
 
+        // Fetch sub-folders for this folder
+        setLoadingFolders(true);
+        setCheckingQuestions(true);
+
+        try {
+            const [foldersRes, questionsRes] = await Promise.all([
+                fetch(`/api/student/data?course=${encodeURIComponent(activeCourse!)}&parentId=${folder._id}`),
+                fetch(`/api/student/data?folderId=${folder._id}`)
+            ]);
+
+            const foldersData = await foldersRes.json();
+            const questionsData = await questionsRes.json();
+
+            const subFolders = foldersData.folders || [];
+            const questions = questionsData.questions || [];
+
+            setFolders(subFolders);
+            setFolderHasQuestions(questions.length > 0);
+
+            // If no sub-folders but has questions, go directly to resources view
+            if (subFolders.length === 0 && questions.length > 0) {
+                router.push(`/student/resources/${folder._id}`);
+                return;
+            }
+        } catch (e) {
+            toast.error('Failed to load folder');
+        } finally {
+            setLoadingFolders(false);
+            setCheckingQuestions(false);
+        }
+    };
+
+    const goBack = () => {
+        if (folderStack.length <= 1) {
+            setFolderStack([]);
+            setFolderHasQuestions(false);
+            fetchFolders(activeCourse!, null);
+        } else {
+            const newStack = folderStack.slice(0, -1);
+            setFolderStack(newStack);
+            setFolderHasQuestions(false);
+            fetchFolders(activeCourse!, newStack[newStack.length - 1]._id);
+        }
+    };
 
     const handleLogout = () => {
         document.cookie = 'auth_token=; Max-Age=0; path=/;';
@@ -93,6 +149,8 @@ export default function QuestionBank() {
     }
 
     if (!student) return null;
+
+    const isInsideFolder = folderStack.length > 0;
 
     return (
         <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden selection:bg-blue-500/30 pb-20">
@@ -179,21 +237,71 @@ export default function QuestionBank() {
                         </div>
                     </div>
                 ) : (
-                    // Folder Grid View
+                    // Folder Grid View with sub-folder support
                     <div className="animate-in fade-in duration-500">
-                        <button
-                            onClick={() => setActiveCourse(null)}
-                            className="flex items-center text-slate-400 hover:text-white transition-colors mb-4 text-xs font-medium"
-                        >
-                            <ArrowLeft className="h-2.5 w-2.5 mr-1" /> Back to Courses
-                        </button>
+                        {/* Navigation */}
+                        <div className="flex items-center gap-2 mb-4 flex-wrap">
+                            <button
+                                onClick={() => {
+                                    if (isInsideFolder) {
+                                        goBack();
+                                    } else {
+                                        setActiveCourse(null);
+                                    }
+                                }}
+                                className="flex items-center text-slate-400 hover:text-white transition-colors text-xs font-medium"
+                            >
+                                <ArrowLeft className="h-2.5 w-2.5 mr-1" /> Back
+                            </button>
+
+                            {/* Breadcrumb */}
+                            <div className="flex items-center gap-1 text-xs">
+                                <button
+                                    onClick={() => { setFolderStack([]); setFolderHasQuestions(false); fetchFolders(activeCourse!, null); }}
+                                    className="text-slate-400 hover:text-white transition-colors"
+                                >
+                                    {activeCourse}
+                                </button>
+                                {folderStack.map((folder, idx) => (
+                                    <span key={folder._id} className="flex items-center gap-1">
+                                        <ChevronRight className="h-2.5 w-2.5 text-slate-600" />
+                                        <button
+                                            onClick={() => {
+                                                if (idx < folderStack.length - 1) {
+                                                    const newStack = folderStack.slice(0, idx + 1);
+                                                    setFolderStack(newStack);
+                                                    setFolderHasQuestions(false);
+                                                    fetchFolders(activeCourse!, newStack[newStack.length - 1]._id);
+                                                }
+                                            }}
+                                            className={`transition-colors ${idx === folderStack.length - 1 ? 'text-white font-medium' : 'text-slate-400 hover:text-white'}`}
+                                        >
+                                            {folder.name}
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
 
                         <div className="flex items-center gap-2 mb-6">
-                            <h2 className="text-xl font-bold text-white truncate">{activeCourse}</h2>
+                            <h2 className="text-xl font-bold text-white truncate">
+                                {isInsideFolder ? currentFolder!.name : activeCourse}
+                            </h2>
                             <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[9px] font-bold border border-blue-500/20 uppercase">
                                 Active
                             </span>
                         </div>
+
+                        {/* Practice Questions button if current folder has questions */}
+                        {isInsideFolder && folderHasQuestions && (
+                            <button
+                                onClick={() => router.push(`/student/resources/${currentFolder!._id}`)}
+                                className="mb-6 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Practice Questions in this folder
+                            </button>
+                        )}
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                             {loadingFolders ? (
@@ -201,7 +309,7 @@ export default function QuestionBank() {
                                     <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                                     <p className="text-[10px] text-slate-500">Loading...</p>
                                 </div>
-                            ) : folders.length === 0 ? (
+                            ) : folders.length === 0 && !folderHasQuestions ? (
                                 <div className="col-span-full bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
                                     <FolderIcon className="h-8 w-8 text-slate-700 mx-auto mb-2" />
                                     <p className="text-sm text-slate-400 font-medium">No content yet</p>
@@ -210,7 +318,7 @@ export default function QuestionBank() {
                                 folders.map((folder, idx) => (
                                     <div
                                         key={folder._id}
-                                        onClick={() => router.push(`/student/resources/${folder._id}`)}
+                                        onClick={() => enterFolder(folder)}
                                         className="group bg-[#0f172a]/60 backdrop-blur-sm border border-white/5 hover:border-blue-500/50 p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:bg-[#0f172a] active:scale-95 relative overflow-hidden flex flex-col items-center text-center gap-3 aspect-square justify-center shadow-lg shadow-black/20"
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >

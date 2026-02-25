@@ -330,7 +330,7 @@ export default function PracticeQuestionsPage() {
                                         {exam}
                                     </span>
                                 ))}
-                                {currentQuestion.marks && (
+                                {currentQuestion.marks != null && currentQuestion.marks > 0 && (
                                     <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                         {currentQuestion.marks} Marks
                                     </span>

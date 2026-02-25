@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     // However, the middleware sets headers 'x-user-id' etc.
     const courseParams = req.nextUrl.searchParams.get('course');
     const folderId = req.nextUrl.searchParams.get('folderId');
+    const parentId = req.nextUrl.searchParams.get('parentId');
 
     // Fetch Questions for a Folder
     if (folderId) {
@@ -49,7 +50,13 @@ export async function GET(req: NextRequest) {
     // The requirement is transparency, so let's start with just fetching.
 
     try {
-        const folders = await Folder.find({ course: courseParams }).sort({ createdAt: -1 });
+        const query: any = { course: courseParams };
+        if (parentId && parentId !== 'null') {
+            query.parentId = parentId;
+        } else {
+            query.parentId = null;
+        }
+        const folders = await Folder.find(query).sort({ createdAt: -1 });
         return NextResponse.json({ folders });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });

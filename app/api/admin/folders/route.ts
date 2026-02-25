@@ -24,13 +24,21 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const course = searchParams.get('course');
+    const parentId = searchParams.get('parentId'); // null string or ObjectId
 
     if (!course) {
         return NextResponse.json({ error: 'Course is required' }, { status: 400 });
     }
 
     try {
-        const folders = await Folder.find({ course }).sort({ createdAt: -1 });
+        const query: any = { course };
+        // parentId=null or absent means top-level folders
+        if (parentId && parentId !== 'null') {
+            query.parentId = parentId;
+        } else {
+            query.parentId = null;
+        }
+        const folders = await Folder.find(query).sort({ createdAt: -1 });
         return NextResponse.json(folders);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch folders' }, { status: 500 });
@@ -41,13 +49,13 @@ export async function POST(req: NextRequest) {
     await connectDB();
     try {
         const body = await req.json();
-        const { name, course } = body;
+        const { name, course, parentId } = body;
 
         if (!name || !course) {
             return NextResponse.json({ error: 'Name and Course are required' }, { status: 400 });
         }
 
-        const folder = await Folder.create({ name, course });
+        const folder = await Folder.create({ name, course, parentId: parentId || null });
         return NextResponse.json(folder);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to create folder' }, { status: 500 });

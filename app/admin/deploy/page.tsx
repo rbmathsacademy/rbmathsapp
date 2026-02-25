@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder as FolderIcon, Plus, FileText, ChevronRight, LayoutGrid, Trash2, ArrowLeft, Filter, CheckSquare, Square } from 'lucide-react';
+import { Folder as FolderIcon, Plus, FileText, ChevronRight, LayoutGrid, Trash2, ArrowLeft, Filter, CheckSquare, Square, FolderPlus } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import MultiSelect from '../components/MultiSelect';
 import Latex from 'react-latex-next';
@@ -15,6 +15,7 @@ interface Folder {
     _id: string;
     name: string;
     course: string;
+    parentId?: string | null;
     createdAt: string;
 }
 
@@ -32,8 +33,10 @@ export default function DeployPage() {
     const [courses, setCourses] = useState<string[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
-    const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
     const [deployedQuestions, setDeployedQuestions] = useState<Question[]>([]);
+
+    // Folder navigation stack: each entry is a folder we've entered
+    const [folderStack, setFolderStack] = useState<Folder[]>([]);
 
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [loadingFolders, setLoadingFolders] = useState(false);
@@ -53,7 +56,11 @@ export default function DeployPage() {
     // Filters
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
+    const [selectedExamNames, setSelectedExamNames] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Current folder is the top of the stack (or null if at root folder level)
+    const currentFolder = folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -65,16 +72,11 @@ export default function DeployPage() {
 
     useEffect(() => {
         if (selectedCourse) {
-            fetchFolders(selectedCourse);
-            setSelectedFolder(null);
+            setFolderStack([]);
+            setDeployedQuestions([]);
+            fetchFolders(selectedCourse, null);
         }
     }, [selectedCourse]);
-
-    useEffect(() => {
-        if (selectedFolder) {
-            fetchDeployedQuestions(selectedFolder._id);
-        }
-    }, [selectedFolder]);
 
     const fetchCourses = async () => {
         try {
@@ -88,10 +90,11 @@ export default function DeployPage() {
         }
     };
 
-    const fetchFolders = async (course: string) => {
+    const fetchFolders = async (course: string, parentId: string | null) => {
         setLoadingFolders(true);
         try {
-            const res = await fetch(`/api/admin/folders?course=${encodeURIComponent(course)}`);
+            const parentParam = parentId ? `&parentId=${parentId}` : '';
+            const res = await fetch(`/api/admin/folders?course=${encodeURIComponent(course)}${parentParam}`);
             const data = await res.json();
             setFolders(data);
         } catch (e) {
@@ -101,19 +104,47 @@ export default function DeployPage() {
         }
     };
 
+    const enterFolder = (folder: Folder) => {
+        const newStack = [...folderStack, folder];
+        setFolderStack(newStack);
+        setDeployedQuestions([]);
+        fetchFolders(selectedCourse!, folder._id);
+        fetchDeployedQuestions(folder._id);
+    };
+
+    const goBackInStack = () => {
+        if (folderStack.length <= 1) {
+            // Going back to top-level folders
+            setFolderStack([]);
+            setDeployedQuestions([]);
+            fetchFolders(selectedCourse!, null);
+        } else {
+            const newStack = folderStack.slice(0, -1);
+            setFolderStack(newStack);
+            const parentFolder = newStack[newStack.length - 1];
+            setDeployedQuestions([]);
+            fetchFolders(selectedCourse!, parentFolder._id);
+            fetchDeployedQuestions(parentFolder._id);
+        }
+    };
+
     const createFolder = async () => {
-        if (!process.env.NEXT_PUBLIC_API_URL && !newFolderName.trim()) return;
+        if (!newFolderName.trim()) return;
         try {
             const res = await fetch('/api/admin/folders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newFolderName, course: selectedCourse })
+                body: JSON.stringify({
+                    name: newFolderName,
+                    course: selectedCourse,
+                    parentId: currentFolder?._id || null
+                })
             });
             if (res.ok) {
                 toast.success('Folder created');
                 setNewFolderName('');
                 setShowFolderModal(false);
-                fetchFolders(selectedCourse!);
+                fetchFolders(selectedCourse!, currentFolder?._id || null);
             } else {
                 toast.error('Failed to create folder');
             }
@@ -129,7 +160,7 @@ export default function DeployPage() {
             const res = await fetch(`/api/admin/folders?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
                 toast.success('Folder deleted');
-                fetchFolders(selectedCourse!);
+                fetchFolders(selectedCourse!, currentFolder?._id || null);
             }
         } catch (e) { toast.error('Error deleting folder'); }
     };
@@ -173,6 +204,10 @@ export default function DeployPage() {
     };
 
     const deployQuestions = async () => {
+        if (!currentFolder) {
+            toast.error('Please select a folder first');
+            return;
+        }
         try {
             const res = await fetch('/api/admin/deploy', {
                 method: 'POST',
@@ -180,14 +215,14 @@ export default function DeployPage() {
                 body: JSON.stringify({
                     questionIds: selectedQuestionIds,
                     courseId: selectedCourse,
-                    folderId: selectedFolder?._id
+                    folderId: currentFolder._id
                 })
             });
             if (res.ok) {
                 toast.success('Questions deployed');
                 setShowQuestionPicker(false);
                 setSelectedQuestionIds([]);
-                fetchDeployedQuestions(selectedFolder!._id);
+                fetchDeployedQuestions(currentFolder._id);
             } else {
                 toast.error('Failed to deploy');
             }
@@ -211,9 +246,23 @@ export default function DeployPage() {
             .map(q => q.subtopic)
     )).filter(Boolean).sort();
 
+    const examNameOptions = Array.from(new Set(
+        allQuestions
+            .filter(q => {
+                if (selectedTopics.length > 0 && !selectedTopics.includes(q.topic)) return false;
+                if (selectedSubtopics.length > 0 && !selectedSubtopics.includes(q.subtopic)) return false;
+                return true;
+            })
+            .flatMap(q => q.examNames || [])
+    )).filter(Boolean).sort();
+
     const filteredQuestions = allQuestions.filter(q => {
         if (selectedTopics.length > 0 && !selectedTopics.includes(q.topic)) return false;
         if (selectedSubtopics.length > 0 && !selectedSubtopics.includes(q.subtopic)) return false;
+        if (selectedExamNames.length > 0) {
+            const qExams = q.examNames || [];
+            if (!selectedExamNames.some(e => qExams.includes(e))) return false;
+        }
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             return (
@@ -240,6 +289,9 @@ export default function DeployPage() {
             setSelectedQuestionIds(newIds);
         }
     };
+
+    // Whether we are inside a folder (showing its contents)
+    const isInsideFolder = folderStack.length > 0;
 
     return (
         <div className="p-6 max-w-7xl mx-auto text-slate-200 font-sans">
@@ -279,26 +331,84 @@ export default function DeployPage() {
                         ))
                     )}
                 </div>
-            ) : !selectedFolder ? (
-                // Folder View
+            ) : (
+                // Folder + Content View (supports nesting)
                 <div>
-                    <button onClick={() => setSelectedCourse(null)} className="mb-6 flex items-center text-slate-400 hover:text-white transition-colors">
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
-                    </button>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-white">{selectedCourse} <span className="text-slate-500 text-lg font-normal">/ Folders</span></h2>
+                    {/* Navigation Header */}
+                    <div className="flex items-center gap-2 mb-6 flex-wrap">
                         <button
-                            onClick={() => setShowFolderModal(true)}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium"
+                            onClick={() => {
+                                if (isInsideFolder) {
+                                    goBackInStack();
+                                } else {
+                                    setSelectedCourse(null);
+                                }
+                            }}
+                            className="flex items-center text-slate-400 hover:text-white transition-colors"
                         >
-                            <Plus className="h-4 w-4" /> New Folder
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Back
                         </button>
+                        <div className="h-4 w-[1px] bg-slate-700"></div>
+
+                        {/* Breadcrumb */}
+                        <button
+                            onClick={() => { setFolderStack([]); setDeployedQuestions([]); fetchFolders(selectedCourse!, null); }}
+                            className="text-slate-400 hover:text-white transition-colors text-sm"
+                        >
+                            {selectedCourse}
+                        </button>
+                        {folderStack.map((folder, idx) => (
+                            <span key={folder._id} className="flex items-center gap-2">
+                                <ChevronRight className="h-4 w-4 text-slate-600" />
+                                <button
+                                    onClick={() => {
+                                        if (idx < folderStack.length - 1) {
+                                            // Navigate to this folder in the stack
+                                            const newStack = folderStack.slice(0, idx + 1);
+                                            setFolderStack(newStack);
+                                            setDeployedQuestions([]);
+                                            fetchFolders(selectedCourse!, newStack[newStack.length - 1]._id);
+                                            fetchDeployedQuestions(newStack[newStack.length - 1]._id);
+                                        }
+                                    }}
+                                    className={`text-sm transition-colors ${idx === folderStack.length - 1 ? 'text-white font-medium' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    {folder.name}
+                                </button>
+                            </span>
+                        ))}
                     </div>
 
+                    {/* Action Bar */}
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-white">
+                            {isInsideFolder ? currentFolder!.name : 'Folders'}
+                        </h2>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowFolderModal(true)}
+                                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium border border-slate-600"
+                            >
+                                <FolderPlus className="h-4 w-4" />
+                                {isInsideFolder ? 'New Sub-folder' : 'New Folder'}
+                            </button>
+                            {isInsideFolder && (
+                                <button
+                                    onClick={openQuestionPicker}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium shadow-lg shadow-indigo-500/20"
+                                >
+                                    <Plus className="h-4 w-4" /> Add Questions
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Sub-folders Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {loadingFolders ? (
                             <div className="text-center col-span-full py-12 text-slate-500">Loading folders...</div>
-                        ) : folders.length === 0 ? (
+                        ) : folders.length === 0 && !isInsideFolder ? (
                             <div className="col-span-full bg-slate-800/20 border border-dashed border-slate-700 rounded-2xl p-12 text-center">
                                 <FolderIcon className="h-12 w-12 text-slate-600 mx-auto mb-4" />
                                 <p className="text-slate-400 mb-2">No folders yet</p>
@@ -308,7 +418,7 @@ export default function DeployPage() {
                             folders.map(folder => (
                                 <div
                                     key={folder._id}
-                                    onClick={() => setSelectedFolder(folder)}
+                                    onClick={() => enterFolder(folder)}
                                     className="bg-slate-800/40 hover:bg-slate-800 border border-white/5 hover:border-indigo-500/50 p-5 rounded-2xl cursor-pointer transition-all group relative"
                                 >
                                     <button
@@ -324,74 +434,57 @@ export default function DeployPage() {
                             ))
                         )}
                     </div>
-                </div>
-            ) : (
-                // Question View (Inside Folder)
-                <div>
-                    <div className="flex items-center gap-4 mb-6">
-                        <button onClick={() => setSelectedFolder(null)} className="flex items-center text-slate-400 hover:text-white transition-colors">
-                            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Folders
-                        </button>
-                        <div className="h-4 w-[1px] bg-slate-700"></div>
-                        <span className="text-slate-500">{selectedCourse}</span>
-                        <ChevronRight className="h-4 w-4 text-slate-600" />
-                        <span className="text-white font-medium">{selectedFolder.name}</span>
-                    </div>
 
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-white">Questions</h2>
-                        <button
-                            onClick={openQuestionPicker}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium shadow-lg shadow-indigo-500/20"
-                        >
-                            <Plus className="h-4 w-4" /> Add Questions
-                        </button>
-                    </div>
-
-                    <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden">
-                        {loadingQuestions ? (
-                            <div className="p-8 text-center text-slate-500">Loading questions...</div>
-                        ) : deployedQuestions.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <FileText className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                                <p className="text-slate-400">This folder is empty</p>
-                                <button onClick={openQuestionPicker} className="text-indigo-400 hover:text-indigo-300 text-sm mt-2 font-medium">Browse Question Bank</button>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-white/5">
-                                {deployedQuestions.map((q, i) => (
-                                    <div key={i} className="p-4 hover:bg-slate-800/30 transition-colors flex gap-4">
-                                        <div className="flex-shrink-0 pt-1">
-                                            <div className="h-6 w-6 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-medium text-slate-400">
-                                                {i + 1}
-                                            </div>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="text-slate-300 text-sm mb-1 line-clamp-2 prose prose-invert prose-sm max-w-none">
-                                                <Latex>{q.text}</Latex>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
-                                                    {q.type}
-                                                </span>
-                                                <span className="px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-400 border border-slate-700">{q.topic}</span>
-                                                {q.examNames && q.examNames.length > 0 && q.examNames.map((exam, idx) => (
-                                                    <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
-                                                        {exam}
-                                                    </span>
-                                                ))}
-                                                {q.marks && (
-                                                    <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
-                                                        {q.marks} marks
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
+                    {/* Deployed Questions (inside a folder) */}
+                    {isInsideFolder && (
+                        <div className="mt-8">
+                            <h3 className="text-lg font-bold text-white mb-4">Questions in this folder</h3>
+                            <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden">
+                                {loadingQuestions ? (
+                                    <div className="p-8 text-center text-slate-500">Loading questions...</div>
+                                ) : deployedQuestions.length === 0 ? (
+                                    <div className="p-12 text-center">
+                                        <FileText className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                                        <p className="text-slate-400">No questions in this folder yet</p>
+                                        <button onClick={openQuestionPicker} className="text-indigo-400 hover:text-indigo-300 text-sm mt-2 font-medium">Browse Question Bank</button>
                                     </div>
-                                ))}
+                                ) : (
+                                    <div className="divide-y divide-white/5">
+                                        {deployedQuestions.map((q, i) => (
+                                            <div key={i} className="p-4 hover:bg-slate-800/30 transition-colors flex gap-4">
+                                                <div className="flex-shrink-0 pt-1">
+                                                    <div className="h-6 w-6 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-medium text-slate-400">
+                                                        {i + 1}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="text-slate-300 text-sm mb-1 line-clamp-2 prose prose-invert prose-sm max-w-none">
+                                                        <Latex>{q.text}</Latex>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
+                                                            {q.type}
+                                                        </span>
+                                                        <span className="px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-400 border border-slate-700">{q.topic}</span>
+                                                        {q.examNames && q.examNames.length > 0 && q.examNames.map((exam, idx) => (
+                                                            <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                                {exam}
+                                                            </span>
+                                                        ))}
+                                                        {q.marks != null && q.marks > 0 && (
+                                                            <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                                {q.marks} marks
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -399,10 +492,12 @@ export default function DeployPage() {
             {showFolderModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                     <div className="bg-slate-900 rounded-xl border border-white/10 p-6 w-full max-w-md shadow-2xl">
-                        <h3 className="text-xl font-bold text-white mb-4">Create New Folder</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">
+                            {isInsideFolder ? `Create Sub-folder in "${currentFolder!.name}"` : 'Create New Folder'}
+                        </h3>
                         <input
                             type="text"
-                            placeholder="Folder Name (e.g., Week 1, Algebra Basics)"
+                            placeholder={isInsideFolder ? "Sub-folder Name" : "Folder Name (e.g., Week 1, Algebra Basics)"}
                             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none mb-6"
                             value={newFolderName}
                             onChange={(e) => setNewFolderName(e.target.value)}
@@ -457,6 +552,15 @@ export default function DeployPage() {
                                         placeholder="All Subtopics"
                                     />
                                 </div>
+                                <div className="flex-1">
+                                    <label className="text-xs text-slate-400 mb-1 block">Exam Names</label>
+                                    <MultiSelect
+                                        options={examNameOptions}
+                                        selected={selectedExamNames}
+                                        onChange={setSelectedExamNames}
+                                        placeholder="All Exams"
+                                    />
+                                </div>
                             </div>
                             <div className="flex gap-4 items-center">
                                 <input
@@ -509,7 +613,7 @@ export default function DeployPage() {
                                                         {exam}
                                                     </span>
                                                 ))}
-                                                {q.marks && (
+                                                {q.marks != null && q.marks > 0 && (
                                                     <span className="bg-green-900/30 text-green-300 text-[10px] px-1.5 py-0.5 rounded border border-green-500/20">
                                                         {q.marks}m
                                                     </span>
