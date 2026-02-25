@@ -1,21 +1,38 @@
 {
-    "name": "RB Maths Admin",
-    "short_name": "RB Maths Admin",
-    "description": "RB Maths Question Bank Admin Portal",
-    "start_url": "/admin",
+    "name": "RB Maths Academy",
+    "short_name": "RB Maths",
+    "description": "RB Maths Academy - Question Bank Portal",
+    "id": "/",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "orientation": "portrait",
     "background_color": "#0a0f1a",
     "theme_color": "#0a0f1a",
     "icons": [
         {
-            "src": "/hero-logo.png",
+            "src": "/icons/icon-192x192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
-            "src": "/hero-logo.png",
+            "src": "/icons/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-maskable-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/icons/icon-maskable-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }
