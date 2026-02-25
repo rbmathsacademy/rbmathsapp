@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
 interface Analytics {
@@ -50,10 +50,16 @@ export default function MonitorTestPage() {
     const [loading, setLoading] = useState(true);
     const [userEmail, setUserEmail] = useState<string | null>(null);
 
-    // Reassign state
+    // Reassign completed students state
     const [selectedPhones, setSelectedPhones] = useState<Set<string>>(new Set());
     const [showReassignModal, setShowReassignModal] = useState(false);
     const [reassigning, setReassigning] = useState(false);
+
+    // Reassign missed students state
+    const [showMissedModal, setShowMissedModal] = useState(false);
+    const [missedReassigning, setMissedReassigning] = useState(false);
+    const [newStartTime, setNewStartTime] = useState('');
+    const [newEndTime, setNewEndTime] = useState('');
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -148,6 +154,39 @@ export default function MonitorTestPage() {
 
     const selectedStudents = completed.filter(s => selectedPhones.has(s.phone));
 
+    // --- Handle missed reassign ---
+    const handleMissedReassign = async () => {
+        if (!newStartTime || !newEndTime) {
+            toast.error('Please set both start and end times');
+            return;
+        }
+        setMissedReassigning(true);
+        try {
+            const res = await fetch(`/api/admin/online-tests/${testId}/reassign`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': userEmail!
+                },
+                body: JSON.stringify({ newStartTime, newEndTime })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                toast.success(data.message || 'Test reassigned for missed students!');
+                setShowMissedModal(false);
+                fetchResults();
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to reassign');
+            }
+        } catch {
+            toast.error('Network error while reassigning');
+        } finally {
+            setMissedReassigning(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
             <Toaster position="top-right" />
@@ -196,6 +235,66 @@ export default function MonitorTestPage() {
                                     <><RefreshCw className="w-4 h-4 animate-spin" /> Reassigning...</>
                                 ) : (
                                     <><RotateCcw className="w-4 h-4" /> Confirm Reassign</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Missed Students Reassign Modal */}
+            {showMissedModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-lg bg-blue-500/20">
+                                <CalendarClock className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <h2 className="text-lg font-bold text-white">Reassign Missed Students</h2>
+                        </div>
+
+                        <p className="text-slate-400 text-sm mb-4">
+                            Set a new time window so that <span className="text-blue-400 font-bold">{notStarted.length} missed student{notStarted.length !== 1 ? 's' : ''}</span> can take this test. The test status will be set back to <span className="text-emerald-400 font-bold">Deployed</span>. Students who already completed are not affected.
+                        </p>
+
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-xs text-slate-400 font-semibold mb-1.5">New Start Time</label>
+                                <input
+                                    type="datetime-local"
+                                    value={newStartTime}
+                                    onChange={e => setNewStartTime(e.target.value)}
+                                    className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-slate-400 font-semibold mb-1.5">New End Time</label>
+                                <input
+                                    type="datetime-local"
+                                    value={newEndTime}
+                                    onChange={e => setNewEndTime(e.target.value)}
+                                    className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowMissedModal(false)}
+                                disabled={missedReassigning}
+                                className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm font-bold transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleMissedReassign}
+                                disabled={missedReassigning || !newStartTime || !newEndTime}
+                                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold disabled:opacity-50 flex justify-center items-center gap-2 transition-all"
+                            >
+                                {missedReassigning ? (
+                                    <><RefreshCw className="w-4 h-4 animate-spin" /> Updating...</>
+                                ) : (
+                                    <><CalendarClock className="w-4 h-4" /> Confirm Reassign</>
                                 )}
                             </button>
                         </div>
@@ -580,48 +679,68 @@ export default function MonitorTestPage() {
 
                         {/* Not Started */}
                         {activeTab === 'notStarted' && (
-                            <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
-                                {notStarted.length === 0 ? (
-                                    <p className="text-center py-12 text-emerald-400 font-medium">All students have started the test! 🎉</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
-                                                    <th className="px-4 py-3 font-semibold">Student</th>
-                                                    <th className="px-4 py-3 font-semibold">Batch</th>
-                                                    <th className="px-4 py-3 font-semibold">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {notStarted.map(s => (
-                                                    <tr key={s.phone} className="border-b border-white/5 hover:bg-white/5">
-                                                        <td className="px-4 py-3">
-                                                            <div className="text-white font-medium text-sm">{s.name}</div>
-                                                            <div className="text-[10px] text-slate-500">{s.phone}</div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
-                                                        <td className="px-4 py-3 flex items-center gap-4">
-                                                            <span className="px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 text-xs font-medium">Not Attempted</span>
-                                                            <button
-                                                                onClick={() => {
-                                                                    const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : 'soon';
-                                                                    const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
-                                                                    navigator.clipboard.writeText(text);
-                                                                    toast.success('Reminder copied!');
-                                                                }}
-                                                                className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
-                                                                title="Copy Reminder"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                            <div className="space-y-4">
+                                {/* Reassign Missed Students Button */}
+                                {notStarted.length > 0 && (
+                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3">
+                                        <span className="text-sm text-slate-400">{notStarted.length} student{notStarted.length !== 1 ? 's' : ''} missed this test</span>
+                                        <button
+                                            onClick={() => {
+                                                setNewStartTime('');
+                                                setNewEndTime('');
+                                                setShowMissedModal(true);
+                                            }}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 text-sm font-bold transition-all"
+                                        >
+                                            <CalendarClock className="w-4 h-4" />
+                                            Reassign Missed Students
+                                        </button>
                                     </div>
                                 )}
+
+                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                    {notStarted.length === 0 ? (
+                                        <p className="text-center py-12 text-emerald-400 font-medium">All students have started the test! 🎉</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                                        <th className="px-4 py-3 font-semibold">Student</th>
+                                                        <th className="px-4 py-3 font-semibold">Batch</th>
+                                                        <th className="px-4 py-3 font-semibold">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {notStarted.map(s => (
+                                                        <tr key={s.phone} className="border-b border-white/5 hover:bg-white/5">
+                                                            <td className="px-4 py-3">
+                                                                <div className="text-white font-medium text-sm">{s.name}</div>
+                                                                <div className="text-[10px] text-slate-500">{s.phone}</div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
+                                                            <td className="px-4 py-3 flex items-center gap-4">
+                                                                <span className="px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 text-xs font-medium">Not Attempted</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : 'soon';
+                                                                        const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
+                                                                        navigator.clipboard.writeText(text);
+                                                                        toast.success('Reminder copied!');
+                                                                    }}
+                                                                    className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
+                                                                    title="Copy Reminder"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </>
