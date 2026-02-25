@@ -24,7 +24,7 @@ type PaymentReceiver = 'MM' | 'RB';
 interface FeeRecord {
     _id: string;
     invoiceNo?: string; // Optional now
-    student: Student | string;
+    student: Student | string | null;
     batch: string;
     amount: number;
     paymentMode: PaymentMode;
@@ -39,6 +39,8 @@ interface FeeRecord {
     status?: 'PENDING' | 'EMPTY'; // For grid cell logic if needed
     isAdhoc?: boolean;
     adhocStudentName?: string;
+    studentName?: string;
+    studentPhone?: string;
 }
 
 const MONTHS = [
@@ -258,7 +260,7 @@ function FeesManagementContent() {
             const data = await res.json();
             if (data.records) {
                 const records = data.records.filter((r: FeeRecord) => {
-                    const rId = typeof r.student === 'object' ? (r.student as Student)._id : r.student;
+                    const rId = typeof r.student === 'object' ? (r.student as Student)?._id : r.student;
                     // Allow PAYMENT, NEW_ADMISSION, EXEMPTED
                     return rId === studentId && (['PAYMENT', 'NEW_ADMISSION', 'EXEMPTED'].includes(r.recordType) || !r.recordType);
                 });
@@ -627,7 +629,7 @@ function FeesManagementContent() {
         if (!historyRecords.length) return;
         const headers = ['Invoice', 'Student', 'Batch', 'Amount', 'Fees Month', 'Paid On', 'Mode', 'Receiver', 'Remarks'];
         const rows = historyRecords.map(r => {
-            const sName = r.isAdhoc ? `${r.adhocStudentName || 'Unknown'} (Ad-hoc)` : (typeof r.student === 'object' ? r.student?.name : 'Unknown');
+            const sName = r.isAdhoc ? `${r.adhocStudentName || 'Unknown'} (Ad-hoc)` : (typeof r.student === 'object' && r.student ? r.student.name : (r.studentName || 'Unknown'));
             return [
                 r.invoiceNo,
                 sName,
@@ -1035,7 +1037,7 @@ function FeesManagementContent() {
                                                 </td>
                                                 {gridMonths.map(m => {
                                                     const record = allRecords.find(r => {
-                                                        const rId = typeof r.student === 'object' ? r.student._id : r.student;
+                                                        const rId = (typeof r.student === 'object' && r.student) ? r.student._id : r.student;
                                                         return String(rId) === String(student._id) &&
                                                             String(r.batch).trim() === String(batch).trim() &&
                                                             r.monthIndex === m.monthIndex &&
@@ -1089,7 +1091,7 @@ function FeesManagementContent() {
                                                     // Find New Admission Date for this Student+Batch
                                                     // We look through all records for this student+batch that are NEW_ADMISSION
                                                     const admissionRecord = allRecords.find(r => {
-                                                        const rId = typeof r.student === 'object' ? r.student._id : r.student;
+                                                        const rId = (typeof r.student === 'object' && r.student) ? r.student._id : r.student;
                                                         // Robust comparison: stringify IDs and trim batches
                                                         return String(rId) === String(student._id) &&
                                                             r.batch?.trim() === batch?.trim() &&
@@ -1323,7 +1325,7 @@ function FeesManagementContent() {
                                         <td className="px-6 py-4 font-medium text-white">
                                             {record.isAdhoc ? (
                                                 <span>{record.adhocStudentName || 'Unknown'} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">Ad-hoc</span></span>
-                                            ) : (typeof record.student === 'object' ? record.student?.name : 'Unknown')}
+                                            ) : (typeof record.student === 'object' && record.student ? record.student.name : (record.studentName || 'Unknown'))}
                                         </td>
                                         <td className="px-6 py-4 text-slate-400">{record.batch}</td>
                                         <td className="px-6 py-4 text-white">
@@ -1352,7 +1354,7 @@ function FeesManagementContent() {
                                             <div className="font-bold text-white text-base">
                                                 {record.isAdhoc ? (
                                                     <span>{record.adhocStudentName || 'Unknown'} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">Ad-hoc</span></span>
-                                                ) : (typeof record.student === 'object' ? record.student?.name : 'Unknown')}
+                                                ) : (typeof record.student === 'object' && record.student ? record.student.name : (record.studentName || 'Unknown'))}
                                             </div>
                                             <div className="text-xs text-slate-400 mt-0.5">{record.batch}</div>
                                         </div>

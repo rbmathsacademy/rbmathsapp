@@ -20,6 +20,16 @@ const FeeRecordSchema = new mongoose.Schema({
         trim: true,
         default: null
     },
+    studentName: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    studentPhone: {
+        type: String,
+        trim: true,
+        default: null
+    },
     amount: {
         type: Number,
         required: true

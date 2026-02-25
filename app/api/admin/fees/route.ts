@@ -16,6 +16,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Student is required for non-adhoc entries' }, { status: 400 });
         }
 
+        // Look up student name/phone to denormalize onto the fee record
+        // This ensures fee history persists even if the student is later deleted
+        let studentName: string | null = null;
+        let studentPhone: string | null = null;
+        if (!isAdhoc && body.student) {
+            const studentDoc = await BatchStudent.findById(body.student).select('name phoneNumber').lean() as any;
+            if (studentDoc) {
+                studentName = studentDoc.name || null;
+                studentPhone = studentDoc.phoneNumber || null;
+            }
+        }
+
+
         // Determine if we need an invoice number
         const isPayment = !body.recordType || body.recordType === 'PAYMENT';
         let lastInvoiceNum = 0;
@@ -57,6 +70,8 @@ export async function POST(req: Request) {
             isAdhoc,
             adhocStudentName: isAdhoc ? (body.adhocStudentName || 'Unknown') : null,
             student: isAdhoc ? null : body.student,
+            studentName: isAdhoc ? (body.adhocStudentName || 'Unknown') : studentName,
+            studentPhone: isAdhoc ? null : studentPhone,
         };
 
         // Check if multi-month or single
@@ -181,11 +196,13 @@ export async function GET(req: Request) {
             }).select('_id');
 
             const studentIds = students.map(s => s._id);
-            // Also include adhoc records matching the name
+            // Also include adhoc records matching the name, and records with denormalized studentName
+            // (for deleted students whose records persist)
             const fuzzyAdhocRegex = { $regex: fuzzyName, $options: 'i' };
             query.$or = [
                 { student: { $in: studentIds } },
-                { isAdhoc: true, adhocStudentName: fuzzyAdhocRegex }
+                { isAdhoc: true, adhocStudentName: fuzzyAdhocRegex },
+                { studentName: fuzzyAdhocRegex }
             ];
         }
 
