@@ -141,36 +141,13 @@ export default function TakeTestPage() {
             }
         };
 
-        const handleResize = () => {
-            // Split screen detection for mobile
-            // If width drops significantly below screen width, it's likely split screen
-            const isSplitScreen = window.innerWidth < screen.width * 0.8; // < 80% width
-            const isLandscape = window.innerWidth > window.innerHeight;
-
-            if (isSplitScreen && !isLandscape) {
-                // Only trigger if not landscape (landscape might naturally be wider/shorter)
-            }
-
-            // Robust check: Window dimensions vs Screen dimensions
-            // If window area is significantly smaller than screen area
-            const windowArea = window.innerWidth * window.innerHeight;
-            const screenArea = screen.width * screen.height;
-            if (windowArea < screenArea * 0.6) {
-                // < 60% screen area -> likely split screen or floating window
-                if (!document.activeElement?.tagName.match(/INPUT|TEXTAREA/)) {
-                    // Ignore if keyboard is likely open
-                    handleViolation();
-                }
-            }
-        };
-
-        // Use visibilitychange as the primary reliable trigger for tab switching/minimizing on mobile
+        // Use visibilitychange as the sole reliable trigger for tab switching/app switching on mobile.
+        // NOTE: The resize event was intentionally removed — it caused false positives on tablets
+        // when the virtual keyboard opened and reduced the visible viewport area.
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('resize', handleResize);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('resize', handleResize);
         };
     }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
 interface Analytics {
@@ -50,6 +50,11 @@ export default function MonitorTestPage() {
     const [loading, setLoading] = useState(true);
     const [userEmail, setUserEmail] = useState<string | null>(null);
 
+    // Reassign state
+    const [selectedPhones, setSelectedPhones] = useState<Set<string>>(new Set());
+    const [showReassignModal, setShowReassignModal] = useState(false);
+    const [reassigning, setReassigning] = useState(false);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -75,6 +80,7 @@ export default function MonitorTestPage() {
                 setCompleted(data.completed);
                 setInProgress(data.inProgress);
                 setNotStarted(data.notStarted);
+                setSelectedPhones(new Set()); // Clear selection on refresh
             } else {
                 toast.error('Failed to load test results');
             }
@@ -93,9 +99,109 @@ export default function MonitorTestPage() {
 
     const maxDistCount = analytics?.scoreDistribution ? Math.max(...analytics.scoreDistribution.map(d => d.count), 1) : 1;
 
+    // --- Reassign helpers ---
+    const toggleSelectPhone = (phone: string) => {
+        setSelectedPhones(prev => {
+            const next = new Set(prev);
+            if (next.has(phone)) next.delete(phone);
+            else next.add(phone);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedPhones.size === completed.length) {
+            setSelectedPhones(new Set());
+        } else {
+            setSelectedPhones(new Set(completed.map(s => s.phone)));
+        }
+    };
+
+    const handleReassign = async () => {
+        if (selectedPhones.size === 0) return;
+        setReassigning(true);
+        try {
+            const res = await fetch(`/api/admin/online-tests/${testId}/reassign`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': userEmail!
+                },
+                body: JSON.stringify({ phones: Array.from(selectedPhones) })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                toast.success(data.message || 'Students reassigned successfully');
+                setShowReassignModal(false);
+                fetchResults();
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to reassign');
+            }
+        } catch {
+            toast.error('Network error while reassigning');
+        } finally {
+            setReassigning(false);
+        }
+    };
+
+    const selectedStudents = completed.filter(s => selectedPhones.has(s.phone));
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
             <Toaster position="top-right" />
+
+            {/* Reassign Confirmation Modal */}
+            {showReassignModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-lg bg-amber-500/20">
+                                <RotateCcw className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <h2 className="text-lg font-bold text-white">Reassign Test</h2>
+                        </div>
+
+                        <p className="text-slate-400 text-sm mb-4">
+                            The following {selectedStudents.length} student{selectedStudents.length !== 1 ? 's' : ''} will have their attempt <span className="text-red-400 font-bold">permanently deleted</span> so they can retake the test. All other test settings remain unchanged.
+                        </p>
+
+                        <div className="bg-slate-900/60 rounded-xl border border-white/5 divide-y divide-white/5 mb-6 max-h-48 overflow-y-auto">
+                            {selectedStudents.map(s => (
+                                <div key={s.phone} className="flex items-center justify-between px-4 py-2.5">
+                                    <div>
+                                        <p className="text-white text-sm font-medium">{s.name}</p>
+                                        <p className="text-slate-500 text-xs">{s.phone} · {s.batch}</p>
+                                    </div>
+                                    <span className="text-xs text-slate-400 font-bold">{s.score}/{testInfo?.totalMarks} ({s.percentage}%)</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowReassignModal(false)}
+                                disabled={reassigning}
+                                className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm font-bold transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReassign}
+                                disabled={reassigning}
+                                className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold disabled:opacity-50 flex justify-center items-center gap-2 transition-all"
+                            >
+                                {reassigning ? (
+                                    <><RefreshCw className="w-4 h-4 animate-spin" /> Reassigning...</>
+                                ) : (
+                                    <><RotateCcw className="w-4 h-4" /> Confirm Reassign</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="bg-slate-900/60 backdrop-blur-sm border-b border-white/10 p-6">
@@ -328,67 +434,110 @@ export default function MonitorTestPage() {
                             </div>
                         )}
 
-                        {/* Completed Leaderboard */}
+                        {/* Completed Leaderboard (with reassign) */}
                         {activeTab === 'completed' && (
-                            <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
-                                {completed.length === 0 ? (
-                                    <p className="text-center py-12 text-slate-400">No completed attempts yet</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
-                                                    <th className="px-4 py-3 font-semibold">Rank</th>
-                                                    <th className="px-4 py-3 font-semibold">Student</th>
-                                                    <th className="px-4 py-3 font-semibold">Batch</th>
-                                                    <th className="px-4 py-3 font-semibold">Score</th>
-                                                    <th className="px-4 py-3 font-semibold">%</th>
-                                                    <th className="px-4 py-3 font-semibold">Time</th>
-                                                    <th className="px-4 py-3 font-semibold">Submitted</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {completed.map((student, i) => (
-                                                    <tr key={student.phone} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                        <td className="px-4 py-3">
-                                                            {i < 3 ? (
-                                                                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                                                    i === 1 ? 'bg-slate-400/20 text-slate-300' :
-                                                                        'bg-orange-500/20 text-orange-400'
-                                                                    }`}>{i + 1}</span>
-                                                            ) : (
-                                                                <span className="text-slate-500 font-medium text-sm pl-2">#{i + 1}</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            <div className="text-white font-medium text-sm">{student.name}</div>
-                                                            <div className="text-[10px] text-slate-500">{student.phone}</div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-slate-300 text-sm">{student.batch}</td>
-                                                        <td className="px-4 py-3">
-                                                            <span className="text-white font-bold text-sm">{student.score}</span>
-                                                            <span className="text-slate-500 text-xs">/{testInfo?.totalMarks}</span>
-                                                            {student.graceMarks > 0 && <span className="text-purple-400 text-[10px] ml-1">+{student.graceMarks}g</span>}
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'
-                                                                }`}>{student.percentage}%</span>
-                                                            {student.terminationReason && (
-                                                                <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                                                                    Terminated
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
-                                                        <td className="px-4 py-3 text-slate-400 text-xs">
-                                                            {new Date(student.submittedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                            <div className="space-y-4">
+                                {/* Bulk Reassign Toolbar */}
+                                {completed.length > 0 && (
+                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3">
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="select-all"
+                                                checked={selectedPhones.size === completed.length && completed.length > 0}
+                                                onChange={toggleSelectAll}
+                                                className="w-4 h-4 rounded border-white/20 bg-black/40 text-amber-600 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer accent-amber-500"
+                                            />
+                                            <label htmlFor="select-all" className="text-sm text-slate-400 cursor-pointer select-none">
+                                                {selectedPhones.size > 0 ? `${selectedPhones.size} selected` : 'Select all'}
+                                            </label>
+                                        </div>
+                                        {selectedPhones.size > 0 && (
+                                            <button
+                                                onClick={() => setShowReassignModal(true)}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 text-sm font-bold transition-all"
+                                            >
+                                                <RotateCcw className="w-4 h-4" />
+                                                Reassign Selected ({selectedPhones.size})
+                                            </button>
+                                        )}
                                     </div>
                                 )}
+
+                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                    {completed.length === 0 ? (
+                                        <p className="text-center py-12 text-slate-400">No completed attempts yet</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                                        <th className="px-4 py-3 font-semibold w-10">
+                                                            {/* checkbox header placeholder */}
+                                                        </th>
+                                                        <th className="px-4 py-3 font-semibold">Rank</th>
+                                                        <th className="px-4 py-3 font-semibold">Student</th>
+                                                        <th className="px-4 py-3 font-semibold">Batch</th>
+                                                        <th className="px-4 py-3 font-semibold">Score</th>
+                                                        <th className="px-4 py-3 font-semibold">%</th>
+                                                        <th className="px-4 py-3 font-semibold">Time</th>
+                                                        <th className="px-4 py-3 font-semibold">Submitted</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {completed.map((student, i) => (
+                                                        <tr
+                                                            key={student.phone}
+                                                            className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''}`}
+                                                        >
+                                                            <td className="px-4 py-3">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={selectedPhones.has(student.phone)}
+                                                                    onChange={() => toggleSelectPhone(student.phone)}
+                                                                    className="w-4 h-4 rounded border-white/20 bg-black/40 cursor-pointer accent-amber-500"
+                                                                />
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                {i < 3 ? (
+                                                                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                                                        i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                                                                            'bg-orange-500/20 text-orange-400'
+                                                                        }`}>{i + 1}</span>
+                                                                ) : (
+                                                                    <span className="text-slate-500 font-medium text-sm pl-2">#{i + 1}</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="text-white font-medium text-sm">{student.name}</div>
+                                                                <div className="text-[10px] text-slate-500">{student.phone}</div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-slate-300 text-sm">{student.batch}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className="text-white font-bold text-sm">{student.score}</span>
+                                                                <span className="text-slate-500 text-xs">/{testInfo?.totalMarks}</span>
+                                                                {student.graceMarks > 0 && <span className="text-purple-400 text-[10px] ml-1">+{student.graceMarks}g</span>}
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'
+                                                                    }`}>{student.percentage}%</span>
+                                                                {student.terminationReason && (
+                                                                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                                                                        Terminated
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
+                                                            <td className="px-4 py-3 text-slate-400 text-xs">
+                                                                {new Date(student.submittedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
