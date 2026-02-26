@@ -650,26 +650,6 @@ export default function TakeTestPage() {
 
     return (
         <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex flex-col relative">
-            {/* Strict Orientation Lock Overlay */}
-            <style jsx global>{`
-                @media screen and (orientation: landscape) {
-                    .landscape-blocker { display: flex !important; }
-                    .test-content { display: none !important; }
-                }
-            `}</style>
-            <div className="landscape-blocker fixed inset-0 z-[9999] bg-[#050b14] flex-col items-center justify-center p-8 text-center" style={{ display: 'none' }}>
-                <div className="p-6 rounded-full bg-red-500/10 mb-6 animate-pulse">
-                    <div className="w-16 h-24 border-4 border-red-500 rounded-xl flex items-center justify-center">
-                        <div className="w-1 h-12 bg-red-500 rounded-full"></div>
-                    </div>
-                </div>
-                <h2 className="text-2xl font-black text-white mb-2">Portrait Mode Required</h2>
-                <p className="text-slate-400 max-w-xs mx-auto">
-                    Please rotate your device to portrait mode to continue the test. Landscape mode is not allowed.
-                </p>
-            </div>
-
-
 
             <div className="test-content flex flex-col min-h-screen">
                 {/* Top Bar - Timer & Progress */}
