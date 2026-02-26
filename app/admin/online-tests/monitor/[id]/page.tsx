@@ -455,39 +455,72 @@ export default function MonitorTestPage() {
                                 {/* Score Distribution */}
                                 {analytics.scoreDistribution && analytics.scoreDistribution.some(d => d.count > 0) && (
                                     <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6">
-                                        <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><BarChart3 className="h-4 w-4 text-blue-400" /> Score Distribution</h3>
-                                        <div className="flex items-end gap-1.5 h-32">
-                                            {analytics.scoreDistribution.map((bucket, i) => (
-                                                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                                                    <span className="text-[10px] text-slate-400 font-bold">{bucket.count}</span>
-                                                    <div
-                                                        className={`w-full rounded-t-md transition-all ${i < 4 ? 'bg-red-500/60' : i < 7 ? 'bg-amber-500/60' : 'bg-emerald-500/60'
-                                                            }`}
-                                                        style={{ height: `${Math.max((bucket.count / maxDistCount) * 100, 4)}%` }}
-                                                    ></div>
-                                                    <span className="text-[8px] text-slate-500 leading-none">{`${i * 10}-${i * 10 + 9}`}</span>
-                                                </div>
-                                            ))}
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-sm font-bold text-white flex items-center gap-2"><BarChart3 className="h-4 w-4 text-blue-400" /> Score Distribution (%)</h3>
+                                            <div className="text-xs text-slate-500 flex items-center gap-3">
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500/80"></span> 0-39% (Fail)</span>
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500/80"></span> 40-69% (Avg)</span>
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500/80"></span> 70-100% (Top)</span>
+                                            </div>
                                         </div>
+
+                                        <div className="relative h-48 mt-4 flex items-end gap-2 border-l border-b border-white/10 pb-2 pl-2">
+                                            {/* Y-axis guidelines */}
+                                            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6 pl-2">
+                                                <div className="border-b border-white/5 w-full"></div>
+                                                <div className="border-b border-white/5 w-full"></div>
+                                                <div className="border-b border-white/5 w-full"></div>
+                                                <div className="border-b border-white/5 w-full"></div>
+                                            </div>
+
+                                            {analytics.scoreDistribution.map((bucket, i) => {
+                                                const heightPerc = Math.max((bucket.count / maxDistCount) * 100, bucket.count > 0 ? 4 : 0);
+                                                return (
+                                                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative z-10 h-full justify-end">
+                                                        {bucket.count > 0 && (
+                                                            <span className="text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-slate-800 px-2.5 py-1 rounded shadow-xl border border-white/10 z-20 whitespace-nowrap">
+                                                                {bucket.count} Student{bucket.count !== 1 ? 's' : ''}
+                                                            </span>
+                                                        )}
+                                                        <div
+                                                            className={`w-full max-w-[40px] rounded-t-lg transition-all relative overflow-hidden shadow-sm ${bucket.count === 0 ? 'bg-transparent' :
+                                                                    i < 4 ? 'bg-red-500/80 hover:bg-red-400' :
+                                                                        i < 7 ? 'bg-amber-500/80 hover:bg-amber-400' :
+                                                                            'bg-emerald-500/80 hover:bg-emerald-400'
+                                                                }`}
+                                                            style={{ height: `${heightPerc}%` }}
+                                                        >
+                                                            {bucket.count > 0 && <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>}
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-400 font-medium absolute -bottom-6 turn-slightly">{`${i === 10 ? '100' : i * 10 + '-' + (i * 10 + 9)}`}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="mt-6 text-center text-xs text-slate-500">Percentage Ranges</div>
                                     </div>
                                 )}
 
                                 {/* Batch Performance + Question Analysis */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Batch Performance */}
-                                    {analytics.batchPerformance && analytics.batchPerformance.length > 0 && (
-                                        <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6">
-                                            <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><TrendingUp className="h-4 w-4 text-purple-400" /> Batch Performance</h3>
+                                    {/* Student Leaderboard */}
+                                    {completed.length > 0 && (
+                                        <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6 max-h-[28rem] overflow-y-auto custom-scrollbar">
+                                            <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><Trophy className="h-4 w-4 text-amber-400" /> Student Leaderboard</h3>
                                             <div className="space-y-3">
-                                                {analytics.batchPerformance.map(b => (
-                                                    <div key={b.batch}>
-                                                        <div className="flex justify-between text-xs mb-1">
-                                                            <span className="text-slate-300 font-medium">{b.batch}</span>
-                                                            <span className="text-slate-400">{b.avgPercentage}% avg · {b.studentCount} students</span>
+                                                {[...completed].sort((a, b) => b.score - a.score).map((s, idx) => (
+                                                    <div key={s.phone} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-white/5 hover:bg-slate-800 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${idx === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : idx === 1 ? 'bg-slate-300/20 text-slate-300 border border-slate-300/30' : idx === 2 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-slate-700/50 text-slate-400'}`}>
+                                                                {idx + 1}
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-sm font-semibold text-white truncate max-w-[120px] sm:max-w-[200px]">{s.name}</div>
+                                                                <div className="text-[10px] text-slate-500 flex items-center gap-1"><Clock className="w-3 h-3" /> {formatTime(s.timeSpent)}</div>
+                                                            </div>
                                                         </div>
-                                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                                                            <div className={`h-full rounded-full ${b.avgPercentage >= 70 ? 'bg-emerald-500' : b.avgPercentage >= 40 ? 'bg-amber-500' : 'bg-red-500'
-                                                                }`} style={{ width: `${b.avgPercentage}%` }}></div>
+                                                        <div className="text-right">
+                                                            <div className="text-base font-black text-emerald-400 whitespace-nowrap">{s.score} <span className="text-[10px] text-slate-500 font-normal">/ {testInfo?.totalMarks}</span></div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -497,25 +530,32 @@ export default function MonitorTestPage() {
 
                                     {/* Question Difficulty */}
                                     {analytics.questionAnalysis && analytics.questionAnalysis.length > 0 && (
-                                        <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6 max-h-96 overflow-y-auto">
+                                        <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6 max-h-[28rem] overflow-y-auto custom-scrollbar flex flex-col">
                                             <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><Target className="h-4 w-4 text-orange-400" /> Question Difficulty</h3>
-                                            <div className="space-y-2">
+
+                                            <div className="mb-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                                <p className="text-xs text-blue-200 leading-relaxed">
+                                                    <strong className="text-blue-400">Note:</strong> A lower accuracy percentage indicates the question was generally harder.
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2 flex-1">
                                                 {analytics.questionAnalysis.map((q, i) => (
                                                     <div key={q.questionId} className="flex items-center gap-3 text-xs">
                                                         <span className="w-6 text-slate-500 font-bold text-right shrink-0">Q{i + 1}</span>
-                                                        <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                        <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden shrink-0">
                                                             <div className={`h-full rounded-full ${q.accuracy >= 70 ? 'bg-emerald-500' : q.accuracy >= 40 ? 'bg-amber-500' : 'bg-red-500'
                                                                 }`} style={{ width: `${q.accuracy}%` }}></div>
                                                         </div>
-                                                        <span className={`w-10 text-right font-bold ${q.accuracy >= 70 ? 'text-emerald-400' : q.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'
+                                                        <span className={`w-10 text-right font-bold shrink-0 ${q.accuracy >= 70 ? 'text-emerald-400' : q.accuracy >= 40 ? 'text-amber-400' : 'text-red-400'
                                                             }`}>{q.accuracy}%</span>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="mt-3 flex gap-4 text-[10px] text-slate-500">
-                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Easy (≥70%)</span>
-                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Medium</span>
-                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> Hard (&lt;40%)</span>
+                                            <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-4 text-[10px] text-slate-500 shrink-0">
+                                                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Easy (≥70%)</span>
+                                                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Medium (40-69%)</span>
+                                                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500"></span> Hard (&lt;40%)</span>
                                             </div>
                                         </div>
                                     )}

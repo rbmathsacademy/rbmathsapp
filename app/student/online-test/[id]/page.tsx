@@ -58,6 +58,8 @@ export default function TakeTestPage() {
     const answersRef = useRef<Map<string, any>>(new Map()); // Ref to access latest answers in closures (timers/handlers)
     const [flagged, setFlagged] = useState<Set<string>>(new Set());
     const [timeLeft, setTimeLeft] = useState(0); // in seconds
+    const timeSpentPerQuestionRef = useRef<Map<string, number>>(new Map()); // track ms spent on each question
+    const questionVisitTimeRef = useRef<number>(Date.now()); // timestamp when they visited the current question
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showPalette, setShowPalette] = useState(false);
@@ -79,11 +81,28 @@ export default function TakeTestPage() {
 
     // Initialize per-question timer when question changes
     useEffect(() => {
-        if (!started || !test?.config?.enablePerQuestionTimer) return;
+        if (!started) return;
 
-        // Determine duration for current question
-        const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
-        setQuestionTimeLeft(qDuration);
+        // Track the time spent on the PREVIOUS question before switching
+        if (currentQuestion) {
+            const now = Date.now();
+            const timeElapsed = now - questionVisitTimeRef.current;
+
+            // For comprehension, we distribute the time evenly among all sub-questions for simplicity
+            // or we could assign it all to the parent ID. Let's just track it by parent ID and when assembling
+            // answers we'll attach this time to the subquestions.
+            const existingTime = timeSpentPerQuestionRef.current.get(currentQuestion.id) || 0;
+            timeSpentPerQuestionRef.current.set(currentQuestion.id, existingTime + timeElapsed);
+
+            // Reset visit time for the newly arrived question
+            questionVisitTimeRef.current = now;
+        }
+
+        if (test?.config?.enablePerQuestionTimer) {
+            // Determine duration for current question
+            const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
+            setQuestionTimeLeft(qDuration);
+        }
 
     }, [currentIndex, started, test, currentQuestion]);
 
@@ -234,9 +253,18 @@ export default function TakeTestPage() {
             // If we have an existing attempt, restore answers
             if (data.attempt?.answers?.length > 0) {
                 const restored = new Map<string, any>();
-                data.attempt.answers.forEach((a: any) => restored.set(a.questionId, a.answer));
+                const restoredTimes = new Map<string, number>();
+
+                data.attempt.answers.forEach((a: any) => {
+                    restored.set(a.questionId, a.answer);
+                    // For comprehension, times might be recorded per sub-question in the db, map it back
+                    // It's safer to just set it per questionId. We use `id` across the board anyway.
+                    if (a.timeTaken) restoredTimes.set(a.questionId, a.timeTaken);
+                });
+
                 setAnswers(restored);
                 answersRef.current = restored; // Sync ref
+                timeSpentPerQuestionRef.current = restoredTimes; // Restore tracking times
             }
 
             // If already started, set the time
@@ -288,6 +316,7 @@ export default function TakeTestPage() {
 
             setStarted(true);
             startTimeRef.current = Date.now();
+            questionVisitTimeRef.current = Date.now(); // Start tracking time
             toast.success('Test started! Good luck!');
         } catch {
             toast.error('Network error');
@@ -301,17 +330,29 @@ export default function TakeTestPage() {
 
         const answerArray: any[] = [];
         for (const q of (test?.questions || [])) {
+            // Update the currently viewed question's time just before auto-saving
+            if (q.id === currentQuestion?.id) {
+                const now = Date.now();
+                const timeElapsed = now - questionVisitTimeRef.current;
+                const existingTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
+                timeSpentPerQuestionRef.current.set(q.id, existingTime + timeElapsed);
+                questionVisitTimeRef.current = now; // reset
+            }
+
             if (q.type === 'comprehension' && q.subQuestions) {
                 for (const sq of q.subQuestions) {
                     const ans = currentAnswers.get(sq.id);
                     if (ans !== undefined && ans !== null) {
-                        answerArray.push({ questionId: sq.id, answer: ans });
+                        // Distribute the parent's accumulated time evenly among its sub-questions
+                        const parentTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
+                        const subTime = Math.floor(parentTime / q.subQuestions.length);
+                        answerArray.push({ questionId: sq.id, answer: ans, timeTaken: subTime });
                     }
                 }
             } else {
                 const ans = currentAnswers.get(q.id);
                 if (ans !== undefined && ans !== null) {
-                    answerArray.push({ questionId: q.id, answer: ans });
+                    answerArray.push({ questionId: q.id, answer: ans, timeTaken: timeSpentPerQuestionRef.current.get(q.id) || 0 });
                 }
             }
         }
@@ -431,17 +472,30 @@ export default function TakeTestPage() {
 
             // Collect answers for all questions (including comprehension sub-questions)
             for (const q of allQuestions) {
+                // Flash the time for the very last question before submitting
+                if (q.id === currentQuestion?.id) {
+                    const now = Date.now();
+                    const timeElapsed = now - questionVisitTimeRef.current;
+                    const existingTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
+                    timeSpentPerQuestionRef.current.set(q.id, existingTime + timeElapsed);
+                    questionVisitTimeRef.current = now; // reset just in case
+                }
+
                 if (q.type === 'comprehension' && q.subQuestions) {
                     for (const sq of q.subQuestions) {
+                        const parentTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
+                        const subTime = Math.floor(parentTime / q.subQuestions.length);
                         answerArray.push({
                             questionId: sq.id,
-                            answer: currentAnswers.get(sq.id) ?? null
+                            answer: currentAnswers.get(sq.id) ?? null,
+                            timeTaken: subTime
                         });
                     }
                 } else {
                     answerArray.push({
                         questionId: q.id,
-                        answer: currentAnswers.get(q.id) ?? null
+                        answer: currentAnswers.get(q.id) ?? null,
+                        timeTaken: timeSpentPerQuestionRef.current.get(q.id) || 0
                     });
                 }
             }

@@ -403,7 +403,8 @@ export async function PUT(
                 questionId: ans.questionId,
                 answer: ans.answer,
                 isCorrect,
-                marksAwarded
+                marksAwarded,
+                timeTaken: ans.timeTaken || 0
             });
         }
 
@@ -497,7 +498,8 @@ export async function PATCH(
                 questionId: a.questionId,
                 answer: a.answer,
                 isCorrect: false,  // Not graded yet
-                marksAwarded: 0
+                marksAwarded: 0,
+                timeTaken: a.timeTaken || existingMap.get(a.questionId)?.timeTaken || 0
             });
         }
 

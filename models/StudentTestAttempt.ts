@@ -19,7 +19,8 @@ const StudentTestAttemptSchema = new mongoose.Schema({
         answer: mongoose.Schema.Types.Mixed, // Can be string, array, etc.
         isCorrect: Boolean,
         marksAwarded: Number,
-        adjustmentMarks: { type: Number, default: 0 }
+        adjustmentMarks: { type: Number, default: 0 },
+        timeTaken: { type: Number, default: 0 }
     }],
     score: { type: Number, default: 0 },
     percentage: { type: Number, default: 0 },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle2, XCircle, Save, RefreshCw, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Save, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import LatexRender from '@/components/LatexRenderer';
 
@@ -122,6 +122,12 @@ export default function SubmissionReviewModal({
         const baseMarks = ans?.marksAwarded || 0;
         const totalMarks = baseMarks + adjustment;
 
+        // timeTaken is stored in milliseconds
+        const timeTakenMs = ans?.timeTaken || 0;
+        const m = Math.floor(timeTakenMs / 60000);
+        const s = Math.floor((timeTakenMs % 60000) / 1000);
+        const timeTakenDesc = timeTakenMs > 0 ? (m > 0 ? `${m}m ${s}s` : `${s}s`) : '-';
+
         return (
             <div key={q.id} className="bg-slate-800/50 border border-white/5 rounded-xl p-5 mb-4">
                 <div className="flex justify-between items-start gap-4 mb-3">
@@ -130,8 +136,15 @@ export default function SubmissionReviewModal({
                         <span className="text-xs font-semibold text-slate-400 capitalize">{q.type}</span>
                     </div>
                     <div className="flex items-center gap-2 bg-slate-900/80 rounded-lg p-1.5 border border-white/10">
+                        <div className="text-[10px] text-slate-400 flex flex-col items-center px-2 pr-3">
+                            <span className="flex items-center gap-1 font-bold whitespace-nowrap"><Clock className="w-3 h-3" /> {timeTakenDesc}</span>
+                            <span className="font-mono mt-0.5 whitespace-nowrap px-1 rounded bg-black/50 border border-white/10 text-slate-300">
+                                [{q.marks ? `+${q.marks}` : '+1'}, {q.negativeMarks ? `-${q.negativeMarks}` : '0'}]
+                            </span>
+                        </div>
+                        <div className="w-px h-8 bg-white/10 mx-0"></div>
                         <div className="text-xs text-slate-400 px-2 flex flex-col items-end">
-                            <span className="mb-0.5">Base: <span className={baseMarks > 0 ? 'text-emerald-400 font-bold' : baseMarks < 0 ? 'text-red-400 font-bold' : 'text-slate-300 font-bold'}>{baseMarks > 0 ? '+' : ''}{baseMarks}</span></span>
+                            <span className="mb-0.5">Earned: <span className={baseMarks > 0 ? 'text-emerald-400 font-bold' : baseMarks < 0 ? 'text-red-400 font-bold' : 'text-slate-300 font-bold'}>{baseMarks > 0 ? '+' : ''}{baseMarks}</span></span>
                         </div>
                         <div className="w-px h-6 bg-white/10 mx-1"></div>
                         <div className="flex items-center gap-2 px-2">
