@@ -67,6 +67,10 @@ export default function TakeTestPage() {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const startTimeRef = useRef<number>(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const isInputFocusedRef = useRef(false); // Track if an input/textarea is focused (for proctoring guard)
+    const inputBlurCooldownRef = useRef<NodeJS.Timeout | null>(null); // Cooldown after input blur
+    const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null); // Periodic auto-save
+    const testDurationMs = useRef<number>(0); // Total test duration in ms (set once)
 
     // Flatten questions for navigation (comprehension sub-questions are inline)
     const allQuestions = test?.questions || [];
@@ -111,8 +115,8 @@ export default function TakeTestPage() {
         return () => clearInterval(timer);
     }, [started, test, questionTimeLeft, currentIndex, allQuestions.length]);
 
-    // Proctoring: Visibility Change Detection
-    // Proctoring: Visibility Change & Split Screen Detection
+    // Proctoring: Visibility Change Detection (mobile-safe)
+    // Uses focusin/focusout tracking to avoid false positives from keyboard open/close
     useEffect(() => {
         if (!started) return;
 
@@ -129,31 +133,60 @@ export default function TakeTestPage() {
         };
         fetchWarnings();
 
-        // Orientation check (Warning only, no lock)
-        const checkOrientation = () => {
-            // We rely on CSS overlay for visual blocking, but we can log or warn if needed.
-            // No programmatic lock to avoid traps.
+        // --- Input focus tracking (focusin/focusout bubble, unlike focus/blur) ---
+        const handleFocusIn = (e: FocusEvent) => {
+            const tag = (e.target as HTMLElement)?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                isInputFocusedRef.current = true;
+                // Clear any pending cooldown
+                if (inputBlurCooldownRef.current) {
+                    clearTimeout(inputBlurCooldownRef.current);
+                    inputBlurCooldownRef.current = null;
+                }
+            }
         };
 
+        const handleFocusOut = (e: FocusEvent) => {
+            const tag = (e.target as HTMLElement)?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                // Don't immediately clear — some devices fire focusout+focusin rapidly
+                // when switching between inputs or when keyboard is animating
+                inputBlurCooldownRef.current = setTimeout(() => {
+                    isInputFocusedRef.current = false;
+                    inputBlurCooldownRef.current = null;
+                }, 1500);
+            }
+        };
+
+        document.addEventListener('focusin', handleFocusIn);
+        document.addEventListener('focusout', handleFocusOut);
+
+        // --- Visibility change handler (with multi-layer mobile guards) ---
         let visibilityTimer: NodeJS.Timeout | null = null;
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                // Guard 1: If an input/textarea is focused, the keyboard is opening — skip entirely.
-                // On some mobile devices, the keyboard opening briefly fires visibilitychange(hidden=true)
-                // in a tight loop, preventing the keyboard from ever completing its open animation.
+                // Guard 1: If an input/textarea is focused (tracked via focusin/focusout),
+                // the keyboard is likely opening/closing — skip entirely.
+                // This is MORE reliable than checking document.activeElement because
+                // focusin fires BEFORE the keyboard animation starts on most devices.
+                if (isInputFocusedRef.current) {
+                    return;
+                }
+
+                // Guard 2: Also check activeElement as a fallback
                 const tag = document.activeElement?.tagName;
                 if (tag === 'INPUT' || tag === 'TEXTAREA') {
                     return;
                 }
 
-                // Guard 2: Debounce — wait 800ms and re-verify the page is still hidden.
-                // This catches any remaining transient hidden states from system UI overlays.
+                // Guard 3: Debounce — wait 1200ms and re-verify the page is still hidden.
+                // Increased from 800ms to handle slower keyboard animations on budget phones.
                 visibilityTimer = setTimeout(() => {
-                    if (document.hidden) {
+                    if (document.hidden && !isInputFocusedRef.current) {
                         handleViolation();
                     }
-                }, 800);
+                }, 1200);
             } else {
                 // Page became visible again within the delay window — cancel pending violation
                 if (visibilityTimer) {
@@ -163,12 +196,14 @@ export default function TakeTestPage() {
             }
         };
 
-        // Use visibilitychange as the sole reliable trigger for tab switching/app switching on mobile.
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('focusin', handleFocusIn);
+            document.removeEventListener('focusout', handleFocusOut);
             if (visibilityTimer) clearTimeout(visibilityTimer);
+            if (inputBlurCooldownRef.current) clearTimeout(inputBlurCooldownRef.current);
         };
     }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
 
@@ -249,6 +284,7 @@ export default function TakeTestPage() {
             if (data.attempt?.status === 'in_progress') {
                 const elapsed = data.attempt.timeSpent || (Date.now() - new Date(data.attempt.startedAt).getTime());
                 const totalMs = (data.test.durationMinutes || 60) * 60 * 1000;
+                testDurationMs.current = totalMs;
                 const remaining = Math.max(0, Math.floor((totalMs - elapsed) / 1000));
                 setTimeLeft(remaining);
                 setStarted(true);
@@ -256,6 +292,8 @@ export default function TakeTestPage() {
                 setWarningCount(data.attempt.warningCount || 0);
                 warningCountRef.current = data.attempt.warningCount || 0; // Sync ref
             } else {
+                const totalMs = (data.test.durationMinutes || 60) * 60 * 1000;
+                testDurationMs.current = totalMs;
                 setTimeLeft((data.test.durationMinutes || 60) * 60);
             }
         } catch {
@@ -297,20 +335,99 @@ export default function TakeTestPage() {
         }
     };
 
-    // Timer
+    // --- Auto-save answers periodically (every 30 seconds) and on pagehide ---
+    const doAutoSave = useCallback(async (useBeacon = false) => {
+        const currentAnswers = answersRef.current;
+        if (currentAnswers.size === 0) return;
+
+        const answerArray: any[] = [];
+        for (const q of (test?.questions || [])) {
+            if (q.type === 'comprehension' && q.subQuestions) {
+                for (const sq of q.subQuestions) {
+                    const ans = currentAnswers.get(sq.id);
+                    if (ans !== undefined && ans !== null) {
+                        answerArray.push({ questionId: sq.id, answer: ans });
+                    }
+                }
+            } else {
+                const ans = currentAnswers.get(q.id);
+                if (ans !== undefined && ans !== null) {
+                    answerArray.push({ questionId: q.id, answer: ans });
+                }
+            }
+        }
+
+        if (answerArray.length === 0) return;
+
+        const payload = JSON.stringify({
+            answers: answerArray,
+            timeSpent: Date.now() - startTimeRef.current
+        });
+
+        if (useBeacon) {
+            // sendBeacon is the only reliable way to send data when the page is being unloaded
+            navigator.sendBeacon?.(`/api/student/online-tests/${testId}`, new Blob([payload], { type: 'application/json' }));
+        } else {
+            try {
+                await fetch(`/api/student/online-tests/${testId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload
+                });
+            } catch { /* silent fail for auto-save */ }
+        }
+    }, [test, testId]);
+
     useEffect(() => {
-        if (!started || timeLeft <= 0) return;
+        if (!started) return;
+
+        // Periodic auto-save every 30 seconds
+        autoSaveTimerRef.current = setInterval(() => doAutoSave(false), 30000);
+
+        // Save on page hide (tab close, app switch, browser killed)
+        // pagehide is more reliable than beforeunload on mobile
+        const handlePageHide = () => doAutoSave(true);
+        window.addEventListener('pagehide', handlePageHide);
+
+        return () => {
+            if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
+            window.removeEventListener('pagehide', handlePageHide);
+        };
+    }, [started, doAutoSave]);
+
+    // Timer — uses Date.now() calculation to resist mobile throttling
+    // Mobile browsers throttle setInterval when backgrounded, so decrementing
+    // a counter would drift. Instead we recalculate from wall-clock time.
+    useEffect(() => {
+        if (!started || testDurationMs.current <= 0) return;
         timerRef.current = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
+            const elapsed = Date.now() - startTimeRef.current;
+            const remaining = Math.max(0, Math.floor((testDurationMs.current - elapsed) / 1000));
+            setTimeLeft(remaining);
+            if (remaining <= 0) {
+                clearInterval(timerRef.current!);
+                handleSubmit(true);
+            }
+        }, 1000);
+
+        // Also recalculate when page becomes visible again (catches mobile background throttling)
+        const handleVisible = () => {
+            if (!document.hidden) {
+                const elapsed = Date.now() - startTimeRef.current;
+                const remaining = Math.max(0, Math.floor((testDurationMs.current - elapsed) / 1000));
+                setTimeLeft(remaining);
+                if (remaining <= 0) {
                     clearInterval(timerRef.current!);
                     handleSubmit(true);
-                    return 0;
                 }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisible);
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+            document.removeEventListener('visibilitychange', handleVisible);
+        };
     }, [started]);
 
     const formatTime = (seconds: number) => {
@@ -527,7 +644,7 @@ export default function TakeTestPage() {
                     .test-content { display: none !important; }
                 }
             `}</style>
-            <div className="landscape-blocker hidden fixed inset-0 z-[9999] bg-[#050b14] flex-col items-center justify-center p-8 text-center">
+            <div className="landscape-blocker fixed inset-0 z-[9999] bg-[#050b14] flex-col items-center justify-center p-8 text-center" style={{ display: 'none' }}>
                 <div className="p-6 rounded-full bg-red-500/10 mb-6 animate-pulse">
                     <div className="w-16 h-24 border-4 border-red-500 rounded-xl flex items-center justify-center">
                         <div className="w-1 h-12 bg-red-500 rounded-full"></div>
@@ -999,6 +1116,11 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
                 <div className="pt-2">
                     <input
                         type="text"
+                        inputMode="text"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
                         value={currentAnswer || ''}
                         onChange={e => setAnswer(question.id, e.target.value || null)}
                         placeholder={question.isNumberRange ? 'Enter a number...' : 'Type your answer...'}
@@ -1016,6 +1138,9 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
             return (
                 <div>
                     <textarea
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
                         value={currentAnswer || ''}
                         onChange={e => setAnswer(question.id, e.target.value || null)}
                         placeholder="Write your answer here..."

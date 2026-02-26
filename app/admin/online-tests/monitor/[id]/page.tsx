@@ -61,6 +61,9 @@ export default function MonitorTestPage() {
     const [newStartTime, setNewStartTime] = useState('');
     const [newEndTime, setNewEndTime] = useState('');
 
+    // Force-complete expired students
+    const [forceCompleting, setForceCompleting] = useState(false);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -184,6 +187,29 @@ export default function MonitorTestPage() {
             toast.error('Network error while reassigning');
         } finally {
             setMissedReassigning(false);
+        }
+    };
+
+    // Force-complete expired in-progress tests
+    const handleForceComplete = async () => {
+        setForceCompleting(true);
+        try {
+            const res = await fetch(`/api/admin/online-tests/${testId}/auto-complete`, {
+                method: 'POST',
+                headers: { 'X-User-Email': userEmail! }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                toast.success(data.message || 'Expired tests auto-completed!');
+                fetchResults();
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to force-complete');
+            }
+        } catch {
+            toast.error('Network error');
+        } finally {
+            setForceCompleting(false);
         }
     };
 
@@ -642,38 +668,73 @@ export default function MonitorTestPage() {
 
                         {/* In Progress */}
                         {activeTab === 'inProgress' && (
-                            <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
-                                {inProgress.length === 0 ? (
-                                    <p className="text-center py-12 text-slate-400">No students currently taking the test</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
-                                                    <th className="px-4 py-3 font-semibold">Student</th>
-                                                    <th className="px-4 py-3 font-semibold">Batch</th>
-                                                    <th className="px-4 py-3 font-semibold">Started</th>
-                                                    <th className="px-4 py-3 font-semibold">Elapsed</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {inProgress.map(s => (
-                                                    <tr key={s.phone} className="border-b border-white/5 hover:bg-white/5">
-                                                        <td className="px-4 py-3">
-                                                            <div className="text-white font-medium text-sm">{s.name}</div>
-                                                            <div className="text-[10px] text-slate-500">{s.phone}</div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
-                                                        <td className="px-4 py-3 text-slate-400 text-xs">
-                                                            {new Date(s.startedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-blue-400 font-medium text-sm">{formatTime(s.timeElapsed)}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                            <div className="space-y-4">
+                                {/* Force Complete Toolbar */}
+                                {inProgress.length > 0 && (
+                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3">
+                                        <div>
+                                            <span className="text-sm text-slate-400">
+                                                {inProgress.length} student{inProgress.length !== 1 ? 's' : ''} still in progress
+                                            </span>
+                                            {testInfo?.endTime && new Date(testInfo.endTime) < new Date() && (
+                                                <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+                                                    PAST DEADLINE
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={handleForceComplete}
+                                            disabled={forceCompleting}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-sm font-bold transition-all disabled:opacity-50"
+                                        >
+                                            {forceCompleting ? (
+                                                <><RefreshCw className="w-4 h-4 animate-spin" /> Completing...</>
+                                            ) : (
+                                                <><XCircle className="w-4 h-4" /> Force Complete Expired</>
+                                            )}
+                                        </button>
                                     </div>
                                 )}
+
+                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                    {inProgress.length === 0 ? (
+                                        <p className="text-center py-12 text-slate-400">No students currently taking the test</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                                        <th className="px-4 py-3 font-semibold">Student</th>
+                                                        <th className="px-4 py-3 font-semibold">Batch</th>
+                                                        <th className="px-4 py-3 font-semibold">Started</th>
+                                                        <th className="px-4 py-3 font-semibold">Elapsed</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {inProgress.map(s => {
+                                                        const isOvertime = testInfo?.endTime && new Date(testInfo.endTime) < new Date();
+                                                        return (
+                                                            <tr key={s.phone} className={`border-b border-white/5 hover:bg-white/5 ${isOvertime ? 'bg-red-500/5' : ''}`}>
+                                                                <td className="px-4 py-3">
+                                                                    <div className="text-white font-medium text-sm">{s.name}</div>
+                                                                    <div className="text-[10px] text-slate-500">{s.phone}</div>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
+                                                                <td className="px-4 py-3 text-slate-400 text-xs">
+                                                                    {new Date(s.startedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                </td>
+                                                                <td className={`px-4 py-3 font-medium text-sm ${isOvertime ? 'text-red-400' : 'text-blue-400'}`}>
+                                                                    {formatTime(s.timeElapsed)}
+                                                                    {isOvertime && <span className="ml-1 text-[10px] text-red-500">⚠</span>}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 

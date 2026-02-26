@@ -452,3 +452,62 @@ export async function PUT(
         return NextResponse.json({ error: 'Failed to submit test' }, { status: 500 });
     }
 }
+
+// PATCH - Auto-save answers without grading (for periodic save & pagehide beacon)
+export async function PATCH(
+    req: NextRequest,
+    props: { params: Promise<{ id: string }> }
+) {
+    try {
+        const student = await getStudentFromToken(req);
+        if (!student) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        await dbConnect();
+        const { id: testId } = await props.params;
+        const body = await req.json();
+        const { answers, timeSpent } = body;
+
+        if (!answers || !Array.isArray(answers)) {
+            return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+        }
+
+        // Find the active attempt
+        const attempt = await StudentTestAttempt.findOne({
+            testId,
+            studentPhone: student.phoneNumber,
+            status: 'in_progress'
+        });
+
+        if (!attempt) {
+            return NextResponse.json({ error: 'No active attempt' }, { status: 404 });
+        }
+
+        // Save answers without grading (raw answer data only)
+        // Merge with existing answers — update existing, add new
+        const existingMap = new Map<string, any>();
+        if (attempt.answers && attempt.answers.length > 0) {
+            for (const a of attempt.answers) {
+                existingMap.set(a.questionId, a);
+            }
+        }
+        for (const a of answers) {
+            existingMap.set(a.questionId, {
+                questionId: a.questionId,
+                answer: a.answer,
+                isCorrect: false,  // Not graded yet
+                marksAwarded: 0
+            });
+        }
+
+        attempt.answers = Array.from(existingMap.values());
+        if (timeSpent) attempt.timeSpent = timeSpent;
+        await attempt.save();
+
+        return NextResponse.json({ success: true, savedCount: answers.length });
+    } catch (error: any) {
+        console.error('Error auto-saving answers:', error);
+        return NextResponse.json({ error: 'Failed to auto-save' }, { status: 500 });
+    }
+}

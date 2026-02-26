@@ -41,6 +41,92 @@ export async function GET(
 
         // Get all attempts for this test
         const attempts = await StudentTestAttempt.find({ testId });
+
+        // --- Lazy auto-cleanup: complete expired in_progress attempts ---
+        const now = new Date();
+        const durationMs = (test.deployment?.durationMinutes || 60) * 60 * 1000;
+        const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
+
+        for (const attempt of attempts) {
+            if (attempt.status !== 'in_progress') continue;
+
+            const startedAt = new Date(attempt.startedAt).getTime();
+            const elapsed = now.getTime() - startedAt;
+            const isExpiredByDuration = elapsed > durationMs;
+            const isExpiredByEndTime = endTime ? now > endTime : false;
+
+            if (!isExpiredByDuration && !isExpiredByEndTime) continue;
+
+            // Auto-grade with whatever answers exist
+            const sourceQuestions = (attempt.questions && attempt.questions.length > 0)
+                ? attempt.questions : test.questions;
+
+            const qMap = new Map<string, any>();
+            for (const q of sourceQuestions) {
+                qMap.set(q.id, q);
+                if (q.type === 'comprehension' && q.subQuestions) {
+                    for (const sq of q.subQuestions) qMap.set(sq.id, sq);
+                }
+            }
+
+            let totalScore = 0;
+            const gradedAnswers: any[] = [];
+            for (const ans of (attempt.answers || [])) {
+                const question = qMap.get(ans.questionId);
+                if (!question) { gradedAnswers.push({ questionId: ans.questionId, answer: ans.answer, isCorrect: false, marksAwarded: 0 }); continue; }
+
+                let isCorrect = false;
+                let marksAwarded = 0;
+
+                if (ans.answer === null || ans.answer === undefined || ans.answer === '' ||
+                    (Array.isArray(ans.answer) && ans.answer.length === 0)) {
+                    // unanswered
+                } else if (question.type === 'mcq') {
+                    isCorrect = question.correctIndices?.[0] === ans.answer;
+                    marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
+                } else if (question.type === 'msq') {
+                    if (question.correctIndices && Array.isArray(ans.answer)) {
+                        const correct = new Set(question.correctIndices as number[]);
+                        const selected = new Set(ans.answer as number[]);
+                        isCorrect = correct.size === selected.size && [...correct].every((i: number) => selected.has(i));
+                    }
+                    marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
+                } else if (question.type === 'fillblank') {
+                    if (question.isNumberRange) {
+                        const numAnswer = parseFloat(ans.answer);
+                        isCorrect = !isNaN(numAnswer) && numAnswer >= (question.numberRangeMin ?? 0) && numAnswer <= (question.numberRangeMax ?? 0);
+                    } else {
+                        const sa = question.caseSensitive ? String(ans.answer).trim() : String(ans.answer).trim().toLowerCase();
+                        const ca = question.caseSensitive ? String(question.fillBlankAnswer).trim() : String(question.fillBlankAnswer).trim().toLowerCase();
+                        isCorrect = sa === ca;
+                    }
+                    marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
+                }
+                totalScore += marksAwarded;
+                gradedAnswers.push({ questionId: ans.questionId, answer: ans.answer, isCorrect, marksAwarded });
+            }
+
+            totalScore = Math.max(0, totalScore);
+            let servedTotalMarks = 0;
+            for (const q of sourceQuestions) {
+                if (q.type === 'comprehension' && q.subQuestions) {
+                    for (const sq of q.subQuestions) servedTotalMarks += sq.marks || 1;
+                } else servedTotalMarks += q.marks || 1;
+            }
+            const tm = servedTotalMarks || test.totalMarks || 1;
+
+            attempt.answers = gradedAnswers;
+            attempt.score = totalScore;
+            attempt.percentage = Math.round((totalScore / tm) * 100);
+            attempt.status = 'completed';
+            attempt.submittedAt = now;
+            attempt.timeSpent = attempt.timeSpent || elapsed;
+            attempt.terminationReason = 'server_auto_expired';
+            await attempt.save();
+        }
+
+        // --- End lazy auto-cleanup ---
+
         const attemptMap = new Map<string, any>();
         attempts.forEach(attempt => {
             attemptMap.set(attempt.studentPhone || attempt.studentEmail, attempt);
