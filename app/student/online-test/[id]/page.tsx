@@ -381,9 +381,11 @@ export default function TakeTestPage() {
             }
 
             setStarted(true);
-            startTimeRef.current = Date.now();
-            questionVisitTimeRef.current = Date.now(); // Start tracking time
-            toast.success('Test started! Good luck!');
+            if (!isResuming) {
+                startTimeRef.current = Date.now();
+            }
+            questionVisitTimeRef.current = Date.now(); // Start tracking time for current question
+            toast.success(isResuming ? 'Test resumed! Good luck!' : 'Test started! Good luck!');
         } catch {
             toast.error('Network error');
         }

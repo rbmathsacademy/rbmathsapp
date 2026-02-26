@@ -200,7 +200,8 @@ export async function GET(
                 subtopic: q.subtopic,
                 marks: q.marks,
                 negativeMarks: q.negativeMarks,
-                shuffleOptions: q.shuffleOptions
+                shuffleOptions: q.shuffleOptions,
+                timeLimit: q.timeLimit
             };
 
             if (q.type === 'mcq' || q.type === 'msq') {
@@ -221,7 +222,8 @@ export async function GET(
                         latexContent: sq.latexContent,
                         type: sq.type,
                         marks: sq.marks,
-                        negativeMarks: sq.negativeMarks
+                        negativeMarks: sq.negativeMarks,
+                        timeLimit: sq.timeLimit
                     };
                     if (sq.type === 'mcq' || sq.type === 'msq') {
                         subStripped.options = sq.options;
@@ -356,7 +358,8 @@ export async function POST(
                 subtopic: q.subtopic,
                 marks: q.marks,
                 negativeMarks: q.negativeMarks,
-                shuffleOptions: q.shuffleOptions
+                shuffleOptions: q.shuffleOptions,
+                timeLimit: q.timeLimit
             };
 
             if (q.type === 'mcq' || q.type === 'msq') {
@@ -375,7 +378,8 @@ export async function POST(
                         latexContent: sq.latexContent,
                         type: sq.type,
                         marks: sq.marks,
-                        negativeMarks: sq.negativeMarks
+                        negativeMarks: sq.negativeMarks,
+                        timeLimit: sq.timeLimit
                     };
                     if (sq.type === 'mcq' || sq.type === 'msq') {
                         subStripped.options = sq.options;
