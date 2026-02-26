@@ -150,40 +150,37 @@ export default function TakeTestPage() {
         };
         fetchWarnings();
 
-        // --- Visibility change handler ---
-        // Uses document.hasFocus() to distinguish real tab/app switches from
-        // false visibilitychange events (e.g. keyboard opening in Android WebViews).
-        // When the keyboard opens, document.hasFocus() remains true (user is still on the page).
-        // When the user actually switches apps/tabs, document.hasFocus() becomes false.
-        let visibilityTimer: NodeJS.Timeout | null = null;
+        // --- Visibility change & blur handler ---
+        const handleProctoringViolation = (e: Event) => {
+            // If visibilitychange and document is hidden, it's a definite tab/app switch
+            if (e.type === 'visibilitychange' && document.hidden) {
+                handleViolation();
+            }
+            // If window blur, it means they clicked outside or switched windows
+            else if (e.type === 'blur') {
+                // Ignore blur if an input/textarea is currently focused (to prevent mobile keyboard false positives)
+                const activeEl = document.activeElement;
+                const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
 
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                // Small debounce to let the browser settle (avoids race conditions)
-                visibilityTimer = setTimeout(() => {
-                    // Only trigger if the document has truly lost focus (real tab/app switch)
-                    // document.hasFocus() returns true when keyboard opens within the page,
-                    // so this naturally filters out keyboard-related false positives on WebViews
-                    if (document.hidden && !document.hasFocus()) {
+                // Some mobile browsers fire blur on the window when keyboard opens, 
+                // but the input remains the active element. Recheck focus after a tiny delay
+                // to see if the document still has focus.
+                setTimeout(() => {
+                    if (!document.hasFocus() && !isInputFocused && !document.hidden) {
                         handleViolation();
                     }
-                }, 500);
-            } else {
-                // Page became visible again — cancel any pending violation
-                if (visibilityTimer) {
-                    clearTimeout(visibilityTimer);
-                    visibilityTimer = null;
-                }
+                }, 200);
             }
         };
 
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        document.addEventListener('visibilitychange', handleProctoringViolation);
+        window.addEventListener('blur', handleProctoringViolation);
 
         return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            if (visibilityTimer) clearTimeout(visibilityTimer);
+            document.removeEventListener('visibilitychange', handleProctoringViolation);
+            window.removeEventListener('blur', handleProctoringViolation);
         };
-    }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
+    }, [started]);
 
     const handleViolation = async () => {
         if (submitting) return; // Prevent loop if already submitting
