@@ -108,29 +108,49 @@ export default function TakeTestPage() {
 
     // Per-question timer countdown
     useEffect(() => {
-        if (!started || !test?.config?.enablePerQuestionTimer || questionTimeLeft <= 0) return;
+        if (!started || !test?.config?.enablePerQuestionTimer) return;
+
+        const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
+
+        const checkTime = () => {
+            const elapsed = Math.floor((Date.now() - questionVisitTimeRef.current) / 1000);
+            const remaining = Math.max(0, qDuration - elapsed);
+
+            setQuestionTimeLeft(remaining);
+
+            if (remaining <= 0) {
+                // Time is up
+                if (currentIndex < allQuestions.length - 1) {
+                    toast.success('Time up for this question! Moving to next.');
+                    setCurrentIndex(prevIndex => prevIndex + 1);
+                } else {
+                    toast.success('Time up for last question!');
+                    handleSubmit(true);
+                }
+                return true; // Indicates it should clear interval
+            }
+            return false;
+        };
 
         const timer = setInterval(() => {
-            setQuestionTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    // Auto-advance
-                    if (currentIndex < allQuestions.length - 1) {
-                        toast.success('Time up for this question! Moving to next.');
-                        setCurrentIndex(prevIndex => prevIndex + 1);
-                    } else {
-                        // Last question time up
-                        toast.success('Time up for last question!');
-                        handleSubmit(true);
-                    }
-                    return 0;
-                }
-                return prev - 1;
-            });
+            const isDone = checkTime();
+            if (isDone) clearInterval(timer);
         }, 1000);
 
-        return () => clearInterval(timer);
-    }, [started, test, questionTimeLeft, currentIndex, allQuestions.length]);
+        const handleVisible = () => {
+            if (!document.hidden) {
+                const isDone = checkTime();
+                if (isDone) clearInterval(timer);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisible);
+
+        return () => {
+            clearInterval(timer);
+            document.removeEventListener('visibilitychange', handleVisible);
+        };
+    }, [started, test, currentIndex, allQuestions.length, currentQuestion]);
 
     // Proctoring: Visibility Change Detection (mobile-safe)
     // Uses focusin/focusout tracking to avoid false positives from keyboard open/close

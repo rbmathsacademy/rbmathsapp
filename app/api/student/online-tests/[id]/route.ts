@@ -67,6 +67,111 @@ export async function GET(
         // Check for existing attempt
         let attempt = await StudentTestAttempt.findOne({ testId, studentPhone: student.phoneNumber });
 
+        if (attempt && attempt.status === 'in_progress') {
+            attempt.resumeCount = (attempt.resumeCount || 0) + 1;
+
+            if (attempt.resumeCount > 1) { // They are resuming for the SECOND time
+                // Auto-grade their latest saved answers
+                const sourceQuestions = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : test.questions;
+                const questionMap = new Map<string, any>();
+                for (const q of sourceQuestions) {
+                    questionMap.set(q.id, q);
+                    if (q.type === 'comprehension' && q.subQuestions) {
+                        for (const sq of q.subQuestions) questionMap.set(sq.id, sq);
+                    }
+                }
+
+                let totalScore = 0;
+                const gradedAnswers: any[] = [];
+                const attemptAnswers = attempt.answers || [];
+
+                for (const ans of attemptAnswers) {
+                    const question = questionMap.get(ans.questionId);
+                    if (!question) {
+                        gradedAnswers.push({ questionId: ans.questionId, answer: ans.answer, isCorrect: false, marksAwarded: 0 });
+                        continue;
+                    }
+
+                    let isCorrect = false;
+                    let marksAwarded = 0;
+
+                    if (question.type === 'mcq') {
+                        if (question.correctIndices && question.correctIndices.length > 0) {
+                            isCorrect = question.correctIndices[0] === ans.answer;
+                        }
+                        marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
+                    } else if (question.type === 'msq') {
+                        if (question.correctIndices && Array.isArray(ans.answer)) {
+                            const correct = new Set(question.correctIndices);
+                            const selected = new Set(ans.answer);
+                            isCorrect = correct.size === selected.size && [...correct].every(i => selected.has(i));
+                        }
+                        marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
+                    } else if (question.type === 'fillblank') {
+                        if (question.isNumberRange) {
+                            const cleanAnswer = String(ans.answer).replace(/\s+/g, '');
+                            const numAnswer = parseFloat(cleanAnswer);
+                            const min = question.numberRangeMin ?? 0;
+                            const max = question.numberRangeMax ?? 0;
+                            isCorrect = !isNaN(numAnswer) && numAnswer >= min && numAnswer <= max;
+                        } else {
+                            const studentAns = question.caseSensitive ? String(ans.answer).trim().replace(/\s+/g, ' ') : String(ans.answer).trim().toLowerCase().replace(/\s+/g, ' ');
+                            const correctAns = question.caseSensitive ? String(question.fillBlankAnswer).trim().replace(/\s+/g, ' ') : String(question.fillBlankAnswer).trim().toLowerCase().replace(/\s+/g, ' ');
+                            isCorrect = studentAns === correctAns;
+                        }
+                        marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
+                    } else if (question.type === 'broad') {
+                        isCorrect = false;
+                        marksAwarded = 0;
+                    }
+
+                    if (ans.answer === null || ans.answer === undefined || ans.answer === '' ||
+                        (Array.isArray(ans.answer) && ans.answer.length === 0)) {
+                        marksAwarded = 0;
+                        isCorrect = false;
+                    }
+                    totalScore += marksAwarded;
+                    gradedAnswers.push({
+                        questionId: ans.questionId,
+                        answer: ans.answer,
+                        isCorrect,
+                        marksAwarded,
+                        timeTaken: ans.timeTaken || 0
+                    });
+                }
+
+                totalScore = Math.max(0, totalScore);
+                let servedTotalMarks = 0;
+                for (const q of sourceQuestions) {
+                    if (q.type === 'comprehension' && q.subQuestions) {
+                        for (const sq of q.subQuestions) servedTotalMarks += sq.marks || 1;
+                    } else {
+                        servedTotalMarks += q.marks || 1;
+                    }
+                }
+                const totalMarks = servedTotalMarks || test.totalMarks || 1;
+                const percentage = Math.round((totalScore / totalMarks) * 100);
+
+                attempt.answers = gradedAnswers;
+                attempt.score = totalScore;
+                attempt.percentage = percentage;
+                attempt.timeSpent = attempt.timeSpent || (Date.now() - new Date(attempt.startedAt).getTime());
+                attempt.status = 'completed';
+                attempt.submittedAt = new Date();
+                attempt.terminationReason = 'max_resumes_exceeded';
+
+                await attempt.save();
+
+                return NextResponse.json({
+                    error: 'Maximum resume limit exceeded. Test has been automatically submitted.',
+                    status: 'completed',
+                    redirect: true
+                }, { status: 403 });
+            } else {
+                await attempt.save();
+            }
+        }
+
         // If no attempt yet and test hasn't started, return test info only
         if (!attempt && startTime && now < startTime) {
             return NextResponse.json({
@@ -374,13 +479,14 @@ export async function PUT(
                 marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
             } else if (question.type === 'fillblank') {
                 if (question.isNumberRange) {
-                    const numAnswer = parseFloat(ans.answer);
+                    const cleanAnswer = String(ans.answer).replace(/\s+/g, '');
+                    const numAnswer = parseFloat(cleanAnswer);
                     const min = question.numberRangeMin ?? 0;
                     const max = question.numberRangeMax ?? 0;
                     isCorrect = !isNaN(numAnswer) && numAnswer >= min && numAnswer <= max;
                 } else {
-                    const studentAns = question.caseSensitive ? String(ans.answer).trim() : String(ans.answer).trim().toLowerCase();
-                    const correctAns = question.caseSensitive ? String(question.fillBlankAnswer).trim() : String(question.fillBlankAnswer).trim().toLowerCase();
+                    const studentAns = question.caseSensitive ? String(ans.answer).trim().replace(/\s+/g, ' ') : String(ans.answer).trim().toLowerCase().replace(/\s+/g, ' ');
+                    const correctAns = question.caseSensitive ? String(question.fillBlankAnswer).trim().replace(/\s+/g, ' ') : String(question.fillBlankAnswer).trim().toLowerCase().replace(/\s+/g, ' ');
                     isCorrect = studentAns === correctAns;
                 }
                 marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);

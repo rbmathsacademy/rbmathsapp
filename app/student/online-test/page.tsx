@@ -270,16 +270,16 @@ export default function OnlineTestPage() {
                         {/* Row 1: Key Metrics */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
-                                <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Average Score</div>
+                                <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Your Avg Score</div>
                                 <div className="text-xl sm:text-3xl font-black text-white">{analytics.averageScore}%</div>
-                            </div>
-                            <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
-                                <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Highest Score</div>
-                                <div className="text-xl sm:text-3xl font-black text-emerald-400">{analytics.highestScore}%</div>
                             </div>
                             <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Batch Topper Avg</div>
                                 <div className="text-xl sm:text-3xl font-black text-amber-400">{analytics.batchHighestAverage}%</div>
+                            </div>
+                            <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
+                                <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Your Highest Score</div>
+                                <div className="text-xl sm:text-3xl font-black text-emerald-400">{analytics.highestScore}%</div>
                             </div>
                             <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/20 border border-indigo-500/20 rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Batch Rank</div>
