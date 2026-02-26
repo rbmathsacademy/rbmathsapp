@@ -78,6 +78,10 @@ export default function TakeTestPage() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
+    // Resume State
+    const [isResuming, setIsResuming] = useState(false);
+    const [resumeCount, setResumeCount] = useState(0);
+
     // Flatten questions for navigation (comprehension sub-questions are inline)
     const allQuestions = test?.questions || [];
     const currentQuestion = allQuestions[currentIndex];
@@ -251,7 +255,11 @@ export default function TakeTestPage() {
                 if (res.status === 401) { router.push('/student/login'); return; }
                 const data = await res.json();
                 toast.error(data.error || 'Failed to load test');
-                router.push('/student/online-test');
+                if (data.redirect || data.status === 'completed') {
+                    router.push(`/student/online-test/${testId}/result`);
+                } else {
+                    router.push('/student/online-test');
+                }
                 return;
             }
             const data = await res.json();
@@ -290,14 +298,17 @@ export default function TakeTestPage() {
                 timeSpentPerQuestionRef.current = restoredTimes; // Restore tracking times
             }
 
-            // If already started, set the time
+            // If already started, set the time and show the resume pre-screen
             if (data.attempt?.status === 'in_progress') {
                 const elapsed = data.attempt.timeSpent || (Date.now() - new Date(data.attempt.startedAt).getTime());
                 const totalMs = (data.test.durationMinutes || 60) * 60 * 1000;
                 testDurationMs.current = totalMs;
                 const remaining = Math.max(0, Math.floor((totalMs - elapsed) / 1000));
                 setTimeLeft(remaining);
-                setStarted(true);
+                setIsResuming(true);
+                setResumeCount(data.attempt.resumeCount || 0);
+
+                // Don't setStarted(true) yet. Wait for the user to pass the camera check and click Resume.
                 startTimeRef.current = Date.now() - elapsed;
                 setWarningCount(data.attempt.warningCount || 0);
                 warningCountRef.current = data.attempt.warningCount || 0; // Sync ref
@@ -359,15 +370,22 @@ export default function TakeTestPage() {
         }
     };
 
+    // Fix for camera viewing issues on mobile webviews/iOS
+    useEffect(() => {
+        if (cameraActive && videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            // Explicitly play to avoid sticking on a play icon
+            videoRef.current.play().catch(e => console.error('Video play failed:', e));
+        }
+    }, [cameraActive]);
+
     const startCamera = async () => {
         setCameraError(null);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             streamRef.current = stream;
             setCameraActive(true);
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-            }
+            // srcObject assignment is handled by the useEffect above once the div renders
         } catch (err: any) {
             console.error('Camera access denied:', err);
             setCameraError('Please allow camera and microphone access to start the exam.');
@@ -696,7 +714,8 @@ export default function TakeTestPage() {
                         </div>
                         <p className="text-xs text-slate-400 mb-4 pb-4 border-b border-slate-700/50">
                             Your <strong className="text-emerald-400">front camera & voice</strong> will remain open and recorded during the exam tenure.
-                            You must place the phone in front of you in a stationary upright position throughout the exam tenure.
+                            You must place the phone in front of you in a stationary upright position throughout the exam tenure.<br /><br />
+                            <strong className="text-red-400">NOTE:</strong> Any malpractices shall easily get detected in the video stream using AI-powered exam proctoring tools and immediately get reported to the admin.
                         </p>
 
                         {!cameraActive ? (
@@ -725,17 +744,28 @@ export default function TakeTestPage() {
                                         <span className="font-bold">READY</span>
                                     </div>
                                 </div>
-                                <p className="text-xs text-emerald-400 font-medium">Camera and microphone active. You may now begin the exam.</p>
+                                <p className="text-xs text-emerald-400 font-medium text-center">Camera and microphone active. You may now begin the exam.</p>
                             </div>
                         )}
                     </div>
+
+                    {isResuming && (
+                        <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 mb-6 text-left text-sm text-red-300">
+                            <div className="flex items-center gap-2 font-bold mb-1">
+                                <AlertTriangle className="h-4 w-4" /> Warning: Exam Resume Detected
+                            </div>
+                            <p className="text-xs mt-1">
+                                You have exited the browser and are resuming your test. <strong>If you exit or reload the browser again, your test will be securely locked and automatically submitted.</strong>
+                            </p>
+                        </div>
+                    )}
 
                     <button
                         onClick={startTest}
                         disabled={loading || started || !cameraActive}
                         className="w-full px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-black text-sm sm:text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                     >
-                        {started ? 'Starting...' : 'Start Test and Start Recording'}
+                        {started ? 'Processing...' : (isResuming ? 'Resume Test and Start Recording' : 'Start Test and Start Recording')}
                     </button>
                 </div>
             </div>

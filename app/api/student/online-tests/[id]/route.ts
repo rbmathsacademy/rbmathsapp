@@ -261,7 +261,8 @@ export async function GET(
                 startedAt: attempt.startedAt,
                 answers: attempt.answers,
                 timeSpent: attempt.timeSpent,
-                warningCount: attempt.warningCount || 0
+                warningCount: attempt.warningCount || 0,
+                resumeCount: attempt.resumeCount || 0
             } : null
         });
     } catch (error: any) {
