@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import SubmissionReviewModal from '../components/SubmissionReviewModal';
 
 interface Analytics {
     totalStudents: number;
@@ -60,6 +61,9 @@ export default function MonitorTestPage() {
     const [missedReassigning, setMissedReassigning] = useState(false);
     const [newStartTime, setNewStartTime] = useState('');
     const [newEndTime, setNewEndTime] = useState('');
+
+    // Submission Review Modal state
+    const [reviewStudentPhone, setReviewStudentPhone] = useState<string | null>(null);
 
     // Force-complete expired students
     const [forceCompleting, setForceCompleting] = useState(false);
@@ -216,6 +220,20 @@ export default function MonitorTestPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
             <Toaster position="top-right" />
+
+            {/* Submission Review Modal */}
+            {reviewStudentPhone && userEmail && (
+                <SubmissionReviewModal
+                    testId={testId}
+                    phone={reviewStudentPhone}
+                    userEmail={userEmail}
+                    onClose={() => setReviewStudentPhone(null)}
+                    onSuccess={() => {
+                        setReviewStudentPhone(null);
+                        fetchResults();
+                    }}
+                />
+            )}
 
             {/* Reassign Confirmation Modal */}
             {showReassignModal && (
@@ -607,15 +625,17 @@ export default function MonitorTestPage() {
                                                         <th className="px-4 py-3 font-semibold">%</th>
                                                         <th className="px-4 py-3 font-semibold">Time</th>
                                                         <th className="px-4 py-3 font-semibold">Submitted</th>
+                                                        <th className="px-4 py-3 font-semibold text-right">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {completed.map((student, i) => (
                                                         <tr
                                                             key={student.phone}
-                                                            className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''}`}
+                                                            className={`border-b border-white/5 hover:bg-white/10 transition-colors cursor-pointer ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''}`}
+                                                            onClick={() => setReviewStudentPhone(student.phone)}
                                                         >
-                                                            <td className="px-4 py-3">
+                                                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={selectedPhones.has(student.phone)}
@@ -641,7 +661,6 @@ export default function MonitorTestPage() {
                                                             <td className="px-4 py-3">
                                                                 <span className="text-white font-bold text-sm">{student.score}</span>
                                                                 <span className="text-slate-500 text-xs">/{testInfo?.totalMarks}</span>
-                                                                {student.graceMarks > 0 && <span className="text-purple-400 text-[10px] ml-1">+{student.graceMarks}g</span>}
                                                             </td>
                                                             <td className="px-4 py-3">
                                                                 <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'
@@ -655,6 +674,18 @@ export default function MonitorTestPage() {
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
                                                             <td className="px-4 py-3 text-slate-400 text-xs">
                                                                 {new Date(student.submittedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' })}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setReviewStudentPhone(student.phone);
+                                                                    }}
+                                                                    className="p-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors"
+                                                                    title="Review Submission & Give Adjustments"
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))}

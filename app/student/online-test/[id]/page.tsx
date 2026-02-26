@@ -67,8 +67,6 @@ export default function TakeTestPage() {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const startTimeRef = useRef<number>(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const isInputFocusedRef = useRef(false); // Track if an input/textarea is focused (for proctoring guard)
-    const inputBlurCooldownRef = useRef<NodeJS.Timeout | null>(null); // Cooldown after input blur
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null); // Periodic auto-save
     const testDurationMs = useRef<number>(0); // Total test duration in ms (set once)
 
@@ -133,62 +131,26 @@ export default function TakeTestPage() {
         };
         fetchWarnings();
 
-        // --- Input focus tracking (focusin/focusout bubble, unlike focus/blur) ---
-        const handleFocusIn = (e: FocusEvent) => {
-            const tag = (e.target as HTMLElement)?.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                isInputFocusedRef.current = true;
-                // Clear any pending cooldown
-                if (inputBlurCooldownRef.current) {
-                    clearTimeout(inputBlurCooldownRef.current);
-                    inputBlurCooldownRef.current = null;
-                }
-            }
-        };
-
-        const handleFocusOut = (e: FocusEvent) => {
-            const tag = (e.target as HTMLElement)?.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                // Don't immediately clear — some devices fire focusout+focusin rapidly
-                // when switching between inputs or when keyboard is animating
-                inputBlurCooldownRef.current = setTimeout(() => {
-                    isInputFocusedRef.current = false;
-                    inputBlurCooldownRef.current = null;
-                }, 1500);
-            }
-        };
-
-        document.addEventListener('focusin', handleFocusIn);
-        document.addEventListener('focusout', handleFocusOut);
-
-        // --- Visibility change handler (with multi-layer mobile guards) ---
+        // --- Visibility change handler ---
+        // Uses document.hasFocus() to distinguish real tab/app switches from
+        // false visibilitychange events (e.g. keyboard opening in Android WebViews).
+        // When the keyboard opens, document.hasFocus() remains true (user is still on the page).
+        // When the user actually switches apps/tabs, document.hasFocus() becomes false.
         let visibilityTimer: NodeJS.Timeout | null = null;
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                // Guard 1: If an input/textarea is focused (tracked via focusin/focusout),
-                // the keyboard is likely opening/closing — skip entirely.
-                // This is MORE reliable than checking document.activeElement because
-                // focusin fires BEFORE the keyboard animation starts on most devices.
-                if (isInputFocusedRef.current) {
-                    return;
-                }
-
-                // Guard 2: Also check activeElement as a fallback
-                const tag = document.activeElement?.tagName;
-                if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                    return;
-                }
-
-                // Guard 3: Debounce — wait 1200ms and re-verify the page is still hidden.
-                // Increased from 800ms to handle slower keyboard animations on budget phones.
+                // Small debounce to let the browser settle (avoids race conditions)
                 visibilityTimer = setTimeout(() => {
-                    if (document.hidden && !isInputFocusedRef.current) {
+                    // Only trigger if the document has truly lost focus (real tab/app switch)
+                    // document.hasFocus() returns true when keyboard opens within the page,
+                    // so this naturally filters out keyboard-related false positives on WebViews
+                    if (document.hidden && !document.hasFocus()) {
                         handleViolation();
                     }
-                }, 1200);
+                }, 500);
             } else {
-                // Page became visible again within the delay window — cancel pending violation
+                // Page became visible again — cancel any pending violation
                 if (visibilityTimer) {
                     clearTimeout(visibilityTimer);
                     visibilityTimer = null;
@@ -200,10 +162,7 @@ export default function TakeTestPage() {
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            document.removeEventListener('focusin', handleFocusIn);
-            document.removeEventListener('focusout', handleFocusOut);
             if (visibilityTimer) clearTimeout(visibilityTimer);
-            if (inputBlurCooldownRef.current) clearTimeout(inputBlurCooldownRef.current);
         };
     }, [started]); // Removed warningCount dependency to avoid re-attaching listeners endlessly
 
