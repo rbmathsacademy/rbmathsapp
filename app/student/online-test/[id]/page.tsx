@@ -296,6 +296,25 @@ export default function TakeTestPage() {
                 setAnswers(restored);
                 answersRef.current = restored; // Sync ref
                 timeSpentPerQuestionRef.current = restoredTimes; // Restore tracking times
+
+                // Jump to the first unanswered question
+                let firstUnansweredIndex = 0;
+                for (let i = 0; i < data.test.questions.length; i++) {
+                    const q = data.test.questions[i];
+                    if (q.type === 'comprehension' && q.subQuestions) {
+                        const allAnswered = q.subQuestions.every((sq: any) => restored.has(sq.id) && restored.get(sq.id) !== null && restored.get(sq.id) !== '');
+                        if (!allAnswered) {
+                            firstUnansweredIndex = i;
+                            break;
+                        }
+                    } else {
+                        if (!restored.has(q.id) || restored.get(q.id) === null || restored.get(q.id) === '') {
+                            firstUnansweredIndex = i;
+                            break;
+                        }
+                    }
+                }
+                setCurrentIndex(firstUnansweredIndex);
             }
 
             // If already started, set the time and show the resume pre-screen
@@ -434,8 +453,17 @@ export default function TakeTestPage() {
         });
 
         if (useBeacon) {
-            // sendBeacon is the only reliable way to send data when the page is being unloaded
-            navigator.sendBeacon?.(`/api/student/online-tests/${testId}`, new Blob([payload], { type: 'application/json' }));
+            // sendBeacon uses POST which our endpoint routes to "Start Test" and wipes data.
+            // Using fetch with keepalive ensures it fires the PATCH exactly like a beacon 
+            // but hits the correct route without being cancelled by the browser unload.
+            try {
+                fetch(`/api/student/online-tests/${testId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                });
+            } catch { /* silent fail for auto-save unload */ }
         } else {
             try {
                 await fetch(`/api/student/online-tests/${testId}`, {
