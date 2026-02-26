@@ -484,9 +484,9 @@ export default function MonitorTestPage() {
                                                         )}
                                                         <div
                                                             className={`w-full max-w-[40px] rounded-t-lg transition-all relative overflow-hidden shadow-sm ${bucket.count === 0 ? 'bg-transparent' :
-                                                                    i < 4 ? 'bg-red-500/80 hover:bg-red-400' :
-                                                                        i < 7 ? 'bg-amber-500/80 hover:bg-amber-400' :
-                                                                            'bg-emerald-500/80 hover:bg-emerald-400'
+                                                                i < 4 ? 'bg-red-500/80 hover:bg-red-400' :
+                                                                    i < 7 ? 'bg-amber-500/80 hover:bg-amber-400' :
+                                                                        'bg-emerald-500/80 hover:bg-emerald-400'
                                                                 }`}
                                                             style={{ height: `${heightPerc}%` }}
                                                         >
@@ -592,11 +592,22 @@ export default function MonitorTestPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
                                                     <td className="px-4 py-3">
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? (s.terminationReason ? 'bg-red-500/15 text-red-400 border border-red-500/20' : 'bg-emerald-500/15 text-emerald-300') :
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? (
+                                                            s.terminationReason ? (
+                                                                (s.terminationReason === 'time_limit' || s.terminationReason === 'server_auto_expired')
+                                                                    ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20'
+                                                                    : 'bg-red-500/15 text-red-400 border border-red-500/20'
+                                                            ) : 'bg-emerald-500/15 text-emerald-300'
+                                                        ) :
                                                             s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-300' :
                                                                 'bg-red-500/15 text-red-300'
                                                             }`}>
-                                                            {s._status === 'completed' ? (s.terminationReason ? 'Terminated' : 'Completed') : s._status === 'inProgress' ? 'In Progress' : 'Not Started'}
+                                                            {s._status === 'completed' ? (
+                                                                s.terminationReason ? (
+                                                                    (s.terminationReason === 'time_limit' || s.terminationReason === 'server_auto_expired')
+                                                                        ? 'Time Up' : 'Terminated'
+                                                                ) : 'Completed'
+                                                            ) : s._status === 'inProgress' ? 'In Progress' : 'Not Started'}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-slate-400">
@@ -706,8 +717,11 @@ export default function MonitorTestPage() {
                                                                 <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'
                                                                     }`}>{student.percentage}%</span>
                                                                 {student.terminationReason && (
-                                                                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                                                                        Terminated
+                                                                    <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold border ${['time_limit', 'server_auto_expired'].includes(student.terminationReason)
+                                                                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                                                        : 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                                        }`}>
+                                                                        {['time_limit', 'server_auto_expired'].includes(student.terminationReason) ? 'Time Up' : 'Terminated'}
                                                                     </span>
                                                                 )}
                                                             </td>

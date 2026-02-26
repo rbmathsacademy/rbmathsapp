@@ -88,25 +88,30 @@ export default function TakeTestPage() {
 
     // Per-question timer state
     const [questionTimeLeft, setQuestionTimeLeft] = useState(0);
+    const prevIndexRef = useRef<number>(currentIndex);
 
     // Initialize per-question timer when question changes
     useEffect(() => {
         if (!started) return;
 
         // Track the time spent on the PREVIOUS question before switching
-        if (currentQuestion) {
+        if (allQuestions[prevIndexRef.current]) {
+            const previousQuestion = allQuestions[prevIndexRef.current];
             const now = Date.now();
             const timeElapsed = now - questionVisitTimeRef.current;
 
             // For comprehension, we distribute the time evenly among all sub-questions for simplicity
             // or we could assign it all to the parent ID. Let's just track it by parent ID and when assembling
             // answers we'll attach this time to the subquestions.
-            const existingTime = timeSpentPerQuestionRef.current.get(currentQuestion.id) || 0;
-            timeSpentPerQuestionRef.current.set(currentQuestion.id, existingTime + timeElapsed);
+            const existingTime = timeSpentPerQuestionRef.current.get(previousQuestion.id) || 0;
+            timeSpentPerQuestionRef.current.set(previousQuestion.id, existingTime + timeElapsed);
 
             // Reset visit time for the newly arrived question
             questionVisitTimeRef.current = now;
         }
+
+        // Update ref for next navigation
+        prevIndexRef.current = currentIndex;
 
         if (test?.config?.enablePerQuestionTimer) {
             // Determine duration for current question
