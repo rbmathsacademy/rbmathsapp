@@ -72,6 +72,12 @@ export default function TakeTestPage() {
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null); // Periodic auto-save
     const testDurationMs = useRef<number>(0); // Total test duration in ms (set once)
 
+    // Camera Gimmick State
+    const [cameraActive, setCameraActive] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+
     // Flatten questions for navigation (comprehension sub-questions are inline)
     const allQuestions = test?.questions || [];
     const currentQuestion = allQuestions[currentIndex];
@@ -309,6 +315,14 @@ export default function TakeTestPage() {
     };
 
     const startTest = async () => {
+        // --- CAMERA GIMMICK CLEANUP ---
+        // Clean up the camera stream so the recording indicator disappears during the test,
+        // saving battery and resources while the student thinks it's still running.
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+
         try {
             const res = await fetch(`/api/student/online-tests/${testId}`, { method: 'POST' });
             if (!res.ok) {
@@ -316,6 +330,11 @@ export default function TakeTestPage() {
                 if (data.error === 'You have already completed this test') {
                     toast.error('You have already completed this test');
                     router.push('/student/online-test');
+                    return;
+                }
+                if (data.redirect) {
+                    toast.error(data.error || 'Test submitted remotely');
+                    router.push(`/student/online-test/${testId}/result`);
                     return;
                 }
                 toast.error(data.error || 'Failed to start test');
@@ -337,6 +356,21 @@ export default function TakeTestPage() {
             toast.success('Test started! Good luck!');
         } catch {
             toast.error('Network error');
+        }
+    };
+
+    const startCamera = async () => {
+        setCameraError(null);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            streamRef.current = stream;
+            setCameraActive(true);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (err: any) {
+            console.error('Camera access denied:', err);
+            setCameraError('Please allow camera and microphone access to start the exam.');
         }
     };
 
@@ -651,12 +685,57 @@ export default function TakeTestPage() {
                         </ul>
                     </div>
 
+                    {/* Camera Recording Gimmick Section */}
+                    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 text-left">
+                        <div className="text-sm font-bold text-white mb-2 flex items-center justify-between">
+                            <span>Security Check</span>
+                            {cameraActive && <span className="flex h-2 w-2 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>}
+                        </div>
+                        <p className="text-xs text-slate-400 mb-4 pb-4 border-b border-slate-700/50">
+                            Your <strong className="text-emerald-400">front camera & voice</strong> will remain open and recorded during the exam tenure.
+                            You must place the phone in front of you in a stationary upright position throughout the exam tenure.
+                        </p>
+
+                        {!cameraActive ? (
+                            <div className="flex flex-col items-center">
+                                {cameraError && <p className="text-red-400 text-xs mb-3 text-center w-full bg-red-500/10 p-2 rounded">{cameraError}</p>}
+                                <button
+                                    onClick={startCamera}
+                                    className="w-full sm:w-auto px-6 py-2.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white rounded-lg text-sm font-medium transition-all"
+                                >
+                                    Start Camera Config
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="relative w-[150px] sm:w-[200px] aspect-[3/4] rounded-lg overflow-hidden border-2 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)] bg-black">
+                                    <video
+                                        ref={videoRef}
+                                        autoPlay
+                                        playsInline
+                                        muted
+                                        className="w-full h-full object-cover mirror-x"
+                                        style={{ transform: 'scaleX(-1)' }}
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent pt-6 pb-2 px-3 flex items-center justify-between text-[10px] font-mono text-emerald-400">
+                                        <span>REC</span>
+                                        <span className="font-bold">READY</span>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-emerald-400 font-medium">Camera and microphone active. You may now begin the exam.</p>
+                            </div>
+                        )}
+                    </div>
+
                     <button
                         onClick={startTest}
-                        disabled={loading || started}
-                        className="w-full px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-black text-sm sm:text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={loading || started || !cameraActive}
+                        className="w-full px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-black text-sm sm:text-base transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                     >
-                        {started ? 'Starting...' : 'Start Test'}
+                        {started ? 'Starting...' : 'Start Test and Start Recording'}
                     </button>
                 </div>
             </div>
