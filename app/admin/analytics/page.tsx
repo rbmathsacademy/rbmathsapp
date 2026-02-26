@@ -322,7 +322,7 @@ export default function AnalyticsPage() {
                                 <p className="text-xs sm:text-sm text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                                     <span>{selectedStudent.student.phoneNumber}</span>
                                     <span className="hidden sm:inline">•</span>
-                                    <span>Joined: {new Date(selectedStudent.student.joinedAt).toLocaleDateString()}</span>
+                                    <span>Joined: {new Date(selectedStudent.student.joinedAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                                 </p>
                             </div>
                             <button
@@ -367,8 +367,8 @@ export default function AnalyticsPage() {
                                                     </span>
                                                     <div className="flex items-baseline gap-1">
                                                         <span className={`text-2xl sm:text-3xl font-black ${test.score === null ? 'text-gray-600' :
-                                                                (test.percentage || 0) >= 75 ? 'text-green-400' :
-                                                                    (test.percentage || 0) >= 40 ? 'text-yellow-400' : 'text-red-400'
+                                                            (test.percentage || 0) >= 75 ? 'text-green-400' :
+                                                                (test.percentage || 0) >= 40 ? 'text-yellow-400' : 'text-red-400'
                                                             }`}>
                                                             {test.score !== null ? test.score : '-'}
                                                         </span>

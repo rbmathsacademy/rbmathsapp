@@ -72,7 +72,7 @@ export default function AssignmentQuestionsPage() {
                 {deadline && (
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                         <Clock className="w-4 h-4" />
-                        Due: {new Date(deadline).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        Due: {new Date(deadline).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                     </div>
                 )}
                 <div className="mt-2 text-xs text-gray-500">{questions.length} question{questions.length !== 1 ? 's' : ''}</div>

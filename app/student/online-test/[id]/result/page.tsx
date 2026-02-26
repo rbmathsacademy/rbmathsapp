@@ -344,12 +344,12 @@ export default function TestResultPage() {
                                                 <td className="px-3 py-3 text-right">
                                                     <div className="text-[9px] text-slate-400 font-bold whitespace-nowrap">
                                                         {entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString('en-IN', {
-                                                            day: 'numeric', month: 'short'
+                                                            day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata'
                                                         }) : '-'}
                                                     </div>
                                                     <div className="text-[8px] text-slate-500 font-medium whitespace-nowrap">
                                                         {entry.submittedAt ? new Date(entry.submittedAt).toLocaleTimeString('en-IN', {
-                                                            hour: '2-digit', minute: '2-digit'
+                                                            hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
                                                         }) : ''}
                                                     </div>
                                                 </td>

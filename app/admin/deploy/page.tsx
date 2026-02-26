@@ -429,7 +429,7 @@ export default function DeployPage() {
                                     </button>
                                     <FolderIcon className="h-10 w-10 text-indigo-400 mb-4 group-hover:scale-110 transition-transform" />
                                     <h3 className="font-bold text-white truncate">{folder.name}</h3>
-                                    <p className="text-xs text-slate-500 mt-1">{new Date(folder.createdAt).toLocaleDateString()}</p>
+                                    <p className="text-xs text-slate-500 mt-1">{new Date(folder.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
                                 </div>
                             ))
                         )}

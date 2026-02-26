@@ -635,8 +635,8 @@ function FeesManagementContent() {
                 sName,
                 r.batch,
                 r.amount,
-                new Date(r.feesMonth).toLocaleDateString('default', { month: 'short', year: 'numeric' }),
-                new Date(r.entryDate).toLocaleDateString(),
+                new Date(r.feesMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }),
+                new Date(r.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 r.paymentMode,
                 r.paymentReceiver || '-',
                 r.remarks || ''
@@ -1073,7 +1073,7 @@ function FeesManagementContent() {
                                                             <td key={`${m.year}-${m.monthIndex}`} className="p-0.5 md:p-1 border-l border-white/5 h-16 md:h-24">
                                                                 <div onClick={() => openEditModal(record)} className="w-full h-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded flex flex-col items-center justify-center cursor-pointer relative transition-all">
                                                                     <span className="font-bold text-[10px] md:text-xs">₹{record.amount}</span>
-                                                                    <span className="text-[8px] md:text-[9px] opacity-70 leading-none mt-0.5 md:mt-1">{new Date(record.entryDate).toLocaleDateString('default', { day: 'numeric', month: 'short' })}</span>
+                                                                    <span className="text-[8px] md:text-[9px] opacity-70 leading-none mt-0.5 md:mt-1">{new Date(record.entryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}</span>
                                                                     {record.remarks && <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                                                                 </div>
                                                             </td>
@@ -1329,10 +1329,10 @@ function FeesManagementContent() {
                                         </td>
                                         <td className="px-6 py-4 text-slate-400">{record.batch}</td>
                                         <td className="px-6 py-4 text-white">
-                                            {new Date(record.feesMonth).toLocaleDateString('default', { month: 'short', year: 'numeric' })}
+                                            {new Date(record.feesMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
                                         </td>
                                         <td className="px-6 py-4 text-slate-400 text-xs">
-                                            {new Date(record.entryDate).toLocaleString()}
+                                            {new Date(record.entryDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded text-xs ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-700 text-slate-300'}`}>
@@ -1366,13 +1366,13 @@ function FeesManagementContent() {
                                             {record.invoiceNo}
                                         </div>
                                         <div className="flex-1 text-right">
-                                            {new Date(record.entryDate).toLocaleDateString()}
+                                            {new Date(record.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                         </div>
                                     </div>
 
                                     <div className="flex justify-between items-center text-xs">
                                         <div className="text-slate-300">
-                                            For <span className="text-white font-medium">{new Date(record.feesMonth).toLocaleDateString('default', { month: 'long', year: 'numeric' })}</span>
+                                            For <span className="text-white font-medium">{new Date(record.feesMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span>
                                         </div>
                                         <span className={`px-2 py-1 rounded ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-700 text-slate-300'}`}>
                                             {record.paymentMode} {record.paymentReceiver ? `(${record.paymentReceiver})` : ''}

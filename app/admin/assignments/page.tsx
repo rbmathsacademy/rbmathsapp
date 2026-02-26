@@ -261,7 +261,7 @@ export default function AdminAssignmentsPage() {
                                                     <div className="flex items-center gap-1.5">
                                                         <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                         <span className={isExpired ? 'text-red-400' : 'text-green-400'}>
-                                                            {deadline.toLocaleDateString('en-GB')} {deadline.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                            {deadline.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' })} {deadline.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">

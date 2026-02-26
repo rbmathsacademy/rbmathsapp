@@ -197,7 +197,7 @@ export default function StudentAttendance() {
 
         // Prepare table data
         const tableBodyData = allDates.map(record => [
-            `${new Date(record.date).toLocaleDateString('en-IN')} (${record.timeSlot || '-'})`,
+            `${new Date(record.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} (${record.timeSlot || '-'})`,
             record.faculty,
             record.status
         ]);
@@ -212,7 +212,7 @@ export default function StudentAttendance() {
         doc.setTextColor(100);
         doc.text(`Name: ${student.name} | Roll: ${student.roll}`, 14, 22);
         doc.text(`Department: ${student.department} | Year: ${student.year}`, 14, 27);
-        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+        doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}`, 14, 32);
 
         autoTable(doc, {
             startY: 38,
@@ -434,7 +434,7 @@ export default function StudentAttendance() {
                                         <div className="flex flex-wrap gap-2 mt-2">
                                             {massBunkDates.slice(0, 5).map((mb, i) => (
                                                 <span key={i} className="text-xs bg-rose-500/20 text-rose-300 px-2 py-1 rounded-lg">
-                                                    {new Date(mb.date).toLocaleDateString()} • {mb.teacherName}
+                                                    {new Date(mb.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} • {mb.teacherName}
                                                 </span>
                                             ))}
                                             {massBunkDates.length > 5 && (
@@ -520,7 +520,7 @@ export default function StudentAttendance() {
                                                             <div className="flex items-center gap-1">
                                                                 <Calendar className="h-3 w-3 text-gray-500 shrink-0" />
                                                                 <span className="text-gray-300 text-[10px] sm:text-xs truncate">
-                                                                    {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                                    {new Date(d.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' })}
                                                                 </span>
                                                             </div>
                                                             {d.timeSlot && (

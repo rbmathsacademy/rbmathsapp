@@ -73,13 +73,15 @@ export async function GET(
             const dateStr = endTime ? endTime.toLocaleDateString('en-IN', {
                 day: '2-digit',
                 month: '2-digit',
-                year: '2-digit'
+                year: '2-digit',
+                timeZone: 'Asia/Kolkata'
             }) : 'a later date';
 
             const timeStr = endTime ? endTime.toLocaleTimeString('en-IN', {
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: true
+                hour12: true,
+                timeZone: 'Asia/Kolkata'
             }) : '';
 
             return NextResponse.json({

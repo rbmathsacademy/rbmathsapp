@@ -222,7 +222,7 @@ export default function StudentDashboard() {
                                 <p className="text-sm font-medium text-slate-400 mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                                     <span>{data.student.phoneNumber}</span>
                                     <span className="hidden sm:inline text-slate-700">•</span>
-                                    <span>Joined: {new Date(data.student.joinedAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                    <span>Joined: {new Date(data.student.joinedAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span>
                                 </p>
                                 <div className="mt-3 flex flex-wrap justify-center sm:justify-start gap-2">
                                     {data.student.courses.map(course => (
@@ -310,7 +310,7 @@ export default function StudentDashboard() {
                                             {test.status === 'missed' ? (
                                                 <span className="bg-rose-500/20 text-rose-400 text-[8px] sm:text-[9px] uppercase font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-rose-500/30 whitespace-nowrap tracking-wider">Missed</span>
                                             ) : (
-                                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono">{new Date(test.deploymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
+                                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono">{new Date(test.deploymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                                             )}
                                         </div>
 
@@ -375,7 +375,7 @@ export default function StudentDashboard() {
                                             <div className="flex items-center gap-3 mt-1.5">
                                                 <div className="flex items-center gap-1 text-[10px] text-slate-500 font-bold tracking-tight">
                                                     <Calendar className="w-3 h-3" />
-                                                    {new Date(assign.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                    {new Date(assign.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}
                                                 </div>
                                             </div>
                                         </div>

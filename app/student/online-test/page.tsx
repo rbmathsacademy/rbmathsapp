@@ -144,8 +144,8 @@ export default function OnlineTestPage() {
 
     const formatDate = (dateStr: string) => {
         const d = new Date(dateStr);
-        const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' });
-        const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' });
+        const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
         return `${date} & ${time}`;
     };
 

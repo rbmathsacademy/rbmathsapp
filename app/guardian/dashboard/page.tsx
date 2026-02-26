@@ -268,7 +268,7 @@ export default function GuardianDashboard() {
                                         {test.status === 'missed' ? (
                                             <span className="bg-red-500/20 text-red-400 text-[8px] uppercase font-bold px-2 py-0.5 rounded border border-red-500/30">Missed</span>
                                         ) : (
-                                            <span className="text-[9px] text-slate-500">{new Date(test.deploymentDate).toLocaleDateString()}</span>
+                                            <span className="text-[9px] text-slate-500">{new Date(test.deploymentDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                                         )}
                                     </div>
 
@@ -310,7 +310,7 @@ export default function GuardianDashboard() {
                                     <div>
                                         <p className="text-sm font-semibold text-white mb-0.5">{assign.title}</p>
                                         <p className="text-[10px] text-slate-500">
-                                            Deadline: {new Date(assign.deadline).toLocaleDateString()}
+                                            Deadline: {new Date(assign.deadline).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                         </p>
                                     </div>
                                     <div>
@@ -353,7 +353,7 @@ export default function GuardianDashboard() {
                                     <div key={idx} className="p-5 flex flex-col sm:flex-row gap-4 sm:items-center">
                                         <div className="min-w-[120px] flex flex-col">
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                                {new Date(plan.date).toLocaleDateString('en-IN', { month: 'short', day: '2-digit' })}
+                                                {new Date(plan.date).toLocaleDateString('en-IN', { month: 'short', day: '2-digit', timeZone: 'Asia/Kolkata' })}
                                             </span>
                                             <span className="text-lg font-black text-white">
                                                 {new Date(plan.date).getFullYear()}

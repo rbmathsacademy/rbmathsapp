@@ -318,7 +318,7 @@ export default function QuestionBank() {
                                         <div className="w-full">
                                             <h3 className="text-[11px] font-bold text-slate-200 mb-1 line-clamp-2 leading-relaxed group-hover:text-blue-300 transition-colors">{folder.name}</h3>
                                             <p className="text-[9px] text-slate-500 font-medium">
-                                                {new Date(folder.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                {new Date(folder.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' })}
                                             </p>
                                         </div>
                                     </div>

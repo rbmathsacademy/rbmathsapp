@@ -375,7 +375,7 @@ function AssignmentCard({
                 <h3 className="text-lg font-bold text-white mb-1">{assignment.title}</h3>
                 <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-4">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>Due: {deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at {deadlineDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>Due: {deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })} at {deadlineDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                 </div>
 
                 {/* Late Warning */}

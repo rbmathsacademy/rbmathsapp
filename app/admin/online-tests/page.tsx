@@ -493,15 +493,17 @@ export default function OnlineTestsPage() {
                                             <div className="space-y-1">
                                                 <div>📅 Start: {new Date(test.deployment.startTime).toLocaleString('en-IN', {
                                                     dateStyle: 'short',
-                                                    timeStyle: 'short'
+                                                    timeStyle: 'short',
+                                                    timeZone: 'Asia/Kolkata'
                                                 })}</div>
                                                 <div>📅 End: {new Date(test.deployment.endTime).toLocaleString('en-IN', {
                                                     dateStyle: 'short',
-                                                    timeStyle: 'short'
+                                                    timeStyle: 'short',
+                                                    timeZone: 'Asia/Kolkata'
                                                 })}</div>
                                             </div>
                                         ) : (
-                                            <div>Created {new Date(test.createdAt).toLocaleDateString()}</div>
+                                            <div>Created {new Date(test.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
                                         )}
                                     </div>
                                 </div>

@@ -172,7 +172,7 @@ export default function AssignmentDetailsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-gray-400 mt-3 sm:mt-4 text-sm">
                         <div className="flex items-center gap-2">
                             <Clock className={`w-4 h-4 sm:w-5 sm:h-5 ${isExpired ? 'text-red-400' : 'text-green-400'}`} />
-                            <span>Due: {deadline.toLocaleDateString('en-GB')} {deadline.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span>Due: {deadline.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' })} {deadline.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
@@ -283,7 +283,7 @@ export default function AssignmentDetailsPage() {
                                         <td className="p-4 text-gray-400 text-sm">
                                             {student.submittedAt ? (
                                                 <>
-                                                    {new Date(student.submittedAt).toLocaleDateString('en-GB')} <span className="text-gray-600">|</span> {new Date(student.submittedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                    {new Date(student.submittedAt).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' })} <span className="text-gray-600">|</span> {new Date(student.submittedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                                                 </>
                                             ) : '-'}
                                         </td>
@@ -367,7 +367,7 @@ export default function AssignmentDetailsPage() {
                                     <div className="flex items-center gap-3">
                                         {student.submittedAt && (
                                             <span className="text-xs text-gray-500">
-                                                {new Date(student.submittedAt).toLocaleDateString('en-GB')} {new Date(student.submittedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                {new Date(student.submittedAt).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' })} {new Date(student.submittedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                                             </span>
                                         )}
                                         {student._id && (

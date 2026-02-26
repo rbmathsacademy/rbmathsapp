@@ -195,24 +195,10 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
     const { assignment, questions, attendance, access, submission, scriptUrl } = data;
     const now = new Date();
 
-    // TIMEZONE FIX: Retrieve raw string and treat as local time (effectively subtracting 5.5h if it was auto-converted)
-    // We do this by creating a date, getting its time, and subtracting the offset
-    // OR simply by assuming the time string provided by server is what the user intended in IST
-    const adjustTime = (dateStr: string) => {
-        if (!dateStr) return null;
-        const date = new Date(dateStr);
-        // If the server returns UTC but meant IST, we need to subtract 5.5 hours to match "visual" time
-        // However, standard new Date() converts UTC to Local (+5.5h).
-        // If 11:47 became 17:17, we need to subtract 5.5h.
-        return new Date(date.getTime() - (5.5 * 60 * 60 * 1000));
-    }
-
-    const startTime = assignment.startTime ? adjustTime(assignment.startTime) : null;
+    const startTime = assignment.startTime ? new Date(assignment.startTime) : null;
     const hasStarted = !startTime || startTime <= now;
 
-    // Check if the deadline also needs adjustment or if it relies on 'isPastDeadline' flag from server
-    // We trust the server flag 'isPastDeadline' for logic, but for display we might need adjustment
-    const deadline = assignment.deadline ? adjustTime(assignment.deadline) : null;
+    const deadline = assignment.deadline ? new Date(assignment.deadline) : null;
     const isPastDeadline = access.isPastDeadline; // Keep server logic for safety
     const hasSubmitted = submission?.status === 'submitted' || submission?.driveLink;
 
@@ -285,7 +271,7 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                                 {formatDate(deadline)}
                             </p>
                             <p className={`text-[10px] sm:text-sm ${isPastDeadline ? 'text-rose-400' : 'text-gray-400'}`}>
-                                {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {deadline.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                                 {isPastDeadline && ' • Passed'}
                             </p>
                         </div>
@@ -357,7 +343,7 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                             <div>
                                 <h2 className="text-sm sm:text-xl font-bold text-amber-300 mb-1">Assignment Not Started</h2>
                                 <p className="text-xs sm:text-base text-amber-200/80">
-                                    This assignment will open on {startTime?.toLocaleString()}.
+                                    This assignment will open on {startTime?.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.
                                 </p>
                             </div>
                         </div>
@@ -521,7 +507,7 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
                                 <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl bg-emerald-900/20 border border-emerald-500/30">
                                     <p className="text-emerald-300 text-xs sm:text-sm mb-2 flex items-center gap-2">
                                         <CheckCircle className="h-4 w-4" />
-                                        Submitted on {new Date(submission.submittedAt).toLocaleString()}
+                                        Submitted on {new Date(submission.submittedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                     </p>
                                     <a
                                         href={submission.driveLink}

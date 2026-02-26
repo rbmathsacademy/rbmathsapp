@@ -654,7 +654,7 @@ export default function MonitorTestPage() {
                                                             </td>
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
                                                             <td className="px-4 py-3 text-slate-400 text-xs">
-                                                                {new Date(student.submittedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                {new Date(student.submittedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' })}
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -721,7 +721,7 @@ export default function MonitorTestPage() {
                                                                 </td>
                                                                 <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
                                                                 <td className="px-4 py-3 text-slate-400 text-xs">
-                                                                    {new Date(s.startedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                    {new Date(s.startedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' })}
                                                                 </td>
                                                                 <td className={`px-4 py-3 font-medium text-sm ${isOvertime ? 'text-red-400' : 'text-blue-400'}`}>
                                                                     {formatTime(s.timeElapsed)}
@@ -784,7 +784,7 @@ export default function MonitorTestPage() {
                                                                 <span className="px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 text-xs font-medium">Not Attempted</span>
                                                                 <button
                                                                     onClick={() => {
-                                                                        const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : 'soon';
+                                                                        const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
                                                                         const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
                                                                         navigator.clipboard.writeText(text);
                                                                         toast.success('Reminder copied!');

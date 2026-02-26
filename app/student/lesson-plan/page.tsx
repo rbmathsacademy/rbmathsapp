@@ -63,9 +63,9 @@ export default function StudentLessonPlan() {
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         const day = date.getDate();
-        const month = date.toLocaleDateString('en-IN', { month: 'short' });
+        const month = date.toLocaleDateString('en-IN', { month: 'short', timeZone: 'Asia/Kolkata' });
         const year = date.getFullYear();
-        const weekday = date.toLocaleDateString('en-IN', { weekday: 'long' });
+        const weekday = date.toLocaleDateString('en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' });
 
         const getOrdinal = (n: number) => {
             const s = ["th", "st", "nd", "rd"];
