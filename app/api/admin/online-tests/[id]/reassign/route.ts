@@ -77,8 +77,13 @@ export async function POST(
             return NextResponse.json({ error: 'Start time and end time are required' }, { status: 400 });
         }
 
-        const start = new Date(newStartTime);
-        const end = new Date(newEndTime);
+        const startStr = newStartTime.endsWith('Z') || newStartTime.includes('+') || newStartTime.includes('-')
+            ? newStartTime : `${newStartTime}+05:30`;
+        const start = new Date(startStr);
+
+        const endStr = newEndTime.endsWith('Z') || newEndTime.includes('+') || newEndTime.includes('-')
+            ? newEndTime : `${newEndTime}+05:30`;
+        const end = new Date(endStr);
 
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
             return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });

@@ -128,8 +128,12 @@ export default function TakeTestPage() {
         const qDuration = currentQuestion?.timeLimit || test.config.perQuestionDuration || 60;
 
         const checkTime = () => {
-            const elapsed = Math.floor((Date.now() - questionVisitTimeRef.current) / 1000);
-            const remaining = Math.max(0, qDuration - elapsed);
+            const elapsedThisSession = Math.floor((Date.now() - questionVisitTimeRef.current) / 1000);
+            const previouslySpentMs = timeSpentPerQuestionRef.current.get(currentQuestion?.id) || 0;
+            const previouslySpentSecs = Math.floor(previouslySpentMs / 1000);
+
+            const totalElapsed = elapsedThisSession + previouslySpentSecs;
+            const remaining = Math.max(0, qDuration - totalElapsed);
 
             setQuestionTimeLeft(remaining);
 
@@ -302,24 +306,40 @@ export default function TakeTestPage() {
                 answersRef.current = restored; // Sync ref
                 timeSpentPerQuestionRef.current = restoredTimes; // Restore tracking times
 
-                // Jump to the first unanswered question
-                let firstUnansweredIndex = 0;
+                // Jump to the highest question they spent time on, or the first unanswered
+                let resumeIndex = 0;
+                let highestVisitedIndex = -1;
+
                 for (let i = 0; i < data.test.questions.length; i++) {
                     const q = data.test.questions[i];
+
+                    // Track if they've spent ANY time on this question previously
+                    const timeSpent = restoredTimes.get(q.id) || 0;
+                    if (timeSpent > 0 || restored.has(q.id)) {
+                        highestVisitedIndex = i;
+                    }
+
                     if (q.type === 'comprehension' && q.subQuestions) {
                         const allAnswered = q.subQuestions.every((sq: any) => restored.has(sq.id) && restored.get(sq.id) !== null && restored.get(sq.id) !== '');
-                        if (!allAnswered) {
-                            firstUnansweredIndex = i;
-                            break;
+                        if (!allAnswered && resumeIndex === 0 && highestVisitedIndex < i) {
+                            resumeIndex = i;
                         }
                     } else {
-                        if (!restored.has(q.id) || restored.get(q.id) === null || restored.get(q.id) === '') {
-                            firstUnansweredIndex = i;
-                            break;
+                        if ((!restored.has(q.id) || restored.get(q.id) === null || restored.get(q.id) === '') && resumeIndex === 0 && highestVisitedIndex < i) {
+                            resumeIndex = i;
                         }
                     }
                 }
-                setCurrentIndex(firstUnansweredIndex);
+
+                // If per-question timer or no back navigation, always throw them to the furthest question they reached
+                if (data.test.config?.enablePerQuestionTimer || !data.test.config?.allowBackNavigation) {
+                    // If they finished a question (time up) without answering, we still need them on the NEXT available question
+                    // So we use highestVisitedIndex. If highest visited is still under time, put them there.
+                    // But let's simplify: if they visited it, put them there. The timer interval will handle auto-skipping if time was already up.
+                    resumeIndex = highestVisitedIndex >= 0 ? highestVisitedIndex : 0;
+                }
+
+                setCurrentIndex(resumeIndex);
             }
 
             // If already started, set the time and show the resume pre-screen
@@ -437,22 +457,25 @@ export default function TakeTestPage() {
             if (q.type === 'comprehension' && q.subQuestions) {
                 for (const sq of q.subQuestions) {
                     const ans = currentAnswers.get(sq.id);
-                    if (ans !== undefined && ans !== null) {
-                        // Distribute the parent's accumulated time evenly among its sub-questions
-                        const parentTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
-                        const subTime = Math.floor(parentTime / q.subQuestions.length);
-                        answerArray.push({ questionId: sq.id, answer: ans, timeTaken: subTime });
+                    const parentTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
+                    const subTime = Math.floor(parentTime / q.subQuestions.length);
+
+                    // IF it has an answer OR it has time spent, we must push it so the backend saves the timeTaken
+                    if ((ans !== undefined && ans !== null) || parentTime > 0) {
+                        answerArray.push({ questionId: sq.id, answer: ans ?? null, timeTaken: subTime });
                     }
                 }
             } else {
                 const ans = currentAnswers.get(q.id);
-                if (ans !== undefined && ans !== null) {
-                    answerArray.push({ questionId: q.id, answer: ans, timeTaken: timeSpentPerQuestionRef.current.get(q.id) || 0 });
+                const qTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
+                if ((ans !== undefined && ans !== null) || qTime > 0) {
+                    answerArray.push({ questionId: q.id, answer: ans ?? null, timeTaken: qTime });
                 }
             }
         }
 
-        if (answerArray.length === 0) return;
+        // Even if no formal answers, we MUST save if time has elapsed
+        if (answerArray.length === 0 && (Date.now() - startTimeRef.current) < 1000) return;
 
         const payload = JSON.stringify({
             answers: answerArray,

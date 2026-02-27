@@ -37,8 +37,19 @@ export async function POST(request: NextRequest) {
         }
 
         // Calculate end time
-        const start = new Date(startTime);
-        const end = endTime ? new Date(endTime) : new Date(start.getTime() + durationMinutes * 60000);
+        // TIMEZONE FIX: Handle missing timezone info by defaulting to IST
+        const startStr = startTime.endsWith('Z') || startTime.includes('+') || startTime.includes('-')
+            ? startTime : `${startTime}+05:30`;
+        const start = new Date(startStr);
+
+        let end: Date;
+        if (endTime) {
+            const endStr = endTime.endsWith('Z') || endTime.includes('+') || endTime.includes('-')
+                ? endTime : `${endTime}+05:30`;
+            end = new Date(endStr);
+        } else {
+            end = new Date(start.getTime() + durationMinutes * 60000);
+        }
 
         // Update deployment
         test.deployment = {
