@@ -60,6 +60,7 @@ export default function TakeTestPage() {
     const [timeLeft, setTimeLeft] = useState(0); // in seconds
     const timeSpentPerQuestionRef = useRef<Map<string, number>>(new Map()); // track ms spent on each question
     const questionVisitTimeRef = useRef<number>(Date.now()); // timestamp when they visited the current question
+    const currentQuestionIdRef = useRef<string | undefined>(undefined); // To prevent stale closure in doAutoSave
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showPalette, setShowPalette] = useState(false);
@@ -109,6 +110,9 @@ export default function TakeTestPage() {
             // Reset visit time for the newly arrived question
             questionVisitTimeRef.current = now;
         }
+
+        // Keep current question ID ref up to date to prevent stale closures in periodic auto-save
+        currentQuestionIdRef.current = currentQuestion?.id;
 
         // Update ref for next navigation
         prevIndexRef.current = currentIndex;
@@ -446,7 +450,8 @@ export default function TakeTestPage() {
         const answerArray: any[] = [];
         for (const q of (test?.questions || [])) {
             // Update the currently viewed question's time just before auto-saving
-            if (q.id === currentQuestion?.id) {
+            // Using currentQuestionIdRef to prevent stale closure bug resetting timers incorrectly
+            if (q.id === currentQuestionIdRef.current) {
                 const now = Date.now();
                 const timeElapsed = now - questionVisitTimeRef.current;
                 const existingTime = timeSpentPerQuestionRef.current.get(q.id) || 0;
