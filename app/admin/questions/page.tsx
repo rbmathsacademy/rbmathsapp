@@ -166,7 +166,7 @@ export default function QuestionBank() {
     // Editor State
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editorMode, setEditorMode] = useState<EditorMode>('manual');
-    const [manualData, setManualData] = useState({ id: '', type: 'broad', topic: '', subtopic: '', text: '' });
+    const [manualData, setManualData] = useState({ id: '', type: 'broad', topic: '', subtopic: '', text: '', examNames: [] as string[], examName: '', marks: '' as number | string });
     const [jsonContent, setJsonContent] = useState('');
     const [previewContent, setPreviewContent] = useState<any[]>([]);
     const [jsonError, setJsonError] = useState<string | null>(null);
@@ -732,7 +732,7 @@ export default function QuestionBank() {
             if (res.ok) {
                 toast.success('Saved successfully!');
                 setIsEditorOpen(false);
-                setManualData({ id: '', type: 'broad', topic: '', subtopic: '', text: '' });
+                setManualData({ id: '', type: 'broad', topic: '', subtopic: '', text: '', examNames: [], examName: '', marks: '' });
                 setJsonContent('');
                 setPreviewContent([]);
 
@@ -837,7 +837,7 @@ export default function QuestionBank() {
 
     const handleModeSwitch = (mode: 'manual' | 'json' | 'pdf' | 'latex' | 'image') => {
         setEditorMode(mode);
-        setManualData({ id: '', type: 'broad', topic: '', subtopic: '', text: '' });
+        setManualData({ id: '', type: 'broad', topic: '', subtopic: '', text: '', examNames: [], examName: '', marks: '' });
         setJsonContent('');
         setJsonError(null);
         setErrorLine(null);
@@ -983,7 +983,10 @@ export default function QuestionBank() {
             type: q.type,
             topic: q.topic,
             subtopic: q.subtopic,
-            text: q.text
+            text: q.text,
+            examNames: q.examNames || [],
+            examName: q.examName || '',
+            marks: q.marks || ''
         });
         setPreviewContent([{ ...q, facultyName: userName }]);
         setEditorMode('manual');
