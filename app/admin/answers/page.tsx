@@ -750,7 +750,7 @@ export default function AnswerBank() {
                                                             {exam}
                                                         </span>
                                                     ))}
-                                                    {q.marks && (
+                                                    {Number(q.marks) > 0 && (
                                                         <span className="bg-gradient-to-r from-emerald-600 to-green-600 text-white text-[9px] md:text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
                                                             {q.marks} m
                                                         </span>

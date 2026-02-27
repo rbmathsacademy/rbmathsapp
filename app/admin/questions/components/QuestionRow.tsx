@@ -139,8 +139,13 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Exam Name</label>
                             <input
                                 className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
-                                value={localQuestion.examName || ''}
-                                onChange={(e) => handleFieldChange('examName', e.target.value)}
+                                value={localQuestion.examNames?.join(', ') || localQuestion.examName || ''}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const names = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                                    handleFieldChange('examNames', names);
+                                    handleFieldChange('examName', val);
+                                }}
                                 placeholder="e.g. JEE Main 2024"
                             />
                         </div>
