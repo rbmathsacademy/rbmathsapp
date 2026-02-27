@@ -843,8 +843,18 @@ export default function TakeTestPage() {
             <div className="test-content flex flex-col min-h-screen">
                 {/* Top Bar - Timer & Progress */}
                 <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-4 py-3 shadow-sm">
-                    <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-                        <h1 className="text-xs font-bold text-white truncate flex-1 min-w-0">{test.title}</h1>
+                    <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                            <h1 className="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-xs">{test.title}</h1>
+                            {/* Recording Indicator */}
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-black/40 border border-slate-700/50 rounded-full shrink-0">
+                                <span className="flex h-2 w-2 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                <span className="text-[10px] sm:text-xs font-bold text-red-400 tracking-wider">REC</span>
+                            </div>
+                        </div>
 
                         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                             {/* Progress */}
