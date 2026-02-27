@@ -206,7 +206,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                             <p>No questions found matching your filters</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             {filteredQuestions.map((q) => (
                                 <div
                                     key={q.id}
@@ -222,26 +222,53 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                                             {selectedIds.has(q.id) && <Check className="h-3.5 w-3.5 text-white" />}
                                         </div>
 
-                                        <div className="flex-1 space-y-2">
+                                        <div className="flex-1 space-y-3">
                                             <div className="flex flex-wrap gap-2 items-center">
                                                 <span className="text-[10px] font-bold bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase tracking-wider">
                                                     {q.type}
                                                 </span>
-                                                <span className="text-[10px] font-bold bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded uppercase">
-                                                    {q.topic}
-                                                </span>
-                                                <span className="text-[10px] font-bold bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded uppercase">
-                                                    {q.subtopic}
-                                                </span>
+                                                {q.topic && (
+                                                    <span className="text-[10px] font-bold bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded uppercase">
+                                                        {q.topic}
+                                                    </span>
+                                                )}
+                                                {q.subtopic && (
+                                                    <span className="text-[10px] font-bold bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded uppercase">
+                                                        {q.subtopic}
+                                                    </span>
+                                                )}
+                                                {(q.examNames?.length > 0 ? q.examNames : (q.examName ? [q.examName] : [])).map((exam: string, idx: number) => (
+                                                    <span key={idx} className="text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded uppercase">
+                                                        {exam}
+                                                    </span>
+                                                ))}
                                             </div>
 
-                                            <div className="text-sm text-slate-300 line-clamp-3 prose prose-invert prose-sm">
-                                                <Latex>{q.text}</Latex>
+                                            <div className="text-sm text-slate-300 prose prose-invert prose-sm max-w-none">
+                                                <Latex>{q.text || ''}</Latex>
                                             </div>
 
                                             {q.image && (
-                                                <div className="h-16 w-16 rounded overflow-hidden border border-white/5 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                    <img src={q.image} alt="Q" className="w-full h-full object-cover" />
+                                                <div className="mt-2 rounded overflow-hidden border border-white/5 opacity-80 group-hover:opacity-100 transition-opacity flex justify-start">
+                                                    <img src={q.image} alt="Question Image" className="max-h-64 object-contain" />
+                                                </div>
+                                            )}
+
+                                            {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                <div className="mt-3 space-y-2">
+                                                    {q.options.map((opt: string, idx: number) => {
+                                                        const isCorrect = String(q.answer) === String(opt) || String(q.answer) === String(idx);
+                                                        return (
+                                                            <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-900/50 border-white/5'}`}>
+                                                                <span className={`text-[10px] font-bold mt-0.5 px-1.5 py-0.5 rounded flex-shrink-0 ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                                                                    {String.fromCharCode(65 + idx)}
+                                                                </span>
+                                                                <div className="text-sm text-slate-300 prose prose-invert prose-sm max-w-none break-words overflow-hidden">
+                                                                    <Latex>{opt || ''}</Latex>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
