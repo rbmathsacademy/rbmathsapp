@@ -34,6 +34,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -74,11 +75,30 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
 
     const types = ['mcq', 'blanks', 'broad', 'short'];
 
+    const availableBatchNames = useMemo(() => {
+        const set = new Set<string>();
+        questions.forEach(q => {
+            if (q.batches && Array.isArray(q.batches)) (q as any).batches.forEach((b: string) => set.add(b));
+        });
+        const batchNames = Array.from(set).filter(Boolean).sort();
+        return ['Untagged', ...batchNames];
+    }, [questions]);
+
     const filteredQuestions = useMemo(() => {
         return questions.filter(q => {
             const topicMatch = selectedTopics.length === 0 || selectedTopics.includes(q.topic);
             const subtopicMatch = selectedSubtopics.length === 0 || selectedSubtopics.includes(q.subtopic);
             const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(q.type);
+
+            // Batch filter
+            let batchMatch = true;
+            if (selectedBatches.length > 0) {
+                const qBatches = (q as any).batches || [];
+                const wantUntagged = selectedBatches.includes('Untagged');
+                const realBatches = selectedBatches.filter(b => b !== 'Untagged');
+                batchMatch = (wantUntagged && qBatches.length === 0) ||
+                    (realBatches.length > 0 && realBatches.some(b => qBatches.includes(b)));
+            }
 
             const searchLower = searchQuery.toLowerCase();
             const searchMatch = !searchQuery ||
@@ -86,9 +106,9 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 (q.topic || '').toLowerCase().includes(searchLower) ||
                 (q.subtopic || '').toLowerCase().includes(searchLower);
 
-            return topicMatch && subtopicMatch && typeMatch && searchMatch;
+            return topicMatch && subtopicMatch && typeMatch && batchMatch && searchMatch;
         });
-    }, [questions, searchQuery, selectedTopics, selectedSubtopics, selectedTypes]);
+    }, [questions, searchQuery, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches]);
 
     const toggleSelection = (id: string) => {
         const newSet = new Set(selectedIds);
@@ -158,7 +178,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
 
                 {/* Filters */}
                 <div className="p-6 bg-slate-950/30 border-b border-white/5 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                             <input
@@ -189,6 +209,13 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                             selected={selectedTypes}
                             onChange={setSelectedTypes}
                             placeholder="All Types"
+                        />
+
+                        <MultiSelect
+                            options={availableBatchNames}
+                            selected={selectedBatches}
+                            onChange={setSelectedBatches}
+                            placeholder="All Batches"
                         />
                     </div>
                 </div>

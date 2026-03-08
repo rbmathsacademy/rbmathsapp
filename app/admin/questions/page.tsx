@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle, Search } from 'lucide-react';
@@ -196,6 +196,8 @@ export default function QuestionBank() {
     const [selectedTopics, setSelectedTopics] = useState<string[]>(["No Topic"]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedExams, setSelectedExams] = useState<string[]>([]);
+    const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+    const [availableBatches, setAvailableBatches] = useState<string[]>([]);
     // Singular Selection for Modal
     const [selectedTopic, setSelectedTopic] = useState('');
     const [selectedSubtopic, setSelectedSubtopic] = useState('');
@@ -225,6 +227,12 @@ export default function QuestionBank() {
     const [availableDepts, setAvailableDepts] = useState<string[]>([]);
     const [availableYears, setAvailableYears] = useState<string[]>([]);
     const [availableCourses, setAvailableCourses] = useState<string[]>([]);
+
+    // Batch Tagging Modal State
+    const [isBatchTagModalOpen, setIsBatchTagModalOpen] = useState(false);
+    const [batchTagTargets, setBatchTagTargets] = useState<string[]>([]);
+    const [batchTagMode, setBatchTagMode] = useState<'add' | 'set' | 'remove'>('add');
+    const [batchTagLoading, setBatchTagLoading] = useState(false);
 
     // Derived Lists - All with bidirectional cascading
     const topics = useMemo(() => {
@@ -278,6 +286,26 @@ export default function QuestionBank() {
         return Array.from(set).filter(Boolean).sort();
     }, [questions, selectedTopics, selectedSubtopics]);
 
+    // Derived batch names from questions (what batches exist on questions)
+    const availableBatchNames = useMemo(() => {
+        const set = new Set<string>();
+        let filtered = questions;
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        if (actualTopics.length > 0) filtered = filtered.filter(q => actualTopics.includes(q.topic));
+        if (selectedSubtopics.length > 0) filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || (q.examName ? [q.examName] : []);
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
+        }
+        filtered.forEach(q => {
+            if (q.batches && Array.isArray(q.batches)) q.batches.forEach((b: string) => set.add(b));
+        });
+        const batchNames = Array.from(set).filter(Boolean).sort();
+        return ['Untagged', ...batchNames];
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams]);
+
     // Paper Modal Subtopics
     const paperSubtopics = useMemo(() => {
         const filteredByTopic = selectedTopic
@@ -303,6 +331,16 @@ export default function QuestionBank() {
             const qExams = q.examNames || (q.examName ? [q.examName] : []);
             const examMatch = selectedExams.length === 0 || selectedExams.some(e => qExams.includes(e));
 
+            // Batch filter
+            let batchMatch = true;
+            if (selectedBatches.length > 0) {
+                const qBatches = q.batches || [];
+                const wantUntagged = selectedBatches.includes('Untagged');
+                const realBatches = selectedBatches.filter(b => b !== 'Untagged');
+                batchMatch = (wantUntagged && qBatches.length === 0) ||
+                    (realBatches.length > 0 && realBatches.some(b => qBatches.includes(b)));
+            }
+
             const searchLower = searchQuery.toLowerCase();
             const searchMatch = !searchQuery ||
                 (q.text || '').toLowerCase().includes(searchLower) ||
@@ -310,9 +348,9 @@ export default function QuestionBank() {
                 (q.subtopic || '').toLowerCase().includes(searchLower) ||
                 (q.id || '').toLowerCase().includes(searchLower);
 
-            return topicMatch && subtopicMatch && examMatch && searchMatch;
+            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, searchQuery]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -322,6 +360,11 @@ export default function QuestionBank() {
             setUserName(parsed.name);
             fetchQuestions(parsed.email);
         }
+        // Fetch available batches from courses API
+        fetch('/api/admin/courses')
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setAvailableBatches(data); })
+            .catch(() => {});
     }, []);
 
     const fetchQuestions = async (email: string) => {
@@ -1206,7 +1249,7 @@ export default function QuestionBank() {
                     </div>
 
                     {/* Filters */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Topic</label>
                             <MultiSelect options={topics} selected={selectedTopics} onChange={setSelectedTopics} placeholder="All Topics" />
@@ -1218,6 +1261,10 @@ export default function QuestionBank() {
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Exam</label>
                             <MultiSelect options={examNames} selected={selectedExams} onChange={setSelectedExams} placeholder="All Exams" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Batch</label>
+                            <MultiSelect options={availableBatchNames} selected={selectedBatches} onChange={setSelectedBatches} placeholder="All Batches" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Search</label>
@@ -1272,6 +1319,12 @@ export default function QuestionBank() {
                                     </button>
                                     <button onClick={deleteSelected} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-red-900/30 text-red-400 border border-gray-700 hover:border-red-500/30 rounded text-xs font-medium transition-colors">
                                         <Trash2 className="h-3.5 w-3.5" /> Delete
+                                    </button>
+                                    <button
+                                        onClick={() => { setBatchTagTargets([]); setBatchTagMode('add'); setIsBatchTagModalOpen(true); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-amber-900/30 text-amber-400 border border-gray-700 hover:border-amber-500/30 rounded text-xs font-medium transition-colors"
+                                    >
+                                        <GraduationCap className="h-3.5 w-3.5" /> Tag to Batch
                                     </button>
                                 </>
                             )}
@@ -1772,6 +1825,107 @@ export default function QuestionBank() {
                     </div>
                 )
             }
+
+            {/* Batch Tag Modal */}
+            {isBatchTagModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-gray-800 p-6 rounded-xl max-w-md w-full border border-gray-700 shadow-2xl">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <GraduationCap className="h-5 w-5 text-amber-400" /> Tag to Batch
+                            </h3>
+                            <button onClick={() => setIsBatchTagModalOpen(false)} className="p-1 hover:bg-white/5 rounded-full">
+                                <X className="h-5 w-5 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-slate-400 mb-3">
+                            Apply batch tags to <span className="text-white font-bold">{selectedQuestionIds.size}</span> selected question{selectedQuestionIds.size !== 1 ? 's' : ''}.
+                        </p>
+
+                        {/* Mode Selection */}
+                        <div className="flex gap-2 mb-4">
+                            {(['add', 'set', 'remove'] as const).map(mode => (
+                                <button
+                                    key={mode}
+                                    onClick={() => setBatchTagMode(mode)}
+                                    className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all capitalize ${batchTagMode === mode
+                                        ? mode === 'remove' ? 'bg-red-600/20 text-red-400 border-red-500/30'
+                                            : 'bg-amber-600/20 text-amber-400 border-amber-500/30'
+                                        : 'bg-gray-900 border-gray-700 text-slate-500'}`}
+                                >
+                                    {mode === 'add' ? 'Add' : mode === 'set' ? 'Replace' : 'Remove'}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-[10px] text-slate-500 mb-3">
+                            {batchTagMode === 'add' && 'Add selected batches (keeps existing tags)'}
+                            {batchTagMode === 'set' && 'Replace all existing batch tags with selected ones'}
+                            {batchTagMode === 'remove' && 'Remove selected batch tags from questions'}
+                        </p>
+
+                        {/* Batch Selection */}
+                        <div className="max-h-48 overflow-y-auto space-y-1 mb-4 bg-gray-900 rounded-lg p-2 border border-gray-700">
+                            {availableBatches.length === 0 ? (
+                                <div className="text-xs text-gray-500 p-2">No batches found. Create batches first.</div>
+                            ) : (
+                                availableBatches.map(batch => (
+                                    <label key={batch} className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded cursor-pointer text-sm text-gray-300">
+                                        <input
+                                            type="checkbox"
+                                            checked={batchTagTargets.includes(batch)}
+                                            onChange={() => {
+                                                setBatchTagTargets(prev =>
+                                                    prev.includes(batch) ? prev.filter(b => b !== batch) : [...prev, batch]
+                                                );
+                                            }}
+                                            className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 text-amber-500"
+                                        />
+                                        {batch}
+                                    </label>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="flex gap-3 justify-end">
+                            <button onClick={() => setIsBatchTagModalOpen(false)} className="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium">Cancel</button>
+                            <button
+                                disabled={batchTagTargets.length === 0 || batchTagLoading}
+                                onClick={async () => {
+                                    setBatchTagLoading(true);
+                                    try {
+                                        const res = await fetch('/api/admin/questions/batch-tag', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                questionIds: Array.from(selectedQuestionIds),
+                                                batches: batchTagTargets,
+                                                mode: batchTagMode
+                                            })
+                                        });
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            toast.success(`Updated ${data.modifiedCount} question(s)`);
+                                            setIsBatchTagModalOpen(false);
+                                            setSelectedQuestionIds(new Set());
+                                            if (userEmail) fetchQuestions(userEmail);
+                                        } else {
+                                            toast.error('Failed to update batch tags');
+                                        }
+                                    } catch (err) {
+                                        toast.error('Error updating batch tags');
+                                    } finally {
+                                        setBatchTagLoading(false);
+                                    }
+                                }}
+                                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg font-bold text-sm transition-all"
+                            >
+                                {batchTagLoading ? 'Updating...' : 'Apply'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

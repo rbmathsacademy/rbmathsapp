@@ -11,6 +11,7 @@ const QuestionSchema = new mongoose.Schema({
     facultyName: { type: String, required: true },
     examName: { type: String }, // Backwards compatibility
     examNames: { type: [String], default: [] }, // Multiple Exams
+    batches: { type: [String], default: [] }, // Batch tags for filtering
     marks: { type: Number },    // Marks for the question
     answer: { type: String },   // Correct Answer
     options: { type: [String] }, // MCQ Options

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     DollarSign, Search,
     Plus, CheckCircle, User, ChevronDown,
-    CreditCard, RefreshCw, Edit2, Save, X, CheckSquare, Square, History, Trash2, Download
+    CreditCard, RefreshCw, Edit2, Save, X, CheckSquare, Square, History, Trash2, Download, ArrowLeft
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
@@ -629,7 +629,7 @@ function FeesManagementContent() {
         if (!historyRecords.length) return;
         const headers = ['Invoice', 'Student', 'Batch', 'Amount', 'Fees Month', 'Paid On', 'Mode', 'Receiver', 'Remarks'];
         const rows = historyRecords.map(r => {
-            const sName = r.isAdhoc ? `${r.adhocStudentName || 'Unknown'} (Ad-hoc)` : (typeof r.student === 'object' && r.student ? r.student.name : (r.studentName || 'Unknown'));
+            const sName = r.isAdhoc ? `${r.adhocStudentName || 'Unknown'} (Ad-hoc)` : (r.studentName || (typeof r.student === 'object' && r.student ? r.student.name : null) || 'Unknown');
             return [
                 r.invoiceNo,
                 sName,
@@ -658,6 +658,17 @@ function FeesManagementContent() {
     return (
         <div className="min-h-screen bg-[#050b14] p-2 md:p-6 text-slate-200 font-sans max-w-[100vw] overflow-x-hidden">
             <Toaster position="top-right" />
+
+            {/* Mobile Back Button */}
+            <div className="md:hidden max-w-7xl mx-auto mb-3">
+                <button
+                    onClick={() => window.location.href = '/admin'}
+                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm py-2"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Dashboard
+                </button>
+            </div>
 
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-6 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1325,7 +1336,7 @@ function FeesManagementContent() {
                                         <td className="px-6 py-4 font-medium text-white">
                                             {record.isAdhoc ? (
                                                 <span>{record.adhocStudentName || 'Unknown'} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">Ad-hoc</span></span>
-                                            ) : (typeof record.student === 'object' && record.student ? record.student.name : (record.studentName || 'Unknown'))}
+                                            ) : (record.studentName || (typeof record.student === 'object' && record.student ? record.student.name : null) || 'Unknown')}
                                         </td>
                                         <td className="px-6 py-4 text-slate-400">{record.batch}</td>
                                         <td className="px-6 py-4 text-white">
@@ -1354,7 +1365,7 @@ function FeesManagementContent() {
                                             <div className="font-bold text-white text-base">
                                                 {record.isAdhoc ? (
                                                     <span>{record.adhocStudentName || 'Unknown'} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded ml-1">Ad-hoc</span></span>
-                                                ) : (typeof record.student === 'object' && record.student ? record.student.name : (record.studentName || 'Unknown'))}
+                                                ) : (record.studentName || (typeof record.student === 'object' && record.student ? record.student.name : null) || 'Unknown')}
                                             </div>
                                             <div className="text-xs text-slate-400 mt-0.5">{record.batch}</div>
                                         </div>

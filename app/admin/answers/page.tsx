@@ -88,6 +88,7 @@ export default function AnswerBank() {
     const [selectedTopics, setSelectedTopics] = useState<string[]>(["No Topic"]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedExams, setSelectedExams] = useState<string[]>([]);
+    const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -176,6 +177,15 @@ export default function AnswerBank() {
         return Array.from(set).filter(Boolean).sort();
     }, [questions, selectedTopics, selectedSubtopics]);
 
+    const availableBatchNames = useMemo(() => {
+        const set = new Set<string>();
+        questions.forEach(q => {
+            if ((q as any).batches && Array.isArray((q as any).batches)) (q as any).batches.forEach((b: string) => set.add(b));
+        });
+        const batchNames = Array.from(set).filter(Boolean).sort();
+        return ['Untagged', ...batchNames];
+    }, [questions]);
+
     const filteredQuestions = useMemo(() => {
         // If "No Topic" is selected, return empty (unless searching)
         if (selectedTopics.includes("No Topic") && !searchQuery) {
@@ -194,6 +204,16 @@ export default function AnswerBank() {
                 if (!hasExam) return false;
             }
 
+            // Batch filter
+            if (selectedBatches.length > 0) {
+                const qBatches = (q as any).batches || [];
+                const wantUntagged = selectedBatches.includes('Untagged');
+                const realBatches = selectedBatches.filter(b => b !== 'Untagged');
+                const batchMatch = (wantUntagged && qBatches.length === 0) ||
+                    (realBatches.length > 0 && realBatches.some((b: string) => qBatches.includes(b)));
+                if (!batchMatch) return false;
+            }
+
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 return (
@@ -204,7 +224,7 @@ export default function AnswerBank() {
             }
             return true;
         });
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, searchQuery]);
 
     // --- Selection Logic ---
     const toggleSelection = (id: string) => {
@@ -658,7 +678,7 @@ export default function AnswerBank() {
                     <div className="bg-gray-900 border-b border-gray-800 p-3 md:p-4">
                         <div className="flex flex-col gap-4">
                             {/* Mobile Stacked Filters */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
                                 <div className="flex items-center h-[38px] px-2 bg-gray-800 rounded border border-gray-700 w-fit">
                                     <input
                                         type="checkbox"
@@ -694,6 +714,15 @@ export default function AnswerBank() {
                                         selected={selectedExams}
                                         onChange={setSelectedExams}
                                         placeholder="All Exams"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1 block">Batch</label>
+                                    <MultiSelect
+                                        options={availableBatchNames}
+                                        selected={selectedBatches}
+                                        onChange={setSelectedBatches}
+                                        placeholder="All Batches"
                                     />
                                 </div>
                                 <div className="space-y-1 relative">

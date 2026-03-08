@@ -44,6 +44,7 @@ export default function CreateAssignmentPage() {
     const [topicFilter, setTopicFilter] = useState('');
     const [subtopicFilter, setSubtopicFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
+    const [batchFilter, setBatchFilter] = useState('');
 
     // Random Deploy — admin selects a pool, sets N, each student gets N random Qs from pool
     const [randomDeploy, setRandomDeploy] = useState(false);
@@ -93,8 +94,15 @@ export default function CreateAssignmentPage() {
         if (topicFilter) res = res.filter(q => q.topic === topicFilter);
         if (subtopicFilter) res = res.filter(q => q.subtopic === subtopicFilter);
         if (typeFilter) res = res.filter(q => q.type === typeFilter);
+        if (batchFilter) {
+            if (batchFilter === 'Untagged') {
+                res = res.filter(q => !(q as any).batches || (q as any).batches.length === 0);
+            } else {
+                res = res.filter(q => (q as any).batches && (q as any).batches.includes(batchFilter));
+            }
+        }
         setFilteredQuestions(res);
-    }, [allQuestions, topicFilter, subtopicFilter, typeFilter]);
+    }, [allQuestions, topicFilter, subtopicFilter, typeFilter, batchFilter]);
 
     // Unique values for filter dropdowns
     const topics = [...new Set(allQuestions.map(q => q.topic))].sort();
@@ -104,6 +112,7 @@ export default function CreateAssignmentPage() {
             .map(q => q.subtopic)
     )].sort();
     const types = [...new Set(allQuestions.map(q => q.type))];
+    const batchNames = ['Untagged', ...Array.from(new Set(allQuestions.flatMap(q => (q as any).batches || []).filter(Boolean))).sort()];
 
     const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -494,6 +503,14 @@ export default function CreateAssignmentPage() {
                                 >
                                     <option value="">All Types</option>
                                     {types.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+                                </select>
+                                <select
+                                    value={batchFilter}
+                                    onChange={(e) => setBatchFilter(e.target.value)}
+                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[130px]"
+                                >
+                                    <option value="">All Batches</option>
+                                    {batchNames.map(b => <option key={b} value={b}>{b}</option>)}
                                 </select>
                             </div>
                             <div className="flex gap-2 sm:gap-3 items-center flex-wrap">

@@ -209,12 +209,38 @@ export async function GET(req: Request) {
         const records = await FeeRecord.find(query)
             .populate('student', 'name phoneNumber')
             .sort({ entryDate: -1 })
-            .lean(); // Use lean for performance and logging
+            .lean();
 
-        // Debug logging for troubleshooting "Unknown" student
-        if (records.length > 0 && !records[0].student) {
-            console.log('⚠️ WARNING: First record has null student after populate:', records[0]);
-            console.log('Query used:', JSON.stringify(query));
+        // Self-healing: backfill studentName/studentPhone for records that have
+        // a populated student but are missing denormalized fields.
+        // This progressively repairs old records created before denormalization was added.
+        const backfillOps: Promise<any>[] = [];
+        for (const record of records) {
+            if (
+                !record.isAdhoc &&
+                !record.studentName &&
+                typeof record.student === 'object' &&
+                record.student &&
+                (record.student as any).name
+            ) {
+                const studentObj = record.student as any;
+                // Mutate the lean object for the current response
+                (record as any).studentName = studentObj.name;
+                (record as any).studentPhone = studentObj.phoneNumber || null;
+                // Persist the backfill asynchronously
+                backfillOps.push(
+                    FeeRecord.updateOne(
+                        { _id: record._id },
+                        { $set: { studentName: studentObj.name, studentPhone: studentObj.phoneNumber || null } }
+                    )
+                );
+            }
+        }
+        // Fire-and-forget backfill updates (don't block response)
+        if (backfillOps.length > 0) {
+            Promise.all(backfillOps).catch(err =>
+                console.error('Fee record backfill error:', err)
+            );
         }
 
         return NextResponse.json({ records });

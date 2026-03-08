@@ -57,6 +57,7 @@ export default function DeployPage() {
     const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedExamNames, setSelectedExamNames] = useState<string[]>([]);
+    const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Current folder is the top of the stack (or null if at root folder level)
@@ -262,6 +263,15 @@ export default function DeployPage() {
         if (selectedExamNames.length > 0) {
             const qExams = q.examNames || [];
             if (!selectedExamNames.some(e => qExams.includes(e))) return false;
+        }
+        // Batch filter
+        if (selectedBatches.length > 0) {
+            const qBatches = (q as any).batches || [];
+            const wantUntagged = selectedBatches.includes('Untagged');
+            const realBatches = selectedBatches.filter(b => b !== 'Untagged');
+            const batchMatch = (wantUntagged && qBatches.length === 0) ||
+                (realBatches.length > 0 && realBatches.some(b => qBatches.includes(b)));
+            if (!batchMatch) return false;
         }
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
@@ -559,6 +569,15 @@ export default function DeployPage() {
                                         selected={selectedExamNames}
                                         onChange={setSelectedExamNames}
                                         placeholder="All Exams"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs text-slate-400 mb-1 block">Batch</label>
+                                    <MultiSelect
+                                        options={['Untagged', ...Array.from(new Set(allQuestions.flatMap(q => (q as any).batches || []).filter(Boolean))).sort()]}
+                                        selected={selectedBatches}
+                                        onChange={setSelectedBatches}
+                                        placeholder="All Batches"
                                     />
                                 </div>
                             </div>
