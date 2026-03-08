@@ -95,6 +95,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return () => clearTimeout(timer);
     }, [router, pathname]); // Re-run on pathname change to protect navigation
 
+    // Prevent mobile back button from logging out
+    useEffect(() => {
+        if (!user) return;
+
+        // Push an extra history entry so back button doesn't leave the app
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = () => {
+            // Re-push current URL to trap the back button
+            window.history.pushState(null, '', window.location.href);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [user, pathname]);
+
     const handleLogout = () => {
         localStorage.removeItem('user');
         localStorage.removeItem('adminSessionStart');

@@ -124,9 +124,21 @@ export default function AnswerBank() {
         }
     };
 
+    // Helper: filter questions by selected batches
+    const filterByBatches = (qs: Question[]) => {
+        if (selectedBatches.length === 0) return qs;
+        return qs.filter(q => {
+            const qBatches = (q as any).batches || [];
+            const wantUntagged = selectedBatches.includes('Untagged');
+            const realBatches = selectedBatches.filter((b: string) => b !== 'Untagged');
+            return (wantUntagged && qBatches.length === 0) ||
+                (realBatches.length > 0 && realBatches.some((b: string) => qBatches.includes(b)));
+        });
+    };
+
     // --- Filter Logic ---
     const topics = useMemo(() => {
-        let filtered = questions;
+        let filtered = filterByBatches(questions);
         if (selectedSubtopics.length > 0) {
             filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
         }
@@ -138,10 +150,10 @@ export default function AnswerBank() {
         }
         const actualTopics = Array.from(new Set(filtered.map(q => q.topic))).filter(Boolean).sort();
         return ["No Topic", ...actualTopics];
-    }, [questions, selectedSubtopics, selectedExams]);
+    }, [questions, selectedSubtopics, selectedExams, selectedBatches]);
 
     const subtopics = useMemo(() => {
-        let filtered = questions;
+        let filtered = filterByBatches(questions);
         if (selectedTopics.length > 0) {
             const actualTopics = selectedTopics.filter(t => t !== "No Topic");
             if (actualTopics.length > 0) {
@@ -155,11 +167,11 @@ export default function AnswerBank() {
             });
         }
         return Array.from(new Set(filtered.map(q => q.subtopic))).filter(Boolean).sort();
-    }, [questions, selectedTopics, selectedExams]);
+    }, [questions, selectedTopics, selectedExams, selectedBatches]);
 
     const examNames = useMemo(() => {
         const set = new Set<string>();
-        let filtered = questions;
+        let filtered = filterByBatches(questions);
 
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
         if (actualTopics.length > 0) {
@@ -175,16 +187,26 @@ export default function AnswerBank() {
             else if (q.examName) set.add(q.examName);
         });
         return Array.from(set).filter(Boolean).sort();
-    }, [questions, selectedTopics, selectedSubtopics]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedBatches]);
 
     const availableBatchNames = useMemo(() => {
         const set = new Set<string>();
-        questions.forEach(q => {
+        let filtered = questions;
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        if (actualTopics.length > 0) filtered = filtered.filter(q => actualTopics.includes(q.topic));
+        if (selectedSubtopics.length > 0) filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || [];
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
+        }
+        filtered.forEach(q => {
             if ((q as any).batches && Array.isArray((q as any).batches)) (q as any).batches.forEach((b: string) => set.add(b));
         });
         const batchNames = Array.from(set).filter(Boolean).sort();
         return ['Untagged', ...batchNames];
-    }, [questions]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams]);
 
     const filteredQuestions = useMemo(() => {
         // If "No Topic" is selected, return empty (unless searching)

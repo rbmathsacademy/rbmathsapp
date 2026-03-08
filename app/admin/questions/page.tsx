@@ -234,9 +234,21 @@ export default function QuestionBank() {
     const [batchTagMode, setBatchTagMode] = useState<'add' | 'set' | 'remove'>('add');
     const [batchTagLoading, setBatchTagLoading] = useState(false);
 
-    // Derived Lists - All with bidirectional cascading
+    // Helper: filter questions by selected batches
+    const filterByBatches = (qs: any[]) => {
+        if (selectedBatches.length === 0) return qs;
+        return qs.filter(q => {
+            const qBatches = q.batches || [];
+            const wantUntagged = selectedBatches.includes('Untagged');
+            const realBatches = selectedBatches.filter((b: string) => b !== 'Untagged');
+            return (wantUntagged && qBatches.length === 0) ||
+                (realBatches.length > 0 && realBatches.some((b: string) => qBatches.includes(b)));
+        });
+    };
+
+    // Derived Lists - All with bidirectional cascading (including Batch)
     const topics = useMemo(() => {
-        let filtered = questions;
+        let filtered = filterByBatches(questions);
         if (selectedSubtopics.length > 0) {
             filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
         }
@@ -248,12 +260,12 @@ export default function QuestionBank() {
         }
         const actualTopics = Array.from(new Set(filtered.map(q => q.topic))).sort();
         return ["No Topic", ...actualTopics];
-    }, [questions, selectedSubtopics, selectedExams]);
+    }, [questions, selectedSubtopics, selectedExams, selectedBatches]);
 
     // Cascading Subtopics: Filter based on selected topics and exams
     const subtopics = useMemo(() => {
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
-        let filtered = questions;
+        let filtered = filterByBatches(questions);
         if (actualTopics.length > 0) {
             filtered = filtered.filter(q => actualTopics.includes(q.topic));
         }
@@ -264,12 +276,12 @@ export default function QuestionBank() {
             });
         }
         return Array.from(new Set(filtered.map(q => q.subtopic))).filter(Boolean).sort();
-    }, [questions, selectedTopics, selectedExams]);
+    }, [questions, selectedTopics, selectedExams, selectedBatches]);
 
     // Cascading Exam Names: Filter based on selected topics and subtopics
     const examNames = useMemo(() => {
         const set = new Set<string>();
-        let filtered = questions;
+        let filtered = filterByBatches(questions);
 
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
         if (actualTopics.length > 0) {
@@ -284,7 +296,7 @@ export default function QuestionBank() {
             else if (q.examName) set.add(q.examName);
         });
         return Array.from(set).filter(Boolean).sort();
-    }, [questions, selectedTopics, selectedSubtopics]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedBatches]);
 
     // Derived batch names from questions (what batches exist on questions)
     const availableBatchNames = useMemo(() => {

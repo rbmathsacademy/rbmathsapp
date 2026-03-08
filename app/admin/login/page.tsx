@@ -66,8 +66,8 @@ export default function AdminLogin() {
                 localStorage.setItem('admin_session_expiry', (30 * 60 * 1000).toString());
             }
 
-            // Force hard navigation to resolve potential freeze/infinite loading issues
-            window.location.href = '/admin/dashboard';
+            // Force hard navigation and replace history so back button doesn't return to login
+            window.location.replace('/admin/dashboard');
         } catch (err: any) {
             setError(err.message);
         } finally {

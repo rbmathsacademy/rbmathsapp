@@ -86,7 +86,7 @@ export default function StudentDashboard() {
     const handleLogout = () => {
         document.cookie = 'auth_token=; Max-Age=0; path=/;';
         localStorage.clear();
-        router.push('/student/login');
+        window.location.replace('/student/login');
     };
 
     const [userRole, setUserRole] = useState<string | null>(null);

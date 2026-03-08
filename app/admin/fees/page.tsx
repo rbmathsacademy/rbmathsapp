@@ -662,11 +662,11 @@ function FeesManagementContent() {
             {/* Mobile Back Button */}
             <div className="md:hidden max-w-7xl mx-auto mb-3">
                 <button
-                    onClick={() => window.location.href = '/admin'}
-                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm py-2"
+                    onClick={() => window.location.href = '/admin/dashboard'}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to Dashboard
+                    Back
                 </button>
             </div>
 

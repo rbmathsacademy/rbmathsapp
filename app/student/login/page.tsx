@@ -13,8 +13,12 @@ export default function StudentLogin() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Clear any previous session data to prevent role conflicts
-        localStorage.clear();
+        // Clear previous session data to prevent role conflicts (specific keys only)
+        localStorage.removeItem('studentName');
+        localStorage.removeItem('studentCourses');
+        localStorage.removeItem('user');
+        localStorage.removeItem('adminSessionStart');
+        localStorage.removeItem('admin_session_expiry');
 
         try {
             const res = await fetch('/api/student/login', {
@@ -41,7 +45,7 @@ export default function StudentLogin() {
                     localStorage.setItem('adminSessionStart', Date.now().toString());
                 }
 
-                router.push(data.redirectUrl || '/student');
+                router.replace(data.redirectUrl || '/student');
             } else {
                 toast.error(data.error || 'Login failed. Please check your number.');
             }
