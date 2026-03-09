@@ -143,8 +143,8 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     const names = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
-                                    handleFieldChange('examNames', names);
-                                    handleFieldChange('examName', val);
+                                    const updated = { ...localQuestion, examNames: names, examName: val };
+                                    updateParent(updated);
                                 }}
                                 placeholder="e.g. JEE Main 2024"
                             />
@@ -288,8 +288,8 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     const names = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
-                                    handleFieldChange('examNames', names);
-                                    handleFieldChange('examName', val);
+                                    const updated = { ...localQuestion, examNames: names, examName: val };
+                                    updateParent(updated);
                                 }}
                                 placeholder="e.g. JEE 2024"
                             />
