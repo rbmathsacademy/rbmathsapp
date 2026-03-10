@@ -63,37 +63,66 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
         }
     };
 
+    // Generic filtering for cascading dropdowns
+    const getFilteredQuestionsFor = (excludeFilter: 'topic' | 'subtopic' | 'type' | 'batch' | 'exam') => {
+        return questions.filter(q => {
+            if (excludeFilter !== 'topic' && selectedTopics.length > 0 && !selectedTopics.includes(q.topic)) return false;
+            if (excludeFilter !== 'subtopic' && selectedSubtopics.length > 0 && !selectedSubtopics.includes(q.subtopic)) return false;
+            if (excludeFilter !== 'type' && selectedTypes.length > 0 && !selectedTypes.includes(q.type)) return false;
+            
+            if (excludeFilter !== 'batch' && selectedBatches.length > 0) {
+                const qBatches = (q as any).batches || [];
+                const wantUntagged = selectedBatches.includes('Untagged');
+                const realBatches = selectedBatches.filter(b => b !== 'Untagged');
+                const match = (wantUntagged && qBatches.length === 0) ||
+                    (realBatches.length > 0 && realBatches.some(b => qBatches.includes(b)));
+                if (!match) return false;
+            }
+
+            if (excludeFilter !== 'exam' && selectedExams.length > 0) {
+                const exams = (q as any).examNames?.length > 0 ? (q as any).examNames : ((q as any).examName ? [(q as any).examName] : []);
+                const wantUntagged = selectedExams.includes('Untagged');
+                const realExams = selectedExams.filter(e => e !== 'Untagged');
+                const match = (wantUntagged && exams.length === 0) ||
+                    (realExams.length > 0 && realExams.some(e => exams.includes(e)));
+                if (!match) return false;
+            }
+
+            return true;
+        });
+    };
+
     const topics = useMemo(() => {
-        return Array.from(new Set(questions.map(q => q.topic).filter(Boolean))).sort() as string[];
-    }, [questions]);
+        return Array.from(new Set(getFilteredQuestionsFor('topic').map(q => q.topic).filter(Boolean))).sort() as string[];
+    }, [questions, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches, selectedExams]);
 
     const subtopics = useMemo(() => {
-        const filtered = selectedTopics.length > 0
-            ? questions.filter(q => selectedTopics.includes(q.topic))
-            : questions;
-        return Array.from(new Set(filtered.map(q => q.subtopic).filter(Boolean))).sort() as string[];
-    }, [questions, selectedTopics]);
+        return Array.from(new Set(getFilteredQuestionsFor('subtopic').map(q => q.subtopic).filter(Boolean))).sort() as string[];
+    }, [questions, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches, selectedExams]);
 
-    const types = ['mcq', 'blanks', 'broad', 'short'];
+    const types = useMemo(() => {
+        const availableTypesSet = new Set(getFilteredQuestionsFor('type').map(q => q.type).filter(Boolean));
+        return ['mcq', 'blanks', 'broad', 'short'].filter(t => availableTypesSet.has(t));
+    }, [questions, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches, selectedExams]);
 
     const availableBatchNames = useMemo(() => {
         const set = new Set<string>();
-        questions.forEach(q => {
+        getFilteredQuestionsFor('batch').forEach(q => {
             if (q.batches && Array.isArray(q.batches)) (q as any).batches.forEach((b: string) => set.add(b));
         });
         const batchNames = Array.from(set).filter(Boolean).sort();
         return ['Untagged', ...batchNames];
-    }, [questions]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches, selectedExams]);
 
     const availableExamNames = useMemo(() => {
         const set = new Set<string>();
-        questions.forEach(q => {
+        getFilteredQuestionsFor('exam').forEach(q => {
             const exams = q.examNames?.length > 0 ? q.examNames : (q.examName ? [q.examName] : []);
             exams.forEach((e: string) => set.add(e));
         });
         const examNames = Array.from(set).filter(Boolean).sort();
         return ['Untagged', ...examNames];
-    }, [questions]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches, selectedExams]);
 
     const filteredQuestions = useMemo(() => {
         return questions.filter(q => {
