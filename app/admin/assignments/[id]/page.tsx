@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save } from 'lucide-react';
+import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
 interface StudentSubmission {
@@ -120,6 +120,23 @@ export default function AssignmentDetailsPage() {
             }
         } catch (error) {
             toast.error('Error updating assignment');
+        }
+    };
+
+    const handleDeleteSubmission = async (submissionId: string) => {
+        if (!confirm('Are you sure you want to delete this submission? The student will be able to submit again.')) return;
+
+        try {
+            const res = await fetch(`/api/admin/assignments/submission/${submissionId}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) throw new Error('Failed to delete');
+
+            toast.success('Submission deleted successfully');
+            fetchDetails(); // Refresh the list
+        } catch (error) {
+            toast.error('Failed to delete submission');
         }
     };
 
@@ -303,15 +320,26 @@ export default function AssignmentDetailsPage() {
                                             )}
                                         </td>
                                         <td className="p-4 text-right">
-                                            {student.link ? (
-                                                <a
-                                                    href={student.link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition-colors text-white"
-                                                >
-                                                    View <ExternalLink className="w-3 h-3" />
-                                                </a>
+                                            {student._id ? (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {student.link && (
+                                                        <a
+                                                            href={student.link}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition-colors text-white"
+                                                        >
+                                                            View <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleDeleteSubmission(student._id!)}
+                                                        className="inline-flex items-center justify-center w-7 h-7 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors border border-red-500/20"
+                                                        title="Delete Submission"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <span className="text-gray-600 text-xs italic">Not submitted</span>
                                             )}
@@ -382,15 +410,26 @@ export default function AssignmentDetailsPage() {
                                             </button>
                                         )}
                                     </div>
-                                    {student.link ? (
-                                        <a
-                                            href={student.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-medium text-white flex-shrink-0"
-                                        >
-                                            View <ExternalLink className="w-3 h-3" />
-                                        </a>
+                                    {student._id ? (
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            {student.link && (
+                                                <a
+                                                    href={student.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-medium text-white flex-shrink-0"
+                                                >
+                                                    View <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            )}
+                                            <button
+                                                onClick={() => handleDeleteSubmission(student._id!)}
+                                                className="inline-flex items-center justify-center w-6 h-6 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 flex-shrink-0"
+                                                title="Delete Submission"
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     ) : null}
                                 </div>
                             </div>
