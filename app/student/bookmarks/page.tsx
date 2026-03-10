@@ -207,7 +207,7 @@ export default function BookmarksPage() {
                                 <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-white/5 text-gray-400 border border-white/10">
                                     {currentQuestion.topic}
                                 </span>
-                                {currentQuestion.marks && (
+                                {!!currentQuestion.marks && (
                                     <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                         {currentQuestion.marks} Marks
                                     </span>

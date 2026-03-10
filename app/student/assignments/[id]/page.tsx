@@ -106,7 +106,7 @@ export default function AssignmentQuestionsPage() {
                                         ))}
                                     </div>
                                 )}
-                                {q.marks && (
+                                {!!q.marks && (
                                     <div className="text-right text-sm text-gray-500 font-mono">
                                         [{q.marks} Marks]
                                     </div>

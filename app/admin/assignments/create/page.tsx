@@ -468,7 +468,7 @@ export default function CreateAssignmentPage() {
                                                         <div className="flex gap-2 mb-1">
                                                             <span className="text-xs bg-white/5 px-2 py-0.5 rounded text-gray-400">{q.topic}</span>
                                                             <span className="text-xs bg-white/5 px-2 py-0.5 rounded text-gray-400">{q.type}</span>
-                                                            {q.marks && <span className="text-xs bg-white/5 px-2 py-0.5 rounded text-gray-400">{q.marks}M</span>}
+                                                            {!!q.marks && <span className="text-xs bg-white/5 px-2 py-0.5 rounded text-gray-400">{q.marks}M</span>}
                                                         </div>
                                                         <Latex>{q.text}</Latex>
                                                         {q.image && (
