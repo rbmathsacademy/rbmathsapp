@@ -45,6 +45,7 @@ export default function CreateAssignmentPage() {
     const [subtopicFilter, setSubtopicFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
     const [batchFilter, setBatchFilter] = useState('');
+    const [examFilter, setExamFilter] = useState('');
 
     // Random Deploy — admin selects a pool, sets N, each student gets N random Qs from pool
     const [randomDeploy, setRandomDeploy] = useState(false);
@@ -101,8 +102,21 @@ export default function CreateAssignmentPage() {
                 res = res.filter(q => (q as any).batches && (q as any).batches.includes(batchFilter));
             }
         }
+        if (examFilter) {
+            if (examFilter === 'Untagged') {
+                res = res.filter(q => {
+                    const exams = (q as any).examNames?.length > 0 ? (q as any).examNames : ((q as any).examName ? [(q as any).examName] : []);
+                    return exams.length === 0;
+                });
+            } else {
+                res = res.filter(q => {
+                    const exams = (q as any).examNames?.length > 0 ? (q as any).examNames : ((q as any).examName ? [(q as any).examName] : []);
+                    return exams.includes(examFilter);
+                });
+            }
+        }
         setFilteredQuestions(res);
-    }, [allQuestions, topicFilter, subtopicFilter, typeFilter, batchFilter]);
+    }, [allQuestions, topicFilter, subtopicFilter, typeFilter, batchFilter, examFilter]);
 
     // Unique values for filter dropdowns
     const topics = [...new Set(allQuestions.map(q => q.topic))].sort();
@@ -113,6 +127,7 @@ export default function CreateAssignmentPage() {
     )].sort();
     const types = [...new Set(allQuestions.map(q => q.type))];
     const batchNames = ['Untagged', ...Array.from(new Set(allQuestions.flatMap(q => (q as any).batches || []).filter(Boolean))).sort()];
+    const examNames = ['Untagged', ...Array.from(new Set(allQuestions.flatMap(q => (q as any).examNames || ((q as any).examName ? [(q as any).examName] : [])).filter(Boolean))).sort()];
 
     const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -511,6 +526,14 @@ export default function CreateAssignmentPage() {
                                 >
                                     <option value="">All Batches</option>
                                     {batchNames.map(b => <option key={b} value={b}>{b}</option>)}
+                                </select>
+                                <select
+                                    value={examFilter}
+                                    onChange={(e) => setExamFilter(e.target.value)}
+                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[130px]"
+                                >
+                                    <option value="">All Exams</option>
+                                    {examNames.map(e => <option key={e} value={e}>{e}</option>)}
                                 </select>
                             </div>
                             <div className="flex gap-2 sm:gap-3 items-center flex-wrap">

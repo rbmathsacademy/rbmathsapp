@@ -207,9 +207,17 @@ export default function TakeTestPage() {
 
                 // Some mobile browsers fire blur on the window when keyboard opens, 
                 // but the input remains the active element. Recheck focus after a tiny delay
-                // to see if the document still has focus.
+                // to see if the document still has focus OR if an input is focused.
+                // On mobile overlays (like Google Assistant) that cover the screen, the browser window loses blur,
+                // but the document might occasionally still report hasFocus() as true due to the way webviews manage overlays.
+                // We shouldn't strictly require !document.hasFocus() because overlays steal focus but might not trigger
+                // a full document blur event. If `window.blur` fires, and we're NOT in an input/textarea (keyboard open),
+                // it's highly likely a real app switch or overlay.
+
                 setTimeout(() => {
-                    if (!document.hasFocus() && !isInputFocused && !document.hidden) {
+                    // Mobile fix: If the window is blurred, and we are NOT focused on an input/textarea
+                    // (which handles the mobile keyboard false-positive), then we consider it a violation.
+                    if (!isInputFocused) {
                         handleViolation();
                     }
                 }, 200);

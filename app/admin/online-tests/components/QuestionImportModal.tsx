@@ -35,6 +35,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+    const [selectedExams, setSelectedExams] = useState<string[]>([]);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -84,6 +85,16 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
         return ['Untagged', ...batchNames];
     }, [questions]);
 
+    const availableExamNames = useMemo(() => {
+        const set = new Set<string>();
+        questions.forEach(q => {
+            const exams = q.examNames?.length > 0 ? q.examNames : (q.examName ? [q.examName] : []);
+            exams.forEach((e: string) => set.add(e));
+        });
+        const examNames = Array.from(set).filter(Boolean).sort();
+        return ['Untagged', ...examNames];
+    }, [questions]);
+
     const filteredQuestions = useMemo(() => {
         return questions.filter(q => {
             const topicMatch = selectedTopics.length === 0 || selectedTopics.includes(q.topic);
@@ -99,6 +110,16 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 batchMatch = (wantUntagged && qBatches.length === 0) ||
                     (realBatches.length > 0 && realBatches.some(b => qBatches.includes(b)));
             }
+            
+            // Exam filter
+            let examMatch = true;
+            if (selectedExams.length > 0) {
+                const exams = (q as any).examNames?.length > 0 ? (q as any).examNames : ((q as any).examName ? [(q as any).examName] : []);
+                const wantUntagged = selectedExams.includes('Untagged');
+                const realExams = selectedExams.filter(e => e !== 'Untagged');
+                examMatch = (wantUntagged && exams.length === 0) ||
+                    (realExams.length > 0 && realExams.some(e => exams.includes(e)));
+            }
 
             const searchLower = searchQuery.toLowerCase();
             const searchMatch = !searchQuery ||
@@ -106,9 +127,9 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 (q.topic || '').toLowerCase().includes(searchLower) ||
                 (q.subtopic || '').toLowerCase().includes(searchLower);
 
-            return topicMatch && subtopicMatch && typeMatch && batchMatch && searchMatch;
+            return topicMatch && subtopicMatch && typeMatch && batchMatch && examMatch && searchMatch;
         });
-    }, [questions, searchQuery, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches]);
+    }, [questions, searchQuery, selectedTopics, selectedSubtopics, selectedTypes, selectedBatches, selectedExams]);
 
     const toggleSelection = (id: string) => {
         const newSet = new Set(selectedIds);
@@ -178,8 +199,8 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
 
                 {/* Filters */}
                 <div className="p-6 bg-slate-950/30 border-b border-white/5 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div className="relative">
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                        <div className="relative md:col-span-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                             <input
                                 type="text"
@@ -190,33 +211,50 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                             />
                         </div>
 
-                        <MultiSelect
-                            options={topics}
-                            selected={selectedTopics}
-                            onChange={setSelectedTopics}
-                            placeholder="All Topics"
-                        />
+                        <div className="md:col-span-1">
+                            <MultiSelect
+                                options={topics}
+                                selected={selectedTopics}
+                                onChange={setSelectedTopics}
+                                placeholder="All Topics"
+                            />
+                        </div>
 
-                        <MultiSelect
-                            options={subtopics}
-                            selected={selectedSubtopics}
-                            onChange={setSelectedSubtopics}
-                            placeholder="All Subtopics"
-                        />
+                        <div className="md:col-span-1">
+                            <MultiSelect
+                                options={subtopics}
+                                selected={selectedSubtopics}
+                                onChange={setSelectedSubtopics}
+                                placeholder="All Subtopics"
+                            />
+                        </div>
 
-                        <MultiSelect
-                            options={types}
-                            selected={selectedTypes}
-                            onChange={setSelectedTypes}
-                            placeholder="All Types"
-                        />
+                        <div className="md:col-span-1">
+                            <MultiSelect
+                                options={types}
+                                selected={selectedTypes}
+                                onChange={setSelectedTypes}
+                                placeholder="All Types"
+                            />
+                        </div>
 
-                        <MultiSelect
-                            options={availableBatchNames}
-                            selected={selectedBatches}
-                            onChange={setSelectedBatches}
-                            placeholder="All Batches"
-                        />
+                        <div className="md:col-span-1">
+                            <MultiSelect
+                                options={availableBatchNames}
+                                selected={selectedBatches}
+                                onChange={setSelectedBatches}
+                                placeholder="All Batches"
+                            />
+                        </div>
+
+                        <div className="md:col-span-1">
+                            <MultiSelect
+                                options={availableExamNames}
+                                selected={selectedExams}
+                                onChange={setSelectedExams}
+                                placeholder="All Exams"
+                            />
+                        </div>
                     </div>
                 </div>
 
