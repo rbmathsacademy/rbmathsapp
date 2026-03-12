@@ -208,7 +208,7 @@ export async function GET(req: Request) {
 
         const records = await FeeRecord.find(query)
             .populate('student', 'name phoneNumber')
-            .sort({ entryDate: -1 })
+            .sort({ createdAt: -1, entryDate: -1 })
             .lean();
 
         // Self-healing: backfill studentName/studentPhone for records that have

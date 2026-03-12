@@ -1342,8 +1342,20 @@ function FeesManagementContent() {
                                         <td className="px-6 py-4 text-white">
                                             {new Date(record.feesMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
                                         </td>
-                                        <td className="px-6 py-4 text-slate-400 text-xs">
-                                            {new Date(record.entryDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                        <td className="px-6 py-4">
+                                            <div className="text-white text-sm">
+                                                {new Date(record.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                            </div>
+                                            {record.createdAt && (
+                                                <div className="text-[10px] text-slate-500 mt-0.5">
+                                                    Entered: {new Date(record.createdAt).toLocaleString('en-IN', {
+                                                        timeZone: 'Asia/Kolkata',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        hour12: true
+                                                    })}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded text-xs ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-700 text-slate-300'}`}>
@@ -1377,7 +1389,17 @@ function FeesManagementContent() {
                                             {record.invoiceNo}
                                         </div>
                                         <div className="flex-1 text-right">
-                                            {new Date(record.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                            <div>{new Date(record.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
+                                            {record.createdAt && (
+                                                <div className="text-[9px] text-slate-500 mt-0.5">
+                                                    {new Date(record.createdAt).toLocaleString('en-IN', {
+                                                        timeZone: 'Asia/Kolkata',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        hour12: true
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

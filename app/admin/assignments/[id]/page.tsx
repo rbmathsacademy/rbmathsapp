@@ -52,7 +52,11 @@ export default function AssignmentDetailsPage() {
             const data = await res.json();
             if (data.assignment) {
                 setAssignment(data.assignment);
-                setStudents(data.studentList || []);
+                // Sort students alphabetically by name
+                const sortedStudents = (data.studentList || []).sort((a: any, b: any) =>
+                    (a.student.name || '').localeCompare(b.student.name || '')
+                );
+                setStudents(sortedStudents);
 
                 // Init edit state
                 setEditTitle(data.assignment.title);

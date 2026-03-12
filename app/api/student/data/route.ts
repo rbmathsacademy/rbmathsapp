@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         // Need to import Question model dynamically or at top if not already
         const Question = (await import('@/models/Question')).default;
         try {
-            const questions = await Question.find({ "deployments.folderId": folderId });
+            const questions = await Question.find({ "deployments.folderId": folderId }).sort({ order: 1, createdAt: 1 });
             return NextResponse.json({ questions });
         } catch (error) {
             return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });

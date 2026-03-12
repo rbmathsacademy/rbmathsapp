@@ -393,11 +393,10 @@ export default function QuestionBank() {
 
             if (questionsRes.ok) {
                 const data = await questionsRes.json();
-                // Sort: Topic -> Subtopic -> ID (Creation)
+                // Sort: Order -> CreatedAt (Sequential)
                 const sorted = data.sort((a: any, b: any) => {
-                    return a.topic.localeCompare(b.topic) ||
-                        a.subtopic.localeCompare(b.subtopic) ||
-                        (a.id || '').localeCompare(b.id || '');
+                    if (a.order !== b.order) return a.order - b.order;
+                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 });
                 setQuestions(sorted);
                 if (sorted.length > 0) setCurrentFacultyName(sorted[0].facultyName);

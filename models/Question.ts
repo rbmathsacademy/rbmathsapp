@@ -22,6 +22,7 @@ const QuestionSchema = new mongoose.Schema({
         courseId: { type: String, required: true }, // Batch Name
         folderId: { type: String, required: true }  // Folder ID
     }],
+    order: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
 

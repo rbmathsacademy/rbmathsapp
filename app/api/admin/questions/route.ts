@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
     if (adminKey === GLOBAL_ADMIN_KEY) {
         try {
-            const questions = await Question.find({}).sort({ createdAt: -1 });
+            const questions = await Question.find({}).sort({ order: 1, createdAt: 1 });
             return NextResponse.json(questions);
         } catch (error: any) {
             return NextResponse.json({ error: error.message }, { status: 500 });
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 
     try {
         // Filter by uploadedBy to only show questions owned by the faculty
-        const questions = await Question.find({ uploadedBy: email }).sort({ createdAt: -1 });
+        const questions = await Question.find({ uploadedBy: email }).sort({ order: 1, createdAt: 1 });
         return NextResponse.json(questions);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -110,7 +110,8 @@ export async function POST(req: Request) {
                         explanation: q.explanation,
                         uploadedBy: uploaderEmail,
                         facultyName: facultyName,
-                        deployments: q.deployments || []
+                        deployments: q.deployments || [],
+                        order: q.order ?? 0
                     }
                 },
                 upsert: true

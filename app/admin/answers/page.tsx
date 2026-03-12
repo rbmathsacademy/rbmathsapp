@@ -109,11 +109,10 @@ export default function AnswerBank() {
             });
             const data = await res.json();
             if (Array.isArray(data)) {
-                // Sort: Topic -> Subtopic -> ID (Creation)
+                // Sort: Order -> CreatedAt (Sequential)
                 const sorted = data.sort((a: Question, b: Question) => {
-                    return a.topic.localeCompare(b.topic) ||
-                        a.subtopic.localeCompare(b.subtopic) ||
-                        (a.id || '').localeCompare(b.id || '');
+                    if ((a as any).order !== (b as any).order) return ((a as any).order || 0) - ((b as any).order || 0);
+                    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
                 });
                 setQuestions(sorted);
             }

@@ -49,11 +49,10 @@ export default function PracticeQuestionsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setResource(data.resource);
-                // Sort: Topic -> Subtopic -> ID
+                // Sort by Order -> CreatedAt (Sequential)
                 const sorted = (data.questions || []).sort((a: any, b: any) => {
-                    return (a.topic || '').localeCompare(b.topic || '') ||
-                        (a.subtopic || '').localeCompare(b.subtopic || '') ||
-                        (a._id || '').localeCompare(b._id || '');
+                    if (a.order !== b.order) return (a.order || 0) - (b.order || 0);
+                    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
                 });
                 setQuestions(sorted);
             } else {

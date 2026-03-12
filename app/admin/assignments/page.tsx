@@ -199,12 +199,12 @@ export default function AdminAssignmentsPage() {
                 <div className="space-y-8">
                     {/* Folders List (Only at root) */}
                     {displayedFolders.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             {displayedFolders.map(folder => (
                                 <div
                                     key={folder._id}
                                     onClick={() => setCurrentFolder(folder)}
-                                    className="bg-[#1a1f2e] border border-white/5 p-4 rounded-xl cursor-pointer hover:border-blue-500/30 hover:bg-white/5 transition-all group flex items-center gap-3"
+                                    className="bg-[#1a1f2e] border border-white/5 p-3 sm:p-4 rounded-xl cursor-pointer hover:border-blue-500/30 hover:bg-white/5 transition-all group flex items-center gap-3"
                                 >
                                     <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 group-hover:scale-105 transition-all">
                                         <Folder className="w-6 h-6 fill-current" />
