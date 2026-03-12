@@ -109,9 +109,8 @@ export default function AnswerBank() {
             });
             const data = await res.json();
             if (Array.isArray(data)) {
-                // Sort: Order -> CreatedAt (Sequential)
+                // Sort: CreatedAt ascending (oldest first, newest at bottom)
                 const sorted = data.sort((a: Question, b: Question) => {
-                    if ((a as any).order !== (b as any).order) return ((a as any).order || 0) - ((b as any).order || 0);
                     return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
                 });
                 setQuestions(sorted);

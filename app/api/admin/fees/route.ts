@@ -74,8 +74,53 @@ export async function POST(req: Request) {
             studentPhone: isAdhoc ? null : studentPhone,
         };
 
-        // Check if multi-month or single
-        if (body.months && Array.isArray(body.months) && body.months.length > 0) {
+        // --- Duplicate Prevention ---
+        // For non-adhoc entries, check which months already have a record
+        const recordType = body.recordType || 'PAYMENT';
+        if (!isAdhoc && body.student && body.months && Array.isArray(body.months) && body.months.length > 0) {
+            const monthDates = body.months.map((m: string) => new Date(m));
+            const existing = await FeeRecord.find({
+                student: body.student,
+                batch: body.batch,
+                feesMonth: { $in: monthDates },
+                recordType: recordType
+            }).select('feesMonth').lean();
+
+            const existingMonthTimes = new Set(existing.map((r: any) => new Date(r.feesMonth).getTime()));
+            const filteredMonths = body.months.filter((m: string) => !existingMonthTimes.has(new Date(m).getTime()));
+
+            if (filteredMonths.length === 0) {
+                return NextResponse.json({
+                    error: 'Fee entries already exist for all selected months. No new records created.',
+                    duplicateCount: body.months.length
+                }, { status: 409 });
+            }
+
+            const skippedCount = body.months.length - filteredMonths.length;
+
+            const recordsToCreate = filteredMonths.map((monthStr: string, index: number) => {
+                const feesMonth = new Date(monthStr);
+                const isPay = !body.recordType || body.recordType === 'PAYMENT';
+
+                return {
+                    ...baseRecord,
+                    feesMonth: feesMonth,
+                    monthIndex: feesMonth.getMonth(),
+                    year: feesMonth.getFullYear(),
+                    invoiceNo: isPay ? invoiceBaseFn(lastInvoiceNum + index + 1) : undefined
+                };
+            });
+
+            const newRecords = await FeeRecord.insertMany(recordsToCreate);
+            return NextResponse.json({
+                success: true,
+                records: newRecords,
+                count: newRecords.length,
+                skippedCount
+            });
+
+        } else if (body.months && Array.isArray(body.months) && body.months.length > 0) {
+            // Adhoc multi-month (no duplicate check for adhoc)
             const recordsToCreate = body.months.map((monthStr: string, index: number) => {
                 const feesMonth = new Date(monthStr);
                 const isPay = !body.recordType || body.recordType === 'PAYMENT';
@@ -89,12 +134,26 @@ export async function POST(req: Request) {
                 };
             });
 
-            // Insert Many
             const newRecords = await FeeRecord.insertMany(recordsToCreate);
             return NextResponse.json({ success: true, records: newRecords, count: newRecords.length });
 
         } else {
             // Single Record Fallback (or if months not provided)
+            // Duplicate check for single non-adhoc entry
+            if (!isAdhoc && body.student && body.feesMonth) {
+                const existingSingle = await FeeRecord.findOne({
+                    student: body.student,
+                    batch: body.batch,
+                    feesMonth: new Date(body.feesMonth),
+                    recordType: recordType
+                });
+                if (existingSingle) {
+                    return NextResponse.json({
+                        error: 'A fee entry already exists for this student, batch, and month.',
+                    }, { status: 409 });
+                }
+            }
+
             const invoiceNo = isPayment ? invoiceBaseFn(lastInvoiceNum + 1) : undefined;
 
             const newRecord = await FeeRecord.create({

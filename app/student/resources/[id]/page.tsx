@@ -49,9 +49,8 @@ export default function PracticeQuestionsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setResource(data.resource);
-                // Sort by Order -> CreatedAt (Sequential)
+                // Sort by CreatedAt ascending (oldest first, newest at bottom)
                 const sorted = (data.questions || []).sort((a: any, b: any) => {
-                    if (a.order !== b.order) return (a.order || 0) - (b.order || 0);
                     return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
                 });
                 setQuestions(sorted);

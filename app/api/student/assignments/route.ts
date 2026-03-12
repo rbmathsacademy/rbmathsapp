@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
                 cooldownEndDate,
                 createdAt: a.createdAt,
                 status,
+                submissionId: submission?._id || null,
                 submissionLink: submission?.link,
                 correctionStatus: submission?.status || 'PENDING',
                 content: a.content // Sending content here so student can see it

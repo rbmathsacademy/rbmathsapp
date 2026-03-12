@@ -77,6 +77,15 @@ const FeeRecordSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+// Compound unique index: prevent duplicate fee entries for the same student+batch+month+recordType
+FeeRecordSchema.index(
+    { student: 1, batch: 1, feesMonth: 1, recordType: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { student: { $type: 'objectId' } } // Only enforce for non-adhoc entries (student is not null)
+    }
+);
+
 // Force recompilation of the model in dev mode if it exists, to ensure schema updates are applied
 if (mongoose.models.FeeRecord) {
     delete mongoose.models.FeeRecord;

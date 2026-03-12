@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle, AlertTriangle, Upload, FileText, ExternalLink, XCircle, ArrowLeft } from 'lucide-react';
+import { Clock, CheckCircle, AlertTriangle, Upload, FileText, ExternalLink, XCircle, ArrowLeft, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useStudentProfile } from '../StudentProfileContext';
@@ -16,6 +16,7 @@ interface Assignment {
     cooldownDuration: number;
     cooldownEndDate: string;
     status: 'PENDING' | 'LATE_ALLOWED' | 'SUBMITTED' | 'LATE_SUBMITTED' | 'CLOSED';
+    submissionId?: string;
     submissionLink?: string;
     correctionStatus: 'PENDING' | 'CORRECTED';
 }
@@ -125,6 +126,29 @@ export default function StudentAssignmentsPage() {
         } finally {
             setUploadingId(null);
             e.target.value = '';
+        }
+    };
+
+    const handleDeleteSubmission = async (assignment: Assignment) => {
+        if (!confirm('Are you sure you want to delete your submission? The assignment will move back to pending.')) return;
+
+        const toastId = toast.loading('Deleting submission...');
+        try {
+            const res = await fetch(`/api/student/assignments/${assignment._id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                toast.success('Submission deleted. You can now re-submit.', { id: toastId });
+                fetchAssignments();
+            } else if (res.status === 403) {
+                toast.error('Cannot delete — submission deadline has passed.', { id: toastId });
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete submission', { id: toastId });
+            }
+        } catch (error) {
+            toast.error('Error deleting submission', { id: toastId });
         }
     };
 
@@ -250,6 +274,7 @@ export default function StudentAssignmentsPage() {
                         uploadingId={uploadingId}
                         onUpload={handleFileUpload}
                         onOpen={() => openAssignment(assignment)}
+                        onDelete={() => handleDeleteSubmission(assignment)}
                     />
                 ))}
 
@@ -272,12 +297,14 @@ function AssignmentCard({
     assignment,
     uploadingId,
     onUpload,
-    onOpen
+    onOpen,
+    onDelete
 }: {
     assignment: Assignment;
     uploadingId: string | null;
     onUpload: (a: Assignment, e: React.ChangeEvent<HTMLInputElement>) => void;
     onOpen: () => void;
+    onDelete: () => void;
 }) {
     const isLateAllowed = assignment.status === 'LATE_ALLOWED';
     const isClosed = assignment.status === 'CLOSED';
@@ -401,6 +428,7 @@ function AssignmentCard({
 
                     {/* Upload / View Submission / Missed */}
                     {isSubmitted ? (
+                        <>
                         <a
                             href={assignment.submissionLink}
                             target="_blank"
@@ -409,6 +437,20 @@ function AssignmentCard({
                         >
                             View Submission <ExternalLink className="w-3.5 h-3.5" />
                         </a>
+                        <button
+                            onClick={onDelete}
+                            disabled={new Date() > new Date(assignment.cooldownEndDate)}
+                            className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-colors border flex items-center justify-center gap-1.5 ${
+                                new Date() > new Date(assignment.cooldownEndDate)
+                                    ? 'bg-gray-800/50 text-gray-600 border-gray-700 cursor-not-allowed'
+                                    : 'bg-red-600/20 text-red-400 hover:bg-red-600/30 border-red-500/30'
+                            }`}
+                            title={new Date() > new Date(assignment.cooldownEndDate) ? 'Deadline passed — cannot delete' : 'Delete your submission'}
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                        </button>
+                        </>
                     ) : isClosed ? (
                         <button disabled className="flex-1 py-2.5 bg-red-900/20 text-red-400/60 rounded-lg text-sm font-medium cursor-not-allowed border border-red-500/10">
                             Missed

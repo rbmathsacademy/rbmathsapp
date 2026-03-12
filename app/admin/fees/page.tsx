@@ -419,12 +419,16 @@ function FeesManagementContent() {
         }
     };
 
+    const [submitting, setSubmitting] = useState(false);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedStudent || !entryForm.amount || selectedMonths.length === 0) {
             toast.error('Please select student, amount and at least one month');
             return;
         }
+        if (submitting) return; // Prevent double-click
+        setSubmitting(true);
 
         const toastId = toast.loading('Recording payment...');
         try {
@@ -450,7 +454,10 @@ function FeesManagementContent() {
 
             if (res.ok) {
                 const data = await res.json();
-                toast.success(`Recorded ${data.count} payments!`, { id: toastId });
+                const msg = data.skippedCount > 0
+                    ? `Recorded ${data.count} payments! (${data.skippedCount} duplicate months skipped)`
+                    : `Recorded ${data.count} payments!`;
+                toast.success(msg, { id: toastId });
                 fetchStudentHistory(selectedStudent._id, selectedStudent.name);
                 setEntryForm(prev => ({
                     ...prev,
@@ -458,11 +465,16 @@ function FeesManagementContent() {
                     remarks: ''
                 }));
                 setSelectedMonths([]);
+            } else if (res.status === 409) {
+                const data = await res.json();
+                toast.error(data.error || 'Duplicate entry — fees already recorded for this month', { id: toastId });
             } else {
                 throw new Error('Failed to save');
             }
         } catch (e) {
             toast.error('Error recording fee', { id: toastId });
+        } finally {
+            setSubmitting(false);
         }
     };
 

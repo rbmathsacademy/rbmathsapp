@@ -26,6 +26,7 @@ interface Assignment {
     type: 'PDF' | 'QUESTIONS';
     batch: string;
     deadline: string;
+    cooldownDuration?: number;
     content: any;
     folderId?: string;
 }
@@ -41,6 +42,7 @@ export default function AssignmentDetailsPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editTitle, setEditTitle] = useState('');
     const [editDeadline, setEditDeadline] = useState('');
+    const [editCooldown, setEditCooldown] = useState(0);
 
     useEffect(() => {
         if (params.id) fetchDetails();
@@ -60,6 +62,7 @@ export default function AssignmentDetailsPage() {
 
                 // Init edit state
                 setEditTitle(data.assignment.title);
+                setEditCooldown(data.assignment.cooldownDuration || 0);
                 // Convert UTC date to local datetime-local string format
                 const d = new Date(data.assignment.deadline);
                 d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -110,7 +113,8 @@ export default function AssignmentDetailsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: editTitle,
-                    deadline: new Date(editDeadline).toISOString()
+                    deadline: new Date(editDeadline).toISOString(),
+                    cooldownDuration: editCooldown
                 })
             });
             const data = await res.json();
@@ -467,6 +471,18 @@ export default function AssignmentDetailsPage() {
                                     onChange={(e) => setEditDeadline(e.target.value)}
                                     className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Cooldown Duration (minutes)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editCooldown}
+                                    onChange={(e) => setEditCooldown(Number(e.target.value))}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
+                                    placeholder="e.g. 30"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Extra time after deadline for late submissions</p>
                             </div>
                         </div>
 

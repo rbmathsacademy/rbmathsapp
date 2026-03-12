@@ -108,6 +108,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (body.title) updateData.title = body.title;
         if (body.deadline) updateData.deadline = body.deadline;
         if (body.folderId !== undefined) updateData.folderId = body.folderId; // Allow null to remove from folder
+        if (body.cooldownDuration !== undefined) updateData.cooldownDuration = Number(body.cooldownDuration);
 
         const assignment = await Assignment.findByIdAndUpdate(
             id,
