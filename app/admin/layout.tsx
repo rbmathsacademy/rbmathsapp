@@ -89,8 +89,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             try {
                 const user = JSON.parse(storedUser);
                 const allowedRoutes: Record<string, string[]> = {
-                    'manager': ['/admin/fees', '/admin/chat'],
-                    'copy_checker': ['/admin/assignments', '/admin/chat'],
+                    'manager': ['/admin/fees'],
+                    'copy_checker': ['/admin/assignments'],
                     'admin': [], // Admin allows all
                     'superadmin': []
                 };
@@ -205,13 +205,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (user.role === 'admin' || user.role === 'superadmin') return true;
 
         if (user.role === 'manager') {
-            // Manager: Fees + Chat
-            return ['Fees Management', 'Student Chat'].includes(item.name);
+            // Manager: Fees Only
+            return ['Fees Management'].includes(item.name);
         }
 
         if (user.role === 'copy_checker') {
-            // Copy Checker: Assignments + Chat
-            return ['Assignments', 'Student Chat'].includes(item.name);
+            // Copy Checker: Assignments Only
+            return ['Assignments'].includes(item.name);
         }
 
         return false;

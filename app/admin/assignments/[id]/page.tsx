@@ -248,7 +248,7 @@ export default function AssignmentDetailsPage() {
                     <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
                         <div className="flex items-center gap-1.5 text-green-400">
                             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500" />
-                            Submitted: {submittedCount - lateCount}
+                            Submitted on time: {submittedCount - lateCount}
                         </div>
                         <div className="flex items-center gap-1.5 text-orange-400">
                             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500" />
@@ -261,6 +261,12 @@ export default function AssignmentDetailsPage() {
                         <div className="flex items-center gap-1.5 text-gray-400">
                             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gray-500" />
                             Pending: {pendingCount}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-blue-400 ml-auto sm:ml-4 border-l border-white/10 pl-4">
+                            Total Submissions: {submittedCount}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-purple-400 border-l border-white/10 pl-4">
+                            No. of Corrected: {students.filter(s => s.status === 'CORRECTED').length}
                         </div>
                     </div>
                 </div>
