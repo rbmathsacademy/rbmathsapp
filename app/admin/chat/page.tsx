@@ -6,6 +6,17 @@ import toast, { Toaster } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
+declare global {
+    namespace JSX {
+        interface IntrinsicElements {
+            'math-field': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+                onInput?: (e: any) => void;
+                value?: string;
+            };
+        }
+    }
+}
+
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
     if (url.includes('drive.google.com/file/d/')) {
@@ -46,9 +57,11 @@ export default function AdminChat() {
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+    const [editingMessage, setEditingMessage] = useState<Message|null>(null);
     const [editContent, setEditContent] = useState('');
     const [showMathTools, setShowMathTools] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+    const mfRef = useRef<any>(null);
     
     const mathSymbols = [
         { label: 'xⁿ', insert: '$x^{n}$' },
@@ -91,10 +104,29 @@ export default function AdminChat() {
     };
 
     useEffect(() => {
+        setIsMounted(true);
+        import('mathlive');
         fetchBatches();
         const interval = setInterval(fetchBatches, 30000); 
-        return () => clearInterval(interval);
+        
+        // Push a state so back button has something to go back to within the app
+        window.history.pushState(null, '', window.location.href);
+        const handlePopState = () => {
+             window.location.href = '/admin';
+        };
+        window.addEventListener('popstate', handlePopState);
+        
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('popstate', handlePopState);
+        };
     }, []);
+
+    useEffect(() => {
+        if (mfRef.current && mfRef.current.value !== newMessage) {
+            mfRef.current.value = newMessage;
+        }
+    }, [newMessage]);
 
     useEffect(() => {
         if (selectedBatch) {
@@ -251,7 +283,7 @@ export default function AdminChat() {
     const filteredBatches = batches.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100dvh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#0f172a] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
+        <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100svh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#0f172a] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
             <Toaster position="top-right" />
             
             {/* Sidebar: Batch List */}
@@ -330,8 +362,8 @@ export default function AdminChat() {
                                 <ChevronLeft className="h-6 w-6 text-slate-400" />
                             </button>
                             <div className="min-w-0">
-                                <h3 className="text-lg font-bold text-white truncate">{selectedBatch.name}</h3>
-                                <p className="text-xs text-slate-500 truncate">Real-name Chat (Admin View)</p>
+                                <h3 className="text-lg font-bold text-white truncate">Student Batch Chat</h3>
+                                <p className="text-xs text-slate-500 truncate">Support View (Admin)</p>
                             </div>
                         </div>
                         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2.5 mx-2 md:mx-0 flex flex-col gap-1 shadow-sm mt-1 sm:mt-0 max-w-lg">
@@ -350,7 +382,7 @@ export default function AdminChat() {
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 no-scrollbar relative min-h-0">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 relative min-h-0 custom-scrollbar">
                         {loadingMessages ? (
                             <div className="flex items-center justify-center h-full">
                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
@@ -469,7 +501,26 @@ export default function AdminChat() {
                             </button>
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"><ImageIcon className="h-5 w-5" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type message..." className="flex-1 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all font-sans min-w-0" />
+                            
+                            <div className="flex-1 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus-within:border-blue-500 transition-all font-sans relative flex items-center overflow-hidden">
+                                {isMounted ? (
+                                    /* @ts-ignore */
+                                    <math-field
+                                        ref={mfRef}
+                                        onInput={(e: any) => setNewMessage(e.target.value)}
+                                        style={{ width: '100%', background: 'transparent', color: 'white', border: 'none', outline: 'none', fontSize: '1rem' }}
+                                    ></math-field>
+                                ) : (
+                                    <input 
+                                        type="text" 
+                                        value={newMessage} 
+                                        onChange={(e) => setNewMessage(e.target.value)} 
+                                        placeholder="Type message with symbols..." 
+                                        className="w-full bg-transparent border-none outline-none focus:ring-0 p-0"
+                                    />
+                                )}
+                            </div>
+                            
                             <button type="submit" disabled={!newMessage.trim()} className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-5 w-5" /></button>
                         </form>
                     </div>

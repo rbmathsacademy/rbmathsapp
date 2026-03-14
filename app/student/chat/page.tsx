@@ -7,6 +7,17 @@ import { useRouter } from 'next/navigation';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
+declare global {
+    namespace JSX {
+        interface IntrinsicElements {
+            'math-field': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+                onInput?: (e: any) => void;
+                value?: string;
+            };
+        }
+    }
+}
+
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
     if (url.includes('drive.google.com/file/d/')) {
@@ -43,6 +54,8 @@ export default function StudentChat() {
     const [editContent, setEditContent] = useState('');
     const [myRoll, setMyRoll] = useState<string | null>(null);
     const [showMathTools, setShowMathTools] = useState(false);
+    const mathFieldRef = useRef<any>(null);
+    const [isClient, setIsClient] = useState(false);
     
     const mathSymbols = [
         { label: 'xⁿ', insert: '$x^{n}$' },
@@ -89,8 +102,23 @@ export default function StudentChat() {
     }, [selectedBatch]);
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        setIsClient(true);
+        import('mathlive');
+        
+        // Push a state so back button has something to go back to within the app
+        window.history.pushState(null, '', window.location.href);
+        const handlePopState = () => {
+            router.push('/student');
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
+
+    useEffect(() => {
+        if (mathFieldRef.current && mathFieldRef.current.value !== newMessage) {
+            mathFieldRef.current.value = newMessage;
+        }
+    }, [newMessage]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -247,18 +275,8 @@ export default function StudentChat() {
                         <ChevronLeft className="h-6 w-6 text-slate-400" />
                     </button>
                     <div className="min-w-0">
-                        {batches.length > 1 ? (
-                            <select 
-                                value={selectedBatch || ''} 
-                                onChange={(e) => setSelectedBatch(e.target.value)}
-                                className="bg-transparent text-lg font-bold text-white border-none focus:ring-0 p-0 cursor-pointer max-w-full truncate"
-                            >
-                                {batches.map(b => <option key={b} value={b} className="bg-[#0a0f1a]">{b}</option>)}
-                            </select>
-                        ) : (
-                            <h2 className="text-lg font-bold text-white truncate">{selectedBatch || 'Student Chat'}</h2>
-                        )}
-                        <p className="text-xs text-slate-500 truncate">Course Chat Group</p>
+                        <h2 className="text-lg font-bold text-white truncate">Student Chat</h2>
+                        <p className="text-xs text-slate-500 truncate">Support Group</p>
                     </div>
                 </div>
                 
@@ -366,7 +384,10 @@ export default function StudentChat() {
                                         <button
                                             key={idx}
                                             type="button"
-                                            onClick={() => setNewMessage(prev => prev + ' ' + item.insert + ' ')}
+                                            onClick={() => {
+                                                setNewMessage(prev => prev + ' ' + item.insert + ' ');
+                                                toast.success('Symbol added. Use the input below to edit.', { duration: 1000 });
+                                            }}
                                             className="px-2.5 py-1.5 bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-lg text-white font-mono text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center min-w-[36px]"
                                             title={item.insert}
                                         >
@@ -383,7 +404,26 @@ export default function StudentChat() {
                             </button>
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all"><ImageIcon className="h-[1.2rem] w-[1.2rem]" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Ask a doubt..." className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all shadow-inner" />
+                            
+                            <div className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus-within:border-blue-500 transition-all shadow-inner relative overflow-hidden flex items-center">
+                                {isClient ? (
+                                    /* @ts-ignore */
+                                    <math-field
+                                        ref={mathFieldRef}
+                                        onInput={(e: any) => setNewMessage(e.target.value)}
+                                        style={{ width: '100%', background: 'transparent', color: 'white', border: 'none', outline: 'none', fontSize: '1rem' }}
+                                    ></math-field>
+                                ) : (
+                                    <input 
+                                        type="text" 
+                                        value={newMessage} 
+                                        onChange={(e) => setNewMessage(e.target.value)} 
+                                        placeholder="Ask a doubt..." 
+                                        className="w-full bg-transparent border-none outline-none focus:ring-0 p-0"
+                                    />
+                                )}
+                            </div>
+                            
                             <button type="submit" disabled={!newMessage.trim()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-[1.2rem] w-[1.2rem]" /></button>
                         </form>
                         <p className="text-[9px] text-slate-700 mt-3 text-center uppercase tracking-[0.2em] font-black italic">Encrypted & Anonymous Community</p>
