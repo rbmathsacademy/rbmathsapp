@@ -153,6 +153,8 @@ export default function AssignmentDetailsPage() {
 
     const deadline = new Date(assignment.deadline);
     const isExpired = new Date() > deadline;
+    const cooldownEnd = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
+    const isCooldownExpired = new Date() > cooldownEnd;
 
     // Counts
     const submittedCount = students.filter(s => s.submissionStatus === 'SUBMITTED' || s.submissionStatus === 'LATE_SUBMITTED').length;
@@ -194,11 +196,19 @@ export default function AssignmentDetailsPage() {
                     <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-2 pr-10">
                         {assignment.title}
                     </h1>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-gray-400 mt-3 sm:mt-4 text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-gray-400 mt-3 sm:mt-4 text-sm flex-wrap">
                         <div className="flex items-center gap-2">
                             <Clock className={`w-4 h-4 sm:w-5 sm:h-5 ${isExpired ? 'text-red-400' : 'text-green-400'}`} />
                             <span>Due: {deadline.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' })} {deadline.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                         </div>
+                        {(assignment.cooldownDuration || 0) > 0 && (
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className={`w-4 h-4 sm:w-5 sm:h-5 ${isCooldownExpired ? 'text-red-400' : 'text-orange-400'}`} />
+                                <span className={isCooldownExpired ? 'text-red-400' : 'text-orange-400'}>
+                                    Cooldown ends: {cooldownEnd.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' })} {cooldownEnd.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
+                                </span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2">
                             <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                             <span>{submittedCount} / {students.length} Submissions</span>
