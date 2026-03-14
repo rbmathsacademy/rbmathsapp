@@ -54,6 +54,7 @@ interface DashboardData {
         deadline: string;
         status: string;
         submittedAt: string | null;
+        quality: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
     }>;
 }
 
@@ -381,11 +382,22 @@ export default function StudentDashboard() {
                                         </div>
                                         <div className="shrink-0">
                                             {['SUBMITTED', 'LATE_SUBMITTED', 'CORRECTED'].includes(assign.status) ? (
-                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">
-                                                        {assign.status === 'LATE_SUBMITTED' ? 'Late' : 'Done'}
-                                                    </span>
+                                                <div className="flex flex-col items-end gap-1.5">
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                                            {assign.status === 'LATE_SUBMITTED' ? 'Late' : 'Done'}
+                                                        </span>
+                                                    </div>
+                                                    {assign.status === 'CORRECTED' && assign.quality && (
+                                                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${
+                                                            assign.quality === 'GOOD' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                                            assign.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
+                                                            'bg-red-500/10 text-red-500 border-red-500/30'
+                                                        }`}>
+                                                            {assign.quality}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ) : assign.status === 'MISSED' ? (
                                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 font-black uppercase tracking-widest text-[10px]">

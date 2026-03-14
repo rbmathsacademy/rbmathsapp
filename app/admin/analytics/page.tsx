@@ -31,6 +31,9 @@ interface StudentAnalytics {
         assignmentsSubmitted: number;
         assignmentsLate: number;
         assignmentsMissed: number;
+        goodQuality: number;
+        satisfactoryQuality: number;
+        poorQuality: number;
     };
     tests: Array<{
         testId: string;
@@ -220,9 +223,9 @@ export default function AnalyticsPage() {
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="grid grid-cols-3 gap-2 text-center">
+                                                <div className="grid grid-cols-3 gap-2 text-center mb-2">
                                                     <div className="bg-green-500/10 rounded p-1 border border-green-500/20">
-                                                        <div className="text-xs text-gray-400">Submitted</div>
+                                                        <div className="text-xs text-gray-400">Sub</div>
                                                         <div className="font-bold text-green-400">{student.stats.assignmentsSubmitted}</div>
                                                     </div>
                                                     <div className="bg-orange-500/10 rounded p-1 border border-orange-500/20">
@@ -232,6 +235,20 @@ export default function AnalyticsPage() {
                                                     <div className="bg-red-500/10 rounded p-1 border border-red-500/20">
                                                         <div className="text-xs text-gray-400">Missed</div>
                                                         <div className="font-bold text-red-400">{student.stats.assignmentsMissed}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-2 text-center">
+                                                    <div className="flex flex-col items-center justify-center bg-[#1a1f2e] rounded border border-white/5 py-1">
+                                                        <div className="text-[10px] text-gray-500 w-full text-center tracking-tighter">GOOD</div>
+                                                        <div className="font-bold text-green-400 text-sm mt-0.5">{student.stats.goodQuality}</div>
+                                                    </div>
+                                                    <div className="flex flex-col items-center justify-center bg-[#1a1f2e] rounded border border-white/5 py-1">
+                                                        <div className="text-[10px] text-gray-500 w-full text-center tracking-tighter">SATISFACTORY</div>
+                                                        <div className="font-bold text-yellow-400 text-sm mt-0.5">{student.stats.satisfactoryQuality}</div>
+                                                    </div>
+                                                    <div className="flex flex-col items-center justify-center bg-[#1a1f2e] rounded border border-white/5 py-1">
+                                                        <div className="text-[10px] text-gray-500 w-full text-center tracking-tighter">POOR</div>
+                                                        <div className="font-bold text-red-400 text-sm mt-0.5">{student.stats.poorQuality}</div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -294,6 +311,20 @@ export default function AnalyticsPage() {
                                             <div className="bg-red-500/10 rounded p-2 text-center border border-red-500/20 mt-2">
                                                 <div className="text-[10px] text-gray-400">Missed</div>
                                                 <div className="font-bold text-red-300">{student.stats.assignmentsMissed}</div>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-1 mt-2">
+                                                <div className="bg-[#1a1f2e] border border-white/5 rounded py-1 flex flex-col items-center">
+                                                    <span className="text-[8px] text-gray-500">GOOD</span>
+                                                    <span className="text-xs font-bold text-green-400">{student.stats.goodQuality}</span>
+                                                </div>
+                                                <div className="bg-[#1a1f2e] border border-white/5 rounded py-1 flex flex-col items-center">
+                                                    <span className="text-[8px] text-gray-500">SAT</span>
+                                                    <span className="text-xs font-bold text-yellow-400">{student.stats.satisfactoryQuality}</span>
+                                                </div>
+                                                <div className="bg-[#1a1f2e] border border-white/5 rounded py-1 flex flex-col items-center">
+                                                    <span className="text-[8px] text-gray-500">POOR</span>
+                                                    <span className="text-xs font-bold text-red-400">{student.stats.poorQuality}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

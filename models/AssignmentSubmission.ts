@@ -7,7 +7,8 @@ const AssignmentSubmissionSchema = new mongoose.Schema({
     link: { type: String, required: true }, // Drive File URL
     submittedAt: { type: Date, default: Date.now },
     isLate: { type: Boolean, default: false },
-    status: { type: String, enum: ['PENDING', 'CORRECTED'], default: 'PENDING' }
+    status: { type: String, enum: ['PENDING', 'CORRECTED'], default: 'PENDING' },
+    quality: { type: String, enum: ['GOOD', 'SATISFACTORY', 'POOR', null], default: null }
 }, { timestamps: true });
 
 // Force recompilation

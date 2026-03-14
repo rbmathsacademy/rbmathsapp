@@ -18,6 +18,7 @@ interface StudentSubmission {
     submittedAt: string | null;
     link: string | null;
     isLate: boolean;
+    quality?: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
 }
 
 interface Assignment {
@@ -77,33 +78,37 @@ export default function AssignmentDetailsPage() {
         }
     };
 
-    const toggleStatus = async (submissionId: string | null, currentStatus: string) => {
+    const toggleStatus = async (submissionId: string | null, currentStatus: string, quality: string | null = null) => {
         if (!submissionId) return; // Cannot toggle status if not submitted
 
-        const newStatus = currentStatus === 'CORRECTED' ? 'PENDING' : 'CORRECTED';
+        const newStatus = currentStatus === 'CORRECTED' && !quality ? 'PENDING' : 'CORRECTED';
 
         // Optimistic update
         setStudents(prev => prev.map(s =>
-            s._id === submissionId ? { ...s, status: newStatus as any } : s
+            s._id === submissionId ? { ...s, status: newStatus as any, quality: quality as any } : s
         ));
 
         try {
             const res = await fetch('/api/admin/assignments/submission/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ submissionId, status: newStatus })
+                body: JSON.stringify({ submissionId, status: newStatus, quality })
             });
 
             if (!res.ok) throw new Error('Failed to update');
-            toast.success(`Marked as ${newStatus}`);
+            toast.success(newStatus === 'CORRECTED' ? (quality ? `Marked as Corrected (${quality})` : 'Marked as Corrected') : 'Marked as Pending');
         } catch (error) {
             toast.error('Failed to update status');
-            // Revert
-            setStudents(prev => prev.map(s =>
-                s._id === submissionId ? { ...s, status: currentStatus as any } : s
-            ));
+            // Revert optimistic update on failure
+            fetchDetails();
         }
     };
+
+    const handleQualityChange = (submissionId: string | null, quality: string) => {
+        if (!submissionId) return;
+        toggleStatus(submissionId, 'CORRECTED', quality);
+    };
+
 
     const handleUpdateAssignment = async () => {
         if (!assignment) return;
@@ -324,15 +329,35 @@ export default function AssignmentDetailsPage() {
                                         </td>
                                         <td className="p-4 text-center">
                                             {student._id ? (
-                                                <button
-                                                    onClick={() => toggleStatus(student._id, student.status)}
-                                                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${student.status === 'CORRECTED'
-                                                        ? 'bg-green-500/20 text-green-400 border-green-500/50 shadow-[0_0_10px_rgba(74,222,128,0.2)]'
-                                                        : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:bg-gray-700'
-                                                        }`}
-                                                >
-                                                    {student.status === 'CORRECTED' ? 'CORRECTED' : 'PENDING'}
-                                                </button>
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <button
+                                                        onClick={() => toggleStatus(student._id, student.status)}
+                                                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border w-24 ${student.status === 'CORRECTED'
+                                                            ? 'bg-green-500/20 text-green-400 border-green-500/50 shadow-[0_0_10px_rgba(74,222,128,0.2)]'
+                                                            : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:bg-gray-700'
+                                                            }`}
+                                                    >
+                                                        {student.status === 'CORRECTED' ? 'CORRECTED' : 'PENDING'}
+                                                    </button>
+                                                    
+                                                    {student.status === 'CORRECTED' && (
+                                                        <select
+                                                            value={student.quality || ''}
+                                                            onChange={(e) => handleQualityChange(student._id!, e.target.value)}
+                                                            className={`text-[10px] font-bold px-2 py-1 rounded border outline-none cursor-pointer w-24 ${
+                                                                !student.quality ? 'bg-gray-800 text-gray-400 border-gray-600' :
+                                                                student.quality === 'GOOD' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                                                student.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
+                                                                'bg-red-500/10 text-red-400 border-red-500/30'
+                                                            }`}
+                                                        >
+                                                            <option value="" disabled>Select Quality</option>
+                                                            <option value="GOOD">Good</option>
+                                                            <option value="SATISFACTORY">Satisfactory</option>
+                                                            <option value="POOR">Poor</option>
+                                                        </select>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <span className="text-gray-600 text-xs">-</span>
                                             )}
@@ -417,15 +442,35 @@ export default function AssignmentDetailsPage() {
                                             </span>
                                         )}
                                         {student._id && (
-                                            <button
-                                                onClick={() => toggleStatus(student._id, student.status)}
-                                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all border ${student.status === 'CORRECTED'
-                                                    ? 'bg-green-500/20 text-green-400 border-green-500/50'
-                                                    : 'bg-gray-700/50 text-gray-400 border-gray-600'
-                                                    }`}
-                                            >
-                                                {student.status === 'CORRECTED' ? 'CORRECTED' : 'PENDING'}
-                                            </button>
+                                            <div className="flex flex-col gap-1.5 items-end">
+                                                <button
+                                                    onClick={() => toggleStatus(student._id, student.status)}
+                                                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all border ${student.status === 'CORRECTED'
+                                                        ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                                                        : 'bg-gray-700/50 text-gray-400 border-gray-600'
+                                                        }`}
+                                                >
+                                                    {student.status === 'CORRECTED' ? 'CORRECTED' : 'PENDING'}
+                                                </button>
+                                                
+                                                {student.status === 'CORRECTED' && (
+                                                    <select
+                                                        value={student.quality || ''}
+                                                        onChange={(e) => handleQualityChange(student._id!, e.target.value)}
+                                                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded border outline-none cursor-pointer ${
+                                                            !student.quality ? 'bg-gray-800 text-gray-400 border-gray-600' :
+                                                            student.quality === 'GOOD' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                                            student.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
+                                                            'bg-red-500/10 text-red-400 border-red-500/30'
+                                                        }`}
+                                                    >
+                                                        <option value="" disabled>Select Quality</option>
+                                                        <option value="GOOD">Good</option>
+                                                        <option value="SATISFACTORY">Satisfactory</option>
+                                                        <option value="POOR">Poor</option>
+                                                    </select>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                     {student._id ? (

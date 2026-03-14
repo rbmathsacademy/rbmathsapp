@@ -19,6 +19,7 @@ interface Assignment {
     submissionId?: string;
     submissionLink?: string;
     correctionStatus: 'PENDING' | 'CORRECTED';
+    quality?: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
 }
 
 type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
@@ -361,7 +362,6 @@ function AssignmentCard({
                     </div>
 
 
-                    {/* Status Badge */}
                     {isSubmitted && (
                         <div className="flex flex-col items-end gap-1">
                             <span className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 ${isLateSubmitted
@@ -371,12 +371,23 @@ function AssignmentCard({
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 {isLateSubmitted ? 'Late Submitted' : 'Completed'}
                             </span>
-                            <span className={`text-[10px] font-bold px-1 ${assignment.correctionStatus === 'CORRECTED'
-                                ? 'text-green-400 animate-pulse'
-                                : 'text-gray-500'
-                                }`}>
-                                Status: {assignment.correctionStatus === 'CORRECTED' ? 'Corrected' : 'Not Corrected'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-bold px-1 ${assignment.correctionStatus === 'CORRECTED'
+                                    ? 'text-green-400 animate-pulse'
+                                    : 'text-gray-500'
+                                    }`}>
+                                    Status: {assignment.correctionStatus === 'CORRECTED' ? 'Corrected' : 'Not Corrected'}
+                                </span>
+                                {assignment.correctionStatus === 'CORRECTED' && assignment.quality && (
+                                    <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${
+                                        assignment.quality === 'GOOD' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                        assignment.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
+                                        'bg-red-500/10 text-red-500 border-red-500/30'
+                                    }`}>
+                                        {assignment.quality}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     )}
                     {isClosed && (

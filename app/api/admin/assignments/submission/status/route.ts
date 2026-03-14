@@ -5,15 +5,25 @@ import AssignmentSubmission from '@/models/AssignmentSubmission';
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        const { submissionId, status } = await req.json();
+        const { submissionId, status, quality } = await req.json();
 
         if (!submissionId || !status) {
             return NextResponse.json({ error: 'Missing submission ID or status' }, { status: 400 });
         }
 
+        // Prepare the update object
+        const updateData: any = { status };
+        
+        // If status is CORRECTED, we can set quality. If it's PENDING, reset quality to null.
+        if (status === 'CORRECTED') {
+            if (quality) updateData.quality = quality;
+        } else {
+            updateData.quality = null;
+        }
+
         const submission = await AssignmentSubmission.findByIdAndUpdate(
             submissionId,
-            { status },
+            updateData,
             { new: true }
         );
 

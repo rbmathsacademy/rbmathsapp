@@ -97,6 +97,7 @@ export async function GET(req: NextRequest) {
                 submissionId: submission?._id || null,
                 submissionLink: submission?.link,
                 correctionStatus: submission?.status || 'PENDING',
+                quality: submission?.quality || null,
                 content: a.content // Sending content here so student can see it
             };
         });

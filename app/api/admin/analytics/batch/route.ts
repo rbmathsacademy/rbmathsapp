@@ -181,13 +181,18 @@ export async function GET(request: NextRequest) {
                 return {
                     assignmentId: assignment._id,
                     status,
-                    submittedAt: submission ? submission.submittedAt : null
+                    submittedAt: submission ? submission.submittedAt : null,
+                    quality: submission ? (submission as any).quality : null
                 };
             });
 
             const submittedCount = assignmentStatuses.filter(a => ['SUBMITTED', 'LATE_SUBMITTED', 'CORRECTED'].includes(a.status)).length;
             const lateCount = assignmentStatuses.filter(a => a.status === 'LATE_SUBMITTED').length;
             const missedAssignmentCount = assignmentStatuses.filter(a => a.status === 'MISSED').length;
+
+            const goodQuality = assignmentStatuses.filter(a => a.quality === 'GOOD').length;
+            const satisfactoryQuality = assignmentStatuses.filter(a => a.quality === 'SATISFACTORY').length;
+            const poorQuality = assignmentStatuses.filter(a => a.quality === 'POOR').length;
 
             // Completion rate: (Submitted / (Total - Not Enrolled)) * 100
             const validAssignments = assignmentStatuses.filter(a => a.status !== 'NOT_ENROLLED').length;
@@ -207,7 +212,10 @@ export async function GET(request: NextRequest) {
                     testsMissed: missedTestCount,
                     assignmentsSubmitted: submittedCount,
                     assignmentsLate: lateCount,
-                    assignmentsMissed: missedAssignmentCount
+                    assignmentsMissed: missedAssignmentCount,
+                    goodQuality,
+                    satisfactoryQuality,
+                    poorQuality
                 },
                 tests: testScores,
                 assignments: assignmentStatuses

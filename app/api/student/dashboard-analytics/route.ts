@@ -114,7 +114,8 @@ export async function GET(req: NextRequest) {
                 title: assign.title,
                 deadline: assign.deadline,
                 status: status,
-                submittedAt: submission ? (submission as any).submittedAt : null
+                submittedAt: submission ? (submission as any).submittedAt : null,
+                quality: submission ? (submission as any).quality : null
             };
         });
 

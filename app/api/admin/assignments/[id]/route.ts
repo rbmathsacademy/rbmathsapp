@@ -60,7 +60,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 submittedAt: submission ? submission.submittedAt : null,
                 link: submission ? submission.link : null,
                 isLate: dynamicIsLate,
-                correctionStatus
+                correctionStatus,
+                quality: submission ? submission.quality : null
             };
         });
 
@@ -78,7 +79,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     submittedAt: sub.submittedAt,
                     link: sub.link,
                     isLate: isLateDynamically,
-                    correctionStatus: sub.status || 'PENDING'
+                    correctionStatus: sub.status || 'PENDING',
+                    quality: sub.quality || null
                 });
             }
         });
