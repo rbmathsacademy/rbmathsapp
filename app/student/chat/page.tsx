@@ -45,8 +45,7 @@ export default function StudentChat() {
     const [editContent, setEditContent] = useState('');
     const [myRoll, setMyRoll] = useState<string | null>(null);
     const [showMathTools, setShowMathTools] = useState(false);
-    const mathFieldRef = useRef<any>(null);
-    const [isClient, setIsClient] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
     
     const mathSymbols = [
         { label: 'xⁿ', insert: '$x^{n}$' },
@@ -93,23 +92,15 @@ export default function StudentChat() {
     }, [selectedBatch]);
 
     useEffect(() => {
-        setIsClient(true);
-        import('mathlive');
-        
-        // Push a state so back button has something to go back to within the app
-        window.history.pushState(null, '', window.location.href);
-        const handlePopState = () => {
-            router.push('/student');
+        // Push a state so back button navigates within the app
+        window.history.pushState({ chatPage: true }, '', window.location.href);
+        const handlePopState = (e: PopStateEvent) => {
+            e.preventDefault();
+            window.location.href = '/student';
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [router]);
-
-    useEffect(() => {
-        if (mathFieldRef.current && mathFieldRef.current.value !== newMessage) {
-            mathFieldRef.current.value = newMessage;
-        }
-    }, [newMessage]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -272,18 +263,10 @@ export default function StudentChat() {
                 </div>
                 
                 {selectedBatch && (
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2.5 mx-2 sm:mx-0 flex flex-col gap-1 shadow-sm">
-                        <div className="flex items-start gap-2">
-                            <User className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-                            <p className="text-[11px] sm:text-xs text-blue-300 font-medium leading-tight">
-                                Your name will remain <span className="text-white font-bold">anonymous</span> in the chatbox to your friends, but admin can see your name.
-                            </p>
-                        </div>
-                        <div className="flex items-start gap-2 border-t border-blue-500/20 pt-1 mt-1">
-                            <p className="text-[10px] sm:text-[11px] text-blue-200/80 font-medium leading-tight pl-6">
-                                <b>Note:</b> All messages are permanently and securely deleted from the database exactly 7 days after sending.
-                            </p>
-                        </div>
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-1.5 sm:p-2.5 mx-2 sm:mx-0 shadow-sm">
+                        <p className="text-[10px] sm:text-xs text-blue-300 leading-tight">
+                            🔒 <span className="text-white font-semibold">Anonymous</span> to peers · Admin sees your name · Messages auto-delete after 7 days
+                        </p>
                     </div>
                 )}
             </div>
@@ -365,7 +348,7 @@ export default function StudentChat() {
                         
                         {/* Math Tools Palette */}
                         {showMathTools && (
-                            <div className="absolute bottom-full left-0 right-0 p-3 bg-[#0a0f1a]/95 backdrop-blur-md border-t border-white/10 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-2">
+                            <div className="absolute bottom-full left-0 right-0 p-3 bg-[#0a0f1a]/95 backdrop-blur-md border-t border-white/10 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
                                 <div className="flex items-center justify-between mb-2 px-1 max-w-4xl mx-auto">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Math Symbols</span>
                                     <button onClick={() => setShowMathTools(false)} className="text-slate-500 hover:text-white"><X className="h-4 w-4" /></button>
@@ -377,7 +360,7 @@ export default function StudentChat() {
                                             type="button"
                                             onClick={() => {
                                                 setNewMessage(prev => prev + ' ' + item.insert + ' ');
-                                                toast.success('Symbol added. Use the input below to edit.', { duration: 1000 });
+                                                inputRef.current?.focus();
                                             }}
                                             className="px-2.5 py-1.5 bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-lg text-white font-mono text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center min-w-[36px]"
                                             title={item.insert}
@@ -396,28 +379,18 @@ export default function StudentChat() {
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all"><ImageIcon className="h-[1.2rem] w-[1.2rem]" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                             
-                            <div className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus-within:border-blue-500 transition-all shadow-inner relative overflow-hidden flex items-center">
-                                {isClient ? (
-
-                                    <math-field
-                                        ref={mathFieldRef}
-                                        onInput={(e: any) => setNewMessage(e.target.value)}
-                                        style={{ width: '100%', background: 'transparent', color: 'white', border: 'none', outline: 'none', fontSize: '1rem' }}
-                                    ></math-field>
-                                ) : (
-                                    <input 
-                                        type="text" 
-                                        value={newMessage} 
-                                        onChange={(e) => setNewMessage(e.target.value)} 
-                                        placeholder="Ask a doubt..." 
-                                        className="w-full bg-transparent border-none outline-none focus:ring-0 p-0"
-                                    />
-                                )}
-                            </div>
+                            <input 
+                                ref={inputRef}
+                                type="text" 
+                                value={newMessage} 
+                                onChange={(e) => setNewMessage(e.target.value)} 
+                                placeholder="Ask a doubt..." 
+                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all"
+                            />
                             
                             <button type="submit" disabled={!newMessage.trim()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-[1.2rem] w-[1.2rem]" /></button>
                         </form>
-                        <p className="text-[9px] text-slate-700 mt-3 text-center uppercase tracking-[0.2em] font-black italic">Encrypted & Anonymous Community</p>
+                        <p className="text-[9px] text-slate-700 mt-2 text-center uppercase tracking-[0.2em] font-black italic">Encrypted & Anonymous Community</p>
 
             </div>
         </div>
