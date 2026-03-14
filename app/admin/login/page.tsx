@@ -52,6 +52,7 @@ export default function AdminLogin() {
             // Store user in localStorage
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('adminSessionStart', Date.now().toString());
+            localStorage.setItem('adminToken', data.token); // Store token for admin-specific API calls
 
             // Handle "Remember Me" functionality
             if (rememberMe) {

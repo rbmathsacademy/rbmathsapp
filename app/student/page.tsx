@@ -19,7 +19,8 @@ import {
     DollarSign,
     Target,
     Trophy,
-    Users
+    Users,
+    MessageSquare
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
@@ -63,9 +64,21 @@ export default function StudentDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+    const fetchUnreadStatus = async () => {
+        try {
+            const res = await fetch('/api/chat/student-status');
+            const data = await res.json();
+            if (res.ok) setUnreadChatCount(data.unreadCount || 0);
+        } catch (e) {}
+    };
 
     useEffect(() => {
         fetchData();
+        fetchUnreadStatus();
+        const interval = setInterval(fetchUnreadStatus, 60000); // Check every minute
+        return () => clearInterval(interval);
     }, []);
 
     const fetchData = async () => {
@@ -107,6 +120,7 @@ export default function StudentDashboard() {
         { id: 'online-test', label: 'Online Test', icon: ClipboardCheck, href: '/student/online-test', gradient: 'from-emerald-500 to-teal-500' },
         { id: 'assignments', label: 'Assignment Submission', icon: FileText, href: '/student/assignments', gradient: 'from-blue-500 to-cyan-500' },
         { id: 'question-bank', label: 'Question Bank', icon: BookOpen, href: '/student/question-bank', gradient: 'from-purple-500 to-violet-500' },
+        { id: 'chat', label: 'Student Chat', icon: MessageSquare, href: '/student/chat', gradient: 'from-blue-400 to-indigo-400' },
         { id: 'lesson-plan', label: 'Lesson Plan', icon: Calendar, href: '/student/lesson-plan', gradient: 'from-orange-500 to-amber-500' },
         { id: 'fees', label: 'Fees Payment Records', icon: DollarSign, href: '/student/fees', gradient: 'from-pink-500 to-rose-500' },
     ];
@@ -176,6 +190,11 @@ export default function StudentDashboard() {
                                     <span className={`text-[13px] font-semibold transition-colors ${item.id === 'dashboard' ? 'text-white' : 'group-hover:text-white'}`}>
                                         {item.label}
                                     </span>
+                                    {item.id === 'chat' && unreadChatCount > 0 && (
+                                        <div className="ml-auto bg-red-500 text-white text-[9px] font-black h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 animate-pulse">
+                                            {unreadChatCount}
+                                        </div>
+                                    )}
                                 </div>
                             </button>
                         ))}
@@ -274,6 +293,24 @@ export default function StudentDashboard() {
                             <div className="flex items-baseline gap-1.5 sm:gap-2">
                                 <p className="text-xl sm:text-3xl font-black text-rose-400">{data.stats.testsMissed}</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Missed</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-blue-400/30 transition-all duration-300 cursor-pointer relative overflow-hidden" onClick={() => router.push('/student/chat')}>
+                            {unreadChatCount > 0 && (
+                                <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg shadow-lg animate-pulse">
+                                    {unreadChatCount} NEW
+                                </div>
+                            )}
+                            <div className="flex justify-between items-start mb-2 sm:mb-3">
+                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Doubts / Chat</p>
+                                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-400/10 text-blue-400">
+                                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 w-4" />
+                                </div>
+                            </div>
+                            <div className="flex items-baseline gap-1.5 sm:gap-2">
+                                <p className="text-xl sm:text-2xl font-black text-blue-400">Student Chat</p>
+                                <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Ask Doubt</p>
                             </div>
                         </div>
 

@@ -15,7 +15,12 @@ const BatchStudentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Question',
         default: []
-    }]
+    }],
+    chatReadStatus: {
+        type: Map,
+        of: Date,
+        default: {}
+    }
 }, { timestamps: true });
 
 // Prevent overwrite

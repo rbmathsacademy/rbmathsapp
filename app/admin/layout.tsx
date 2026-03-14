@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, FileText, BookOpen, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, BookOpen, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +15,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [showGlobalAdminModal, setShowGlobalAdminModal] = useState(false);
     const [globalAdminPassword, setGlobalAdminPassword] = useState('');
     const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+    const fetchChatStatus = async () => {
+        try {
+            const token = localStorage.getItem('adminToken');
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch('/api/chat/batch-status', { headers });
+            const data = await res.json();
+            if (res.ok) setUnreadChatCount(data.unreadCount || 0);
+        } catch (e) {}
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchChatStatus();
+            const interval = setInterval(fetchChatStatus, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -69,8 +89,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             try {
                 const user = JSON.parse(storedUser);
                 const allowedRoutes: Record<string, string[]> = {
-                    'manager': ['/admin/fees'],
-                    'copy_checker': ['/admin/assignments'],
+                    'manager': ['/admin/fees', '/admin/chat'],
+                    'copy_checker': ['/admin/assignments', '/admin/chat'],
                     'admin': [], // Admin allows all
                     'superadmin': []
                 };
@@ -169,6 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: 'Students', href: '/admin/students', icon: Users },
+        { name: 'Student Chat', href: '/admin/chat', icon: MessageSquare },
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },
         { name: 'Answer Bank', href: '/admin/answers', icon: BookOpen },
         { name: 'Deploy Questions', href: '/admin/deploy', icon: Upload },
@@ -184,13 +205,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (user.role === 'admin' || user.role === 'superadmin') return true;
 
         if (user.role === 'manager') {
-            // Manager: Fees Only
-            return ['Fees Management'].includes(item.name);
+            // Manager: Fees + Chat
+            return ['Fees Management', 'Student Chat'].includes(item.name);
         }
 
         if (user.role === 'copy_checker') {
-            // Copy Checker: Assignments Only
-            return ['Assignments'].includes(item.name);
+            // Copy Checker: Assignments + Chat
+            return ['Assignments', 'Student Chat'].includes(item.name);
         }
 
         return false;
@@ -259,6 +280,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     )}
                                     <Icon className={`h-5 w-5 mr-3 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                                     <span className="font-medium relative z-10">{item.name}</span>
+                                    {item.name === 'Student Chat' && unreadChatCount > 0 && (
+                                        <div className="ml-auto bg-red-500 text-white text-[10px] font-black h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 animate-pulse border border-white/20">
+                                            {unreadChatCount}
+                                        </div>
+                                    )}
                                     {isActive && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
                                 </Link>
                             );

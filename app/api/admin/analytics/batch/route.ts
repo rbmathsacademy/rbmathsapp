@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
             assignment: { $in: assignmentIds },
             student: { $in: studentIds }
         })
-            .select('assignment student status isLate submittedAt')
+            .select('assignment student status isLate submittedAt quality')
             .lean();
 
         // 6. Aggregate Data per Student
