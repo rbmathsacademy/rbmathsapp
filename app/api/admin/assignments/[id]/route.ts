@@ -24,7 +24,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // Merge student data
         const studentList = students.map((student: any) => {
             const submission = submissions.find((sub: any) => sub.student && sub.student._id.toString() === student._id.toString());
-            let status = 'PENDING';
+            let submissionStatus = 'PENDING';
+            let correctionStatus = 'PENDING';
 
             // Calculate Status
             if (submission) {
@@ -32,15 +33,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 const deadlineTime = new Date(assignment.deadline).getTime();
                 const isLateDynamically = subTime > deadlineTime;
                 
-                status = submission.status === 'CORRECTED' ? 'CORRECTED' : (isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED');
+                submissionStatus = isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED';
+                correctionStatus = submission.status || 'PENDING';
             } else {
                 const now = new Date();
                 const deadline = new Date(assignment.deadline);
                 const cooldownEnd = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
 
                 if (now > cooldownEnd) {
-                    status = 'MISSED';
+                    submissionStatus = 'MISSED';
                 }
+                // else stays 'PENDING'
             }
 
             const dynamicIsLate = submission ? (new Date(submission.submittedAt).getTime() > new Date(assignment.deadline).getTime()) : false;
@@ -52,12 +55,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     name: student.name,
                     phoneNumber: student.phoneNumber
                 },
-                status: submission ? (submission.status || 'PENDING') : status, // Corrected/Pending logic is separate from submission status
-                submissionStatus: status, // Overall status: SUBMITTED, LATE, MISSED, PENDING
+                status: correctionStatus,
+                submissionStatus,
                 submittedAt: submission ? submission.submittedAt : null,
                 link: submission ? submission.link : null,
                 isLate: dynamicIsLate,
-                correctionStatus: submission ? (submission.status || 'PENDING') : 'PENDING'
+                correctionStatus
             };
         });
 

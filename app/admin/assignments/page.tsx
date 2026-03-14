@@ -14,6 +14,8 @@ interface Assignment {
     deadline: string;
     submissionCount: number;
     lateCount: number;
+    missedCount: number;
+    totalStudents: number;
     createdAt: string;
     folderId?: string;
 }
@@ -266,12 +268,18 @@ export default function AdminAssignmentsPage() {
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
                                                         <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
-                                                        <span>{assignment.submissionCount} Submitted</span>
+                                                        <span>{assignment.submissionCount - assignment.lateCount} Submitted</span>
                                                     </div>
                                                     {assignment.lateCount > 0 && (
                                                         <div className="flex items-center gap-1.5 text-orange-400">
                                                             <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                             <span>{assignment.lateCount} Late</span>
+                                                        </div>
+                                                    )}
+                                                    {assignment.missedCount > 0 && (
+                                                        <div className="flex items-center gap-1.5 text-red-400">
+                                                            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                            <span>{assignment.missedCount} Missed</span>
                                                         </div>
                                                     )}
                                                 </div>
