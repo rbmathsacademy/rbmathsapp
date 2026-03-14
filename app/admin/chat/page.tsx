@@ -6,16 +6,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
-declare global {
-    namespace JSX {
-        interface IntrinsicElements {
-            'math-field': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-                onInput?: (e: any) => void;
-                value?: string;
-            };
-        }
-    }
-}
+
 
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
@@ -504,7 +495,7 @@ export default function AdminChat() {
                             
                             <div className="flex-1 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus-within:border-blue-500 transition-all font-sans relative flex items-center overflow-hidden">
                                 {isMounted ? (
-                                    /* @ts-ignore */
+
                                     <math-field
                                         ref={mfRef}
                                         onInput={(e: any) => setNewMessage(e.target.value)}
