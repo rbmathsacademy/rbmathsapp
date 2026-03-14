@@ -44,9 +44,19 @@ export async function GET(req: Request) {
         // Attach stats to each assignment
         // This might be expensive if many assignments, but okay for admin view usually
         const assignmentsWithStats = await Promise.all(assignments.map(async (a: any) => {
-            const submissionCount = await AssignmentSubmission.countDocuments({ assignment: a._id });
-            // We could also count late submissions here
-            const lateCount = await AssignmentSubmission.countDocuments({ assignment: a._id, isLate: true });
+            const submissions = await AssignmentSubmission.find({ assignment: a._id }, 'submittedAt isLate');
+            const submissionCount = submissions.length;
+            
+            // Dynamically calculate late count in case deadline was updated
+            const deadlineTime = new Date(a.deadline).getTime();
+            let lateCount = 0;
+            submissions.forEach(sub => {
+                const subTime = new Date(sub.submittedAt).getTime();
+                if (subTime > deadlineTime) {
+                    lateCount++;
+                }
+            });
+            
             return { ...a, submissionCount, lateCount };
         }));
 

@@ -28,7 +28,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
             // Calculate Status
             if (submission) {
-                status = submission.status === 'CORRECTED' ? 'CORRECTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED');
+                const subTime = new Date(submission.submittedAt).getTime();
+                const deadlineTime = new Date(assignment.deadline).getTime();
+                const isLateDynamically = subTime > deadlineTime;
+                
+                status = submission.status === 'CORRECTED' ? 'CORRECTED' : (isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED');
             } else {
                 const now = new Date();
                 const deadline = new Date(assignment.deadline);
@@ -38,6 +42,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     status = 'MISSED';
                 }
             }
+
+            const dynamicIsLate = submission ? (new Date(submission.submittedAt).getTime() > new Date(assignment.deadline).getTime()) : false;
 
             return {
                 _id: submission ? submission._id : null,
@@ -50,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 submissionStatus: status, // Overall status: SUBMITTED, LATE, MISSED, PENDING
                 submittedAt: submission ? submission.submittedAt : null,
                 link: submission ? submission.link : null,
-                isLate: submission ? submission.isLate : false,
+                isLate: dynamicIsLate,
                 correctionStatus: submission ? (submission.status || 'PENDING') : 'PENDING'
             };
         });
@@ -59,14 +65,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // Admin might want to see them. Let's add them.
         submissions.forEach((sub: any) => {
             if (sub.student && !students.find((s: any) => s._id.toString() === sub.student._id.toString())) {
+                const isLateDynamically = new Date(sub.submittedAt).getTime() > new Date(assignment.deadline).getTime();
+                
                 studentList.push({
                     _id: sub._id,
                     student: sub.student,
                     status: sub.status || 'PENDING',
-                    submissionStatus: sub.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED',
+                    submissionStatus: isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED',
                     submittedAt: sub.submittedAt,
                     link: sub.link,
-                    isLate: sub.isLate,
+                    isLate: isLateDynamically,
                     correctionStatus: sub.status || 'PENDING'
                 });
             }
