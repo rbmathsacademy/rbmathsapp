@@ -61,6 +61,7 @@ export default function AdminChat() {
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const lastBatchIdScrolled = useRef<string | null>(null);
     
     // Swipe state refs
     const swipeStartX = useRef<number | null>(null);
@@ -123,7 +124,7 @@ export default function AdminChat() {
         window.history.pushState({ chatPage: true }, '', window.location.href);
         const handlePopState = (e: PopStateEvent) => {
             e.preventDefault();
-            window.location.href = '/admin';
+            window.location.href = '/admin/dashboard';
         };
         window.addEventListener('popstate', handlePopState);
         
@@ -235,6 +236,12 @@ export default function AdminChat() {
             if (res.ok) {
                 setMessages(data.messages);
                 setBatches(prev => prev.map(b => b.id === batchId ? { ...b, hasUnread: false } : b));
+                if (lastBatchIdScrolled.current !== batchId) {
+                    setTimeout(() => {
+                        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+                        lastBatchIdScrolled.current = batchId;
+                    }, 100);
+                }
             }
         } catch (error) {
             console.error('Failed to fetch messages', error);
@@ -473,20 +480,18 @@ export default function AdminChat() {
             {selectedBatch ? (
                 <div className="flex-1 flex flex-col bg-gradient-to-b from-[#0f172a] to-[#050b14] relative min-h-0">
                     {/* Chat Header */}
-                    <div className="p-3 sm:p-5 border-b border-white/10 backdrop-blur-md bg-white/5 flex flex-col gap-2 shrink-0 z-10">
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => setSelectedBatch(null)} className="md:hidden p-2 hover:bg-white/10 rounded-xl transition-colors shrink-0">
-                                <ChevronLeft className="h-6 w-6 text-slate-400" />
-                            </button>
-                            <div className="min-w-0">
-                                <h3 className="text-lg font-bold text-white truncate">Student Batch Chat</h3>
-                                <p className="text-xs text-slate-500 truncate">Support View (Admin)</p>
-                            </div>
-                        </div>
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-1.5 sm:p-2.5 mx-2 md:mx-0 shadow-sm mt-1 sm:mt-0 max-w-lg">
-                            <p className="text-[10px] sm:text-xs text-blue-300 leading-tight">
-                                👁️ Students shown with real names · <span className="text-white font-semibold">Anonymous</span> to peers · Messages auto-delete after 7 days
-                            </p>
+                    <div className="p-2 sm:p-3 border-b border-white/10 backdrop-blur-md bg-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 z-10 gap-2">
+                        <button 
+                            onClick={() => { setSelectedBatch(null); lastBatchIdScrolled.current = null; }} 
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors md:hidden"
+                        >
+                            <ChevronLeft className="h-5 w-5" /> Back
+                        </button>
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-2 w-full sm:w-auto shadow-sm">
+                            <ul className="text-[10px] sm:text-xs text-blue-300 space-y-0.5 list-none m-0 p-0 text-left">
+                                <li>* Student names are shown as Anonymous to all, but admin can see student names.</li>
+                                <li>* Messages auto-delete after 7 days.</li>
+                            </ul>
                         </div>
                     </div>
 

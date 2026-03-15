@@ -55,6 +55,7 @@ export default function StudentChat() {
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const lastBatchIdScrolled = useRef<string | null>(null);
     
     // Swipe state refs
     const swipeStartX = useRef<number | null>(null);
@@ -217,7 +218,15 @@ export default function StudentChat() {
         try {
             const res = await fetch(`/api/chat/messages?batchId=${encodeURIComponent(batchId)}`);
             const data = await res.json();
-            if (res.ok) setMessages(data.messages);
+            if (res.ok) {
+                setMessages(data.messages);
+                if (lastBatchIdScrolled.current !== batchId) {
+                    setTimeout(() => {
+                        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+                        lastBatchIdScrolled.current = batchId;
+                    }, 100);
+                }
+            }
         } catch (error) {
             console.error('Failed to fetch messages', error);
         } finally {
@@ -398,22 +407,20 @@ export default function StudentChat() {
             <Toaster position="top-center" />
             
             {/* Header */}
-            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-3 sm:p-5 shrink-0 z-20 flex flex-col gap-2">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => router.push('/student')} className="p-2 hover:bg-white/10 rounded-xl transition-colors shrink-0">
-                        <ChevronLeft className="h-6 w-6 text-slate-400" />
-                    </button>
-                    <div className="min-w-0">
-                        <h2 className="text-lg font-bold text-white truncate">Student Chat</h2>
-                        <p className="text-xs text-slate-500 truncate">Support Group</p>
-                    </div>
-                </div>
+            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-2 sm:p-3 shrink-0 z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <button 
+                    onClick={() => { lastBatchIdScrolled.current = null; router.push('/student'); }} 
+                    className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0"
+                >
+                    <ChevronLeft className="h-5 w-5" /> Back
+                </button>
                 
                 {selectedBatch && (
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-1.5 sm:p-2.5 mx-2 sm:mx-0 shadow-sm">
-                        <p className="text-[10px] sm:text-xs text-blue-300 leading-tight">
-                            🔒 <span className="text-white font-semibold">Anonymous</span> to peers · Admin sees your name · Messages auto-delete after 7 days
-                        </p>
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-2 w-full sm:w-auto shadow-sm">
+                        <ul className="text-[10px] sm:text-xs text-blue-300 space-y-0.5 list-none m-0 p-0 text-left">
+                            <li>* Student names are shown as Anonymous to all, but admin can see student names.</li>
+                            <li>* Messages auto-delete after 7 days.</li>
+                        </ul>
                     </div>
                 )}
             </div>
