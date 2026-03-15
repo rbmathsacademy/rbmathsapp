@@ -11,29 +11,13 @@ export default function StudentLayout({
 }) {
     const pathname = usePathname();
 
-    // Prevent mobile back button from logging out
+    // Ensure user session triggers rerender or context use if necessary
     useEffect(() => {
         // Skip on login page
         if (pathname === '/student/login') return;
 
-        // Check if user has a valid session
-        const hasSession = typeof window !== 'undefined' && (
-            localStorage.getItem('studentName') ||
-            document.cookie.includes('auth_token')
-        );
-
-        if (!hasSession) return;
-
-        // Push an extra history entry so back button doesn't leave the app
-        window.history.pushState(null, '', window.location.href);
-
-        const handlePopState = () => {
-            // Re-push current URL to trap the back button
-            window.history.pushState(null, '', window.location.href);
-        };
-
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
+        // Note: The actual redirect now happens elegantly inside /student/login 
+        // if user history navigates back, to prevent aggressive trapping.
     }, [pathname]);
 
     return (

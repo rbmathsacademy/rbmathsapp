@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
 import { Phone, ArrowRight, Loader2 } from 'lucide-react';
@@ -9,6 +9,12 @@ export default function StudentLogin() {
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && localStorage.getItem('studentName')) {
+            router.replace('/student');
+        }
+    }, [router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

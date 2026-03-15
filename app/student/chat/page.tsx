@@ -467,14 +467,14 @@ export default function StudentChat() {
                                     <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ml-2 ${isAdmin ? 'text-blue-400' : isMe ? 'text-indigo-400 text-right mr-2' : 'text-slate-500'}`}>
                                         {isAdmin ? 'Admin' : isMe ? 'Me' : 'Anonymous'}
                                     </p>
-                                    <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${isMe ? 'bg-indigo-600 text-white rounded-tr-none' : isAdmin ? 'bg-blue-600 text-white rounded-tl-none' : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'}`}>
+                                    <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${isMe ? 'bg-indigo-600 text-white rounded-tr-none' : isAdmin ? 'bg-[#1e293b] text-slate-200 border border-slate-700 rounded-tl-none shadow-md' : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'}`}>
                                         {/* Reply preview inside message - clickable to scroll */}
                                         {msg.replyTo && (
                                             <div 
-                                                className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? 'bg-indigo-700/50 border-indigo-300' : isAdmin ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}
+                                                className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? 'bg-indigo-700/50 border-indigo-300' : isAdmin ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-700/50 border-blue-400'}`}
                                                 onClick={() => scrollToMessage(msg.replyTo!.messageId)}
                                             >
-                                                <p className="text-[10px] font-bold text-blue-300">
+                                                <p className={`text-[10px] font-bold ${isAdmin ? 'text-slate-300' : 'text-blue-300'}`}>
                                                     {msg.replyTo.senderRole === 'admin' ? 'Admin' : 'Anonymous'}
                                                 </p>
                                                 <p className="text-[11px] opacity-80 truncate max-w-[250px]">
