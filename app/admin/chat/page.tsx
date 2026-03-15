@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Scissors, Camera, X, Edit2, Check, RefreshCcw, Calculator } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Scissors, Camera, X, Edit2, Check, RefreshCcw, Calculator, Reply } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
@@ -20,6 +20,13 @@ const getPreviewUrl = (url: string) => {
     return url;
 };
 
+interface ReplyTo {
+    messageId: string;
+    senderName: string;
+    content: string;
+    senderRole: string;
+}
+
 interface Message {
     _id: string;
     batchId: string;
@@ -30,6 +37,7 @@ interface Message {
     type: 'text' | 'image';
     isEdited?: boolean;
     createdAt: string;
+    replyTo?: ReplyTo;
 }
 
 interface Batch {
@@ -51,7 +59,15 @@ export default function AdminChat() {
     const [editingMessage, setEditingMessage] = useState<Message|null>(null);
     const [editContent, setEditContent] = useState('');
     const [showMathTools, setShowMathTools] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    
+    // Swipe state refs
+    const swipeStartX = useRef<number | null>(null);
+    const swipeStartY = useRef<number | null>(null);
+    const swipeMsgId = useRef<string | null>(null);
+    const swipeOffset = useRef<Record<string, number>>({});
+    const [, forceRender] = useState(0);
     
     const mathSymbols = [
         { label: 'xⁿ', insert: '$x^{n}$' },
@@ -82,6 +98,7 @@ export default function AdminChat() {
 
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Get admin auth headers from localStorage token to avoid student cookie conflicts
@@ -127,6 +144,63 @@ export default function AdminChat() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    // Auto-resize textarea
+    const autoResize = useCallback(() => {
+        const el = inputRef.current;
+        if (el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+    }, []);
+
+    useEffect(() => {
+        autoResize();
+    }, [newMessage, autoResize]);
+
+    // Swipe handlers for reply
+    const handleTouchStart = (e: React.TouchEvent, msgId: string) => {
+        swipeStartX.current = e.touches[0].clientX;
+        swipeStartY.current = e.touches[0].clientY;
+        swipeMsgId.current = msgId;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (swipeStartX.current === null || swipeStartY.current === null || !swipeMsgId.current) return;
+        const deltaX = e.touches[0].clientX - swipeStartX.current;
+        const deltaY = Math.abs(e.touches[0].clientY - swipeStartY.current);
+        
+        // Only allow right swipe, and only if horizontal movement dominant
+        if (deltaY > Math.abs(deltaX)) return;
+        
+        if (deltaX > 0) {
+            const offset = Math.min(deltaX, 80);
+            swipeOffset.current = { ...swipeOffset.current, [swipeMsgId.current]: offset };
+            forceRender(n => n + 1);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (!swipeMsgId.current) return;
+        const msgId = swipeMsgId.current;
+        const offset = swipeOffset.current[msgId] || 0;
+        
+        if (offset > 50) {
+            // Trigger reply
+            const msg = messages.find(m => m._id === msgId);
+            if (msg) {
+                setReplyingTo(msg);
+                inputRef.current?.focus();
+            }
+        }
+        
+        // Reset swipe
+        swipeOffset.current = { ...swipeOffset.current, [msgId]: 0 };
+        swipeStartX.current = null;
+        swipeStartY.current = null;
+        swipeMsgId.current = null;
+        forceRender(n => n + 1);
+    };
+
     const fetchBatches = async () => {
         try {
             const res = await fetch('/api/chat/batches', { headers: getAuthHeaders() });
@@ -167,13 +241,21 @@ export default function AdminChat() {
         if (!newMessage.trim() || !selectedBatch) return;
 
         const content = newMessage;
+        const replyData = replyingTo ? {
+            messageId: replyingTo._id,
+            senderName: replyingTo.senderName,
+            content: replyingTo.content,
+            senderRole: replyingTo.senderRole
+        } : undefined;
+        
         setNewMessage('');
+        setReplyingTo(null);
 
         try {
             const res = await fetch('/api/chat/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                body: JSON.stringify({ batchId: selectedBatch.id, content, type: 'text' })
+                body: JSON.stringify({ batchId: selectedBatch.id, content, type: 'text', replyTo: replyData })
             });
             if (res.ok) {
                 fetchMessages(selectedBatch.id, true);
@@ -265,6 +347,18 @@ export default function AdminChat() {
 
     const filteredBatches = batches.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    const handleReplyClick = (msg: Message) => {
+        setReplyingTo(msg);
+        inputRef.current?.focus();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
     return (
         <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100svh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#0f172a] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
             <Toaster position="top-right" />
@@ -337,9 +431,9 @@ export default function AdminChat() {
 
             {/* Main Chat Area */}
             {selectedBatch ? (
-                <div className="flex-1 flex flex-col bg-gradient-to-b from-[#0f172a] to-[#050b14] relative">
+                <div className="flex-1 flex flex-col bg-gradient-to-b from-[#0f172a] to-[#050b14] relative min-h-0">
                     {/* Chat Header */}
-                    <div className="p-3 sm:p-5 border-b border-white/10 backdrop-blur-md bg-white/5 flex flex-col gap-2 sticky top-0 z-10">
+                    <div className="p-3 sm:p-5 border-b border-white/10 backdrop-blur-md bg-white/5 flex flex-col gap-2 shrink-0 z-10">
                         <div className="flex items-center gap-4">
                             <button onClick={() => setSelectedBatch(null)} className="md:hidden p-2 hover:bg-white/10 rounded-xl transition-colors shrink-0">
                                 <ChevronLeft className="h-6 w-6 text-slate-400" />
@@ -357,7 +451,11 @@ export default function AdminChat() {
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 relative min-h-0 custom-scrollbar">
+                    <div 
+                        ref={messagesContainerRef}
+                        className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 relative min-h-0 custom-scrollbar"
+                        style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+                    >
                         {loadingMessages ? (
                             <div className="flex items-center justify-center h-full">
                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
@@ -370,8 +468,27 @@ export default function AdminChat() {
                         ) : (
                             messages.map((msg, i) => {
                                 const isMe = msg.senderRole === 'admin';
+                                const offset = swipeOffset.current[msg._id] || 0;
                                 return (
-                                    <div key={msg._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
+                                    <div 
+                                        key={msg._id} 
+                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
+                                        onTouchStart={(e) => handleTouchStart(e, msg._id)}
+                                        onTouchMove={handleTouchMove}
+                                        onTouchEnd={handleTouchEnd}
+                                        style={{ 
+                                            transform: offset > 0 ? `translateX(${offset}px)` : undefined,
+                                            transition: offset > 0 ? 'none' : 'transform 0.2s ease-out'
+                                        }}
+                                    >
+                                        {/* Reply indicator on swipe */}
+                                        {offset > 20 && (
+                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center" style={{ opacity: Math.min(offset / 50, 1) }}>
+                                                <div className="bg-blue-600/30 rounded-full p-2">
+                                                    <Reply className="h-4 w-4 text-blue-400" />
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="max-w-[85%] sm:max-w-[70%]">
                                             {!isMe && (
                                                 <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 ml-2">
@@ -379,6 +496,15 @@ export default function AdminChat() {
                                                 </p>
                                             )}
                                             <div className={`relative group p-3 sm:p-4 rounded-3xl shadow-xl ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5'}`}>
+                                                {/* Reply preview inside message */}
+                                                {msg.replyTo && (
+                                                    <div className={`mb-2 p-2 rounded-xl border-l-2 ${isMe ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}>
+                                                        <p className="text-[10px] font-bold text-blue-300">{msg.replyTo.senderRole === 'admin' ? 'Admin' : msg.replyTo.senderName}</p>
+                                                        <p className="text-[11px] opacity-80 truncate max-w-[250px]">
+                                                            {msg.replyTo.content?.substring(0, 80)}{(msg.replyTo.content?.length || 0) > 80 ? '...' : ''}
+                                                        </p>
+                                                    </div>
+                                                )}
                                                 {msg.type === 'text' ? (
                                                     <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar">
                                                         <Latex>{msg.content}</Latex>
@@ -400,6 +526,14 @@ export default function AdminChat() {
                                                             </button>
                                                         )}
                                                     </div>
+                                                    {/* Reply button (desktop) */}
+                                                    <button 
+                                                        onClick={() => handleReplyClick(msg)}
+                                                        className="opacity-0 group-hover:opacity-100 hover:text-white transition-all p-1"
+                                                        title="Reply"
+                                                    >
+                                                        <Reply className="h-3 w-3" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -433,7 +567,7 @@ export default function AdminChat() {
                     )}
 
                     {/* Chat Input */}
-                    <div className="p-4 sm:p-6 border-t border-white/10 bg-[#0a0f1a] relative">
+                    <div className="p-4 sm:p-6 border-t border-white/10 bg-[#0a0f1a] relative shrink-0">
                         {imagePreview && (
                             <div className="absolute bottom-full left-0 right-0 p-4 bg-slate-900 border-t border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 duration-300 z-30">
                                 <div className="relative group">
@@ -473,20 +607,36 @@ export default function AdminChat() {
                             </div>
                         )}
 
-                        <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3">
+                        {/* Reply preview bar */}
+                        {replyingTo && (
+                            <div className="mb-2 flex items-center gap-3 bg-slate-800/80 border border-white/10 rounded-xl p-2.5 animate-in slide-in-from-bottom-2">
+                                <div className="w-1 h-8 bg-blue-500 rounded-full shrink-0"></div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold text-blue-400">{replyingTo.senderRole === 'admin' ? 'Admin' : replyingTo.senderName}</p>
+                                    <p className="text-xs text-slate-400 truncate">{replyingTo.type === 'image' ? '📷 Photo' : replyingTo.content.substring(0, 60)}</p>
+                                </div>
+                                <button onClick={() => setReplyingTo(null)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors shrink-0">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSendMessage} className="flex items-end gap-2 sm:gap-3">
                             <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-5 w-5" />
                             </button>
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"><ImageIcon className="h-5 w-5" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                             
-                            <input 
+                            <textarea 
                                 ref={inputRef}
-                                type="text" 
                                 value={newMessage} 
-                                onChange={(e) => setNewMessage(e.target.value)} 
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 placeholder="Type a message..." 
-                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all"
+                                rows={1}
+                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
+                                style={{ maxHeight: '120px' }}
                             />
                             
                             <button type="submit" disabled={!newMessage.trim()} className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-5 w-5" /></button>

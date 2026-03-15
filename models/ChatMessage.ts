@@ -34,6 +34,12 @@ const ChatMessageSchema = new mongoose.Schema({
     },
     originalContent: {
         type: String
+    },
+    replyTo: {
+        messageId: { type: String },
+        senderName: { type: String },
+        content: { type: String },
+        senderRole: { type: String }
     }
 }, { timestamps: true });
 

@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { batchId, content, type = 'text' } = body;
+        const { batchId, content, type = 'text', replyTo } = body;
 
         if (!batchId || !content) {
             return NextResponse.json({ error: 'Missing batchId or content' }, { status: 400 });
@@ -122,14 +122,25 @@ export async function POST(req: NextRequest) {
             senderId = phoneNumber;
         }
 
-        const newMessage = await ChatMessage.create({
+        const messageData: any = {
             batchId,
             senderId,
             senderName,
             senderRole,
             content,
             type
-        });
+        };
+
+        if (replyTo && replyTo.messageId) {
+            messageData.replyTo = {
+                messageId: replyTo.messageId,
+                senderName: replyTo.senderName,
+                content: replyTo.content?.substring(0, 200),
+                senderRole: replyTo.senderRole
+            };
+        }
+
+        const newMessage = await ChatMessage.create(messageData);
 
         // Update metadata
         await ChatBatchMetadata.findOneAndUpdate(

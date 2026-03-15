@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import 'katex/dist/katex.min.css';
@@ -21,6 +21,13 @@ const getPreviewUrl = (url: string) => {
     return url;
 };
 
+interface ReplyTo {
+    messageId: string;
+    senderName: string;
+    content: string;
+    senderRole: string;
+}
+
 interface Message {
     _id: string;
     batchId: string;
@@ -31,6 +38,7 @@ interface Message {
     type: 'text' | 'image';
     isEdited?: boolean;
     createdAt: string;
+    replyTo?: ReplyTo;
 }
 
 export default function StudentChat() {
@@ -45,8 +53,16 @@ export default function StudentChat() {
     const [editContent, setEditContent] = useState('');
     const [myRoll, setMyRoll] = useState<string | null>(null);
     const [showMathTools, setShowMathTools] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
     
+    // Swipe state refs
+    const swipeStartX = useRef<number | null>(null);
+    const swipeStartY = useRef<number | null>(null);
+    const swipeMsgId = useRef<string | null>(null);
+    const swipeOffset = useRef<Record<string, number>>({});
+    const [, forceRender] = useState(0);
+
     const mathSymbols = [
         { label: 'xⁿ', insert: '$x^{n}$' },
         { label: 'd/dx', insert: '$\\frac{d}{dx}$' },
@@ -106,6 +122,63 @@ export default function StudentChat() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    // Auto-resize textarea
+    const autoResize = useCallback(() => {
+        const el = inputRef.current;
+        if (el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+    }, []);
+
+    useEffect(() => {
+        autoResize();
+    }, [newMessage, autoResize]);
+
+    // Swipe handlers for reply
+    const handleTouchStart = (e: React.TouchEvent, msgId: string) => {
+        swipeStartX.current = e.touches[0].clientX;
+        swipeStartY.current = e.touches[0].clientY;
+        swipeMsgId.current = msgId;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (swipeStartX.current === null || swipeStartY.current === null || !swipeMsgId.current) return;
+        const deltaX = e.touches[0].clientX - swipeStartX.current;
+        const deltaY = Math.abs(e.touches[0].clientY - swipeStartY.current);
+        
+        // Only allow right swipe, and only if horizontal movement dominant
+        if (deltaY > Math.abs(deltaX)) return;
+        
+        if (deltaX > 0) {
+            const offset = Math.min(deltaX, 80);
+            swipeOffset.current = { ...swipeOffset.current, [swipeMsgId.current]: offset };
+            forceRender(n => n + 1);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (!swipeMsgId.current) return;
+        const msgId = swipeMsgId.current;
+        const offset = swipeOffset.current[msgId] || 0;
+        
+        if (offset > 50) {
+            // Trigger reply
+            const msg = messages.find(m => m._id === msgId);
+            if (msg) {
+                setReplyingTo(msg);
+                inputRef.current?.focus();
+            }
+        }
+        
+        // Reset swipe
+        swipeOffset.current = { ...swipeOffset.current, [msgId]: 0 };
+        swipeStartX.current = null;
+        swipeStartY.current = null;
+        swipeMsgId.current = null;
+        forceRender(n => n + 1);
+    };
+
     const fetchStudentInfo = async () => {
         try {
             const res = await fetch('/api/student/me');
@@ -142,13 +215,21 @@ export default function StudentChat() {
         if (!newMessage.trim() || !selectedBatch) return;
 
         const content = newMessage;
+        const replyData = replyingTo ? {
+            messageId: replyingTo._id,
+            senderName: replyingTo.senderRole === 'admin' ? 'Admin' : (replyingTo.senderId === myRoll ? replyingTo.senderName : 'Anonymous'),
+            content: replyingTo.content,
+            senderRole: replyingTo.senderRole
+        } : undefined;
+        
         setNewMessage('');
+        setReplyingTo(null);
 
         try {
             const res = await fetch('/api/chat/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ batchId: selectedBatch, content, type: 'text' })
+                body: JSON.stringify({ batchId: selectedBatch, content, type: 'text', replyTo: replyData })
             });
             if (res.ok) {
                 fetchMessages(selectedBatch, true);
@@ -238,6 +319,25 @@ export default function StudentChat() {
         }
     };
 
+    const handleReplyClick = (msg: Message) => {
+        setReplyingTo(msg);
+        inputRef.current?.focus();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    // Get display name for reply preview considering anonymity
+    const getReplyDisplayName = (msg: Message) => {
+        if (msg.senderRole === 'admin') return 'Admin';
+        if (msg.senderId === myRoll) return 'Me';
+        return 'Anonymous';
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
@@ -251,7 +351,7 @@ export default function StudentChat() {
             <Toaster position="top-center" />
             
             {/* Header */}
-            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-3 sm:p-5 sticky top-0 z-20 flex flex-col gap-2">
+            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-3 sm:p-5 shrink-0 z-20 flex flex-col gap-2">
                 <div className="flex items-center gap-4">
                     <button onClick={() => router.push('/student')} className="p-2 hover:bg-white/10 rounded-xl transition-colors shrink-0">
                         <ChevronLeft className="h-6 w-6 text-slate-400" />
@@ -272,7 +372,10 @@ export default function StudentChat() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 no-scrollbar pb-32">
+            <div 
+                className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 no-scrollbar min-h-0"
+                style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+            >
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full opacity-30 mt-20">
                         <MessageSquare className="h-16 w-16 mb-4" />
@@ -282,14 +385,44 @@ export default function StudentChat() {
                     messages.map((msg, i) => {
                         const isMe = msg.senderId === myRoll;
                         const isAdmin = msg.senderRole === 'admin';
+                        const offset = swipeOffset.current[msg._id] || 0;
 
                         return (
-                            <div key={msg._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
+                            <div 
+                                key={msg._id} 
+                                className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 relative`}
+                                onTouchStart={(e) => handleTouchStart(e, msg._id)}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                                style={{ 
+                                    transform: offset > 0 ? `translateX(${offset}px)` : undefined,
+                                    transition: offset > 0 ? 'none' : 'transform 0.2s ease-out'
+                                }}
+                            >
+                                {/* Reply indicator on swipe */}
+                                {offset > 20 && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center" style={{ opacity: Math.min(offset / 50, 1) }}>
+                                        <div className="bg-blue-600/30 rounded-full p-2">
+                                            <Reply className="h-4 w-4 text-blue-400" />
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="max-w-[85%] sm:max-w-[70%]">
                                     <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ml-2 ${isAdmin ? 'text-blue-400' : isMe ? 'text-indigo-400 text-right mr-2' : 'text-slate-500'}`}>
                                         {isAdmin ? 'Admin' : isMe ? 'Me' : 'Anonymous'}
                                     </p>
                                     <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${isMe ? 'bg-indigo-600 text-white rounded-tr-none' : isAdmin ? 'bg-blue-600 text-white rounded-tl-none' : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'}`}>
+                                        {/* Reply preview inside message */}
+                                        {msg.replyTo && (
+                                            <div className={`mb-2 p-2 rounded-xl border-l-2 ${isMe ? 'bg-indigo-700/50 border-indigo-300' : isAdmin ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}>
+                                                <p className="text-[10px] font-bold text-blue-300">
+                                                    {msg.replyTo.senderRole === 'admin' ? 'Admin' : 'Anonymous'}
+                                                </p>
+                                                <p className="text-[11px] opacity-80 truncate max-w-[250px]">
+                                                    {msg.replyTo.content?.substring(0, 80)}{(msg.replyTo.content?.length || 0) > 80 ? '...' : ''}
+                                                </p>
+                                            </div>
+                                        )}
                                         {msg.type === 'text' ? (
                                             <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar">
                                                 <Latex>{msg.content}</Latex>
@@ -300,11 +433,21 @@ export default function StudentChat() {
                                         )}
                                         <div className="flex items-center justify-between gap-4 mt-2 opacity-50 text-[10px]">
                                             <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                            {isMe && msg.type === 'text' && (
-                                                <button onClick={() => { setEditingMessage(msg); setEditContent(msg.content); }} className="p-1 hover:text-white transition-colors">
-                                                    <Edit2 className="h-2.5 w-2.5" />
+                                            <div className="flex items-center gap-1">
+                                                {isMe && msg.type === 'text' && (
+                                                    <button onClick={() => { setEditingMessage(msg); setEditContent(msg.content); }} className="p-1 hover:text-white transition-colors">
+                                                        <Edit2 className="h-2.5 w-2.5" />
+                                                    </button>
+                                                )}
+                                                {/* Reply button (desktop) */}
+                                                <button 
+                                                    onClick={() => handleReplyClick(msg)}
+                                                    className="opacity-0 group-hover:opacity-100 hover:text-white transition-all p-1"
+                                                    title="Reply"
+                                                >
+                                                    <Reply className="h-3 w-3" />
                                                 </button>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -332,7 +475,7 @@ export default function StudentChat() {
             )}
 
             {/* Input */}
-            <div className="p-4 sm:p-6 bg-[#0a0f1a] border-t border-white/10 sticky bottom-0 z-40">
+            <div className="p-4 sm:p-6 bg-[#0a0f1a] border-t border-white/10 shrink-0 z-40 relative">
                 {imagePreview && (
                     <div className="absolute bottom-full left-0 right-0 p-4 bg-slate-900 border-t border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2">
                         <div className="relative group">
@@ -372,20 +515,36 @@ export default function StudentChat() {
                             </div>
                         )}
 
-                        <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3 max-w-4xl mx-auto">
+                        {/* Reply preview bar */}
+                        {replyingTo && (
+                            <div className="mb-2 flex items-center gap-3 bg-slate-800/80 border border-white/10 rounded-xl p-2.5 animate-in slide-in-from-bottom-2">
+                                <div className="w-1 h-8 bg-blue-500 rounded-full shrink-0"></div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold text-blue-400">{getReplyDisplayName(replyingTo)}</p>
+                                    <p className="text-xs text-slate-400 truncate">{replyingTo.type === 'image' ? '📷 Photo' : replyingTo.content.substring(0, 60)}</p>
+                                </div>
+                                <button onClick={() => setReplyingTo(null)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors shrink-0">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSendMessage} className="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
                             <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-[1.2rem] w-[1.2rem]" />
                             </button>
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all"><ImageIcon className="h-[1.2rem] w-[1.2rem]" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                             
-                            <input 
+                            <textarea 
                                 ref={inputRef}
-                                type="text" 
                                 value={newMessage} 
-                                onChange={(e) => setNewMessage(e.target.value)} 
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 placeholder="Ask a doubt..." 
-                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all"
+                                rows={1}
+                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
+                                style={{ maxHeight: '120px' }}
                             />
                             
                             <button type="submit" disabled={!newMessage.trim()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-[1.2rem] w-[1.2rem]" /></button>
