@@ -5,8 +5,9 @@ import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Sci
 import toast, { Toaster } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
+import dynamic from 'next/dynamic';
 
-
+const MathInput = dynamic(() => import('@/app/components/MathInput'), { ssr: false });
 
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
@@ -62,6 +63,7 @@ export default function AdminChat() {
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const mathFieldRef = useRef<any>(null);
     
     // Swipe state refs
     const swipeStartX = useRef<number | null>(null);
@@ -624,8 +626,13 @@ export default function AdminChat() {
                                             key={idx}
                                             type="button"
                                             onClick={() => {
-                                                setNewMessage(prev => prev + ' ' + item.insert + ' ');
-                                                inputRef.current?.focus();
+                                                if (showMathTools && mathFieldRef.current) {
+                                                    mathFieldRef.current.insert(item.insert);
+                                                    setNewMessage(mathFieldRef.current.value);
+                                                } else {
+                                                    setNewMessage(prev => prev + ' ' + item.insert + ' ');
+                                                    inputRef.current?.focus();
+                                                }
                                             }}
                                             className="px-2.5 py-1.5 bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-lg text-white font-mono text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center min-w-[36px]"
                                             title={item.insert}
@@ -658,15 +665,30 @@ export default function AdminChat() {
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"><ImageIcon className="h-5 w-5" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                             
-                            <textarea 
-                                ref={inputRef}
-                                value={newMessage} 
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder="Type a message..." 
-                                rows={1}
-                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
-                                style={{ maxHeight: '120px' }}
-                            />
+                            {showMathTools ? (
+                                <MathInput
+                                    value={newMessage}
+                                    onChange={(val) => setNewMessage(val)}
+                                    mathFieldRef={mathFieldRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSendMessage();
+                                        }
+                                    }}
+                                    className="flex-1 min-w-0 resize-none overflow-hidden outline-none"
+                                />
+                            ) : (
+                                <textarea 
+                                    ref={inputRef}
+                                    value={newMessage} 
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder="Type a message..." 
+                                    rows={1}
+                                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
+                                    style={{ maxHeight: '120px' }}
+                                />
+                            )}
                             
                             <button type="submit" disabled={!newMessage.trim()} className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-5 w-5" /></button>
                         </form>

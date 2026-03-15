@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, FileQuestion, ClipboardCheck, LayoutDashboard, CreditCard, PenTool, Shield, UserPlus, Trash2, Loader2, Phone } from 'lucide-react';
+import { Users, FileQuestion, ClipboardCheck, LayoutDashboard, CreditCard, PenTool, Shield, UserPlus, Trash2, Loader2, Phone, MessageCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Staff {
@@ -19,6 +19,7 @@ export default function AdminDashboard() {
         totalStudents: 0,
         totalQuestions: 0,
         activeTests: 0,
+        unreadChats: 0,
     });
     const [loading, setLoading] = useState(true);
     const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -39,12 +40,29 @@ export default function AdminDashboard() {
     const fetchDashboard = async () => {
         try {
             const res = await fetch('/api/admin/dashboard');
+            
+            let unreadCount = 0;
+            try {
+                const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+                const headers: Record<string, string> = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                
+                const chatRes = await fetch('/api/chat/batches', { headers });
+                if (chatRes.ok) {
+                    const chatData = await chatRes.json();
+                    unreadCount = chatData.batches?.filter((b: any) => b.hasUnread).length || 0;
+                }
+            } catch (e) {
+                console.error('Error fetching chat stats', e);
+            }
+
             if (res.ok) {
                 const data = await res.json();
                 setStats({
                     totalStudents: data.totalStudents,
                     totalQuestions: data.totalQuestions,
                     activeTests: data.activeTests,
+                    unreadChats: unreadCount,
                 });
                 setStaffList(data.staff || []);
             }
@@ -99,21 +117,29 @@ export default function AdminDashboard() {
 
     const statCards = [
         {
-            title: 'Total Students',
+            title: 'Chat',
+            value: stats.unreadChats,
+            icon: MessageCircle,
+            gradient: stats.unreadChats > 0 ? 'from-red-500 to-rose-600' : 'from-slate-600 to-slate-700',
+            href: '/admin/chat',
+            badge: stats.unreadChats > 0 ? `${stats.unreadChats} new` : null
+        },
+        {
+            title: 'Students',
             value: stats.totalStudents,
             icon: Users,
             gradient: 'from-blue-500 to-cyan-500',
-            href: null, // Not clickable
+            href: null,
         },
         {
-            title: 'Question Bank',
+            title: 'Questions',
             value: stats.totalQuestions,
             icon: FileQuestion,
             gradient: 'from-purple-500 to-violet-500',
             href: '/admin/questions',
         },
         {
-            title: 'Active Tests',
+            title: 'Tests',
             value: stats.activeTests,
             icon: ClipboardCheck,
             gradient: 'from-emerald-500 to-teal-500',
@@ -122,19 +148,19 @@ export default function AdminDashboard() {
     ];
 
     return (
-        <div className="space-y-6 pb-12">
+        <div className="space-y-4 sm:space-y-6 pb-12">
             <Toaster position="top-center" />
 
             {/* Page Header */}
             <div>
-                <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400">
+                <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400">
                     Dashboard
                 </h1>
-                <p className="text-slate-400 text-sm mt-1">Welcome back! Here's what's happening today.</p>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">Welcome back! Here's what's happening today.</p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
                 {statCards.map((stat, index) => {
                     const Icon = stat.icon;
                     const isClickable = !!stat.href;
@@ -142,79 +168,88 @@ export default function AdminDashboard() {
                         <div
                             key={index}
                             onClick={() => isClickable && router.push(stat.href!)}
-                            className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6 transition-all duration-300 group ${isClickable
-                                ? 'hover:border-white/20 cursor-pointer hover:scale-[1.02]'
+                            className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 relative group overflow-hidden ${isClickable
+                                ? 'hover:border-white/20 cursor-pointer hover:shadow-lg'
                                 : ''
                                 }`}
                         >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
-                                    <Icon className="h-6 w-6 text-white" />
+                            {/* Accent Glow */}
+                            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
+                            
+                            <div className="flex justify-between items-start mb-2 sm:mb-4 relative z-10">
+                                <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg shadow-black/20 text-white shrink-0`}>
+                                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
-                                {loading && (
-                                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                {stat.badge && (
+                                    <span className="bg-red-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md animate-pulse">
+                                        {stat.badge}
+                                    </span>
                                 )}
                             </div>
 
-                            <h3 className="text-sm text-slate-400 font-medium mb-1">{stat.title}</h3>
+                            <div className="relative z-10 flex flex-col justify-end min-h-[40px] sm:min-h-[50px]">
+                                <h3 className="text-[11px] sm:text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">{stat.title}</h3>
 
-                            {loading ? (
-                                <div className="h-10 bg-white/5 rounded animate-pulse"></div>
-                            ) : (
-                                <p className="text-2xl sm:text-4xl font-black text-white">{stat.value.toLocaleString()}</p>
-                            )}
+                                {loading ? (
+                                    <div className="h-6 w-12 bg-white/5 rounded animate-pulse mt-1"></div>
+                                ) : (
+                                    <p className="text-lg sm:text-2xl lg:text-3xl font-black text-white leading-none">
+                                        {stat.value.toLocaleString()}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     );
                 })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
                 {/* Quick Actions - Spans 2 cols */}
-                <div className="lg:col-span-2 bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-6 h-fit">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-white">Quick Actions</h2>
+                <div className="lg:col-span-2 bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 h-fit">
+                    <div className="flex items-center justify-between mb-4 sm:mb-6">
+                        <h2 className="text-lg sm:text-xl font-bold text-white">Quick Actions</h2>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                         <button
                             onClick={() => router.push('/admin/online-tests/create')}
-                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition-all text-left group"
+                            className="p-3 bg-slate-800/50 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all text-left group"
                         >
-                            <ClipboardCheck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-xs sm:text-sm font-bold text-white">Create Test</p>
+                            <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 mb-1.5 group-hover:scale-110 transition-transform" />
+                            <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Create<br/>Test</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/assignments/create')}
-                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/30 hover:border-blue-500/50 transition-all text-left group"
+                            className="p-3 bg-slate-800/50 hover:bg-blue-500/10 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all text-left group"
                         >
-                            <PenTool className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-xs sm:text-sm font-bold text-white">Create Assign.</p>
+                            <PenTool className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mb-1.5 group-hover:scale-110 transition-transform" />
+                            <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Create<br/>Assign.</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/fees?tab=record')}
-                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30 hover:border-purple-500/50 transition-all text-left group"
+                            className="p-3 bg-slate-800/50 hover:bg-purple-500/10 border border-white/5 hover:border-purple-500/30 rounded-xl transition-all text-left group"
                         >
-                            <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-xs sm:text-sm font-bold text-white">Fees Grid</p>
+                            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 mb-1.5 group-hover:scale-110 transition-transform" />
+                            <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Fees<br/>Grid</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/questions')}
-                            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 hover:border-orange-500/50 transition-all text-left group"
+                            className="p-3 bg-slate-800/50 hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left group"
                         >
-                            <FileQuestion className="h-5 w-5 sm:h-6 sm:w-6 text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-xs sm:text-sm font-bold text-white">Add Questions</p>
+                            <FileQuestion className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400 mb-1.5 group-hover:scale-110 transition-transform" />
+                            <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Add<br/>Questions</p>
                         </button>
                     </div>
                 </div>
 
                 {/* Staff Management - Spans 1 col */}
-                <div className="bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex flex-col h-full">
+                <div className="bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col h-full">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                             <Shield className="w-5 h-5 text-indigo-400" /> Staff Access
                         </h2>
                         <button
