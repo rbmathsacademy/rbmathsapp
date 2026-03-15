@@ -293,24 +293,44 @@ export default function AdminChat() {
         }
     };
 
-    const handleDeleteMessage = async (msg: Message) => {
-        if (!confirm('Delete this message permanently?')) return;
-        const toastId = toast.loading('Deleting...');
-        try {
-            const res = await fetch(`/api/chat/messages?messageId=${msg._id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-            if (res.ok) {
-                toast.success('Message deleted', { id: toastId });
-                fetchMessages(selectedBatch!.id, true);
-            } else {
-                const data = await res.json();
-                toast.error(data.error || 'Failed to delete', { id: toastId });
-            }
-        } catch (error) {
-            toast.error('Error deleting', { id: toastId });
-        }
+    const handleDeleteMessage = (msg: Message) => {
+        toast((t) => (
+            <div className="flex flex-col gap-3">
+                <p className="font-bold text-sm">Delete this message permanently?</p>
+                <div className="flex gap-2 justify-end">
+                    <button 
+                        onClick={() => toast.dismiss(t.id)} 
+                        className="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            const toastId = toast.loading('Deleting...');
+                            try {
+                                const res = await fetch(`/api/chat/messages?messageId=${msg._id}`, {
+                                    method: 'DELETE',
+                                    headers: getAuthHeaders()
+                                });
+                                if (res.ok) {
+                                    toast.success('Message deleted', { id: toastId });
+                                    fetchMessages(selectedBatch!.id, true);
+                                } else {
+                                    const data = await res.json();
+                                    toast.error(data.error || 'Failed to delete', { id: toastId });
+                                }
+                            } catch (error) {
+                                toast.error('Error deleting', { id: toastId });
+                            }
+                        }} 
+                        className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-500 text-white transition-colors"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

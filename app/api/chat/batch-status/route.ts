@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         const status: Record<string, boolean> = {};
         
         metadata.forEach((m: any) => {
-            const isUnread = m.lastMessageAt > m.lastAdminReadAt;
+            const isUnread = !m.lastAdminReadAt || new Date(m.lastMessageAt).getTime() > new Date(m.lastAdminReadAt).getTime();
             status[m.batchId] = isUnread;
             if (isUnread) unreadCount++;
         });

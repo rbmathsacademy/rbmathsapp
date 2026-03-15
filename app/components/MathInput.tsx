@@ -28,9 +28,8 @@ export default function MathInput({ value, onChange, onKeyDown, placeholder, cla
     useEffect(() => {
         setIsMounted(true);
         import('mathlive').then((mathlive) => {
-            // Customize mathlive config if needed
             if (mfRef.current) {
-                mfRef.current.mathVirtualKeyboardPolicy = "manual";
+                mfRef.current.menuItems = [];
                 mfRef.current.addEventListener('input', (e: any) => {
                     onChange(e.target.value);
                 });
@@ -47,22 +46,30 @@ export default function MathInput({ value, onChange, onKeyDown, placeholder, cla
     if (!isMounted) return <div className={className} style={{...style, display: 'flex', alignItems: 'center', opacity: 0.5}}>Loading math editor...</div>;
 
     return (
-        <math-field
-            ref={mfRef}
-            className={className}
-            style={{
-                ...style, 
-                /* Add overrides for styling math-field similarly to textarea */
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'white',
-                border: '1px solid rgba(255,255,255,0.1)',
-                padding: '12px 20px',
-                borderRadius: '16px',
-                fontSize: '16px'
-            }}
+        <>
+            <style jsx global>{`
+                math-field::part(menu-toggle) {
+                    display: none !important;
+                }
+            `}</style>
+            <math-field
+                ref={mfRef}
+                className={className}
+                math-virtual-keyboard-policy="manual"
+                style={{
+                    ...style, 
+                    /* Add overrides for styling math-field similarly to textarea */
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    padding: '12px 20px',
+                    borderRadius: '16px',
+                    fontSize: '16px'
+                }}
             onKeyDown={onKeyDown}
         >
             {value}
         </math-field>
+        </>
     );
 }

@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
             return {
                 id: batchName,
                 name: batchName,
-                hasUnread: m ? m.lastMessageAt > m.lastAdminReadAt : false,
+                hasUnread: m ? (!m.lastAdminReadAt || new Date(m.lastMessageAt).getTime() > new Date(m.lastAdminReadAt).getTime()) : false,
                 lastMessageAt: m ? m.lastMessageAt : null
             };
         });

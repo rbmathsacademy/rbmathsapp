@@ -29,8 +29,9 @@ export async function GET(req: NextRequest) {
         metadata.forEach((m: any) => {
             const lastRead = readStatus instanceof Map ? readStatus.get(m.batchId) : readStatus[m.batchId];
             const lastReadDate = lastRead ? new Date(lastRead) : new Date(0);
+            const msgDate = m.lastMessageAt ? new Date(m.lastMessageAt) : new Date(0);
             
-            if (m.lastMessageAt > lastReadDate) {
+            if (msgDate.getTime() > lastReadDate.getTime()) {
                 unreadCount++;
             }
         });
