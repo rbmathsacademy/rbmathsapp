@@ -207,6 +207,44 @@ export async function PUT(req: NextRequest) {
     }
 }
 
+export async function DELETE(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const messageId = searchParams.get('messageId');
+
+        if (!messageId) {
+            return NextResponse.json({ error: 'Missing messageId' }, { status: 400 });
+        }
+
+        const payload = await getPayload(req);
+        if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        
+        await dbConnect();
+
+        const message = await ChatMessage.findById(messageId);
+        if (!message) return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+
+        // Authorization check - only own messages
+        const adminRoles = ['admin', 'superadmin', 'manager', 'copy_checker'];
+        const isAdmin = adminRoles.includes(payload.role as string);
+        const myPhoneNumber = (payload.phoneNumber || payload.userId) as string;
+
+        if (isAdmin && message.senderRole !== 'admin') {
+            return NextResponse.json({ error: 'Admin can only delete admin messages' }, { status: 403 });
+        }
+        if (!isAdmin && message.senderId !== myPhoneNumber) {
+            return NextResponse.json({ error: 'You can only delete your own messages' }, { status: 403 });
+        }
+
+        await ChatMessage.findByIdAndDelete(messageId);
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('Chat DELETE error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
 async function sendAdminNotification(studentName: string, batchId: string, content: string) {
     const adminEmail = 'rb.mathsacademy@gmail.com';
     const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });

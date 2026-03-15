@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Scissors, Camera, X, Edit2, Check, RefreshCcw, Calculator, Reply } from 'lucide-react';
+import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Scissors, Camera, X, Edit2, Check, RefreshCcw, Calculator, Reply, Trash2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
@@ -60,6 +60,7 @@ export default function AdminChat() {
     const [editContent, setEditContent] = useState('');
     const [showMathTools, setShowMathTools] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+    const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     
     // Swipe state refs
@@ -136,14 +137,6 @@ export default function AdminChat() {
         }
     }, [selectedBatch]);
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
     // Auto-resize textarea
     const autoResize = useCallback(() => {
         const el = inputRef.current;
@@ -199,6 +192,16 @@ export default function AdminChat() {
         swipeStartY.current = null;
         swipeMsgId.current = null;
         forceRender(n => n + 1);
+    };
+
+    // Scroll to a specific message and highlight it
+    const scrollToMessage = (messageId: string) => {
+        const el = document.getElementById(`msg-${messageId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedMsgId(messageId);
+            setTimeout(() => setHighlightedMsgId(null), 2000);
+        }
     };
 
     const fetchBatches = async () => {
@@ -288,6 +291,26 @@ export default function AdminChat() {
         }
     };
 
+    const handleDeleteMessage = async (msg: Message) => {
+        if (!confirm('Delete this message permanently?')) return;
+        const toastId = toast.loading('Deleting...');
+        try {
+            const res = await fetch(`/api/chat/messages?messageId=${msg._id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                toast.success('Message deleted', { id: toastId });
+                fetchMessages(selectedBatch!.id, true);
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete', { id: toastId });
+            }
+        } catch (error) {
+            toast.error('Error deleting', { id: toastId });
+        }
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !selectedBatch) return;
@@ -350,13 +373,6 @@ export default function AdminChat() {
     const handleReplyClick = (msg: Message) => {
         setReplyingTo(msg);
         inputRef.current?.focus();
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
     };
 
     return (
@@ -469,10 +485,12 @@ export default function AdminChat() {
                             messages.map((msg, i) => {
                                 const isMe = msg.senderRole === 'admin';
                                 const offset = swipeOffset.current[msg._id] || 0;
+                                const isHighlighted = highlightedMsgId === msg._id;
                                 return (
                                     <div 
-                                        key={msg._id} 
-                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
+                                        key={msg._id}
+                                        id={`msg-${msg._id}`}
+                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 transition-colors duration-700 rounded-2xl ${isHighlighted ? 'bg-blue-500/20' : ''}`}
                                         onTouchStart={(e) => handleTouchStart(e, msg._id)}
                                         onTouchMove={handleTouchMove}
                                         onTouchEnd={handleTouchEnd}
@@ -496,9 +514,12 @@ export default function AdminChat() {
                                                 </p>
                                             )}
                                             <div className={`relative group p-3 sm:p-4 rounded-3xl shadow-xl ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5'}`}>
-                                                {/* Reply preview inside message */}
+                                                {/* Reply preview inside message - clickable to scroll */}
                                                 {msg.replyTo && (
-                                                    <div className={`mb-2 p-2 rounded-xl border-l-2 ${isMe ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}>
+                                                    <div 
+                                                        className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}
+                                                        onClick={() => scrollToMessage(msg.replyTo!.messageId)}
+                                                    >
                                                         <p className="text-[10px] font-bold text-blue-300">{msg.replyTo.senderRole === 'admin' ? 'Admin' : msg.replyTo.senderName}</p>
                                                         <p className="text-[11px] opacity-80 truncate max-w-[250px]">
                                                             {msg.replyTo.content?.substring(0, 80)}{(msg.replyTo.content?.length || 0) > 80 ? '...' : ''}
@@ -506,7 +527,7 @@ export default function AdminChat() {
                                                     </div>
                                                 )}
                                                 {msg.type === 'text' ? (
-                                                    <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar">
+                                                    <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar whitespace-pre-wrap">
                                                         <Latex>{msg.content}</Latex>
                                                         {msg.isEdited && <span className="text-[9px] opacity-40 ml-2">(edited)</span>}
                                                     </div>
@@ -523,6 +544,15 @@ export default function AdminChat() {
                                                                 className="hover:text-white transition-colors p-1"
                                                             >
                                                                 <Edit2 className="h-2.5 w-2.5" />
+                                                            </button>
+                                                        )}
+                                                        {isMe && (
+                                                            <button 
+                                                                onClick={() => handleDeleteMessage(msg)}
+                                                                className="hover:text-red-400 transition-colors p-1"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="h-2.5 w-2.5" />
                                                             </button>
                                                         )}
                                                     </div>
@@ -632,7 +662,6 @@ export default function AdminChat() {
                                 ref={inputRef}
                                 value={newMessage} 
                                 onChange={(e) => setNewMessage(e.target.value)}
-                                onKeyDown={handleKeyDown}
                                 placeholder="Type a message..." 
                                 rows={1}
                                 className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"

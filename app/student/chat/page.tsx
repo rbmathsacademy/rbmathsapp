@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply } from 'lucide-react';
+import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import 'katex/dist/katex.min.css';
@@ -54,6 +54,7 @@ export default function StudentChat() {
     const [myRoll, setMyRoll] = useState<string | null>(null);
     const [showMathTools, setShowMathTools] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+    const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     
     // Swipe state refs
@@ -179,6 +180,16 @@ export default function StudentChat() {
         forceRender(n => n + 1);
     };
 
+    // Scroll to a specific message and highlight it
+    const scrollToMessage = (messageId: string) => {
+        const el = document.getElementById(`msg-${messageId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedMsgId(messageId);
+            setTimeout(() => setHighlightedMsgId(null), 2000);
+        }
+    };
+
     const fetchStudentInfo = async () => {
         try {
             const res = await fetch('/api/student/me');
@@ -262,6 +273,25 @@ export default function StudentChat() {
         }
     };
 
+    const handleDeleteMessage = async (msg: Message) => {
+        if (!confirm('Delete this message permanently?')) return;
+        const toastId = toast.loading('Deleting...');
+        try {
+            const res = await fetch(`/api/chat/messages?messageId=${msg._id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                toast.success('Message deleted', { id: toastId });
+                fetchMessages(selectedBatch!, true);
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete', { id: toastId });
+            }
+        } catch (error) {
+            toast.error('Error deleting', { id: toastId });
+        }
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -324,13 +354,6 @@ export default function StudentChat() {
         inputRef.current?.focus();
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    };
-
     // Get display name for reply preview considering anonymity
     const getReplyDisplayName = (msg: Message) => {
         if (msg.senderRole === 'admin') return 'Admin';
@@ -386,11 +409,13 @@ export default function StudentChat() {
                         const isMe = msg.senderId === myRoll;
                         const isAdmin = msg.senderRole === 'admin';
                         const offset = swipeOffset.current[msg._id] || 0;
+                        const isHighlighted = highlightedMsgId === msg._id;
 
                         return (
                             <div 
-                                key={msg._id} 
-                                className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 relative`}
+                                key={msg._id}
+                                id={`msg-${msg._id}`}
+                                className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 relative transition-colors duration-700 rounded-2xl ${isHighlighted ? 'bg-blue-500/20' : ''}`}
                                 onTouchStart={(e) => handleTouchStart(e, msg._id)}
                                 onTouchMove={handleTouchMove}
                                 onTouchEnd={handleTouchEnd}
@@ -412,9 +437,12 @@ export default function StudentChat() {
                                         {isAdmin ? 'Admin' : isMe ? 'Me' : 'Anonymous'}
                                     </p>
                                     <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${isMe ? 'bg-indigo-600 text-white rounded-tr-none' : isAdmin ? 'bg-blue-600 text-white rounded-tl-none' : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'}`}>
-                                        {/* Reply preview inside message */}
+                                        {/* Reply preview inside message - clickable to scroll */}
                                         {msg.replyTo && (
-                                            <div className={`mb-2 p-2 rounded-xl border-l-2 ${isMe ? 'bg-indigo-700/50 border-indigo-300' : isAdmin ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}>
+                                            <div 
+                                                className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? 'bg-indigo-700/50 border-indigo-300' : isAdmin ? 'bg-blue-700/50 border-blue-300' : 'bg-slate-700/50 border-blue-400'}`}
+                                                onClick={() => scrollToMessage(msg.replyTo!.messageId)}
+                                            >
                                                 <p className="text-[10px] font-bold text-blue-300">
                                                     {msg.replyTo.senderRole === 'admin' ? 'Admin' : 'Anonymous'}
                                                 </p>
@@ -424,7 +452,7 @@ export default function StudentChat() {
                                             </div>
                                         )}
                                         {msg.type === 'text' ? (
-                                            <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar">
+                                            <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar whitespace-pre-wrap">
                                                 <Latex>{msg.content}</Latex>
                                                 {msg.isEdited && <span className="text-[9px] opacity-40 ml-2">(edited)</span>}
                                             </div>
@@ -437,6 +465,15 @@ export default function StudentChat() {
                                                 {isMe && msg.type === 'text' && (
                                                     <button onClick={() => { setEditingMessage(msg); setEditContent(msg.content); }} className="p-1 hover:text-white transition-colors">
                                                         <Edit2 className="h-2.5 w-2.5" />
+                                                    </button>
+                                                )}
+                                                {isMe && (
+                                                    <button 
+                                                        onClick={() => handleDeleteMessage(msg)}
+                                                        className="p-1 hover:text-red-400 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="h-2.5 w-2.5" />
                                                     </button>
                                                 )}
                                                 {/* Reply button (desktop) */}
@@ -540,7 +577,6 @@ export default function StudentChat() {
                                 ref={inputRef}
                                 value={newMessage} 
                                 onChange={(e) => setNewMessage(e.target.value)}
-                                onKeyDown={handleKeyDown}
                                 placeholder="Ask a doubt..." 
                                 rows={1}
                                 className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
