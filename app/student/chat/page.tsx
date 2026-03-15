@@ -5,10 +5,8 @@ import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, 
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import 'katex/dist/katex.min.css';
+import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
-import dynamic from 'next/dynamic';
-
-const MathInput = dynamic(() => import('@/app/components/MathInput'), { ssr: false });
 
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
@@ -57,7 +55,6 @@ export default function StudentChat() {
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const mathFieldRef = useRef<any>(null);
     
     // Swipe state refs
     const swipeStartX = useRef<number | null>(null);
@@ -67,30 +64,35 @@ export default function StudentChat() {
     const [, forceRender] = useState(0);
 
     const mathSymbols = [
-        { label: 'xⁿ', insert: '$x^{n}$' },
-        { label: 'd/dx', insert: '$\\frac{d}{dx}$' },
-        { label: '∫', insert: '$\\int$' },
-        { label: '∫a→b', insert: '$\\int_{a}^{b}$' },
-        { label: '∑', insert: '$\\sum$' },
-        { label: '√', insert: '$\\sqrt{x}$' },
-        { label: 'lim', insert: '$\\lim_{x \\to a}$' },
-        { label: '∞', insert: '$\\infty$' },
-        { label: 'π', insert: '$\\pi$' },
-        { label: 'θ', insert: '$\\theta$' },
-        { label: 'Δ', insert: '$\\Delta$' },
-        { label: 'α', insert: '$\\alpha$' },
-        { label: 'β', insert: '$\\beta$' },
-        { label: 'sin', insert: '$\\sin$' },
-        { label: 'cos', insert: '$\\cos$' },
-        { label: 'tan', insert: '$\\tan$' },
-        { label: '≈', insert: '$\\approx$' },
-        { label: '≤', insert: '$\\leq$' },
-        { label: '≥', insert: '$\\geq$' },
-        { label: '≠', insert: '$\\neq$' },
-        { label: '→', insert: '$\\to$' },
-        { label: '⇒', insert: '$\\implies$' },
-        { label: 'Fraction', insert: '$\\frac{x}{y}$' },
-        { label: ' Matrix', insert: '$\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}$'}
+        { label: 'xⁿ', insert: '²' }, // commonly used superscripts
+        { label: 'x³', insert: '³' },
+        { label: 'x⁴', insert: '⁴' },
+        { label: 'x/y', insert: '½' },
+        { label: 'x/y', insert: '⅓' },
+        { label: 'x/y', insert: '¼' },
+        { label: '∫', insert: '∫' },
+        { label: '∑', insert: '∑' },
+        { label: '√', insert: '√' },
+        { label: 'lim', insert: 'lim' },
+        { label: '∞', insert: '∞' },
+        { label: 'π', insert: 'π' },
+        { label: 'θ', insert: 'θ' },
+        { label: 'Δ', insert: 'Δ' },
+        { label: 'α', insert: 'α' },
+        { label: 'β', insert: 'β' },
+        { label: 'sin', insert: 'sin' },
+        { label: 'cos', insert: 'cos' },
+        { label: 'tan', insert: 'tan' },
+        { label: '≈', insert: '≈' },
+        { label: '≤', insert: '≤' },
+        { label: '≥', insert: '≥' },
+        { label: '≠', insert: '≠' },
+        { label: '→', insert: '→' },
+        { label: '⇒', insert: '⇒' },
+        { label: '×', insert: '×' },
+        { label: '÷', insert: '÷' },
+        { label: '±', insert: '±' },
+        { label: '°', insert: '°' },
     ];
 
 
@@ -561,18 +563,13 @@ export default function StudentChat() {
                                             key={idx}
                                             type="button"
                                             onClick={() => {
-                                                if (showMathTools && mathFieldRef.current) {
-                                                    mathFieldRef.current.insert(item.insert);
-                                                    setNewMessage(mathFieldRef.current.value);
-                                                } else {
-                                                    setNewMessage(prev => prev + ' ' + item.insert + ' ');
-                                                    inputRef.current?.focus();
-                                                }
+                                                setNewMessage(prev => prev + item.insert);
+                                                inputRef.current?.focus();
                                             }}
                                             className="px-2.5 py-1.5 bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-lg text-white font-mono text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center min-w-[36px]"
-                                            title={item.insert}
+                                            title={item.label}
                                         >
-                                            <Latex>{item.insert}</Latex>
+                                            {item.insert}
                                         </button>
                                     ))}
                                 </div>
@@ -600,30 +597,15 @@ export default function StudentChat() {
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all"><ImageIcon className="h-[1.2rem] w-[1.2rem]" /></button>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                             
-                            {showMathTools ? (
-                                <MathInput
-                                    value={newMessage}
-                                    onChange={(val) => setNewMessage(val)}
-                                    mathFieldRef={mathFieldRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault();
-                                            handleSendMessage();
-                                        }
-                                    }}
-                                    className="flex-1 min-w-0 resize-none overflow-hidden outline-none"
-                                />
-                            ) : (
-                                <textarea 
-                                    ref={inputRef}
-                                    value={newMessage} 
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder="Ask a doubt..." 
-                                    rows={1}
-                                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
-                                    style={{ maxHeight: '120px' }}
-                                />
-                            )}
+                            <textarea 
+                                ref={inputRef}
+                                value={newMessage} 
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                placeholder="Ask a doubt..." 
+                                rows={1}
+                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
+                                style={{ maxHeight: '120px' }}
+                            />
                             
                             <button type="submit" disabled={!newMessage.trim()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-[1.2rem] w-[1.2rem]" /></button>
                         </form>
