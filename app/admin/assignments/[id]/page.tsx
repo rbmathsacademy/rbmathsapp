@@ -3,8 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2, Filter, ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import Latex from 'react-latex-next';
+import 'katex/dist/katex.min.css';
 
 interface StudentSubmission {
     _id: string | null; // submission ID if exists
@@ -45,6 +47,23 @@ export default function AssignmentDetailsPage() {
     const [editDeadline, setEditDeadline] = useState('');
     const [editCooldown, setEditCooldown] = useState(0);
 
+    // Filter State
+    const [correctionFilter, setCorrectionFilter] = useState<'ALL' | 'CORRECTED' | 'NOT_CORRECTED'>('ALL');
+    const [submissionFilter, setSubmissionFilter] = useState<'ALL' | 'ON_TIME' | 'LATE' | 'PENDING' | 'MISSED'>('ALL');
+
+    // Question Viewer State
+    const [assignmentQuestions, setAssignmentQuestions] = useState<any[]>([]);
+    const [isQuestionsExpanded, setIsQuestionsExpanded] = useState(false);
+
+    // Question Edit Modal State
+    const [isQEditModalOpen, setIsQEditModalOpen] = useState(false);
+    const [allBankQuestions, setAllBankQuestions] = useState<any[]>([]);
+    const [qEditSelectedIds, setQEditSelectedIds] = useState<Set<string>>(new Set());
+    const [qBankLoading, setQBankLoading] = useState(false);
+    const [qSearchQuery, setQSearchQuery] = useState('');
+    const [qTopicFilter, setQTopicFilter] = useState('');
+    const [qTypeFilter, setQTypeFilter] = useState('');
+
     useEffect(() => {
         if (params.id) fetchDetails();
     }, [params.id]);
@@ -60,6 +79,11 @@ export default function AssignmentDetailsPage() {
                     (a.student.name || '').localeCompare(b.student.name || '')
                 );
                 setStudents(sortedStudents);
+
+                // Set assignment questions
+                if (data.assignmentQuestions) {
+                    setAssignmentQuestions(data.assignmentQuestions);
+                }
 
                 // Init edit state
                 setEditTitle(data.assignment.title);
@@ -153,6 +177,71 @@ export default function AssignmentDetailsPage() {
         }
     };
 
+    // Question Edit Modal Functions
+    const openQEditModal = async () => {
+        if (allBankQuestions.length === 0) {
+            setQBankLoading(true);
+            try {
+                const res = await fetch('/api/admin/questions', {
+                    headers: { 'X-Global-Admin-Key': 'globaladmin_25' }
+                });
+                const data = await res.json();
+                const qs = Array.isArray(data) ? data : (data.questions || []);
+                setAllBankQuestions(qs);
+            } catch {
+                toast.error('Failed to load question bank');
+            } finally {
+                setQBankLoading(false);
+            }
+        }
+        // Pre-select current assignment questions
+        if (assignment && Array.isArray(assignment.content)) {
+            setQEditSelectedIds(new Set(assignment.content as string[]));
+        }
+        setIsQEditModalOpen(true);
+    };
+
+    const handleSaveQuestionEdits = async () => {
+        if (!assignment) return;
+        const newContent = Array.from(qEditSelectedIds);
+        try {
+            const res = await fetch(`/api/admin/assignments/${assignment._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent })
+            });
+            if (res.ok) {
+                toast.success('Assignment questions updated');
+                setIsQEditModalOpen(false);
+                fetchDetails();
+            } else {
+                toast.error('Failed to update questions');
+            }
+        } catch {
+            toast.error('Error saving question changes');
+        }
+    };
+
+    const toggleQEditSelection = (id: string) => {
+        const s = new Set(qEditSelectedIds);
+        if (s.has(id)) s.delete(id); else s.add(id);
+        setQEditSelectedIds(s);
+    };
+
+    // Filtered question bank for edit modal
+    const filteredBankQuestions = allBankQuestions.filter(q => {
+        if (qSearchQuery) {
+            const query = qSearchQuery.toLowerCase();
+            if (!q.text?.toLowerCase().includes(query) && !q.id?.toLowerCase().includes(query) && !q.topic?.toLowerCase().includes(query)) return false;
+        }
+        if (qTopicFilter && q.topic !== qTopicFilter) return false;
+        if (qTypeFilter && q.type !== qTypeFilter) return false;
+        return true;
+    });
+
+    const bankTopics = [...new Set(allBankQuestions.map((q: any) => q.topic).filter(Boolean))].sort() as string[];
+    const bankTypes = [...new Set(allBankQuestions.map((q: any) => q.type).filter(Boolean))] as string[];
+
     if (loading) return <div className="p-12 text-center text-gray-400">Loading...</div>;
     if (!assignment) return <div className="p-12 text-center text-gray-400">Assignment not found</div>;
 
@@ -166,6 +255,21 @@ export default function AssignmentDetailsPage() {
     const lateCount = students.filter(s => s.submissionStatus === 'LATE_SUBMITTED').length;
     const missedCount = students.filter(s => s.submissionStatus === 'MISSED').length;
     const pendingCount = students.filter(s => s.submissionStatus === 'PENDING').length;
+
+    // Apply filters
+    const filteredStudents = students.filter(s => {
+        // Correction filter
+        if (correctionFilter === 'CORRECTED' && s.status !== 'CORRECTED') return false;
+        if (correctionFilter === 'NOT_CORRECTED' && s.status === 'CORRECTED') return false;
+
+        // Submission filter
+        if (submissionFilter === 'ON_TIME' && s.submissionStatus !== 'SUBMITTED') return false;
+        if (submissionFilter === 'LATE' && s.submissionStatus !== 'LATE_SUBMITTED') return false;
+        if (submissionFilter === 'PENDING' && s.submissionStatus !== 'PENDING') return false;
+        if (submissionFilter === 'MISSED' && s.submissionStatus !== 'MISSED') return false;
+
+        return true;
+    });
 
     return (
         <div className="p-3 sm:p-6 max-w-7xl mx-auto text-gray-200">
@@ -241,6 +345,84 @@ export default function AssignmentDetailsPage() {
                 )}
             </div>
 
+            {/* Assignment Questions Section — only for QUESTIONS type */}
+            {assignment.type === 'QUESTIONS' && assignmentQuestions.length > 0 && (
+                <div className="bg-[#1a1f2e] border border-white/5 rounded-xl mb-6 sm:mb-8 overflow-hidden">
+                    <button
+                        onClick={() => setIsQuestionsExpanded(!isQuestionsExpanded)}
+                        className="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-white/5 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-purple-400" />
+                            <h2 className="text-lg font-semibold text-white">Assignment Questions</h2>
+                            <span className="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full">{assignmentQuestions.length} questions</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); openQEditModal(); }}
+                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium text-white transition-colors flex items-center gap-1.5"
+                            >
+                                <Pen className="w-3 h-3" /> Edit Questions
+                            </button>
+                            {isQuestionsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                        </div>
+                    </button>
+                    {isQuestionsExpanded && (
+                        <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 max-h-[600px] overflow-y-auto">
+                            {assignmentQuestions.map((q, i) => (
+                                <div key={q._id || q.id || i} className="bg-black/20 border border-white/5 rounded-lg p-4">
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-gray-500 font-mono text-sm font-bold flex-shrink-0">{i + 1}.</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                                <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded font-bold uppercase">{q.topic}</span>
+                                                {q.subtopic && <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded font-bold uppercase">{q.subtopic}</span>}
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase border ${q.type === 'broad' ? 'border-pink-500/30 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500/30 text-yellow-400' : 'border-cyan-500/30 text-cyan-400'}`}>{q.type}</span>
+                                                {q.marks && <span className="text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">{q.marks}M</span>}
+                                            </div>
+                                            <div className="text-sm text-gray-200 leading-relaxed">
+                                                {q.image && (
+                                                    <div className="mb-2">
+                                                        <img src={q.image} alt="Q" className="max-h-32 rounded border border-white/10" />
+                                                    </div>
+                                                )}
+                                                <Latex>{q.text}</Latex>
+                                            </div>
+                                            {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                                                    {q.options.map((opt: string, j: number) => (
+                                                        <div key={j} className="text-xs px-2 py-1.5 rounded border border-white/5 bg-black/20 flex items-start gap-2">
+                                                            <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
+                                                            <span className="text-gray-300"><Latex>{opt}</Latex></span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* If QUESTIONS type but no questions loaded yet, show edit button */}
+            {assignment.type === 'QUESTIONS' && assignmentQuestions.length === 0 && (
+                <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6 mb-6 sm:mb-8 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-gray-500" />
+                        <span className="text-gray-400">No questions loaded for this assignment</span>
+                    </div>
+                    <button
+                        onClick={openQEditModal}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium text-white transition-colors flex items-center gap-1.5"
+                    >
+                        <Plus className="w-3 h-3" /> Add Questions
+                    </button>
+                </div>
+            )}
+
             {/* Submissions List */}
             <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-white/5">
@@ -269,6 +451,44 @@ export default function AssignmentDetailsPage() {
                             No. of Corrected: {students.filter(s => s.status === 'CORRECTED').length}
                         </div>
                     </div>
+                    <div className="flex flex-wrap gap-2 sm:gap-3 mt-3">
+                        <div className="flex items-center gap-1.5">
+                            <Filter className="w-3.5 h-3.5 text-gray-500" />
+                            <select
+                                value={correctionFilter}
+                                onChange={(e) => setCorrectionFilter(e.target.value as any)}
+                                className="bg-black/30 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-300 outline-none focus:border-purple-500 cursor-pointer"
+                            >
+                                <option value="ALL">All Corrections</option>
+                                <option value="CORRECTED">Corrected</option>
+                                <option value="NOT_CORRECTED">Not Corrected</option>
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <select
+                                value={submissionFilter}
+                                onChange={(e) => setSubmissionFilter(e.target.value as any)}
+                                className="bg-black/30 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-300 outline-none focus:border-blue-500 cursor-pointer"
+                            >
+                                <option value="ALL">All Submissions</option>
+                                <option value="ON_TIME">On Time</option>
+                                <option value="LATE">Late</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="MISSED">Missed</option>
+                            </select>
+                        </div>
+                        {(correctionFilter !== 'ALL' || submissionFilter !== 'ALL') && (
+                            <button
+                                onClick={() => { setCorrectionFilter('ALL'); setSubmissionFilter('ALL'); }}
+                                className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded border border-red-500/20 hover:bg-red-500/10 transition-colors"
+                            >
+                                Clear Filters
+                            </button>
+                        )}
+                        {(correctionFilter !== 'ALL' || submissionFilter !== 'ALL') && (
+                            <span className="text-xs text-gray-500 self-center ml-auto">Showing {filteredStudents.length} of {students.length}</span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Desktop Table */}
@@ -284,14 +504,14 @@ export default function AssignmentDetailsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {students.length === 0 ? (
+                            {filteredStudents.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="p-12 text-center text-gray-500">
-                                        No students in this batch.
+                                        {students.length === 0 ? 'No students in this batch.' : 'No students match the current filters.'}
                                     </td>
                                 </tr>
                             ) : (
-                                students.map(student => (
+                                filteredStudents.map(student => (
                                     <tr key={student.student._id} className="hover:bg-white/5 transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
@@ -402,10 +622,10 @@ export default function AssignmentDetailsPage() {
 
                 {/* Mobile Card List */}
                 <div className="sm:hidden divide-y divide-white/5">
-                    {students.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">No students in this batch.</div>
+                    {filteredStudents.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">{students.length === 0 ? 'No students in this batch.' : 'No students match the current filters.'}</div>
                     ) : (
-                        students.map(student => (
+                        filteredStudents.map(student => (
                             <div key={student.student._id} className="p-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
@@ -560,6 +780,139 @@ export default function AssignmentDetailsPage() {
                             >
                                 <Save className="w-4 h-4" /> Save Changes
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Question Edit Modal */}
+            {isQEditModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                        {/* Modal Header */}
+                        <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center">
+                            <h2 className="text-xl font-bold">Edit Assignment Questions</h2>
+                            <button onClick={() => setIsQEditModalOpen(false)} className="p-2 hover:bg-white/5 rounded-lg">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Filters */}
+                        <div className="p-3 sm:p-4 border-b border-white/5 bg-black/20 space-y-3">
+                            <div className="flex gap-2 flex-wrap">
+                                <div className="relative flex-1 min-w-[200px]">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        value={qSearchQuery}
+                                        onChange={(e) => setQSearchQuery(e.target.value)}
+                                        placeholder="Search questions by text, ID, or topic..."
+                                        className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <select
+                                    value={qTopicFilter}
+                                    onChange={(e) => setQTopicFilter(e.target.value)}
+                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
+                                >
+                                    <option value="">All Topics</option>
+                                    {bankTopics.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                                <select
+                                    value={qTypeFilter}
+                                    onChange={(e) => setQTypeFilter(e.target.value)}
+                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[120px]"
+                                >
+                                    <option value="">All Types</option>
+                                    {bankTypes.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex gap-2 items-center flex-wrap">
+                                <button
+                                    onClick={() => {
+                                        const s = new Set(qEditSelectedIds);
+                                        filteredBankQuestions.forEach(q => s.add(q.id || q._id));
+                                        setQEditSelectedIds(s);
+                                    }}
+                                    className="px-4 py-1.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-sm border border-blue-500/30"
+                                >
+                                    Select All ({filteredBankQuestions.length})
+                                </button>
+                                <button
+                                    onClick={() => setQEditSelectedIds(new Set())}
+                                    className="px-4 py-1.5 bg-red-600/10 text-red-400 hover:bg-red-600/20 rounded-lg text-sm border border-red-500/20"
+                                >
+                                    Deselect All
+                                </button>
+                                <span className="ml-auto text-xs sm:text-sm text-gray-400">
+                                    {filteredBankQuestions.length} of {allBankQuestions.length} &bull; {qEditSelectedIds.size} selected
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Questions List */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            {qBankLoading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="w-6 h-6 border-2 border-white/20 border-t-blue-500 rounded-full animate-spin" />
+                                </div>
+                            ) : filteredBankQuestions.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500">No questions match your filters.</div>
+                            ) : (
+                                filteredBankQuestions.map(q => {
+                                    const qId = q.id || q._id;
+                                    const isSelected = qEditSelectedIds.has(qId);
+                                    return (
+                                        <div
+                                            key={qId}
+                                            onClick={() => toggleQEditSelection(qId)}
+                                            className={`p-4 rounded-xl border cursor-pointer transition-all ${isSelected
+                                                ? 'bg-blue-500/10 border-blue-500/50'
+                                                : 'bg-black/20 border-white/5 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <div className="flex gap-4">
+                                                <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-500'}`}>
+                                                    {isSelected && (
+                                                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex gap-2 mb-1.5 flex-wrap">
+                                                        <span className="text-xs bg-white/5 px-2 py-0.5 rounded text-gray-400">{q.topic}</span>
+                                                        {q.subtopic && <span className="text-xs bg-white/5 px-2 py-0.5 rounded text-gray-400">{q.subtopic}</span>}
+                                                        <span className="text-xs bg-purple-500/10 px-2 py-0.5 rounded text-purple-400">{q.type}</span>
+                                                        {q.marks && <span className="text-xs bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-400">{q.marks}M</span>}
+                                                    </div>
+                                                    <div className="text-sm text-gray-200"><Latex>{q.text}</Latex></div>
+                                                    {q.image && (
+                                                        <img src={q.image} alt="Q" className="mt-2 max-h-24 rounded border border-white/10" />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-3 sm:p-4 border-t border-white/10 flex justify-between items-center bg-black/20">
+                            <span className="text-gray-400 font-medium">{qEditSelectedIds.size} questions selected</span>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setIsQEditModalOpen(false)}
+                                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveQuestionEdits}
+                                    className="px-6 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-medium flex items-center gap-2"
+                                >
+                                    <Save className="w-4 h-4" /> Save Changes
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

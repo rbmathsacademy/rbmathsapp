@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import BatchStudent from '@/models/BatchStudent';
+import Question from '@/models/Question';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -85,7 +86,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             }
         });
 
-        return NextResponse.json({ assignment, studentList });
+        // If QUESTIONS type, populate full question data
+        let assignmentQuestions: any[] = [];
+        if (assignment.type === 'QUESTIONS' && Array.isArray(assignment.content) && assignment.content.length > 0) {
+            assignmentQuestions = await Question.find({ id: { $in: assignment.content } }).lean();
+        }
+
+        return NextResponse.json({ assignment, studentList, assignmentQuestions });
     } catch (error: any) {
         console.error('Assignment detail error:', error);
         return NextResponse.json({ error: error.message || 'Failed to fetch assignment details' }, { status: 500 });
@@ -122,6 +129,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (body.deadline) updateData.deadline = body.deadline;
         if (body.folderId !== undefined) updateData.folderId = body.folderId; // Allow null to remove from folder
         if (body.cooldownDuration !== undefined) updateData.cooldownDuration = Number(body.cooldownDuration);
+        if (body.content !== undefined) updateData.content = body.content;
 
         const assignment = await Assignment.findByIdAndUpdate(
             id,

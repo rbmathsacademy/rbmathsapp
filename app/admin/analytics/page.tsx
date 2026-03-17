@@ -131,10 +131,10 @@ export default function AnalyticsPage() {
         fetchAnalytics();
     }, [selectedBatch]);
 
-    const filteredStudents = data?.analytics.filter(s =>
+    const filteredStudents = (data?.analytics.filter(s =>
         s.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.student.phoneNumber.includes(searchTerm)
-    ) || [];
+    ) || []).sort((a, b) => (a.student.name || '').localeCompare(b.student.name || ''));
 
     return (
         <div className="p-4 sm:p-6 max-w-[1600px] mx-auto min-h-screen text-gray-200">

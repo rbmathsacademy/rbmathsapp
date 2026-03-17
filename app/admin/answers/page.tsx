@@ -239,7 +239,8 @@ export default function AnswerBank() {
                 return (
                     q.text.toLowerCase().includes(query) ||
                     (q.answer && q.answer.toLowerCase().includes(query)) ||
-                    q.topic.toLowerCase().includes(query)
+                    q.topic.toLowerCase().includes(query) ||
+                    q.id.toLowerCase().includes(query)
                 );
             }
             return true;
@@ -313,9 +314,16 @@ export default function AnswerBank() {
         let editorData: any[] = [];
 
         if (questionsToEdit.length > 0) {
+            // Include full question data along with answer fields
             editorData = questionsToEdit.map(q => ({
                 id: q.id,
                 text: q.text,
+                type: q.type,
+                topic: q.topic,
+                subtopic: q.subtopic,
+                options: q.options || [],
+                examNames: q.examNames || [],
+                marks: q.marks || null,
                 answer: q.answer || "",
                 hint: q.hint || "",
                 explanation: q.explanation || ""
