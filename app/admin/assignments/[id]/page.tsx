@@ -51,9 +51,10 @@ export default function AssignmentDetailsPage() {
     const [correctionFilter, setCorrectionFilter] = useState<'ALL' | 'CORRECTED' | 'NOT_CORRECTED'>('ALL');
     const [submissionFilter, setSubmissionFilter] = useState<'ALL' | 'ON_TIME' | 'LATE' | 'PENDING' | 'MISSED'>('ALL');
 
-    // Question Viewer State
+    // Question Viewer / Manager State
     const [assignmentQuestions, setAssignmentQuestions] = useState<any[]>([]);
-    const [isQuestionsExpanded, setIsQuestionsExpanded] = useState(false);
+    const [isViewQModalOpen, setIsViewQModalOpen] = useState(false);
+    const [isEditQuestionsExpanded, setIsEditQuestionsExpanded] = useState(false);
 
     // Question Edit Modal State
     const [isQEditModalOpen, setIsQEditModalOpen] = useState(false);
@@ -300,16 +301,34 @@ export default function AssignmentDetailsPage() {
     });
 
     return (
-        <div className="p-3 sm:p-6 max-w-7xl mx-auto text-gray-200">
+        <div className="p-3 sm:p-6 max-w-7xl mx-auto w-full text-gray-200 overflow-x-hidden sm:overflow-visible">
             <Toaster />
 
-            <button
-                onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
-            >
-                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                Back
-            </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+                <button
+                    onClick={() => router.push('/admin/assignments')}
+                    className="flex items-center w-fit gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
+                >
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Back
+                </button>
+                {assignment?.type === 'QUESTIONS' && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                            onClick={() => setIsViewQModalOpen(true)}
+                            className="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors flex items-center gap-1.5"
+                        >
+                            <FileText className="w-4 h-4" /> View Assignment
+                        </button>
+                        <button
+                            onClick={() => setIsEditQuestionsExpanded(true)}
+                            className="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors flex items-center gap-1.5"
+                        >
+                            <Pen className="w-4 h-4" /> Edit Questions
+                        </button>
+                    </div>
+                )}
+            </div>
 
             {/* Header Card */}
             <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-4 sm:p-8 mb-6 sm:mb-8 relative group">
@@ -373,90 +392,7 @@ export default function AssignmentDetailsPage() {
                 )}
             </div>
 
-            {/* Assignment Questions Section — only for QUESTIONS type */}
-            {assignment.type === 'QUESTIONS' && assignmentQuestions.length > 0 && (
-                <div className="bg-[#1a1f2e] border border-white/5 rounded-xl mb-6 sm:mb-8 overflow-hidden">
-                    <button
-                        onClick={() => setIsQuestionsExpanded(!isQuestionsExpanded)}
-                        className="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-white/5 transition-colors"
-                    >
-                        <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-purple-400" />
-                            <h2 className="text-lg font-semibold text-white">Assignment Questions</h2>
-                            <span className="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full">{assignmentQuestions.length} questions</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={(e) => { e.stopPropagation(); openQEditModal(); }}
-                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium text-white transition-colors flex items-center gap-1.5"
-                            >
-                                <Pen className="w-3 h-3" /> Edit Questions
-                            </button>
-                            {isQuestionsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                        </div>
-                    </button>
-                    {isQuestionsExpanded && (
-                        <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 max-h-[600px] overflow-y-auto">
-                            {assignmentQuestions.map((q, i) => (
-                                <div key={q._id || q.id || i} className="bg-black/20 border border-white/5 rounded-lg p-4 group relative">
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); handleRemoveQuestion(q._id || q.id); }}
-                                        className="absolute top-4 right-4 p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Remove question from assignment"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                    <div className="flex items-start gap-3 pr-10">
-                                        <span className="text-gray-500 font-mono text-sm font-bold flex-shrink-0">{i + 1}.</span>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap gap-1.5 mb-2">
-                                                <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded font-bold uppercase">{q.topic}</span>
-                                                {q.subtopic && <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded font-bold uppercase">{q.subtopic}</span>}
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase border ${q.type === 'broad' ? 'border-pink-500/30 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500/30 text-yellow-400' : 'border-cyan-500/30 text-cyan-400'}`}>{q.type}</span>
-                                                {q.marks && <span className="text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">{q.marks}M</span>}
-                                            </div>
-                                            <div className="text-sm text-gray-200 leading-relaxed">
-                                                {q.image && (
-                                                    <div className="mb-2">
-                                                        <img src={q.image} alt="Q" className="max-h-32 rounded border border-white/10" />
-                                                    </div>
-                                                )}
-                                                <Latex>{q.text}</Latex>
-                                            </div>
-                                            {q.type === 'mcq' && q.options && q.options.length > 0 && (
-                                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                                                    {q.options.map((opt: string, j: number) => (
-                                                        <div key={j} className="text-xs px-2 py-1.5 rounded border border-white/5 bg-black/20 flex items-start gap-2">
-                                                            <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
-                                                            <span className="text-gray-300"><Latex>{opt}</Latex></span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
 
-            {/* If QUESTIONS type but no questions loaded yet, show edit button */}
-            {assignment.type === 'QUESTIONS' && assignmentQuestions.length === 0 && (
-                <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6 mb-6 sm:mb-8 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-gray-500" />
-                        <span className="text-gray-400">No questions loaded for this assignment</span>
-                    </div>
-                    <button
-                        onClick={openQEditModal}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium text-white transition-colors flex items-center gap-1.5"
-                    >
-                        <Plus className="w-3 h-3" /> Add Questions
-                    </button>
-                </div>
-            )}
 
             {/* Submissions List */}
             <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
@@ -948,6 +884,130 @@ export default function AssignmentDetailsPage() {
                                     <Save className="w-4 h-4" /> Save Changes
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Manage Deployed Questions Modal */}
+            {isEditQuestionsExpanded && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                        <div className="p-4 sm:p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-black/20">
+                            <div>
+                                <h2 className="text-xl font-bold flex items-center gap-2"><Pen className="w-5 h-5 text-blue-400" /> Deployed Questions</h2>
+                                <p className="text-xs text-gray-400 mt-1">Delete questions from this assignment or add new ones</p>
+                            </div>
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <button
+                                    onClick={openQEditModal}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                                >
+                                    <Plus className="w-4 h-4" /> Add More Questions
+                                </button>
+                                <button onClick={() => setIsEditQuestionsExpanded(false)} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors ml-auto sm:ml-0">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                            {assignmentQuestions.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500">No questions loaded for this assignment.</div>
+                            ) : (
+                                assignmentQuestions.map((q, i) => (
+                                    <div key={q._id || q.id || i} className="bg-black/20 border border-white/5 rounded-xl p-4 sm:p-5 group relative">
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleRemoveQuestion(q._id || q.id); }}
+                                            className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                                            title="Remove Question"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <div className="flex items-start gap-4 pr-12">
+                                            <span className="text-gray-500 font-mono text-sm sm:text-base font-bold flex-shrink-0 pt-0.5">{i + 1}.</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex flex-wrap gap-2 mb-3">
+                                                    <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.topic}</span>
+                                                    {q.subtopic && <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.subtopic}</span>}
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${q.type === 'broad' ? 'border-pink-500/30 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500/30 text-yellow-400' : 'border-cyan-500/30 text-cyan-400'}`}>{q.type}</span>
+                                                    {q.marks && <span className="text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">{q.marks}M</span>}
+                                                </div>
+                                                <div className="text-sm sm:text-base text-gray-200 leading-relaxed overflow-x-auto">
+                                                    {q.image && (
+                                                        <div className="mb-3">
+                                                            <img src={q.image} alt="Q" className="max-h-40 rounded-lg border border-white/10" />
+                                                        </div>
+                                                    )}
+                                                    <Latex>{q.text}</Latex>
+                                                </div>
+                                                {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        {q.options.map((opt: string, j: number) => (
+                                                            <div key={j} className="text-xs sm:text-sm px-3 py-2 rounded-lg border border-white/5 bg-black/20 flex items-start gap-2">
+                                                                <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
+                                                                <span className="text-gray-300 overflow-x-auto"><Latex>{opt}</Latex></span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Questions Modal */}
+            {isViewQModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[45] flex items-center justify-center p-2 sm:p-4">
+                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                        <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+                            <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-5 h-5 text-purple-400" /> Assignment View</h2>
+                            <button onClick={() => setIsViewQModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                            {assignmentQuestions.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500">No questions loaded for this assignment.</div>
+                            ) : (
+                                assignmentQuestions.map((q, i) => (
+                                    <div key={q._id || q.id || i} className="bg-black/20 border border-white/5 rounded-xl p-4 sm:p-5">
+                                        <div className="flex items-start gap-4">
+                                            <span className="text-gray-500 font-mono text-sm sm:text-base font-bold flex-shrink-0 pt-0.5">{i + 1}.</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex flex-wrap gap-2 mb-3">
+                                                    <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.topic}</span>
+                                                    {q.subtopic && <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.subtopic}</span>}
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${q.type === 'broad' ? 'border-pink-500/30 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500/30 text-yellow-400' : 'border-cyan-500/30 text-cyan-400'}`}>{q.type}</span>
+                                                    {q.marks && <span className="text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">{q.marks}M</span>}
+                                                </div>
+                                                <div className="text-sm sm:text-base text-gray-200 leading-relaxed overflow-x-auto">
+                                                    {q.image && (
+                                                        <div className="mb-3">
+                                                            <img src={q.image} alt="Q" className="max-h-40 rounded-lg border border-white/10" />
+                                                        </div>
+                                                    )}
+                                                    <Latex>{q.text}</Latex>
+                                                </div>
+                                                {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        {q.options.map((opt: string, j: number) => (
+                                                            <div key={j} className="text-xs sm:text-sm px-3 py-2 rounded-lg border border-white/5 bg-black/20 flex items-start gap-2">
+                                                                <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
+                                                                <span className="text-gray-300 overflow-x-auto"><Latex>{opt}</Latex></span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
