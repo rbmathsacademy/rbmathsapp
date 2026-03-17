@@ -89,7 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // If QUESTIONS type, populate full question data
         let assignmentQuestions: any[] = [];
         if (assignment.type === 'QUESTIONS' && Array.isArray(assignment.content) && assignment.content.length > 0) {
-            assignmentQuestions = await Question.find({ id: { $in: assignment.content } }).lean();
+            assignmentQuestions = await Question.find({ _id: { $in: assignment.content } }).lean();
         }
 
         return NextResponse.json({ assignment, studentList, assignmentQuestions });

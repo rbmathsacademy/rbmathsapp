@@ -228,6 +228,34 @@ export default function AssignmentDetailsPage() {
         setQEditSelectedIds(s);
     };
 
+    const handleRemoveQuestion = async (questionId: string) => {
+        if (!assignment || !Array.isArray(assignment.content)) return;
+        if (!confirm('Are you sure you want to remove this question from the assignment?')) return;
+        
+        const newContent = assignment.content.filter(id => id !== questionId);
+        
+        try {
+            const res = await fetch(`/api/admin/assignments/${assignment._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent })
+            });
+            if (res.ok) {
+                toast.success('Question removed');
+                setAssignmentQuestions(prev => prev.filter(q => (q._id || q.id) !== questionId));
+                setAssignment(prev => prev ? { ...prev, content: newContent } : null);
+                // Also update the selected set for the modal to stay in sync
+                const s = new Set(qEditSelectedIds);
+                s.delete(questionId);
+                setQEditSelectedIds(s);
+            } else {
+                toast.error('Failed to remove question');
+            }
+        } catch {
+            toast.error('Error removing question');
+        }
+    };
+
     // Filtered question bank for edit modal
     const filteredBankQuestions = allBankQuestions.filter(q => {
         if (qSearchQuery) {
@@ -370,8 +398,15 @@ export default function AssignmentDetailsPage() {
                     {isQuestionsExpanded && (
                         <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 max-h-[600px] overflow-y-auto">
                             {assignmentQuestions.map((q, i) => (
-                                <div key={q._id || q.id || i} className="bg-black/20 border border-white/5 rounded-lg p-4">
-                                    <div className="flex items-start gap-3">
+                                <div key={q._id || q.id || i} className="bg-black/20 border border-white/5 rounded-lg p-4 group relative">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleRemoveQuestion(q._id || q.id); }}
+                                        className="absolute top-4 right-4 p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Remove question from assignment"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                    <div className="flex items-start gap-3 pr-10">
                                         <span className="text-gray-500 font-mono text-sm font-bold flex-shrink-0">{i + 1}.</span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-wrap gap-1.5 mb-2">
