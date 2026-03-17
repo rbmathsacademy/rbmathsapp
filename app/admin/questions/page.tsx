@@ -1357,7 +1357,8 @@ export default function QuestionBank() {
                             filteredQuestions.map((q, i) => (
                                 <div key={q.id} className="group bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-xl p-3 md:p-4 transition-all hover:shadow-lg hover:shadow-indigo-500/5 relative">
                                     <div className="flex items-start gap-3 md:gap-4">
-                                        <div className="pt-1 select-none">
+                                        <div className="pt-1 select-none flex flex-col items-center gap-2">
+                                            <span className="text-xs font-mono text-gray-500 font-bold">{i + 1}</span>
                                             <input
                                                 type="checkbox"
                                                 checked={selectedQuestionIds.has(q.id)}
@@ -1387,7 +1388,7 @@ export default function QuestionBank() {
                                                     </span>
                                                 ))}
                                                 <span className="ml-auto text-xs font-mono text-gray-500 hidden sm:block">
-                                                    {q.id.substring(0, 8)}...
+                                                    {q.id}
                                                 </span>
                                             </div>
 
@@ -1397,7 +1398,7 @@ export default function QuestionBank() {
 
                                             {/* Action Buttons (Always show edit on mobile, hover on desktop) */}
                                             <div className="flex items-center gap-2 pt-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => editQuestion(q)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded flex items-center gap-1 transition-colors">
+                                                <button onClick={() => handleEditQuestion(q)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded flex items-center gap-1 transition-colors">
                                                     <Edit className="h-3 w-3" /> Edit
                                                 </button>
                                             </div>
