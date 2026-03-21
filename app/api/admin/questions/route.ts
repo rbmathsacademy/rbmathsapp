@@ -88,38 +88,60 @@ export async function POST(req: Request) {
             }
         }
 
+        // Precompute max order for topics
+        const topics = [...new Set(questions.map((q: any) => q.topic))];
+        const maxOrderMap: Record<string, number> = {};
+        for (const topic of topics) {
+            const maxQ = await Question.findOne({ topic }).sort({ order: -1 }).select('order');
+            maxOrderMap[topic] = maxQ?.order || 0;
+        }
+
         console.log(`[API] Bulk update for ${questions.length} questions`);
 
-        const operations = questions.map((q: any) => ({
-            updateOne: {
-                filter: { id: q.id },
-                update: {
-                    $set: {
-                        id: q.id || `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                        text: q.text,
-                        type: q.type,
-                        topic: q.topic,
-                        subtopic: q.subtopic,
-                        image: q.image,
-                        examName: q.examName,
-                        examNames: q.examNames || [],
-                        marks: q.marks ?? 0, // Default to 0 if missing
-                        answer: q.answer,
-                        options: q.options || [],
-                        hint: q.hint,
-                        explanation: q.explanation,
-                        uploadedBy: uploaderEmail,
-                        facultyName: facultyName,
-                        deployments: q.deployments || [],
-                        order: q.order ?? 0
-                    },
-                    $setOnInsert: {
-                        createdAt: new Date() // Only set on new inserts, never overwrite existing createdAt
-                    }
-                },
-                upsert: true
+        const operations = questions.map((q: any) => {
+            let insertOrder = 0;
+            if (q.order === undefined || q.order === null) {
+                 maxOrderMap[q.topic] = (maxOrderMap[q.topic] || 0) + 1;
+                 insertOrder = maxOrderMap[q.topic];
             }
-        }));
+
+            const updateFields: any = {
+                id: q.id || `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                text: q.text,
+                type: q.type,
+                topic: q.topic,
+                subtopic: q.subtopic,
+                image: q.image,
+                examName: q.examName,
+                examNames: q.examNames || [],
+                marks: q.marks ?? 0,
+                answer: q.answer,
+                options: q.options || [],
+                hint: q.hint,
+                explanation: q.explanation,
+                uploadedBy: uploaderEmail,
+                facultyName: facultyName,
+                deployments: q.deployments || []
+            };
+
+            if (q.order !== undefined && q.order !== null) {
+                updateFields.order = q.order;
+            }
+
+            return {
+                updateOne: {
+                    filter: { id: q.id },
+                    update: {
+                        $set: updateFields,
+                        $setOnInsert: {
+                            createdAt: new Date(),
+                            ...(q.order === undefined || q.order === null ? { order: insertOrder } : {})
+                        }
+                    },
+                    upsert: true
+                }
+            };
+        });
 
         const result = await Question.bulkWrite(operations);
         console.log('[API] Bulk write result:', result);

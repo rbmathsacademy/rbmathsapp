@@ -460,9 +460,9 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             </span>
 
                             {/* Type -> Color Coded */}
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${localQuestion.type === 'mcq' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
-                                localQuestion.type === 'broad' ? 'bg-pink-900/40 text-pink-300 border-pink-500/30' :
-                                    localQuestion.type === 'short' ? 'bg-purple-900/40 text-purple-300 border-purple-500/30' :
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${localQuestion.type?.toLowerCase() === 'mcq' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
+                                localQuestion.type?.toLowerCase() === 'broad' ? 'bg-pink-900/40 text-pink-300 border-pink-500/30' :
+                                    localQuestion.type?.toLowerCase() === 'short' ? 'bg-purple-900/40 text-purple-300 border-purple-500/30' :
                                         'bg-gray-700 text-gray-300 border-gray-600'
                                 }`}>
                                 {localQuestion.type || 'Unknown'}
@@ -488,7 +488,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                         </div>
 
                         {/* Options for MCQ */}
-                        {localQuestion.type === 'mcq' && localQuestion.options && localQuestion.options.length > 0 && (
+                        {localQuestion.type?.toLowerCase() === 'mcq' && localQuestion.options && localQuestion.options.length > 0 && (
                             <div className="flex flex-col gap-2 mb-4">
                                 {localQuestion.options.map((opt: string, i: number) => (
                                     <div key={i} className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300">

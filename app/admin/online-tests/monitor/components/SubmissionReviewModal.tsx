@@ -130,36 +130,36 @@ export default function SubmissionReviewModal({
 
         return (
             <div key={q.id} className="bg-slate-800/50 border border-white/5 rounded-xl p-5 mb-4">
-                <div className="flex justify-between items-start gap-4 mb-3">
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col lg:flex-row justify-between items-start gap-3 sm:gap-4 mb-3">
+                    <div className="flex items-center gap-2 shrink-0">
                         <span className="px-2 py-1 bg-slate-700 rounded-md text-xs font-bold text-white">Q{index + 1}</span>
                         <span className="text-xs font-semibold text-slate-400 capitalize">{q.type}</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-900/80 rounded-lg p-1.5 border border-white/10">
-                        <div className="text-[10px] text-slate-400 flex flex-col items-center px-2 pr-3">
+                    <div className="flex flex-wrap items-center gap-2 bg-slate-900/80 rounded-lg p-1.5 border border-white/10 w-full lg:w-auto justify-between lg:justify-start">
+                        <div className="text-[10px] text-slate-400 flex flex-col items-center px-1 sm:px-2 pr-1 sm:pr-3">
                             <span className="flex items-center gap-1 font-bold whitespace-nowrap"><Clock className="w-3 h-3" /> {timeTakenDesc}</span>
                             <span className="font-mono mt-0.5 whitespace-nowrap px-1 rounded bg-black/50 border border-white/10 text-slate-300">
                                 [{q.marks ? `+${q.marks}` : '+1'}, {q.negativeMarks ? `-${q.negativeMarks}` : '0'}]
                             </span>
                         </div>
-                        <div className="w-px h-8 bg-white/10 mx-0"></div>
-                        <div className="text-xs text-slate-400 px-2 flex flex-col items-end">
-                            <span className="mb-0.5">Earned: <span className={baseMarks > 0 ? 'text-emerald-400 font-bold' : baseMarks < 0 ? 'text-red-400 font-bold' : 'text-slate-300 font-bold'}>{baseMarks > 0 ? '+' : ''}{baseMarks}</span></span>
+                        <div className="w-px h-8 bg-white/10 mx-0 hidden sm:block"></div>
+                        <div className="text-xs text-slate-400 px-1 sm:px-2 flex flex-col items-end shrink-0">
+                            <span className="mb-0.5 whitespace-nowrap">Earned: <span className={baseMarks > 0 ? 'text-emerald-400 font-bold' : baseMarks < 0 ? 'text-red-400 font-bold' : 'text-slate-300 font-bold'}>{baseMarks > 0 ? '+' : ''}{baseMarks}</span></span>
                         </div>
-                        <div className="w-px h-6 bg-white/10 mx-1"></div>
-                        <div className="flex items-center gap-2 px-2">
-                            <span className="text-xs font-bold text-amber-500 mr-1">Adj:</span>
+                        <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block"></div>
+                        <div className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 shrink-0">
+                            <span className="text-xs font-bold text-amber-500 mr-0 sm:mr-1">Adj:</span>
                             <input
                                 type="number"
                                 step="any"
                                 value={adjustments[q.id] === 0 && ans?.adjustmentMarks === 0 ? '' : adjustments[q.id]}
                                 onChange={(e) => handleAdjustmentChange(q.id, e.target.value)}
                                 placeholder="0"
-                                className="w-16 bg-black/50 border border-amber-500/30 rounded px-2 py-1 text-sm text-center font-bold text-amber-400 placeholder:text-amber-500/30 focus:outline-none focus:ring-1 focus:ring-amber-500 hide-arrows"
+                                className="w-12 sm:w-16 bg-black/50 border border-amber-500/30 rounded px-1 sm:px-2 py-1 text-sm text-center font-bold text-amber-400 placeholder:text-amber-500/30 focus:outline-none focus:ring-1 focus:ring-amber-500 hide-arrows"
                             />
                         </div>
-                        <div className="w-px h-6 bg-white/10 mx-1"></div>
-                        <div className="px-2">
+                        <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block"></div>
+                        <div className="px-1 sm:px-2 shrink-0">
                             <span className="text-xs font-bold text-slate-400 mr-1">Total:</span>
                             <span className={`text-sm font-bold ${totalMarks > 0 ? 'text-emerald-400' : totalMarks < 0 ? 'text-red-400' : 'text-white'}`}>{totalMarks}</span>
                         </div>
@@ -204,21 +204,21 @@ export default function SubmissionReviewModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="bg-slate-900 p-5 px-6 border-b border-white/5 flex items-center justify-between sticky top-0 z-10">
-                    <div>
-                        <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                            {student.name}
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-500 uppercase tracking-wide border border-amber-500/20">Review</span>
+                <div className="bg-slate-900 p-4 md:p-5 px-4 md:px-6 border-b border-white/5 flex items-start justify-between sticky top-0 z-10 gap-2">
+                    <div className="min-w-0 pr-2">
+                        <h2 className="text-lg md:text-xl font-bold text-white flex flex-wrap items-center gap-2 md:gap-3 leading-tight">
+                            <span className="truncate">{student.name}</span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-500 uppercase tracking-wide border border-amber-500/20 shrink-0">Review</span>
                         </h2>
-                        <div className="text-sm text-slate-400 mt-1 flex items-center gap-3">
-                            <span>📱 {student.phone}</span>
-                            <span>📚 {student.batch}</span>
-                            <span>🎯 Current Score: <strong className="text-white">{attempt.score}</strong></span>
+                        <div className="text-xs md:text-sm text-slate-400 mt-1 md:mt-2 flex flex-wrap items-center gap-2 md:gap-3">
+                            <span className="whitespace-nowrap">📱 {student.phone}</span>
+                            <span className="whitespace-nowrap">📚 {student.batch}</span>
+                            <span className="whitespace-nowrap">🎯 Current Score: <strong className="text-white">{attempt.score}</strong></span>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
+                        className="p-1.5 md:p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors shrink-0 -mr-1"
                         disabled={saving}
                     >
                         <X className="w-5 h-5" />

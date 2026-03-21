@@ -1752,7 +1752,7 @@ export default function QuestionBank() {
                                                 <div className="flex flex-wrap gap-1.5 mb-1">
                                                     <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
                                                     <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.subtopic}</span>
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type?.toLowerCase() === 'broad' ? 'border-pink-500 text-pink-400' : q.type?.toLowerCase() === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
                                                         {q.type}
                                                     </span>
                                                     {q.examNames && q.examNames.length > 0 && q.examNames.map((exam: string, idx: number) => (
@@ -1786,7 +1786,7 @@ export default function QuestionBank() {
                                                 <Latex>{q.text}</Latex>
 
                                                 {/* MCQ Options Display */}
-                                                {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                                                {q.type?.toLowerCase() === 'mcq' && q.options && q.options.length > 0 && (
                                                     <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                                                         {q.options.map((opt: string, i: number) => (
                                                             <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
