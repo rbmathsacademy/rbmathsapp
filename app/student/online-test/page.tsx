@@ -33,7 +33,7 @@ interface AnalyticsData {
     batchHighestAverage: number;
     batchRank: number;
     totalBatchStudents: number;
-    leaderboard: { name: string; phone: string; average: number; testsAttempted: number }[];
+    leaderboard: { rank: number; name: string; phone: string; average: number; testsAttempted: number }[];
 }
 
 function getRemark(avg: number): { label: string; color: string; bg: string; border: string } {
@@ -427,10 +427,10 @@ export default function OnlineTestPage() {
                                                 return (
                                                     <tr key={i} className={`border-b border-white/5 transition-colors ${isCurrentStudent ? 'bg-emerald-500/5' : 'hover:bg-white/5'}`}>
                                                         <td className="py-2.5 px-1.5">
-                                                            {i === 0 ? <span className="text-base">🥇</span> :
-                                                                i === 1 ? <span className="text-base">🥈</span> :
-                                                                    i === 2 ? <span className="text-base">🥉</span> :
-                                                                        <span className="text-slate-500 font-bold text-xs">{i + 1}</span>}
+                                                            {entry.rank === 1 ? <span className="text-base" title="Rank 1">🥇</span> :
+                                                                entry.rank === 2 ? <span className="text-base" title="Rank 2">🥈</span> :
+                                                                    entry.rank === 3 ? <span className="text-base" title="Rank 3">🥉</span> :
+                                                                        <span className="text-slate-500 font-bold text-xs">{entry.rank}</span>}
                                                         </td>
                                                         <td className="py-2.5 px-1.5">
                                                             <div className="flex flex-col">

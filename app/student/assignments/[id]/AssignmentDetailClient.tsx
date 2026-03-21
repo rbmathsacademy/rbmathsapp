@@ -94,37 +94,84 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
         const toastId = toast.loading('Uploading to Google Drive...');
 
         try {
+            // Verify PDF Magic Bytes to prevent corrupt uploads
+            const isPdf = await new Promise<boolean>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const arr = new Uint8Array(reader.result as ArrayBuffer).subarray(0, 5);
+                    let header = '';
+                    for (let i = 0; i < arr.length; i++) header += String.fromCharCode(arr[i]);
+                    resolve(header === '%PDF-');
+                };
+                reader.onerror = () => resolve(false);
+                reader.readAsArrayBuffer(selectedFile.slice(0, 5));
+            });
+
+            if (!isPdf) {
+                toast.dismiss(toastId);
+                toast.error('Invalid or corrupted PDF file selected. Please check the file.');
+                setUploading(false);
+                setSelectedFile(null);
+                return;
+            }
+
             const { assignment, student: studentData } = data;
 
-            // Convert file to base64 (strip the data:...;base64, prefix)
+            // Convert file to base64
             const fullBase64 = await fileToBase64(selectedFile);
             const base64Data = fullBase64.includes(',') ? fullBase64.split(',')[1] : fullBase64;
 
-            // Build payload matching the GAS script format
-            const payload = {
-                batchName: studentData.course_code || 'General',
-                assignmentTitle: assignment.title,
-                studentName: studentData.name || 'Unknown',
-                phoneNumber: studentData.roll || 'Unknown',
-                fileData: base64Data,
-                mimeType: 'application/pdf',
-            };
+            const CHUNK_SIZE = 1024 * 512; // 500KB chunks
+            const totalChunks = Math.ceil(base64Data.length / CHUNK_SIZE);
+            const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            // Use server-side proxy to avoid CORS issues
-            const response = await fetch('/api/student/assignments/upload-to-drive', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            let gasData = null;
 
-            const result = await response.json();
+            for (let i = 0; i < totalChunks; i++) {
+                const chunk = base64Data.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+                // Build payload matching the GAS script format
+                const payload = {
+                    uploadId,
+                    chunkIndex: i,
+                    totalChunks,
+                    batchName: studentData.course_code || 'General',
+                    assignmentTitle: assignment.title,
+                    studentName: studentData.name || 'Unknown',
+                    phoneNumber: studentData.roll || 'Unknown',
+                    fileData: chunk,
+                    mimeType: 'application/pdf',
+                };
 
-            if (result.status !== 'success') {
-                const errorMsg = result.message || result.error || 'Upload failed';
+                let attempts = 0;
+                let success = false;
+                while (attempts < 3 && !success) {
+                    try {
+                        const response = await fetch('/api/student/assignments/upload-to-drive', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                        });
+                        if (!response.ok) throw new Error('Chunk upload failed');
+                        const result = await response.json();
+
+                        if (i === totalChunks - 1) {
+                            gasData = result;
+                        }
+                        success = true;
+                    } catch (err) {
+                        attempts++;
+                        if (attempts >= 3) throw new Error('Network error. Upload failed after multiple retries.');
+                        await new Promise(r => setTimeout(r, 1000 * attempts));
+                    }
+                }
+            }
+
+            if (!gasData || gasData.status !== 'success') {
+                const errorMsg = gasData?.message || gasData?.error || 'Upload failed';
                 throw new Error(errorMsg);
             }
 
-            const driveLink = result.downloadUrl || result.fileUrl;
+            const driveLink = gasData.downloadUrl || gasData.fileUrl;
 
             const token = localStorage.getItem('auth_token');
             const saveRes = await fetch('/api/student/submissions', {

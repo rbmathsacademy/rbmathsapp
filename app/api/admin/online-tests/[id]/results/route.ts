@@ -165,8 +165,11 @@ export async function GET(
             }
         }
 
-        // Sort completed by score (descending)
-        completed.sort((a, b) => b.score - a.score);
+        // Sort completed by score (descending), then timeSpent (ascending)
+        completed.sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return (a.timeSpent || 0) - (b.timeSpent || 0);
+        });
 
         // Analytics
         const totalStudents = studentMap.size;

@@ -153,48 +153,69 @@ export async function GET(req: NextRequest) {
             });
 
             // Group attempts by student phone
-            const studentAttemptsMap = new Map<string, number[]>();
+            const studentAttemptsMap = new Map<string, { percentage: number; timeSpent: number }[]>();
             allBatchAttempts.forEach((a: any) => {
                 const phone = a.studentPhone;
                 if (!studentAttemptsMap.has(phone)) {
                     studentAttemptsMap.set(phone, []);
                 }
-                studentAttemptsMap.get(phone)!.push(a.percentage || 0);
+                studentAttemptsMap.get(phone)!.push({
+                    percentage: a.percentage || 0,
+                    timeSpent: a.timeSpent || 0
+                });
             });
 
             // Build leaderboard: compute average for each student
             const phoneToName = new Map<string, string>();
             batchStudents.forEach(s => phoneToName.set(s.phone, s.name));
 
-            const rankings: { name: string; phone: string; average: number; testsAttempted: number }[] = [];
+            const rankings: { name: string; phone: string; average: number; avgTimeSpent: number; testsAttempted: number; rank?: number }[] = [];
 
-            studentAttemptsMap.forEach((percentages, phone) => {
-                const avg = Math.round(percentages.reduce((a, b) => a + b, 0) / percentages.length);
+            studentAttemptsMap.forEach((attemptsData, phone) => {
+                const avg = Math.round(attemptsData.reduce((acc, curr) => acc + curr.percentage, 0) / attemptsData.length);
+                const avgTime = Math.round(attemptsData.reduce((acc, curr) => acc + curr.timeSpent, 0) / attemptsData.length);
                 rankings.push({
                     name: phoneToName.get(phone) || 'Unknown',
                     phone,
                     average: avg,
-                    testsAttempted: percentages.length
+                    avgTimeSpent: avgTime,
+                    testsAttempted: attemptsData.length
                 });
             });
 
-            // Sort by average descending
-            rankings.sort((a, b) => b.average - a.average);
+            // Sort by average descending, then avgTimeSpent ascending
+            rankings.sort((a, b) => {
+                if (b.average !== a.average) return b.average - a.average;
+                return a.avgTimeSpent - b.avgTimeSpent;
+            });
+            
+            // Assign true rank handling ties
+            let currentRank = 1;
+            rankings.forEach((r, i, arr) => {
+                if (i > 0) {
+                    const prev = arr[i - 1];
+                    if (r.average < prev.average || r.avgTimeSpent > prev.avgTimeSpent) {
+                        currentRank = i + 1;
+                    }
+                }
+                r.rank = currentRank;
+            });
 
             // Find rank and highest average
             batchHighestAverage = rankings.length > 0 ? rankings[0].average : 0;
             totalBatchStudents = batchStudents.length;
 
-            const myRankIndex = rankings.findIndex(r => r.phone === phoneNumber.replace(/\D/g, ''));
-            batchRank = myRankIndex >= 0 ? myRankIndex + 1 : rankings.length + 1;
+            const myRankObj = rankings.find(r => r.phone === phoneNumber.replace(/\D/g, ''));
+            batchRank = myRankObj ? myRankObj.rank! : rankings.length + 1;
 
             // Send top 10 for leaderboard display (mask phone numbers)
             leaderboard = rankings.slice(0, 10).map(r => ({
+                rank: r.rank!,
                 name: r.name,
                 phone: r.phone === phoneNumber.replace(/\D/g, '') ? r.phone : '***',
                 average: r.average,
                 testsAttempted: r.testsAttempted
-            }));
+            })) as any;
         }
 
         // 6. Per-test comparison: student score vs highest score in batch for that test

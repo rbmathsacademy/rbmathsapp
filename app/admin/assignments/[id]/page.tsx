@@ -21,6 +21,7 @@ interface StudentSubmission {
     link: string | null;
     isLate: boolean;
     quality?: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
+    overrideOnTime?: boolean;
 }
 
 interface Assignment {
@@ -125,6 +126,38 @@ export default function AssignmentDetailsPage() {
         } catch (error) {
             toast.error('Failed to update status');
             // Revert optimistic update on failure
+            fetchDetails();
+        }
+    };
+
+    const toggleOverrideOnTime = async (submissionId: string | null, currentOverride: boolean) => {
+        if (!submissionId) return;
+        const newOverride = !currentOverride;
+
+        // Optimistic update
+        setStudents(prev => prev.map(s =>
+            s._id === submissionId ? {
+                ...s,
+                overrideOnTime: newOverride,
+                submissionStatus: newOverride ? 'SUBMITTED' : 'LATE_SUBMITTED'
+            } : s
+        ));
+
+        try {
+            const res = await fetch('/api/admin/assignments/submission/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    submissionId,
+                    status: students.find(s => s._id === submissionId)?.status || 'PENDING',
+                    overrideOnTime: newOverride
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to update');
+            toast.success(newOverride ? 'Marked as On-Time' : 'Reverted to Late');
+        } catch (error) {
+            toast.error('Failed to update override');
             fetchDetails();
         }
     };
@@ -497,14 +530,34 @@ export default function AssignmentDetailsPage() {
                                         </td>
                                         <td className="p-4">
                                             {student.submissionStatus === 'SUBMITTED' && (
-                                                <span className="inline-flex items-center gap-1.5 text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded-full">
-                                                    <CheckCircle className="w-3 h-3" /> Submitted
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="inline-flex items-center gap-1.5 text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded-full">
+                                                        <CheckCircle className="w-3 h-3" /> Submitted
+                                                    </span>
+                                                    {student.overrideOnTime && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); toggleOverrideOnTime(student._id, true); }}
+                                                            className="text-[10px] px-2 py-0.5 rounded border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all font-bold"
+                                                            title="Revert to Late"
+                                                        >
+                                                            Revert Late
+                                                        </button>
+                                                    )}
+                                                </div>
                                             )}
                                             {student.submissionStatus === 'LATE_SUBMITTED' && (
-                                                <span className="inline-flex items-center gap-1.5 text-orange-400 text-xs bg-orange-500/10 px-2 py-1 rounded-full">
-                                                    <AlertTriangle className="w-3 h-3" /> Late
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="inline-flex items-center gap-1.5 text-orange-400 text-xs bg-orange-500/10 px-2 py-1 rounded-full">
+                                                        <AlertTriangle className="w-3 h-3" /> Late
+                                                    </span>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); toggleOverrideOnTime(student._id, student.overrideOnTime || false); }}
+                                                        className="text-[10px] px-2 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all font-bold"
+                                                        title="Mark as On-Time"
+                                                    >
+                                                        Mark On-Time
+                                                    </button>
+                                                </div>
                                             )}
                                             {student.submissionStatus === 'MISSED' && (
                                                 <span className="inline-flex items-center gap-1.5 text-red-400 text-xs bg-red-500/10 px-2 py-1 rounded-full">
@@ -610,14 +663,32 @@ export default function AssignmentDetailsPage() {
                                     </div>
                                     {/* Status Badge */}
                                     {student.submissionStatus === 'SUBMITTED' && (
-                                        <span className="inline-flex items-center gap-1 text-green-400 text-[10px] bg-green-500/10 px-2 py-0.5 rounded-full flex-shrink-0">
-                                            <CheckCircle className="w-3 h-3" /> Submitted
-                                        </span>
+                                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                                            <span className="inline-flex items-center gap-1 text-green-400 text-[10px] bg-green-500/10 px-2 py-0.5 rounded-full">
+                                                <CheckCircle className="w-3 h-3" /> Submitted
+                                            </span>
+                                            {student.overrideOnTime && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); toggleOverrideOnTime(student._id, true); }}
+                                                    className="text-[9px] px-1.5 py-0.5 rounded border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold"
+                                                >
+                                                    Undo
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                     {student.submissionStatus === 'LATE_SUBMITTED' && (
-                                        <span className="inline-flex items-center gap-1 text-orange-400 text-[10px] bg-orange-500/10 px-2 py-0.5 rounded-full flex-shrink-0">
-                                            <AlertTriangle className="w-3 h-3" /> Late
-                                        </span>
+                                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                                            <span className="inline-flex items-center gap-1 text-orange-400 text-[10px] bg-orange-500/10 px-2 py-0.5 rounded-full">
+                                                <AlertTriangle className="w-3 h-3" /> Late
+                                            </span>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); toggleOverrideOnTime(student._id, student.overrideOnTime || false); }}
+                                                className="text-[9px] px-1.5 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 font-bold"
+                                            >
+                                                On-Time
+                                            </button>
+                                        </div>
                                     )}
                                     {student.submissionStatus === 'MISSED' && (
                                         <span className="inline-flex items-center gap-1 text-red-400 text-[10px] bg-red-500/10 px-2 py-0.5 rounded-full flex-shrink-0">

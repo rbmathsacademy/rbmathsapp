@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
             let status = 'PENDING';
 
             if (submission) {
-                const isLateDynamically = new Date(submission.submittedAt).getTime() > deadline.getTime();
+                const isLateDynamically = submission.overrideOnTime ? false : (new Date(submission.submittedAt).getTime() > deadline.getTime());
                 status = isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED';
             } else {
                 if (now < deadline) {

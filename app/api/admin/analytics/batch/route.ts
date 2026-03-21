@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
             assignment: { $in: assignmentIds },
             student: { $in: studentIds }
         })
-            .select('assignment student status isLate submittedAt quality')
+            .select('assignment student status isLate submittedAt quality overrideOnTime')
             .lean();
 
         // 6. Aggregate Data per Student
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
 
                 let status = 'PENDING';
                 if (submission) {
-                    status = submission.status === 'CORRECTED' ? 'CORRECTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED');
+                    status = submission.status === 'CORRECTED' ? 'CORRECTED' : ((submission as any).overrideOnTime ? 'SUBMITTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED'));
                 } else {
                     const now = new Date();
 

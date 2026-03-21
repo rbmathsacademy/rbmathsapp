@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             if (submission) {
                 const subTime = new Date(submission.submittedAt).getTime();
                 const deadlineTime = new Date(assignment.deadline).getTime();
-                const isLateDynamically = subTime > deadlineTime;
+                const isLateDynamically = submission.overrideOnTime ? false : (subTime > deadlineTime);
                 
                 submissionStatus = isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED';
                 correctionStatus = submission.status || 'PENDING';
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 // else stays 'PENDING'
             }
 
-            const dynamicIsLate = submission ? (new Date(submission.submittedAt).getTime() > new Date(assignment.deadline).getTime()) : false;
+            const dynamicIsLate = submission ? (submission.overrideOnTime ? false : (new Date(submission.submittedAt).getTime() > new Date(assignment.deadline).getTime())) : false;
 
             return {
                 _id: submission ? submission._id : null,
@@ -62,7 +62,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 link: submission ? submission.link : null,
                 isLate: dynamicIsLate,
                 correctionStatus,
-                quality: submission ? submission.quality : null
+                quality: submission ? submission.quality : null,
+                overrideOnTime: submission ? (submission.overrideOnTime || false) : false
             };
         });
 
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // Admin might want to see them. Let's add them.
         submissions.forEach((sub: any) => {
             if (sub.student && !students.find((s: any) => s._id.toString() === sub.student._id.toString())) {
-                const isLateDynamically = new Date(sub.submittedAt).getTime() > new Date(assignment.deadline).getTime();
+                const isLateDynamically = sub.overrideOnTime ? false : (new Date(sub.submittedAt).getTime() > new Date(assignment.deadline).getTime());
                 
                 studentList.push({
                     _id: sub._id,
@@ -81,7 +82,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     link: sub.link,
                     isLate: isLateDynamically,
                     correctionStatus: sub.status || 'PENDING',
-                    quality: sub.quality || null
+                    quality: sub.quality || null,
+                    overrideOnTime: sub.overrideOnTime || false
                 });
             }
         });

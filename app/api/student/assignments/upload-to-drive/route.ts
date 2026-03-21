@@ -1,10 +1,63 @@
 import { NextResponse } from 'next/server';
+import dbConnect from '../../../../../lib/db';
+import { UploadCache } from '../../../../../models/UploadCache';
 
 const GAS_APP_URL = 'https://script.google.com/macros/s/AKfycbyBLvemIMxTVbASJhsRO4yu0syjGw1m4kQxJzU8Lp37HYuMAIMCk2eDOjcxZ-i4WBnRbw/exec';
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        let body = await req.json();
+
+        // Check if this is a chunked upload
+        const { uploadId, chunkIndex, totalChunks, fileData, ...metadata } = body;
+        
+        if (typeof chunkIndex === 'number' && typeof totalChunks === 'number' && uploadId) {
+            await dbConnect();
+            
+            // Upsert chunk cache
+            let cache = await UploadCache.findOne({ uploadId });
+            if (!cache) {
+                cache = new UploadCache({
+                    uploadId,
+                    chunks: [],
+                    totalChunks,
+                    batchName: metadata.batchName || '',
+                    assignmentTitle: metadata.assignmentTitle || '',
+                    studentName: metadata.studentName || '',
+                    phoneNumber: metadata.phoneNumber || '',
+                    mimeType: metadata.mimeType || '',
+                    fileName: metadata.fileName || ''
+                });
+            }
+
+            // Only add if not already there
+            if (!cache.chunks.some((c: any) => c.index === chunkIndex)) {
+                cache.chunks.push({ index: chunkIndex, data: fileData });
+                await cache.save();
+            }
+
+            if (cache.chunks.length < totalChunks) {
+                return NextResponse.json({ status: 'chunk_success', received: chunkIndex });
+            }
+
+            // All chunks received. Reassemble.
+            cache.chunks.sort((a: any, b: any) => a.index - b.index);
+            const fullBase64 = cache.chunks.map((c: any) => c.data).join('');
+            
+            // Clean up cache as we are done
+            await UploadCache.deleteOne({ uploadId });
+
+            // Prepare the full body for GAS
+            body = {
+                batchName: cache.batchName,
+                assignmentTitle: cache.assignmentTitle,
+                studentName: cache.studentName,
+                phoneNumber: cache.phoneNumber,
+                mimeType: cache.mimeType,
+                fileName: cache.fileName,
+                fileData: fullBase64
+            };
+        }
 
         // Server-side fetch bypasses CORS
         const response = await fetch(GAS_APP_URL, {

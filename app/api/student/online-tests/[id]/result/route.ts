@@ -190,11 +190,14 @@ export async function GET(
             percentage: stats.maxMarks > 0 ? Math.round((stats.marks / stats.maxMarks) * 100) : 0
         }));
 
-        // Calculate rank: Number of people with higher score + 1
+        // Calculate rank: Number of people with higher score, OR same score but less time spent + 1
         const betterScoresCount = await StudentTestAttempt.countDocuments({
             testId,
             status: 'completed',
-            score: { $gt: attempt.score }
+            $or: [
+                { score: { $gt: attempt.score } },
+                { score: attempt.score, timeSpent: { $lt: attempt.timeSpent || 0 } }
+            ]
         });
         const rank = betterScoresCount + 1;
 
@@ -209,7 +212,7 @@ export async function GET(
         const topperAttempt = await StudentTestAttempt.findOne({
             testId,
             status: 'completed'
-        }).sort({ score: -1 }).select('score percentage').lean();
+        }).sort({ score: -1, timeSpent: 1 }).select('score percentage').lean();
         const topperScore = (topperAttempt as any)?.score || attempt.score;
         const topperPercentage = (topperAttempt as any)?.percentage || attempt.percentage;
 
@@ -228,15 +231,24 @@ export async function GET(
             .select('studentName studentPhone score percentage timeSpent submittedAt')
             .lean();
 
-        const leaderboard = topAttempts.map((att: any, index: number) => ({
-            rank: index + 1,
-            name: att.studentName || 'Unknown Student', // Show full name
-            score: att.score,
-            percentage: Math.round(att.percentage || 0),
-            timeSpent: att.timeSpent,
-            submittedAt: att.submittedAt,
-            isCurrentUser: att.studentPhone === student.phoneNumber
-        }));
+        let currentRank = 1;
+        const leaderboard = topAttempts.map((att: any, index: number, arr: any[]) => {
+            if (index > 0) {
+                const prev = arr[index - 1];
+                if (att.score < prev.score || (att.timeSpent || 0) > (prev.timeSpent || 0)) {
+                    currentRank = index + 1;
+                }
+            }
+            return {
+                rank: currentRank,
+                name: att.studentName || 'Unknown Student', // Show full name
+                score: att.score,
+                percentage: Math.round(att.percentage || 0),
+                timeSpent: att.timeSpent,
+                submittedAt: att.submittedAt,
+                isCurrentUser: att.studentPhone === student.phoneNumber
+            };
+        });
 
         return NextResponse.json({
             test: {

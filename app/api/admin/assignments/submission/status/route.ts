@@ -5,7 +5,7 @@ import AssignmentSubmission from '@/models/AssignmentSubmission';
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        const { submissionId, status, quality } = await req.json();
+        const { submissionId, status, quality, overrideOnTime } = await req.json();
 
         if (!submissionId || !status) {
             return NextResponse.json({ error: 'Missing submission ID or status' }, { status: 400 });
@@ -19,6 +19,11 @@ export async function POST(req: Request) {
             if (quality) updateData.quality = quality;
         } else {
             updateData.quality = null;
+        }
+
+        // Handle overrideOnTime toggle
+        if (overrideOnTime !== undefined) {
+            updateData.overrideOnTime = overrideOnTime;
         }
 
         const submission = await AssignmentSubmission.findByIdAndUpdate(

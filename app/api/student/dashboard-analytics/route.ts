@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
 
             let status = 'PENDING';
             if (submission) {
-                status = submission.status === 'CORRECTED' ? 'CORRECTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED');
+                status = submission.status === 'CORRECTED' ? 'CORRECTED' : ((submission as any).overrideOnTime ? 'SUBMITTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED'));
             } else {
                 if (studentCreatedAt > deadline) {
                     status = 'NOT_ENROLLED';
