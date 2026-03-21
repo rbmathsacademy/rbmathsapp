@@ -1393,7 +1393,24 @@ export default function QuestionBank() {
                                             </div>
 
                                             <div className="text-gray-200 text-xs md:text-sm leading-relaxed prose prose-invert max-w-none overflow-x-auto">
+                                                {q.image && (
+                                                    <div className="mb-2">
+                                                        <img src={q.image} alt="Question" className="max-h-32 rounded border border-gray-700 hover:scale-105 transition-transform origin-left" />
+                                                    </div>
+                                                )}
                                                 <Latex>{q.text}</Latex>
+
+                                                {/* MCQ Options Display */}
+                                                {q.type?.toLowerCase() === 'mcq' && q.options && q.options.length > 0 && (
+                                                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        {q.options.map((opt: string, i: number) => (
+                                                            <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
+                                                                <span className="text-gray-300"><Latex>{opt}</Latex></span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Action Buttons (Always show edit on mobile, hover on desktop) */}
