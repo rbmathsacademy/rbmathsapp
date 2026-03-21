@@ -932,7 +932,9 @@ export default function QuestionBank() {
             setIsEditorOpen(true);
 
             // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
         } catch (error) {
             console.error('[DEBUG] Error in handleEditQuestion:', error);
             toast.error("Failed to open editor");
@@ -1029,7 +1031,9 @@ export default function QuestionBank() {
 
     const editQuestion = (q: any) => {
         // Scroll to top so user can see the editor
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
         lastEditedId.current = q.id;
 
         setManualData({
@@ -1355,7 +1359,7 @@ export default function QuestionBank() {
                             </div>
                         ) : (
                             filteredQuestions.map((q, i) => (
-                                <div key={q.id} className="group bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-xl p-3 md:p-4 transition-all hover:shadow-lg hover:shadow-indigo-500/5 relative">
+                                <div key={q.id} id={`q-${q.id}`} className="group bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-xl p-3 md:p-4 transition-all hover:shadow-lg hover:shadow-indigo-500/5 relative">
                                     <div className="flex items-start gap-3 md:gap-4">
                                         <div className="pt-1 select-none flex flex-col items-center gap-2">
                                             <span className="text-xs font-mono text-gray-500 font-bold">{i + 1}</span>
