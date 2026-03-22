@@ -418,7 +418,7 @@ export default function TestResultPage() {
                                         </div>
 
                                         {/* Question text */}
-                                        <div className="text-xs sm:text-sm text-slate-200 mb-5 prose prose-invert max-w-none leading-relaxed">
+                                        <div className="text-xs sm:text-sm text-slate-200 mb-5 prose prose-invert max-w-none leading-relaxed overflow-x-auto w-full">
                                             {q.latexContent ? <Latex>{q.text}</Latex> : q.text}
                                         </div>
                                         {q.image && (
@@ -444,7 +444,9 @@ export default function TestResultPage() {
                                                                     isStudentChoice ? <XCircle className="h-5 w-5 text-red-400" /> :
                                                                         <div className="w-5 h-5 rounded-full border border-slate-600/50" />}
                                                             </div>
-                                                            <span className={`text-xs sm:text-sm leading-relaxed ${isCorrectOption ? 'text-white font-medium' : isStudentChoice ? 'text-red-200' : 'text-slate-400'}`}>{opt}</span>
+                                                            <div className={`text-xs sm:text-sm leading-relaxed overflow-x-auto flex-1 ${isCorrectOption ? 'text-white font-medium' : isStudentChoice ? 'text-red-200' : 'text-slate-400'}`}>
+                                                                {q.latexContent ? <Latex>{opt}</Latex> : opt}
+                                                            </div>
                                                         </div>
                                                     );
                                                 })}
@@ -453,17 +455,17 @@ export default function TestResultPage() {
 
                                         {/* Fill blank answer */}
                                         {q.type === 'fillblank' && (
-                                            <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5 space-y-4">
+                                            <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5 space-y-4 overflow-x-auto">
                                                 <div className="grid grid-cols-[120px,1fr] gap-4 items-center">
-                                                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Your Answer</span>
-                                                    <span className={`text-sm sm:text-base font-bold font-mono ${q.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest shrink-0">Your Answer</span>
+                                                    <span className={`text-sm sm:text-base font-bold font-mono break-all ${q.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
                                                         {q.studentAnswer || '(empty)'}
                                                     </span>
                                                 </div>
                                                 {!q.isCorrect && (
                                                     <div className="grid grid-cols-[120px,1fr] gap-4 items-center pt-4 border-t border-white/5">
-                                                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Correct</span>
-                                                        <span className="text-sm sm:text-base font-bold font-mono text-emerald-400">
+                                                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest shrink-0">Correct</span>
+                                                        <span className="text-sm sm:text-base font-bold font-mono text-emerald-400 break-all">
                                                             {q.isNumberRange ? `${q.numberRangeMin} - ${q.numberRangeMax}` : q.correctAnswer}
                                                         </span>
                                                     </div>
@@ -473,10 +475,10 @@ export default function TestResultPage() {
 
                                         {/* Broad answer */}
                                         {q.type === 'broad' && (
-                                            <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5">
+                                            <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5 overflow-x-auto">
                                                 <div className="text-xs text-slate-500 uppercase font-bold mb-2 tracking-widest">Your Answer</div>
-                                                <div className="text-base text-slate-300 font-serif italic mb-4 leading-relaxed">"{q.studentAnswer || '(empty)'}"</div>
-                                                <div className="inline-flex items-center gap-2 text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold">
+                                                <div className="text-base text-slate-300 font-serif italic mb-4 leading-relaxed break-words max-w-full">"{q.studentAnswer || '(empty)'}"</div>
+                                                <div className="inline-flex items-center gap-2 text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold whitespace-normal break-words max-w-full">
                                                     Manually Graded Question
                                                 </div>
                                             </div>
@@ -502,7 +504,7 @@ export default function TestResultPage() {
                                                 </div>
 
                                                 {q.solutionText && (
-                                                    <div className="text-sm text-slate-300 prose prose-invert max-w-none leading-relaxed mb-4">
+                                                    <div className="text-sm text-slate-300 prose prose-invert max-w-none leading-relaxed mb-4 overflow-x-auto w-full">
                                                         <Latex>{q.solutionText}</Latex>
                                                     </div>
                                                 )}
