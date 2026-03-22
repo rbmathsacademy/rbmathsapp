@@ -385,9 +385,13 @@ export default function TestResultPage() {
 
                         {showQuestions && (
                             <div className="mt-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-500 grid gap-6">
-                                {questionReview.map((q, i) => (
+                                {questionReview.map((q, i) => {
+                                    const isSkipped = q.studentAnswer === null || q.studentAnswer === undefined || q.studentAnswer === '' || (Array.isArray(q.studentAnswer) && q.studentAnswer.length === 0);
+                                    const isWrong = !q.isCorrect && !isSkipped;
+
+                                    return (
                                     <div key={q.questionId} className={`relative overflow-x-auto rounded-2xl sm:rounded-3xl p-2 sm:p-6 border transition-all ${q.isCorrect ? 'bg-emerald-900/5 border-emerald-500/20 shadow-lg shadow-emerald-900/5' :
-                                        q.marksAwarded < 0 ? 'bg-red-900/5 border-red-500/20 shadow-lg shadow-red-900/5' :
+                                        isWrong ? 'bg-red-900/5 border-red-500/20 shadow-lg shadow-red-900/5' :
                                             'bg-slate-900/40 border-slate-700/30'
                                         }`}>
                                         {/* Question header */}
@@ -397,12 +401,12 @@ export default function TestResultPage() {
                                                     <span className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 font-bold border border-white/5">Q{i + 1}</span>
                                                     <div className="flex items-center gap-2">
                                                         {q.isCorrect ? <CheckCircle className="h-5 w-5 text-emerald-500" /> :
-                                                            q.marksAwarded < 0 ? <XCircle className="h-5 w-5 text-red-500" /> :
+                                                            isWrong ? <XCircle className="h-5 w-5 text-red-500" /> :
                                                                 <Minus className="h-5 w-5 text-slate-500" />}
                                                         <span className={`text-xs font-bold uppercase tracking-wide ${q.isCorrect ? 'text-emerald-500' :
-                                                            q.marksAwarded < 0 ? 'text-red-500' : 'text-slate-500'
+                                                            isWrong ? 'text-red-500' : 'text-slate-500'
                                                             }`}>
-                                                            {q.isCorrect ? 'Correct' : q.marksAwarded < 0 ? 'Incorrect' : 'Skipped'}
+                                                            {q.isCorrect ? 'Correct' : isWrong ? 'Incorrect' : 'Skipped'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -517,7 +521,8 @@ export default function TestResultPage() {
                                             </div>
                                         )}
                                     </div>
-                                ))}
+                                );
+                            })}
                             </div>
                         )}
                     </div>
