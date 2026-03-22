@@ -386,7 +386,7 @@ export default function TestResultPage() {
                         {showQuestions && (
                             <div className="mt-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-500 grid gap-6">
                                 {questionReview.map((q, i) => (
-                                    <div key={q.questionId} className={`rounded-3xl p-6 border transition-all ${q.isCorrect ? 'bg-emerald-900/5 border-emerald-500/20 shadow-lg shadow-emerald-900/5' :
+                                    <div key={q.questionId} className={`relative overflow-x-auto rounded-2xl sm:rounded-3xl p-2 sm:p-6 border transition-all ${q.isCorrect ? 'bg-emerald-900/5 border-emerald-500/20 shadow-lg shadow-emerald-900/5' :
                                         q.marksAwarded < 0 ? 'bg-red-900/5 border-red-500/20 shadow-lg shadow-red-900/5' :
                                             'bg-slate-900/40 border-slate-700/30'
                                         }`}>
@@ -418,7 +418,7 @@ export default function TestResultPage() {
                                         </div>
 
                                         {/* Question text */}
-                                        <div className="text-xs sm:text-sm text-slate-200 mb-5 prose prose-invert max-w-none leading-relaxed overflow-x-auto w-full">
+                                        <div className="!text-[11px] sm:!text-sm text-slate-200 mb-5 prose prose-sm prose-invert max-w-none leading-relaxed overflow-x-auto w-full">
                                             {q.latexContent ? <Latex>{q.text}</Latex> : q.text}
                                         </div>
                                         {q.image && (
@@ -434,7 +434,7 @@ export default function TestResultPage() {
                                                     const isCorrectOption = q.correctIndices?.includes(oi);
                                                     const isStudentChoice = q.type === 'mcq' ? q.studentAnswer === oi : Array.isArray(q.studentAnswer) && q.studentAnswer.includes(oi);
                                                     return (
-                                                        <div key={oi} className={`flex items-start gap-4 px-5 py-4 rounded-xl text-sm transition-all ${isCorrectOption && isStudentChoice ? 'bg-emerald-500/20 border border-emerald-500/40 shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)]' :
+                                                        <div key={oi} className={`flex items-start gap-2 sm:gap-4 px-2 sm:px-5 py-3 sm:py-4 rounded-xl text-sm transition-all ${isCorrectOption && isStudentChoice ? 'bg-emerald-500/20 border border-emerald-500/40 shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)]' :
                                                             isCorrectOption ? 'bg-emerald-500/10 border border-emerald-500/20 border-dashed' :
                                                                 isStudentChoice ? 'bg-red-500/15 border border-red-500/30' :
                                                                     'bg-slate-800/30 border border-transparent'
@@ -444,7 +444,7 @@ export default function TestResultPage() {
                                                                     isStudentChoice ? <XCircle className="h-5 w-5 text-red-400" /> :
                                                                         <div className="w-5 h-5 rounded-full border border-slate-600/50" />}
                                                             </div>
-                                                            <div className={`text-xs sm:text-sm leading-relaxed overflow-x-auto flex-1 ${isCorrectOption ? 'text-white font-medium' : isStudentChoice ? 'text-red-200' : 'text-slate-400'}`}>
+                                                            <div className={`!text-[11px] sm:!text-sm leading-relaxed overflow-x-auto flex-1 ${isCorrectOption ? 'text-white font-medium' : isStudentChoice ? 'text-red-200' : 'text-slate-400'}`}>
                                                                 {q.latexContent ? <Latex>{opt}</Latex> : opt}
                                                             </div>
                                                         </div>
@@ -455,17 +455,17 @@ export default function TestResultPage() {
 
                                         {/* Fill blank answer */}
                                         {q.type === 'fillblank' && (
-                                            <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5 space-y-4 overflow-x-auto">
-                                                <div className="grid grid-cols-[120px,1fr] gap-4 items-center">
+                                            <div className="bg-slate-900/50 rounded-2xl p-4 sm:p-6 border border-white/5 space-y-4 overflow-x-auto">
+                                                <div className="grid grid-cols-[80px,1fr] sm:grid-cols-[120px,1fr] gap-2 sm:gap-4 items-center">
                                                     <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest shrink-0">Your Answer</span>
-                                                    <span className={`text-sm sm:text-base font-bold font-mono break-all ${q.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    <span className={`!text-[11px] sm:!text-base font-bold font-mono break-all ${q.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
                                                         {q.studentAnswer || '(empty)'}
                                                     </span>
                                                 </div>
                                                 {!q.isCorrect && (
-                                                    <div className="grid grid-cols-[120px,1fr] gap-4 items-center pt-4 border-t border-white/5">
+                                                    <div className="grid grid-cols-[80px,1fr] sm:grid-cols-[120px,1fr] gap-2 sm:gap-4 items-center pt-4 border-t border-white/5">
                                                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest shrink-0">Correct</span>
-                                                        <span className="text-sm sm:text-base font-bold font-mono text-emerald-400 break-all">
+                                                        <span className="!text-[11px] sm:!text-base font-bold font-mono text-emerald-400 break-all">
                                                             {q.isNumberRange ? `${q.numberRangeMin} - ${q.numberRangeMax}` : q.correctAnswer}
                                                         </span>
                                                     </div>
@@ -475,10 +475,10 @@ export default function TestResultPage() {
 
                                         {/* Broad answer */}
                                         {q.type === 'broad' && (
-                                            <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5 overflow-x-auto">
-                                                <div className="text-xs text-slate-500 uppercase font-bold mb-2 tracking-widest">Your Answer</div>
-                                                <div className="text-base text-slate-300 font-serif italic mb-4 leading-relaxed break-words max-w-full">"{q.studentAnswer || '(empty)'}"</div>
-                                                <div className="inline-flex items-center gap-2 text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold whitespace-normal break-words max-w-full">
+                                            <div className="bg-slate-900/50 rounded-2xl p-4 sm:p-6 border border-white/5 overflow-x-auto">
+                                                <div className="text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-2 tracking-widest">Your Answer</div>
+                                                <div className="!text-[11px] sm:!text-base text-slate-300 font-serif italic mb-4 leading-relaxed break-words max-w-full">"{q.studentAnswer || '(empty)'}"</div>
+                                                <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold whitespace-normal break-words max-w-full">
                                                     Manually Graded Question
                                                 </div>
                                             </div>
@@ -494,7 +494,7 @@ export default function TestResultPage() {
 
                                         {/* Solution & Explanation */}
                                         {(q.solutionText || q.solutionImage) && (
-                                            <div className="mt-6 bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
+                                            <div className="mt-6 bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
                                                 <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/50"></div>
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
@@ -504,7 +504,7 @@ export default function TestResultPage() {
                                                 </div>
 
                                                 {q.solutionText && (
-                                                    <div className="text-sm text-slate-300 prose prose-invert max-w-none leading-relaxed mb-4 overflow-x-auto w-full">
+                                                    <div className="!text-[11px] sm:!text-sm text-slate-300 prose prose-sm prose-invert max-w-none leading-relaxed mb-4 overflow-x-auto w-full">
                                                         <Latex>{q.solutionText}</Latex>
                                                     </div>
                                                 )}
