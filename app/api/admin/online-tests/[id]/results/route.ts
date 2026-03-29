@@ -152,7 +152,9 @@ export async function GET(
                     submittedAt: attempt.submittedAt,
                     timeSpent: attempt.timeSpent,
                     graceMarks: attempt.graceMarks || 0,
-                    terminationReason: attempt.terminationReason
+                    terminationReason: attempt.terminationReason,
+                    warningCount: attempt.warningCount || 0,
+                    violationLog: attempt.violationLog || []
                 });
             } else if (attempt.status === 'in_progress') {
                 inProgress.push({
@@ -160,7 +162,9 @@ export async function GET(
                     phone,
                     batch: student.batch,
                     startedAt: attempt.startedAt,
-                    timeElapsed: Date.now() - new Date(attempt.startedAt).getTime()
+                    timeElapsed: Date.now() - new Date(attempt.startedAt).getTime(),
+                    warningCount: attempt.warningCount || 0,
+                    violationLog: attempt.violationLog || []
                 });
             }
         }

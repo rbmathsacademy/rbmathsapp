@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import SubmissionReviewModal from '../components/SubmissionReviewModal';
 
@@ -47,7 +47,7 @@ export default function MonitorTestPage() {
     const [completed, setCompleted] = useState<any[]>([]);
     const [inProgress, setInProgress] = useState<any[]>([]);
     const [notStarted, setNotStarted] = useState<any[]>([]);
-    const [activeTab, setActiveTab] = useState<'analytics' | 'all' | 'completed' | 'inProgress' | 'notStarted'>('analytics');
+    const [activeTab, setActiveTab] = useState<'analytics' | 'all' | 'completed' | 'inProgress' | 'notStarted' | 'breachLog'>('analytics');
     const [loading, setLoading] = useState(true);
     const [userEmail, setUserEmail] = useState<string | null>(null);
 
@@ -408,7 +408,8 @@ export default function MonitorTestPage() {
                         { key: 'all', label: `👥 All Students (${(analytics?.totalStudents || 0)})`, show: true },
                         { key: 'completed', label: `✅ Completed (${completed.length})`, show: true },
                         { key: 'inProgress', label: `⏳ In Progress (${inProgress.length})`, show: true },
-                        { key: 'notStarted', label: `❌ Not Started (${notStarted.length})`, show: true }
+                        { key: 'notStarted', label: `❌ Not Started (${notStarted.length})`, show: true },
+                        { key: 'breachLog', label: `🛡️ Breach Log (${[...completed, ...inProgress].filter(s => (s as any).warningCount > 0).length})`, show: true }
                     ].filter(t => t.show).map(tab => (
                         <button
                             key={tab.key}
@@ -576,6 +577,7 @@ export default function MonitorTestPage() {
                                                 <th className="px-4 py-3 font-semibold">Status</th>
                                                 <th className="px-4 py-3 font-semibold">Time Taken</th>
                                                 <th className="px-4 py-3 font-semibold">Score</th>
+                                                <th className="px-4 py-3 font-semibold">Warnings</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -616,6 +618,15 @@ export default function MonitorTestPage() {
                                                     <td className="px-4 py-3 text-sm">
                                                         {s._status === 'completed' ? (
                                                             <span className="text-white font-bold">{s.score}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
+                                                        ) : (
+                                                            <span className="text-slate-600">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {(s as any).warningCount > 0 ? (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-xs font-bold border border-red-500/20">
+                                                                <ShieldAlert className="w-3 h-3" /> {(s as any).warningCount}
+                                                            </span>
                                                         ) : (
                                                             <span className="text-slate-600">—</span>
                                                         )}
@@ -675,6 +686,7 @@ export default function MonitorTestPage() {
                                                         <th className="px-4 py-3 font-semibold">Score</th>
                                                         <th className="px-4 py-3 font-semibold">%</th>
                                                         <th className="px-4 py-3 font-semibold">Time</th>
+                                                        <th className="px-4 py-3 font-semibold">Warnings</th>
                                                         <th className="px-4 py-3 font-semibold">Submitted</th>
                                                         <th className="px-4 py-3 font-semibold text-right">Action</th>
                                                     </tr>
@@ -726,6 +738,15 @@ export default function MonitorTestPage() {
                                                                 )}
                                                             </td>
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
+                                                            <td className="px-4 py-3">
+                                                                {student.warningCount > 0 ? (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-xs font-bold border border-red-500/20">
+                                                                        <ShieldAlert className="w-3 h-3" /> {student.warningCount}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-600 text-sm">—</span>
+                                                                )}
+                                                            </td>
                                                             <td className="px-4 py-3 text-slate-400 text-xs">
                                                                 {new Date(student.submittedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' })}
                                                             </td>
@@ -793,6 +814,7 @@ export default function MonitorTestPage() {
                                                         <th className="px-4 py-3 font-semibold">Batch</th>
                                                         <th className="px-4 py-3 font-semibold">Started</th>
                                                         <th className="px-4 py-3 font-semibold">Elapsed</th>
+                                                        <th className="px-4 py-3 font-semibold">Warnings</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -812,6 +834,15 @@ export default function MonitorTestPage() {
                                                                     {formatTime(s.timeElapsed)}
                                                                     {isOvertime && <span className="ml-1 text-[10px] text-red-500">⚠</span>}
                                                                 </td>
+                                                                <td className="px-4 py-3">
+                                                                    {s.warningCount > 0 ? (
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-xs font-bold border border-red-500/20 animate-pulse">
+                                                                            <ShieldAlert className="w-3 h-3" /> {s.warningCount}
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-slate-600 text-sm">—</span>
+                                                                    )}
+                                                                </td>
                                                             </tr>
                                                         );
                                                     })}
@@ -819,6 +850,143 @@ export default function MonitorTestPage() {
                                             </table>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Breach Log Tab */}
+                        {activeTab === 'breachLog' && (
+                            <div className="space-y-4">
+                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                    {(() => {
+                                        const studentsWithWarnings = [...completed, ...inProgress]
+                                            .filter((s: any) => s.warningCount > 0)
+                                            .sort((a: any, b: any) => (b.warningCount || 0) - (a.warningCount || 0));
+
+                                        if (studentsWithWarnings.length === 0) {
+                                            return <p className="text-center py-12 text-emerald-400 font-medium">No proctoring violations detected 🎉</p>;
+                                        }
+
+                                        return (
+                                            <div className="divide-y divide-white/5">
+                                                {studentsWithWarnings.map((s: any) => {
+                                                    const screenAwayCount = (s.violationLog || []).filter((v: any) => v.type === 'screen_away').length;
+                                                    const assistantCount = (s.violationLog || []).filter((v: any) => v.type === 'google_assistant').length;
+                                                    const focusLostCount = (s.violationLog || []).filter((v: any) => v.type === 'focus_lost').length;
+                                                    const resizeCount = (s.violationLog || []).filter((v: any) => v.type === 'resize_detected').length;
+                                                    const bfcacheCount = (s.violationLog || []).filter((v: any) => v.type === 'bfcache_return').length;
+                                                    const unknownCount = (s.violationLog || []).filter((v: any) => !v.type || v.type === 'unknown').length;
+
+                                                    return (
+                                                        <div key={s.phone} className="p-4 hover:bg-white/5 transition-colors">
+                                                            {/* Student Header */}
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`p-2 rounded-lg ${s.warningCount >= 3 ? 'bg-red-500/20' : s.warningCount === 2 ? 'bg-amber-500/20' : 'bg-yellow-500/20'}`}>
+                                                                        <ShieldAlert className={`w-5 h-5 ${s.warningCount >= 3 ? 'text-red-400' : s.warningCount === 2 ? 'text-amber-400' : 'text-yellow-400'}`} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-white font-semibold text-sm">{s.name}</div>
+                                                                        <div className="text-[10px] text-slate-500">{s.phone} · {s.batch}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                                                                        s.warningCount >= 3 ? 'bg-red-500/15 text-red-400 border-red-500/30' :
+                                                                        s.warningCount === 2 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' :
+                                                                        'bg-yellow-500/15 text-yellow-400 border-yellow-500/30'
+                                                                    }`}>
+                                                                        {s.warningCount} Warning{s.warningCount !== 1 ? 's' : ''}
+                                                                        {s.terminationReason === 'proctoring_violation' && ' · TERMINATED'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Violation Type Stats */}
+                                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                                {screenAwayCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-[11px] font-medium border border-blue-500/20">
+                                                                        📱 Screen Away: {screenAwayCount}
+                                                                    </span>
+                                                                )}
+                                                                {assistantCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400 text-[11px] font-medium border border-purple-500/20">
+                                                                        🤖 Google Assistant: {assistantCount}
+                                                                    </span>
+                                                                )}
+                                                                {focusLostCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-[11px] font-medium border border-orange-500/20">
+                                                                        👁️ Focus Lost: {focusLostCount}
+                                                                    </span>
+                                                                )}
+                                                                {resizeCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-pink-500/10 text-pink-400 text-[11px] font-medium border border-pink-500/20">
+                                                                        📐 Resize: {resizeCount}
+                                                                    </span>
+                                                                )}
+                                                                {bfcacheCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 text-[11px] font-medium border border-cyan-500/20">
+                                                                        🔄 App Return: {bfcacheCount}
+                                                                    </span>
+                                                                )}
+                                                                {unknownCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-500/10 text-slate-400 text-[11px] font-medium border border-slate-500/20">
+                                                                        ❓ Unknown: {unknownCount}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Detailed Timeline */}
+                                                            {(s.violationLog || []).length > 0 && (
+                                                                <div className="bg-slate-800/40 rounded-xl border border-white/5 overflow-hidden">
+                                                                    <table className="w-full">
+                                                                        <thead>
+                                                                            <tr className="text-left text-[10px] text-slate-500 border-b border-white/5 bg-slate-800/60">
+                                                                                <th className="px-3 py-2 font-semibold">#</th>
+                                                                                <th className="px-3 py-2 font-semibold">Type</th>
+                                                                                <th className="px-3 py-2 font-semibold">Time</th>
+                                                                                <th className="px-3 py-2 font-semibold">Detail</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {(s.violationLog || []).map((v: any, vi: number) => (
+                                                                                <tr key={vi} className="border-b border-white/5 last:border-0">
+                                                                                    <td className="px-3 py-2 text-slate-500 text-xs">{vi + 1}</td>
+                                                                                    <td className="px-3 py-2">
+                                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                                                                            v.type === 'screen_away' ? 'bg-blue-500/20 text-blue-400' :
+                                                                                            v.type === 'google_assistant' ? 'bg-purple-500/20 text-purple-400' :
+                                                                                            v.type === 'focus_lost' ? 'bg-orange-500/20 text-orange-400' :
+                                                                                            v.type === 'resize_detected' ? 'bg-pink-500/20 text-pink-400' :
+                                                                                            v.type === 'bfcache_return' ? 'bg-cyan-500/20 text-cyan-400' :
+                                                                                            'bg-slate-500/20 text-slate-400'
+                                                                                        }`}>
+                                                                                            {v.type === 'screen_away' ? '📱 Screen Away' :
+                                                                                             v.type === 'google_assistant' ? '🤖 Google Assistant' :
+                                                                                             v.type === 'focus_lost' ? '👁️ Focus Lost' :
+                                                                                             v.type === 'resize_detected' ? '📐 Resize' :
+                                                                                             v.type === 'bfcache_return' ? '🔄 App Return' :
+                                                                                             '❓ Unknown'}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td className="px-3 py-2 text-slate-400 text-xs whitespace-nowrap">
+                                                                                        {v.timestamp ? new Date(v.timestamp).toLocaleString('en-IN', { timeStyle: 'medium', timeZone: 'Asia/Kolkata' }) : '—'}
+                                                                                    </td>
+                                                                                    <td className="px-3 py-2 text-slate-500 text-[11px] max-w-[200px] truncate" title={v.detail || ''}>
+                                                                                        {v.detail || '—'}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}

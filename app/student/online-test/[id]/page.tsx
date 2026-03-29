@@ -175,8 +175,11 @@ export default function TakeTestPage() {
         };
     }, [started, test, currentIndex, allQuestions.length, currentQuestion]);
 
-    // Proctoring: Visibility Change Detection (mobile-safe)
-    // Uses focusin/focusout tracking to avoid false positives from keyboard open/close
+    // Proctoring: Comprehensive Visibility & Overlay Detection
+    // Detects tab switches, app switches, AND system overlays (Google Assistant, split screen, etc.)
+    // Multiple detection layers are used because Android system overlays (like Google Assistant
+    // triggered by long-pressing the home button) render ON TOP of the browser activity without
+    // backgrounding it, so visibilitychange never fires and blur is unreliable.
     useEffect(() => {
         if (!started) return;
 
@@ -193,47 +196,154 @@ export default function TakeTestPage() {
         };
         fetchWarnings();
 
-        // --- Visibility change & blur handler ---
-        const handleProctoringViolation = (e: Event) => {
-            // If visibilitychange and document is hidden, it's a definite tab/app switch
-            if (e.type === 'visibilitychange' && document.hidden) {
-                handleViolation();
+        // Debounce: Prevent multiple violations from firing within a short window
+        // (e.g., blur + visibilitychange + heartbeat all detecting the same event)
+        let lastViolationTime = 0;
+        const VIOLATION_DEBOUNCE_MS = 2000;
+        const debouncedViolation = (violationType: string, detail?: string) => {
+            const now = Date.now();
+            if (now - lastViolationTime < VIOLATION_DEBOUNCE_MS) return;
+            lastViolationTime = now;
+            handleViolation(violationType, detail);
+        };
+
+        // ============================================================
+        // LAYER 1: visibilitychange (catches full tab/app switches)
+        // ============================================================
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                debouncedViolation('screen_away', 'Tab/app switch detected via visibilitychange');
             }
-            // If window blur, it means they clicked outside or switched windows
-            else if (e.type === 'blur') {
-                // Ignore blur if an input/textarea is currently focused (to prevent mobile keyboard false positives)
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // ============================================================
+        // LAYER 2: window blur (catches focus loss to other windows/overlays)
+        // ============================================================
+        let blurTimestamp = 0;
+        const handleWindowBlur = () => {
+            const activeEl = document.activeElement;
+            const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+            // Record when the blur happened for re-entry detection
+            blurTimestamp = Date.now();
+
+            setTimeout(() => {
+                // If user is in an input field, this could be mobile keyboard — skip
+                if (isInputFocused) return;
+                // Double-check: if document no longer has focus, it's a real switch
+                if (!document.hasFocus()) {
+                    debouncedViolation('screen_away', 'Window blur detected — switched away from exam');
+                }
+            }, 300);
+        };
+        window.addEventListener('blur', handleWindowBlur);
+
+        // ============================================================
+        // LAYER 3: Focus heartbeat polling (catches overlays like Google Assistant)
+        //
+        // Google Assistant on Android renders as a system overlay ON TOP of the 
+        // browser without backgrounding it. The browser thinks it's still visible,
+        // so visibilitychange never fires. On many devices, even window.blur doesn't
+        // fire. However, document.hasFocus() returns FALSE when an overlay is on top.
+        // We poll this every 2 seconds to catch it.
+        // ============================================================
+        let hadFocus = document.hasFocus();
+        let lostFocusAt = 0;
+        const heartbeatInterval = setInterval(() => {
+            const hasFocusNow = document.hasFocus();
+
+            if (hadFocus && !hasFocusNow) {
+                // Focus was just lost — could be keyboard, overlay, or app switch
+                // Check if an input is focused (keyboard scenario)
                 const activeEl = document.activeElement;
                 const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
 
-                // Some mobile browsers fire blur on the window when keyboard opens, 
-                // but the input remains the active element. Recheck focus after a tiny delay
-                // to see if the document still has focus OR if an input is focused.
-                // On mobile overlays (like Google Assistant) that cover the screen, the browser window loses blur,
-                // but the document might occasionally still report hasFocus() as true due to the way webviews manage overlays.
-                // We shouldn't strictly require !document.hasFocus() because overlays steal focus but might not trigger
-                // a full document blur event. If `window.blur` fires, and we're NOT in an input/textarea (keyboard open),
-                // it's highly likely a real app switch or overlay.
+                if (!isInputFocused && !document.hidden) {
+                    // Document is NOT hidden (so visibilitychange didn't fire) and no input focused
+                    // This is very likely an overlay like Google Assistant
+                    lostFocusAt = Date.now();
+                    debouncedViolation('google_assistant', 'System overlay detected — focus lost without visibility change (likely Google Assistant or similar)');
+                }
+            }
 
-                setTimeout(() => {
-                    // Mobile fix: If the window is blurred, and we are NOT focused on an input/textarea
-                    // (which handles the mobile keyboard false-positive), then we consider it a violation.
-                    if (!isInputFocused) {
-                        handleViolation();
-                    }
-                }, 200);
+            hadFocus = hasFocusNow;
+        }, 2000);
+
+        // ============================================================
+        // LAYER 4: window.focus re-entry detection
+        //
+        // When the student returns from Google Assistant (presses back),
+        // the window regains focus. If they were gone > 1.5 seconds and
+        // we didn't already catch it, flag it now.
+        // ============================================================
+        const handleWindowFocus = () => {
+            const goneForMs = Date.now() - blurTimestamp;
+            if (blurTimestamp > 0 && goneForMs > 1500) {
+                // They left for a meaningful amount of time
+                debouncedViolation('focus_lost', `Returned to exam after ${Math.round(goneForMs / 1000)}s away`);
+            }
+            blurTimestamp = 0;
+            hadFocus = true;
+        };
+        window.addEventListener('focus', handleWindowFocus);
+
+        // ============================================================
+        // LAYER 5: pageshow event (catches bfcache returns)
+        //
+        // On some Android browsers, pressing Back from Google Assistant
+        // can restore the page from bfcache (back-forward cache), which 
+        // only fires 'pageshow' with persisted=true, not visibilitychange.
+        // ============================================================
+        const handlePageShow = (e: PageTransitionEvent) => {
+            if (e.persisted) {
+                debouncedViolation('bfcache_return', 'Page restored from bfcache — returned from external app');
             }
         };
+        window.addEventListener('pageshow', handlePageShow);
 
-        document.addEventListener('visibilitychange', handleProctoringViolation);
-        window.addEventListener('blur', handleProctoringViolation);
+        // ============================================================
+        // LAYER 6: Viewport resize detection (catches Assistant panel)
+        //
+        // Google Assistant slides up from the bottom, significantly reducing
+        // the visible viewport height. If the viewport shrinks by more than
+        // 30% while NO input is focused (ruling out keyboard), it's likely
+        // an overlay or split-screen scenario.
+        // ============================================================
+        let baseViewportHeight = window.innerHeight;
+        // Set the baseline after a short delay (after keyboard might close)
+        setTimeout(() => { baseViewportHeight = window.innerHeight; }, 1000);
+
+        const handleResize = () => {
+            const activeEl = document.activeElement;
+            const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+            const currentHeight = window.innerHeight;
+            const shrinkRatio = currentHeight / baseViewportHeight;
+
+            // If viewport shrunk more than 30% AND no input is focused (not keyboard)
+            if (!isInputFocused && shrinkRatio < 0.7 && baseViewportHeight > 0) {
+                debouncedViolation('resize_detected', `Viewport shrunk by ${Math.round((1 - shrinkRatio) * 100)}% — possible overlay or split screen`);
+            }
+
+            // Update baseline when viewport grows back (user returned)
+            if (currentHeight > baseViewportHeight) {
+                baseViewportHeight = currentHeight;
+            }
+        };
+        window.addEventListener('resize', handleResize);
 
         return () => {
-            document.removeEventListener('visibilitychange', handleProctoringViolation);
-            window.removeEventListener('blur', handleProctoringViolation);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleWindowBlur);
+            window.removeEventListener('focus', handleWindowFocus);
+            window.removeEventListener('pageshow', handlePageShow);
+            window.removeEventListener('resize', handleResize);
+            clearInterval(heartbeatInterval);
         };
     }, [started]);
 
-    const handleViolation = async () => {
+    const handleViolation = async (violationType: string = 'unknown', detail: string = '') => {
         if (submitting) return; // Prevent loop if already submitting
 
         const newCount = warningCountRef.current + 1;
@@ -252,9 +362,13 @@ export default function TakeTestPage() {
             handleSubmit(true, 'proctoring_violation');
         }
 
-        // Persist warning count
+        // Persist warning count with violation type
         try {
-            await fetch(`/api/student/online-tests/${testId}/warning`, { method: 'POST' });
+            await fetch(`/api/student/online-tests/${testId}/warning`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ violationType, detail })
+            });
         } catch (error) {
             console.error('Failed to update warning count', error);
         }

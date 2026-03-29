@@ -28,6 +28,11 @@ const StudentTestAttemptSchema = new mongoose.Schema({
     graceMarks: { type: Number, default: 0 },
     graceReason: { type: String, default: '' },
     warningCount: { type: Number, default: 0 },
+    violationLog: [{
+        type: { type: String, enum: ['screen_away', 'google_assistant', 'focus_lost', 'resize_detected', 'bfcache_return', 'unknown'], default: 'unknown' },
+        timestamp: { type: Date, default: Date.now },
+        detail: { type: String, default: '' }
+    }],
     resumeCount: { type: Number, default: 0 },
     terminationReason: { type: String, default: null }
 }, { timestamps: true });

@@ -30,6 +30,17 @@ export async function POST(
         await dbConnect();
         const { id: testId } = await props.params;
 
+        // Parse violation details from request body
+        let violationType = 'unknown';
+        let detail = '';
+        try {
+            const body = await req.json();
+            violationType = body.violationType || 'unknown';
+            detail = body.detail || '';
+        } catch {
+            // Body may be empty for legacy clients — that's OK
+        }
+
         const attempt = await StudentTestAttempt.findOne({
             testId,
             studentPhone: student.phoneNumber,
@@ -42,6 +53,15 @@ export async function POST(
 
         // Increment warning count
         attempt.warningCount = (attempt.warningCount || 0) + 1;
+
+        // Append to violation log
+        if (!attempt.violationLog) attempt.violationLog = [];
+        attempt.violationLog.push({
+            type: violationType,
+            timestamp: new Date(),
+            detail: detail
+        });
+
         await attempt.save();
 
         return NextResponse.json({
