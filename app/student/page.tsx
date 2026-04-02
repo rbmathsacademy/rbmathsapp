@@ -90,6 +90,10 @@ export default function StudentDashboard() {
                 const result = await res.json();
                 setData(result);
             } else {
+                if (res.status === 401) {
+                    handleLogout();
+                    return;
+                }
                 toast.error('Failed to load dashboard data');
             }
         } catch (error) {

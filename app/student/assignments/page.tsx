@@ -31,6 +31,7 @@ export default function StudentAssignmentsPage() {
     const [activeTab, setActiveTab] = useState<TabType>('PENDING');
     const [loading, setLoading] = useState(true);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
     const { profile, loading: profileLoading } = useStudentProfile();
 
     useEffect(() => {
@@ -69,8 +70,9 @@ export default function StudentAssignmentsPage() {
         }
 
         if (file.size > 3 * 1024 * 1024) {
-            toast.error('File too large (Max 3MB). Compress at ilovepdf.com', { duration: 5000 });
+            toast.error('File too large (Max 3MB).', { duration: 5000 });
             e.target.value = '';
+            setShowUploadErrorModal(true);
             return;
         }
 
@@ -167,6 +169,7 @@ export default function StudentAssignmentsPage() {
                     fetchAssignments();
                 } else {
                     toast.error(subData.error || 'Failed to save submission', { id: toastId });
+                    setShowUploadErrorModal(true);
                 }
             } else {
                 throw new Error(gasData?.message || 'Google Drive upload failed');
@@ -174,6 +177,7 @@ export default function StudentAssignmentsPage() {
         } catch (error: any) {
             console.error('Upload error:', error);
             toast.error(error.message || 'Upload failed. Please try again.', { id: toastId });
+            setShowUploadErrorModal(true);
         } finally {
             setUploadingId(null);
             e.target.value = '';
@@ -269,8 +273,57 @@ export default function StudentAssignmentsPage() {
     }
 
     return (
-        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200">
+        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200 relative">
             <Toaster position="top-center" />
+
+            {/* Upload Error Modal */}
+            {showUploadErrorModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Decorative Top Bar */}
+                        <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-orange-500"></div>
+                        
+                        <div className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                        <AlertTriangle className="w-5 h-5 text-red-500" />
+                                    </div>
+                                    <h2 className="text-lg font-bold text-white">Upload Failed</h2>
+                                </div>
+                                <button 
+                                    onClick={() => setShowUploadErrorModal(false)}
+                                    className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-gray-400 hover:text-white"
+                                >
+                                    <XCircle className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 text-sm text-gray-300">
+                                <p className="font-medium">
+                                    Your file might be too large or the network connection was interrupted.
+                                </p>
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                                    <p className="font-bold text-white">How to fix this:</p>
+                                    <ol className="list-decimal pl-4 space-y-2 text-gray-400">
+                                        <li>Go to Google and search for <strong className="text-white">"Compress pdf online"</strong></li>
+                                        <li>Open the first website (like <span className="text-blue-400">ilovepdf.com</span> or <span className="text-blue-400">smallpdf.com</span>)</li>
+                                        <li>Upload your PDF file and compress it.</li>
+                                        <li>Download the smaller version and try uploading it here again.</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setShowUploadErrorModal(false)}
+                                className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 transition-colors"
+                            >
+                                Got it, I'll compress it
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Back Button */}
             <button

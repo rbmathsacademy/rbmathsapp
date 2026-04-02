@@ -11,9 +11,22 @@ export default function StudentLogin() {
     const router = useRouter();
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && localStorage.getItem('studentName')) {
-            router.replace('/student');
-        }
+        const checkSession = async () => {
+            if (typeof window !== 'undefined' && localStorage.getItem('studentName')) {
+                try {
+                    const res = await fetch('/api/student/me');
+                    if (res.ok) {
+                        router.replace('/student');
+                    } else {
+                        localStorage.removeItem('studentName');
+                        localStorage.removeItem('studentCourses');
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+        };
+        checkSession();
     }, [router]);
 
     const handleLogin = async (e: React.FormEvent) => {

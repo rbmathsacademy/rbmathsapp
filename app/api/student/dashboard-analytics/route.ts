@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
-        const studentCreatedAt = new Date(student.createdAt);
+        const studentCreatedAt = student.createdAt ? new Date(student.createdAt) : new Date(parseInt(student._id.toString().slice(0, 8), 16) * 1000);
 
         // 2. Get Tests Data
         const tests = await OnlineTest.find({
@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
                 name: student.name,
                 phoneNumber: student.phoneNumber,
                 courses: student.courses,
-                joinedAt: student.createdAt
+                joinedAt: studentCreatedAt
             },
             stats: {
                 avgTestPercentage: parseFloat(avgPercentage.toFixed(2)),

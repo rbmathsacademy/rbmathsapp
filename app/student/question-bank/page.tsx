@@ -87,18 +87,20 @@ export default function QuestionBank() {
             const subFolders = foldersData.folders || [];
             const questions = questionsData.questions || [];
 
-            setFolders(subFolders);
-            setFolderHasQuestions(questions.length > 0);
-
             // If no sub-folders but has questions, go directly to resources view
             if (subFolders.length === 0 && questions.length > 0) {
                 router.push(`/student/resources/${folder._id}`);
+                // Don't set loading to false here to prevent flashing UI while route changes
                 return;
             }
+
+            setFolders(subFolders);
+            setFolderHasQuestions(questions.length > 0);
+            setLoadingFolders(false);
         } catch (e) {
             toast.error('Failed to load folder');
-        } finally {
             setLoadingFolders(false);
+        } finally {
             setCheckingQuestions(false);
         }
     };
