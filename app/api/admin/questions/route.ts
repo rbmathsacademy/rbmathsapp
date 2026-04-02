@@ -136,8 +136,7 @@ export async function POST(req: Request) {
                 hint: q.hint,
                 explanation: q.explanation,
                 uploadedBy: uploaderEmail,
-                facultyName: facultyName,
-                deployments: q.deployments || []
+                facultyName: facultyName
             };
 
             if (q.order !== undefined && q.order !== null) {

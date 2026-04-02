@@ -5,6 +5,9 @@ import Question from '@/models/Question';
 import Config from '@/models/Config';
 import '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {

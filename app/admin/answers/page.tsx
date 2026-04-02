@@ -24,7 +24,6 @@ interface Question {
     marks?: number;
     // Critical fields for persistence
     options?: string[];
-    deployments?: any[];
     uploadedBy?: string;
     facultyName?: string;
     createdAt?: string;
@@ -426,7 +425,6 @@ export default function AnswerBank() {
                         // BUT if imported has explicit null/undefined, it overrides.
                         // Safest to explicitly handle arrays if we think they might be lost.)
                         options: imported.options || original.options || [],
-                        deployments: imported.deployments || original.deployments || [],
                         examNames: imported.examNames || original.examNames || []
                     };
 
