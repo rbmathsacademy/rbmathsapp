@@ -11,7 +11,7 @@ export async function PUT(
         await dbConnect();
         const { id } = await props.params;
         const body = await req.json();
-        const { name, phoneNumber, courses, guardianPhone, guardianName, email } = body;
+        const { name, phoneNumber, courses, guardianPhone, guardianName, email, schoolName, board } = body;
 
         const updateData: any = {};
         if (name !== undefined) updateData.name = name.trim();
@@ -20,6 +20,8 @@ export async function PUT(
         if (guardianPhone !== undefined) updateData.guardianPhone = guardianPhone?.replace(/\D/g, '') || null;
         if (guardianName !== undefined) updateData.guardianName = guardianName?.trim() || null;
         if (email !== undefined) updateData.email = email?.trim() || null;
+        if (schoolName !== undefined) updateData.schoolName = schoolName?.trim() || null;
+        if (board !== undefined) updateData.board = board?.trim() || null;
 
         // Check for phone number conflict if updating phone
         if (updateData.phoneNumber) {

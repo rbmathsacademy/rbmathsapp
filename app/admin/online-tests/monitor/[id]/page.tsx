@@ -347,23 +347,23 @@ export default function MonitorTestPage() {
             )}
 
             {/* Header */}
-            <div className="bg-slate-900/60 backdrop-blur-sm border-b border-white/10 p-6">
+            <div className="bg-slate-900/60 backdrop-blur-sm border-b border-white/10 p-3 sm:p-6">
                 <div className="max-w-7xl mx-auto">
-                    <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white mb-4 transition-colors">
-                        <ArrowLeft className="h-5 w-5" /> Back to Tests
+                    <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white mb-3 sm:mb-4 transition-colors text-sm">
+                        <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" /> Back
                     </button>
                     {testInfo && (
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
                             <div>
-                                <h1 className="text-2xl font-bold text-white mb-1">{testInfo.title}</h1>
-                                <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                                <h1 className="text-lg sm:text-2xl font-bold text-white mb-1">{testInfo.title}</h1>
+                                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-slate-400">
                                     <span>📚 {testInfo.batches?.join(', ')}</span>
-                                    <span>⏱️ {testInfo.duration} min</span>
-                                    <span>📝 {testInfo.totalMarks} marks</span>
-                                    <span>🎯 Pass: {testInfo.passingPercentage}%</span>
+                                    <span>⏱️ {testInfo.duration}m</span>
+                                    <span>📝 {testInfo.totalMarks}</span>
+                                    <span>🎯 {testInfo.passingPercentage}%</span>
                                 </div>
                             </div>
-                            <button onClick={fetchResults} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2 transition-colors text-sm font-medium self-start">
+                            <button onClick={fetchResults} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2 transition-colors text-xs sm:text-sm font-medium self-start">
                                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
                             </button>
                         </div>
@@ -371,55 +371,56 @@ export default function MonitorTestPage() {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="max-w-7xl mx-auto p-3 sm:p-6">
                 {/* Top Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-                    <div onClick={() => setActiveTab('all')} className={`border rounded-xl p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-blue-500/30 ${activeTab === 'all' ? 'ring-2 ring-blue-400/60 bg-blue-500/10' : 'bg-slate-800/50 border-white/10'}`}>
-                        <Users className="h-5 w-5 text-blue-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-white">{analytics?.totalStudents || 0}</div>
-                        <div className="text-xs text-slate-500">Total Students</div>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <div onClick={() => setActiveTab('all')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-blue-500/30 ${activeTab === 'all' ? 'ring-2 ring-blue-400/60 bg-blue-500/10' : 'bg-slate-800/50 border-white/10'}`}>
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-0.5 sm:mb-1" />
+                        <div className="text-lg sm:text-2xl font-bold text-white">{analytics?.totalStudents || 0}</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500">Total</div>
                     </div>
-                    <div onClick={() => setActiveTab('completed')} className={`border rounded-xl p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-emerald-500/50 ${activeTab === 'completed' ? 'ring-2 ring-emerald-500/60 bg-emerald-500/15' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-                        <Trophy className="h-5 w-5 text-emerald-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-emerald-400">{analytics?.completedCount || 0}</div>
-                        <div className="text-xs text-slate-500">Completed</div>
+                    <div onClick={() => setActiveTab('completed')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-emerald-500/50 ${activeTab === 'completed' ? 'ring-2 ring-emerald-500/60 bg-emerald-500/15' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+                        <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 mx-auto mb-0.5 sm:mb-1" />
+                        <div className="text-lg sm:text-2xl font-bold text-emerald-400">{analytics?.completedCount || 0}</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500">Done</div>
                     </div>
-                    <div onClick={() => setActiveTab('inProgress')} className={`border rounded-xl p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-blue-500/50 ${activeTab === 'inProgress' ? 'ring-2 ring-blue-500/60 bg-blue-500/15' : 'bg-blue-500/10 border-blue-500/20'}`}>
-                        <Clock className="h-5 w-5 text-blue-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-blue-400">{analytics?.inProgressCount || 0}</div>
-                        <div className="text-xs text-slate-500">In Progress</div>
+                    <div onClick={() => setActiveTab('inProgress')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-blue-500/50 ${activeTab === 'inProgress' ? 'ring-2 ring-blue-500/60 bg-blue-500/15' : 'bg-blue-500/10 border-blue-500/20'}`}>
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-0.5 sm:mb-1" />
+                        <div className="text-lg sm:text-2xl font-bold text-blue-400">{analytics?.inProgressCount || 0}</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500">Active</div>
                     </div>
-                    <div onClick={() => setActiveTab('notStarted')} className={`border rounded-xl p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-red-500/50 ${activeTab === 'notStarted' ? 'ring-2 ring-red-500/60 bg-red-500/15' : 'bg-red-500/10 border-red-500/20'}`}>
-                        <XCircle className="h-5 w-5 text-red-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-red-400">{analytics?.notStartedCount || 0}</div>
-                        <div className="text-xs text-slate-500">Not Started</div>
+                    <div onClick={() => setActiveTab('notStarted')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-red-500/50 ${activeTab === 'notStarted' ? 'ring-2 ring-red-500/60 bg-red-500/15' : 'bg-red-500/10 border-red-500/20'}`}>
+                        <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400 mx-auto mb-0.5 sm:mb-1" />
+                        <div className="text-lg sm:text-2xl font-bold text-red-400">{analytics?.notStartedCount || 0}</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500">Missed</div>
                     </div>
-                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 text-center">
-                        <Percent className="h-5 w-5 text-purple-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-purple-400">{analytics?.participationRate || 0}%</div>
-                        <div className="text-xs text-slate-500">Participation</div>
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-2.5 sm:p-4 text-center">
+                        <Percent className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 mx-auto mb-0.5 sm:mb-1" />
+                        <div className="text-lg sm:text-2xl font-bold text-purple-400">{analytics?.participationRate || 0}%</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500">Rate</div>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 bg-slate-800/30 rounded-xl p-1 mb-6 overflow-x-auto">
+                <div className="flex gap-1 bg-slate-800/30 rounded-xl p-1 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
                     {[
-                        { key: 'analytics', label: '📊 Analytics', show: (analytics?.completedCount || 0) > 0 },
-                        { key: 'all', label: `👥 All Students (${(analytics?.totalStudents || 0)})`, show: true },
-                        { key: 'completed', label: `✅ Completed (${completed.length})`, show: true },
-                        { key: 'inProgress', label: `⏳ In Progress (${inProgress.length})`, show: true },
-                        { key: 'notStarted', label: `❌ Not Started (${notStarted.length})`, show: true },
-                        { key: 'breachLog', label: `🛡️ Breach Log (${[...completed, ...inProgress].filter(s => (s as any).warningCount > 0).length})`, show: true }
+                        { key: 'analytics', label: '📊 Analytics', mobileLabel: '📊', show: (analytics?.completedCount || 0) > 0 },
+                        { key: 'all', label: `👥 All (${(analytics?.totalStudents || 0)})`, mobileLabel: `👥 ${analytics?.totalStudents || 0}`, show: true },
+                        { key: 'completed', label: `✅ Done (${completed.length})`, mobileLabel: `✅ ${completed.length}`, show: true },
+                        { key: 'inProgress', label: `⏳ Active (${inProgress.length})`, mobileLabel: `⏳ ${inProgress.length}`, show: true },
+                        { key: 'notStarted', label: `❌ Missed (${notStarted.length})`, mobileLabel: `❌ ${notStarted.length}`, show: true },
+                        { key: 'breachLog', label: `🛡️ Breach (${[...completed, ...inProgress].filter(s => (s as any).warningCount > 0).length})`, mobileLabel: `🛡️ ${[...completed, ...inProgress].filter(s => (s as any).warningCount > 0).length}`, show: true }
                     ].filter(t => t.show).map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key as any)}
-                            className={`flex-shrink-0 px-4 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${activeTab === tab.key
+                            className={`flex-shrink-0 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all whitespace-nowrap ${activeTab === tab.key
                                 ? 'bg-slate-700 text-white shadow-md'
                                 : 'text-slate-400 hover:text-white'
                                 }`}
                         >
-                            {tab.label}
+                            <span className="hidden sm:inline">{tab.label}</span>
+                            <span className="sm:hidden">{tab.mobileLabel}</span>
                         </button>
                     ))}
                 </div>
@@ -567,7 +568,8 @@ export default function MonitorTestPage() {
                         {/* All Students Tab */}
                         {activeTab === 'all' && (
                             <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
-                                <div className="overflow-x-auto">
+                                {/* Desktop Table */}
+                                <div className="hidden sm:block overflow-x-auto">
                                     <table className="w-full">
                                         <thead>
                                             <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
@@ -575,7 +577,7 @@ export default function MonitorTestPage() {
                                                 <th className="px-4 py-3 font-semibold">Student</th>
                                                 <th className="px-4 py-3 font-semibold">Batch</th>
                                                 <th className="px-4 py-3 font-semibold">Status</th>
-                                                <th className="px-4 py-3 font-semibold">Time Taken</th>
+                                                <th className="px-4 py-3 font-semibold">Time</th>
                                                 <th className="px-4 py-3 font-semibold">Score</th>
                                                 <th className="px-4 py-3 font-semibold">Warnings</th>
                                             </tr>
@@ -636,6 +638,42 @@ export default function MonitorTestPage() {
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {/* Mobile Card View */}
+                                <div className="sm:hidden divide-y divide-white/5">
+                                    {[
+                                        ...completed.map(s => ({ ...s, _status: 'completed' as const, status: s.status })),
+                                        ...inProgress.map(s => ({ ...s, _status: 'inProgress' as const })),
+                                        ...notStarted.map(s => ({ ...s, _status: 'notStarted' as const }))
+                                    ].map((s, i) => (
+                                        <div key={s.phone || i} className="p-3 flex items-center justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-slate-600 text-[10px] font-bold w-5 shrink-0">{i + 1}</span>
+                                                    <div className="min-w-0">
+                                                        <p className="text-white font-medium text-sm truncate">{s.name}</p>
+                                                        <p className="text-[10px] text-slate-500">{s.phone}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {s._status === 'completed' && (
+                                                    <span className="text-white font-bold text-xs">{s.score}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
+                                                )}
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s._status === 'completed' ? 'bg-emerald-500/15 text-emerald-400' :
+                                                    s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-400' : 'bg-red-500/15 text-red-400'
+                                                    }`}>
+                                                    {s._status === 'completed' ? '✅' : s._status === 'inProgress' ? '⏳' : '❌'}
+                                                </span>
+                                                {(s as any).warningCount > 0 && (
+                                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold border border-red-500/20">
+                                                        <ShieldAlert className="w-2.5 h-2.5" /> {(s as any).warningCount}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
@@ -644,8 +682,8 @@ export default function MonitorTestPage() {
                             <div className="space-y-4">
                                 {/* Bulk Reassign Toolbar */}
                                 {completed.length > 0 && (
-                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3">
-                                        <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
+                                        <div className="flex items-center gap-2 sm:gap-3">
                                             <input
                                                 type="checkbox"
                                                 id="select-all"
@@ -653,17 +691,18 @@ export default function MonitorTestPage() {
                                                 onChange={toggleSelectAll}
                                                 className="w-4 h-4 rounded border-white/20 bg-black/40 text-amber-600 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer accent-amber-500"
                                             />
-                                            <label htmlFor="select-all" className="text-sm text-slate-400 cursor-pointer select-none">
-                                                {selectedPhones.size > 0 ? `${selectedPhones.size} selected` : 'Select all'}
+                                            <label htmlFor="select-all" className="text-xs sm:text-sm text-slate-400 cursor-pointer select-none">
+                                                {selectedPhones.size > 0 ? `${selectedPhones.size} sel.` : 'All'}
                                             </label>
                                         </div>
                                         {selectedPhones.size > 0 && (
                                             <button
                                                 onClick={() => setShowReassignModal(true)}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 text-sm font-bold transition-all"
+                                                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 text-xs sm:text-sm font-bold transition-all"
                                             >
-                                                <RotateCcw className="w-4 h-4" />
-                                                Reassign Selected ({selectedPhones.size})
+                                                <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                <span className="hidden sm:inline">Reassign Selected ({selectedPhones.size})</span>
+                                                <span className="sm:hidden">Reassign ({selectedPhones.size})</span>
                                             </button>
                                         )}
                                     </div>
@@ -673,13 +712,13 @@ export default function MonitorTestPage() {
                                     {completed.length === 0 ? (
                                         <p className="text-center py-12 text-slate-400">No completed attempts yet</p>
                                     ) : (
-                                        <div className="overflow-x-auto">
+                                        <>
+                                        {/* Desktop Table */}
+                                        <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full">
                                                 <thead>
                                                     <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
-                                                        <th className="px-4 py-3 font-semibold w-10">
-                                                            {/* checkbox header placeholder */}
-                                                        </th>
+                                                        <th className="px-4 py-3 font-semibold w-10"></th>
                                                         <th className="px-4 py-3 font-semibold">Rank</th>
                                                         <th className="px-4 py-3 font-semibold">Student</th>
                                                         <th className="px-4 py-3 font-semibold">Batch</th>
@@ -757,7 +796,7 @@ export default function MonitorTestPage() {
                                                                         setReviewStudentPhone(student.phone);
                                                                     }}
                                                                     className="p-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors"
-                                                                    title="Review Submission & Give Adjustments"
+                                                                    title="Review Submission"
                                                                 >
                                                                     <Eye className="w-4 h-4" />
                                                                 </button>
@@ -767,6 +806,62 @@ export default function MonitorTestPage() {
                                                 </tbody>
                                             </table>
                                         </div>
+
+                                        {/* Mobile Card View */}
+                                        <div className="sm:hidden divide-y divide-white/5">
+                                            {completed.map((student, i) => (
+                                                <div
+                                                    key={student.phone}
+                                                    className={`p-3 ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''}`}
+                                                    onClick={() => setReviewStudentPhone(student.phone)}
+                                                >
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedPhones.has(student.phone)}
+                                                                onChange={() => toggleSelectPhone(student.phone)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="w-3.5 h-3.5 rounded border-white/20 bg-black/40 cursor-pointer accent-amber-500 shrink-0"
+                                                            />
+                                                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                                                i === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                                                i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                                                                i === 2 ? 'bg-orange-500/20 text-orange-400' :
+                                                                'bg-slate-700/50 text-slate-500'
+                                                            }`}>{i + 1}</span>
+                                                            <p className="text-white font-medium text-sm truncate">{student.name}</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                {student.score}<span className="text-slate-500 text-[10px] font-normal">/{testInfo?.totalMarks}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between pl-[52px]">
+                                                        <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                                            <span>{formatTime(student.timeSpent)}</span>
+                                                            <span>{student.percentage}%</span>
+                                                            {student.warningCount > 0 && (
+                                                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold border border-red-500/20">
+                                                                    <ShieldAlert className="w-2.5 h-2.5" /> {student.warningCount}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setReviewStudentPhone(student.phone);
+                                                            }}
+                                                            className="p-1 rounded border border-amber-500/30 bg-amber-500/10 text-amber-500"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -777,10 +872,10 @@ export default function MonitorTestPage() {
                             <div className="space-y-4">
                                 {/* Force Complete Toolbar */}
                                 {inProgress.length > 0 && (
-                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3">
+                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
                                         <div>
-                                            <span className="text-sm text-slate-400">
-                                                {inProgress.length} student{inProgress.length !== 1 ? 's' : ''} still in progress
+                                            <span className="text-xs sm:text-sm text-slate-400">
+                                                {inProgress.length} in progress
                                             </span>
                                             {testInfo?.endTime && new Date(testInfo.endTime) < new Date() && (
                                                 <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
@@ -791,12 +886,12 @@ export default function MonitorTestPage() {
                                         <button
                                             onClick={handleForceComplete}
                                             disabled={forceCompleting}
-                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-sm font-bold transition-all disabled:opacity-50"
+                                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-xs sm:text-sm font-bold transition-all disabled:opacity-50"
                                         >
                                             {forceCompleting ? (
-                                                <><RefreshCw className="w-4 h-4 animate-spin" /> Completing...</>
+                                                <><RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> <span className="hidden sm:inline">Completing...</span><span className="sm:hidden">...</span></>
                                             ) : (
-                                                <><XCircle className="w-4 h-4" /> Force Complete Expired</>
+                                                <><XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Force Complete Expired</span><span className="sm:hidden">Force Complete</span></>
                                             )}
                                         </button>
                                     </div>
@@ -806,7 +901,9 @@ export default function MonitorTestPage() {
                                     {inProgress.length === 0 ? (
                                         <p className="text-center py-12 text-slate-400">No students currently taking the test</p>
                                     ) : (
-                                        <div className="overflow-x-auto">
+                                        <>
+                                        {/* Desktop Table */}
+                                        <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full">
                                                 <thead>
                                                     <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
@@ -849,6 +946,34 @@ export default function MonitorTestPage() {
                                                 </tbody>
                                             </table>
                                         </div>
+
+                                        {/* Mobile Card View */}
+                                        <div className="sm:hidden divide-y divide-white/5">
+                                            {inProgress.map(s => {
+                                                const isOvertime = testInfo?.endTime && new Date(testInfo.endTime) < new Date();
+                                                return (
+                                                    <div key={s.phone} className={`p-3 ${isOvertime ? 'bg-red-500/5' : ''}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="min-w-0">
+                                                                <p className="text-white font-medium text-sm truncate">{s.name}</p>
+                                                                <p className="text-[10px] text-slate-500">{s.phone}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                <span className={`font-bold text-sm ${isOvertime ? 'text-red-400' : 'text-blue-400'}`}>
+                                                                    {formatTime(s.timeElapsed)}
+                                                                </span>
+                                                                {s.warningCount > 0 && (
+                                                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold border border-red-500/20 animate-pulse">
+                                                                        <ShieldAlert className="w-2.5 h-2.5" /> {s.warningCount}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -996,18 +1121,19 @@ export default function MonitorTestPage() {
                             <div className="space-y-4">
                                 {/* Reassign Missed Students Button */}
                                 {notStarted.length > 0 && (
-                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3">
-                                        <span className="text-sm text-slate-400">{notStarted.length} student{notStarted.length !== 1 ? 's' : ''} missed this test</span>
+                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
+                                        <span className="text-xs sm:text-sm text-slate-400">{notStarted.length} missed</span>
                                         <button
                                             onClick={() => {
                                                 setNewStartTime('');
                                                 setNewEndTime('');
                                                 setShowMissedModal(true);
                                             }}
-                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 text-sm font-bold transition-all"
+                                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 text-xs sm:text-sm font-bold transition-all"
                                         >
-                                            <CalendarClock className="w-4 h-4" />
-                                            Reassign Missed Students
+                                            <CalendarClock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            <span className="hidden sm:inline">Reassign Missed Students</span>
+                                            <span className="sm:hidden">Reassign</span>
                                         </button>
                                     </div>
                                 )}
@@ -1016,7 +1142,9 @@ export default function MonitorTestPage() {
                                     {notStarted.length === 0 ? (
                                         <p className="text-center py-12 text-emerald-400 font-medium">All students have started the test! 🎉</p>
                                     ) : (
-                                        <div className="overflow-x-auto">
+                                        <>
+                                        {/* Desktop Table */}
+                                        <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full">
                                                 <thead>
                                                     <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
@@ -1053,6 +1181,33 @@ export default function MonitorTestPage() {
                                                 </tbody>
                                             </table>
                                         </div>
+
+                                        {/* Mobile Card View */}
+                                        <div className="sm:hidden divide-y divide-white/5">
+                                            {notStarted.map(s => (
+                                                <div key={s.phone} className="p-3 flex items-center justify-between gap-2">
+                                                    <div className="min-w-0">
+                                                        <p className="text-white font-medium text-sm truncate">{s.name}</p>
+                                                        <p className="text-[10px] text-slate-500">{s.phone}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 text-[10px] font-bold">❌</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
+                                                                const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
+                                                                navigator.clipboard.writeText(text);
+                                                                toast.success('Reminder copied!');
+                                                            }}
+                                                            className="p-1 hover:bg-slate-700 rounded text-slate-400"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        </>
                                     )}
                                 </div>
                             </div>

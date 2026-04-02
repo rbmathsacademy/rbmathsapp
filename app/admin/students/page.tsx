@@ -12,6 +12,8 @@ interface Student {
     guardianPhone?: string;
     guardianName?: string;
     email?: string;
+    schoolName?: string;
+    board?: string;
     createdAt: string;
 }
 
@@ -41,7 +43,8 @@ export default function AdminStudents() {
     // Form state
     const [form, setForm] = useState({
         name: '', phoneNumber: '', courses: [] as string[],
-        guardianPhone: '', guardianName: '', email: ''
+        guardianPhone: '', guardianName: '', email: '',
+        schoolName: '', board: ''
     });
     const [bulkText, setBulkText] = useState('');
     const [newCourseInput, setNewCourseInput] = useState('');
@@ -88,7 +91,7 @@ export default function AdminStudents() {
     };
 
     const resetForm = () => {
-        setForm({ name: '', phoneNumber: '', courses: [], guardianPhone: '', guardianName: '', email: '' });
+        setForm({ name: '', phoneNumber: '', courses: [], guardianPhone: '', guardianName: '', email: '', schoolName: '', board: '' });
         setNewCourseInput('');
     };
 
@@ -156,7 +159,9 @@ export default function AdminStudents() {
             courses: [...student.courses],
             guardianPhone: student.guardianPhone || '',
             guardianName: student.guardianName || '',
-            email: student.email || ''
+            email: student.email || '',
+            schoolName: student.schoolName || '',
+            board: student.board || ''
         });
         setShowEditModal(true);
     };
@@ -342,6 +347,31 @@ export default function AdminStudents() {
                     />
                 </div>
             </div>
+            {/* School & Board */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">School Name</label>
+                    <input
+                        type="text" value={form.schoolName}
+                        onChange={e => setForm({ ...form, schoolName: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                        placeholder="Full school name"
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Board</label>
+                    <select
+                        value={form.board}
+                        onChange={e => setForm({ ...form, board: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="" className="bg-slate-800 text-white">No board selected</option>
+                        <option value="CBSE" className="bg-slate-800 text-white">CBSE</option>
+                        <option value="ISC" className="bg-slate-800 text-white">ISC</option>
+                        <option value="WBCHSE" className="bg-slate-800 text-white">WBCHSE</option>
+                    </select>
+                </div>
+            </div>
             {/* Guardian Info */}
             <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -510,6 +540,11 @@ export default function AdminStudents() {
                                                 <p className="font-bold text-white truncate">{student.name}</p>
                                                 <p className="text-[10px] text-slate-500 sm:hidden">{student.phoneNumber}</p>
                                                 {student.email && <p className="text-[10px] text-slate-500 truncate hidden sm:block">{student.email}</p>}
+                                                {student.board && (
+                                                    <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
+                                                        {student.board}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </td>

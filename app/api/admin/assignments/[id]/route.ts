@@ -54,7 +54,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 student: {
                     _id: student._id,
                     name: student.name,
-                    phoneNumber: student.phoneNumber
+                    phoneNumber: student.phoneNumber,
+                    board: student.board || null
                 },
                 status: correctionStatus,
                 submissionStatus,

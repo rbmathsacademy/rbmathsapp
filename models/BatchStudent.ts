@@ -11,6 +11,8 @@ const BatchStudentSchema = new mongoose.Schema({
     guardianPhone: { type: String, trim: true },
     guardianName: { type: String, trim: true },
     email: { type: String, sparse: true, trim: true, lowercase: true },
+    schoolName: { type: String, trim: true },
+    board: { type: String, enum: ['CBSE', 'ISC', 'WBCHSE'], trim: true },
     bookmarks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Question',

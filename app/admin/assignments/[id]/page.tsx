@@ -14,6 +14,7 @@ interface StudentSubmission {
         _id: string;
         name: string;
         phoneNumber: string;
+        board?: string | null;
     };
     status: 'PENDING' | 'CORRECTED'; // Correction Status
     submissionStatus: 'SUBMITTED' | 'LATE_SUBMITTED' | 'MISSED' | 'PENDING';
@@ -525,6 +526,11 @@ export default function AssignmentDetailsPage() {
                                                 <div>
                                                     <p className="font-medium text-white">{student.student.name || 'Unknown'}</p>
                                                     <p className="text-xs text-gray-500">{student.student.phoneNumber}</p>
+                                                    {student.student.board && (
+                                                        <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
+                                                            {student.student.board}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
@@ -659,6 +665,11 @@ export default function AssignmentDetailsPage() {
                                         <div className="min-w-0">
                                             <p className="font-medium text-white text-sm truncate">{student.student.name || 'Unknown'}</p>
                                             <p className="text-xs text-gray-500">{student.student.phoneNumber}</p>
+                                            {student.student.board && (
+                                                <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
+                                                    {student.student.board}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     {/* Status Badge */}

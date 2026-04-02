@@ -7,18 +7,22 @@ interface StudentProfile {
     studentName: string;
     courses: string[];
     phoneNumber: string;
+    schoolName: string | null;
+    board: string | null;
 }
 
 interface StudentProfileContextType {
     profile: StudentProfile | null;
     loading: boolean;
     error: boolean;
+    updateProfile: (schoolName: string, board: string) => void;
 }
 
 const StudentProfileContext = createContext<StudentProfileContextType>({
     profile: null,
     loading: true,
     error: false,
+    updateProfile: () => {},
 });
 
 export function useStudentProfile() {
@@ -49,8 +53,14 @@ export function StudentProfileProvider({ children }: { children: ReactNode }) {
         fetchProfile();
     }, []);
 
+    const updateProfile = (schoolName: string, board: string) => {
+        if (profile) {
+            setProfile({ ...profile, schoolName, board });
+        }
+    };
+
     return (
-        <StudentProfileContext.Provider value={{ profile, loading, error }}>
+        <StudentProfileContext.Provider value={{ profile, loading, error, updateProfile }}>
             {children}
         </StudentProfileContext.Provider>
     );

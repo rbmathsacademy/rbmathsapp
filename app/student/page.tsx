@@ -23,6 +23,7 @@ import {
     MessageSquare
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
+import { useStudentProfile } from './StudentProfileContext';
 
 interface DashboardData {
     student: {
@@ -61,6 +62,7 @@ interface DashboardData {
 
 export default function StudentDashboard() {
     const router = useRouter();
+    const { profile: studentProfile } = useStudentProfile();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -251,6 +253,16 @@ export default function StudentDashboard() {
                                         </span>
                                     ))}
                                 </div>
+                                {studentProfile?.schoolName && studentProfile?.board && (
+                                    <div className="mt-3 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] uppercase font-bold tracking-wider">
+                                            🏫 {studentProfile.schoolName}
+                                        </span>
+                                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] uppercase font-bold tracking-wider">
+                                            📋 {studentProfile.board}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
