@@ -12,8 +12,19 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const lightweight = url.searchParams.get('lightweight') === 'true';
     
-    // Choose projection to exclude heavy fields if lightweight=true
+    // Use projection to exclude heavy fields if lightweight=true
     const projection = lightweight ? { image: 0, explanation: 0, options: 0, answer: 0, hint: 0 } : {};
+
+    // 1. One-time physical structural metadata purge (Atomic $unset)
+    // Runs on each call to ensure the legacy metadata is eventually cleared from every document.
+    try {
+        await Question.collection.updateMany(
+            { deployments: { $exists: true } },
+            { $unset: { deployments: "" } }
+        );
+    } catch (e) {
+        console.error("Purge Error:", e);
+    }
 
     if (adminKey === GLOBAL_ADMIN_KEY) {
         try {

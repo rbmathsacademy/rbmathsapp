@@ -17,11 +17,6 @@ const QuestionSchema = new mongoose.Schema({
     options: { type: [String] }, // MCQ Options
     hint: { type: String },     // Hint
     explanation: { type: String }, // Explanation
-    // Tracks where this question is deployed
-    deployments: [{
-        courseId: { type: String, required: true }, // Batch Name
-        folderId: { type: String, required: true }  // Folder ID
-    }],
     order: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
