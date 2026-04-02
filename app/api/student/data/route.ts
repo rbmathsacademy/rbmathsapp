@@ -27,14 +27,18 @@ export async function GET(req: NextRequest) {
     const courseParams = req.nextUrl.searchParams.get('course');
     const folderId = req.nextUrl.searchParams.get('folderId');
     const parentId = req.nextUrl.searchParams.get('parentId');
+    const folderType = req.nextUrl.searchParams.get('folderType');
 
-    // Fetch Questions for a Folder
     if (folderId) {
-        // Need to import Question model dynamically or at top if not already
-        const Question = (await import('@/models/Question')).default;
         try {
-            const questions = await Question.find({ "deployments.folderId": folderId }).sort({ createdAt: 1 });
-            return NextResponse.json({ questions });
+            const folderWithQuestions = await Folder.findById(folderId).populate({
+                path: 'questions',
+                options: { sort: { createdAt: 1 } }
+            }).lean();
+            
+            return NextResponse.json({ 
+                questions: folderWithQuestions && folderWithQuestions.questions ? folderWithQuestions.questions : [] 
+            });
         } catch (error) {
             return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
         }

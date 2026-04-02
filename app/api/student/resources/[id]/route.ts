@@ -26,14 +26,13 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     const resourceId = params.id;
 
     try {
-        // Fetch Folder (Resource)
-        const folder = await Folder.findById(resourceId);
+        // Fetch Folder (Resource) with Questions
+        const folder = await Folder.findById(resourceId).populate('questions').lean();
         if (!folder) {
             return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
         }
 
-        // Fetch Questions for this Folder
-        const questions = await Question.find({ "deployments.folderId": resourceId });
+        const questions = folder.questions || [];
 
         // Check AI Enabled Status
         const config = await Config.findOne({ key: 'data' });

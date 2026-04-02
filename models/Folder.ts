@@ -6,6 +6,7 @@ const FolderSchema = new mongoose.Schema({
     parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', default: null }, // null = top-level
     createdBy: { type: String }, // Admin email for test folders
     type: { type: String, enum: ['question', 'resource', 'test'], default: 'question' },
+    questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question', default: [] }], // Maps to Questions
     createdAt: { type: Date, default: Date.now }
 });
 

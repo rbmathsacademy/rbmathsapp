@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import Question from '@/models/Question';
+import Folder from '@/models/Folder';
 // Ensure DB connection
 import '@/lib/db';
 
@@ -29,23 +30,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
         }
 
-        // Add deployment to each question if not already there
-        const results = await Promise.all(questionIds.map(async (qId) => {
-            return Question.findOneAndUpdate(
-                { _id: qId, "deployments.folderId": { $ne: folderId } }, // Avoid duplicates for same folder
-                {
-                    $push: {
-                        deployments: {
-                            courseId,
-                            folderId
-                        }
-                    }
-                },
-                { new: true }
-            );
-        }));
+        // Add questions to the folder structurally avoiding duplicates per folder
+        const result = await Folder.updateOne(
+            { _id: folderId },
+            { $addToSet: { questions: { $each: questionIds } } }
+        );
 
-        return NextResponse.json({ success: true, count: results.filter(r => r).length });
+        return NextResponse.json({ success: true, modification: result.modifiedCount > 0 });
     } catch (error) {
         console.error("Deploy Error", error);
         return NextResponse.json({ error: 'Failed to deploy questions' }, { status: 500 });
@@ -53,7 +44,6 @@ export async function POST(req: NextRequest) {
 }
 
 // Get Question IDs for a folder (to show what's inside users view)
-// Actually we can just search Questions where deployments.folderId == folderId
 export async function GET(req: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(req.url);
@@ -64,8 +54,11 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const questions = await Question.find({ "deployments.folderId": folderId });
-        return NextResponse.json(questions);
+        const folder = await Folder.findById(folderId).populate('questions').lean();
+        if (!folder) {
+            return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
+        }
+        return NextResponse.json(folder.questions || []);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
     }
