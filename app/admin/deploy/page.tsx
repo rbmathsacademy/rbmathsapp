@@ -189,7 +189,7 @@ export default function DeployPage() {
         setLoadingPicker(true);
 
         try {
-            const res = await fetch('/api/admin/questions', {
+            const res = await fetch('/api/admin/questions?lightweight=true', {
                 headers: { 'X-User-Email': userEmail }
             });
 
@@ -468,7 +468,7 @@ export default function DeployPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className="text-slate-300 text-sm mb-1 line-clamp-2 prose prose-invert prose-sm max-w-none">
+                                                    <div className="text-slate-300 text-sm mb-1 prose prose-invert prose-sm max-w-none">
                                                         <Latex>{q.text}</Latex>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2 mt-2">
@@ -622,7 +622,7 @@ export default function DeployPage() {
                                             {selectedQuestionIds.includes(q._id) && <Plus className="h-4 w-4" />}
                                         </div>
                                         <div className="flex-1">
-                                            <div className="text-slate-300 text-sm mb-1 line-clamp-2 prose prose-invert prose-sm max-w-none">
+                                            <div className="text-slate-300 text-sm mb-1 prose prose-invert prose-sm max-w-none">
                                                 <Latex>{q.text}</Latex>
                                             </div>
                                             <div className="flex flex-wrap gap-2">

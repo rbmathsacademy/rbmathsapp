@@ -9,10 +9,15 @@ export async function GET(req: Request) {
     await dbConnect();
     const email = req.headers.get('X-User-Email');
     const adminKey = req.headers.get('X-Global-Admin-Key');
+    const url = new URL(req.url);
+    const lightweight = url.searchParams.get('lightweight') === 'true';
+    
+    // Choose projection to exclude heavy fields if lightweight=true
+    const projection = lightweight ? { image: 0, explanation: 0, options: 0, answer: 0, hint: 0 } : {};
 
     if (adminKey === GLOBAL_ADMIN_KEY) {
         try {
-            const questions = await Question.find({}).sort({ createdAt: 1 });
+            const questions = await Question.find({}, projection).sort({ createdAt: 1 }).lean();
             return NextResponse.json(questions);
         } catch (error: any) {
             return NextResponse.json({ error: error.message }, { status: 500 });
@@ -25,7 +30,7 @@ export async function GET(req: Request) {
 
     try {
         // Filter by uploadedBy to only show questions owned by the faculty
-        const questions = await Question.find({ uploadedBy: email }).sort({ createdAt: 1 });
+        const questions = await Question.find({ uploadedBy: email }, projection).sort({ createdAt: 1 }).lean();
         return NextResponse.json(questions);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
