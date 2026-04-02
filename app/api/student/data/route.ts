@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import Folder from '@/models/Folder';
+import Question from '@/models/Question';
 // Ensure DB connection
 import '@/lib/db';
 
