@@ -58,7 +58,14 @@ export async function GET(req: NextRequest) {
         if (!folder) {
             return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
         }
-        return NextResponse.json(folder.questions || []);
+        let questions = folder.questions || [];
+
+        // Backward compatibility fallback for admin viewing legacy deployed questions
+        if (questions.length === 0) {
+            questions = await Question.find({ resourceFolders: folderId }).sort({ createdAt: 1 }).lean();
+        }
+
+        return NextResponse.json(questions);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
     }

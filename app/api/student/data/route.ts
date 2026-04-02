@@ -40,9 +40,14 @@ export async function GET(req: NextRequest) {
                 options: { sort: { createdAt: 1 } }
             }).lean();
             
-            return NextResponse.json({ 
-                questions: folderWithQuestions && folderWithQuestions.questions ? folderWithQuestions.questions : [] 
-            });
+            let questions = folderWithQuestions && folderWithQuestions.questions ? folderWithQuestions.questions : [];
+
+            // Backward compatibility fallback for deployments made before the migration
+            if (questions.length === 0) {
+                questions = await Question.find({ resourceFolders: folderId }).sort({ createdAt: 1 }).lean();
+            }
+
+            return NextResponse.json({ questions });
         } catch (error) {
             return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
         }

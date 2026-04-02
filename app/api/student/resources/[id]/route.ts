@@ -35,7 +35,12 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
             return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
         }
 
-        const questions = folder.questions || [];
+        let questions = folder.questions || [];
+
+        // Backward compatibility fallback for legacy deployments
+        if (questions.length === 0) {
+            questions = await Question.find({ resourceFolders: resourceId }).sort({ createdAt: 1 }).lean();
+        }
 
         // Check AI Enabled Status
         const config = await Config.findOne({ key: 'data' });
