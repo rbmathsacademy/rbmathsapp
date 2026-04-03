@@ -446,7 +446,7 @@ export default function AdminChat() {
 
     return (
         <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100svh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#0f172a] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
-            <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} />
+
             
             {/* Sidebar: Batch List */}
 
@@ -754,6 +754,15 @@ export default function AdminChat() {
                     <h3 className="text-xl font-bold text-slate-300">Select a batch to chat</h3>
                 </div>
             )}
+            <Toaster 
+                position="top-right" 
+                containerStyle={{ zIndex: 100000 }} 
+                toastOptions={{
+                    style: {
+                        zIndex: 100000,
+                    },
+                }}
+            />
         </div>
     );
 }

@@ -442,7 +442,7 @@ export default function StudentChat() {
 
     return (
         <div className="h-[100svh] bg-[#050b14] flex flex-col font-sans relative overflow-hidden">
-            <Toaster position="top-center" containerStyle={{ zIndex: 99999 }} />
+
             
             {/* Header */}
             <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-2 sm:p-3 shrink-0 z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -666,6 +666,15 @@ export default function StudentChat() {
                         <p className="text-[9px] text-slate-700 mt-2 text-center uppercase tracking-[0.2em] font-black italic">Encrypted & Anonymous Community</p>
 
             </div>
+            <Toaster 
+                position="top-center" 
+                containerStyle={{ zIndex: 100000 }} 
+                toastOptions={{
+                    style: {
+                        zIndex: 100000,
+                    },
+                }}
+            />
         </div>
     );
 }
