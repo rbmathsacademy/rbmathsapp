@@ -346,9 +346,47 @@ export default function AdminChat() {
         const file = e.target.files?.[0];
         if (!file || !selectedBatch) return;
 
+        const toastId = toast.loading('Preparing image...', { id: 'compressing' });
         const reader = new FileReader();
         reader.onload = (event) => {
-            setImagePreview(event.target?.result as string);
+            const result = event.target?.result as string;
+            // Create an image object to get original dimensions
+            const img = new Image();
+            img.onload = () => {
+                // Short timeout to let the toast render before synchronous drawing blocks the UI
+                setTimeout(() => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        let { width, height } = img;
+                        const MAX_SIZE = 1200;
+
+                        if (width > height && width > MAX_SIZE) {
+                            height = Math.round((height * MAX_SIZE) / width);
+                            width = MAX_SIZE;
+                        } else if (height >= width && height > MAX_SIZE) {
+                            width = Math.round((width * MAX_SIZE) / height);
+                            height = MAX_SIZE;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0, width, height);
+                            // Compress to JPEG with 0.8 quality
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            setImagePreview(dataUrl);
+                        } else {
+                            setImagePreview(result);
+                        }
+                    } catch (err) {
+                        setImagePreview(result);
+                    } finally {
+                        toast.dismiss(toastId);
+                    }
+                }, 50);
+            };
+            img.src = result;
         };
         reader.readAsDataURL(file);
     };
@@ -408,7 +446,7 @@ export default function AdminChat() {
 
     return (
         <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100svh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#0f172a] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
-            <Toaster position="top-right" />
+            <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} />
             
             {/* Sidebar: Batch List */}
 
@@ -684,8 +722,17 @@ export default function AdminChat() {
                             <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-5 w-5" />
                             </button>
-                            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"><ImageIcon className="h-5 w-5" /></button>
-                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                            <label className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden">
+                                <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                    accept="image/*" 
+                                    onChange={handleImageUpload}
+                                    onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
+                                />
+                            </label>
                             
                             <textarea 
                                 ref={inputRef}
