@@ -601,8 +601,17 @@ export default function StudentChat() {
                             <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-[1.2rem] w-[1.2rem]" />
                             </button>
-                            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all"><ImageIcon className="h-[1.2rem] w-[1.2rem]" /></button>
-                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                            <label className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0">
+                                <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    accept="image/*" 
+                                    onChange={handleImageUpload}
+                                    onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
+                                />
+                            </label>
                             
                             <textarea 
                                 ref={inputRef}
