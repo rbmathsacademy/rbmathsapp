@@ -331,7 +331,35 @@ export default function StudentChat() {
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            setImagePreview(event.target?.result as string);
+            const result = event.target?.result as string;
+            // Create an image object to get original dimensions
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let { width, height } = img;
+                const MAX_SIZE = 1200;
+
+                if (width > height && width > MAX_SIZE) {
+                    height = Math.round((height * MAX_SIZE) / width);
+                    width = MAX_SIZE;
+                } else if (height >= width && height > MAX_SIZE) {
+                    width = Math.round((width * MAX_SIZE) / height);
+                    height = MAX_SIZE;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    // Compress to JPEG with 0.8 quality
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    setImagePreview(dataUrl);
+                } else {
+                    setImagePreview(result);
+                }
+            };
+            img.src = result;
         };
         reader.readAsDataURL(file);
     };
