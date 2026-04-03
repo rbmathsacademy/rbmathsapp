@@ -329,35 +329,45 @@ export default function StudentChat() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        const toastId = toast.loading('Preparing image...', { id: 'compressing' });
         const reader = new FileReader();
         reader.onload = (event) => {
             const result = event.target?.result as string;
             // Create an image object to get original dimensions
             const img = new Image();
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let { width, height } = img;
-                const MAX_SIZE = 1200;
+                // Short timeout to let the toast render before synchronous drawing blocks the UI
+                setTimeout(() => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        let { width, height } = img;
+                        const MAX_SIZE = 1200;
 
-                if (width > height && width > MAX_SIZE) {
-                    height = Math.round((height * MAX_SIZE) / width);
-                    width = MAX_SIZE;
-                } else if (height >= width && height > MAX_SIZE) {
-                    width = Math.round((width * MAX_SIZE) / height);
-                    height = MAX_SIZE;
-                }
+                        if (width > height && width > MAX_SIZE) {
+                            height = Math.round((height * MAX_SIZE) / width);
+                            width = MAX_SIZE;
+                        } else if (height >= width && height > MAX_SIZE) {
+                            width = Math.round((width * MAX_SIZE) / height);
+                            height = MAX_SIZE;
+                        }
 
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    ctx.drawImage(img, 0, 0, width, height);
-                    // Compress to JPEG with 0.8 quality
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    setImagePreview(dataUrl);
-                } else {
-                    setImagePreview(result);
-                }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0, width, height);
+                            // Compress to JPEG with 0.8 quality
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            setImagePreview(dataUrl);
+                        } else {
+                            setImagePreview(result);
+                        }
+                    } catch (err) {
+                        setImagePreview(result);
+                    } finally {
+                        toast.dismiss(toastId);
+                    }
+                }, 50);
             };
             img.src = result;
         };
@@ -432,7 +442,7 @@ export default function StudentChat() {
 
     return (
         <div className="h-[100svh] bg-[#050b14] flex flex-col font-sans relative overflow-hidden">
-            <Toaster position="top-center" />
+            <Toaster position="top-center" containerStyle={{ zIndex: 99999 }} />
             
             {/* Header */}
             <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-2 sm:p-3 shrink-0 z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -629,12 +639,12 @@ export default function StudentChat() {
                             <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-[1.2rem] w-[1.2rem]" />
                             </button>
-                            <label className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0">
+                            <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden">
                                 <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
                                 <input 
                                     type="file" 
                                     ref={fileInputRef} 
-                                    className="hidden" 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                                     accept="image/*" 
                                     onChange={handleImageUpload}
                                     onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
