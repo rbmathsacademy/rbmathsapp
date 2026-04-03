@@ -27,6 +27,7 @@ export default function CreateAssignmentPage() {
     const [batch, setBatch] = useState('');
     const [deadline, setDeadline] = useState('');
     const [cooldown, setCooldown] = useState(60);
+    const [cooldownEndTime, setCooldownEndTime] = useState('');
     const [type, setType] = useState<'PDF' | 'QUESTIONS'>('PDF');
 
     // PDF Content
@@ -63,6 +64,26 @@ export default function CreateAssignmentPage() {
             })
             .catch(() => toast.error('Failed to load batches'));
     }, []);
+
+    // Sync Cooldown End Time when Deadline changes initially
+    useEffect(() => {
+        if (deadline && !cooldownEndTime) {
+            const date = new Date(deadline);
+            date.setMinutes(date.getMinutes() + 60);
+            const formatted = date.toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16);
+            setCooldownEndTime(formatted);
+            setCooldown(60);
+        }
+    }, [deadline]);
+
+    const handleCooldownEndTimeChange = (newEndTime: string) => {
+        setCooldownEndTime(newEndTime);
+        if (deadline && newEndTime) {
+            const diffMs = new Date(newEndTime).getTime() - new Date(deadline).getTime();
+            const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+            setCooldown(diffMins);
+        }
+    };
 
     // Load questions when modal opens
     const loadQuestions = async () => {
@@ -323,14 +344,19 @@ export default function CreateAssignmentPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm text-gray-400 mb-1">Cooldown Period (Minutes)</label>
+                            <label className="block text-sm text-gray-400 mb-1">Cooldown End Time</label>
                             <input
-                                type="number"
-                                value={cooldown}
-                                onChange={(e) => setCooldown(Number(e.target.value))}
-                                min={0}
+                                type="datetime-local"
+                                value={cooldownEndTime}
+                                onChange={(e) => handleCooldownEndTimeChange(e.target.value)}
+                                min={deadline}
                                 className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
                             />
+                            {deadline && cooldownEndTime && (
+                                <p className="text-xs text-blue-400 mt-1 font-medium">
+                                    Duration: {cooldown} minutes after deadline
+                                </p>
+                            )}
                             <p className="text-xs text-gray-500 mt-1">
                                 Extra time after deadline for late submissions (marked as late).
                             </p>

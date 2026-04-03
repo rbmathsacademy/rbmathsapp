@@ -48,6 +48,7 @@ export default function AssignmentDetailsPage() {
     const [editTitle, setEditTitle] = useState('');
     const [editDeadline, setEditDeadline] = useState('');
     const [editCooldown, setEditCooldown] = useState(0);
+    const [editCooldownEndTime, setEditCooldownEndTime] = useState('');
 
     // Filter State
     const [correctionFilter, setCorrectionFilter] = useState<'ALL' | 'CORRECTED' | 'NOT_CORRECTED'>('ALL');
@@ -91,10 +92,16 @@ export default function AssignmentDetailsPage() {
                 // Init edit state
                 setEditTitle(data.assignment.title);
                 setEditCooldown(data.assignment.cooldownDuration || 0);
+                
                 // Convert UTC date to local datetime-local string format
                 const d = new Date(data.assignment.deadline);
-                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                setEditDeadline(d.toISOString().slice(0, 16));
+                const deadlineLocal = d.toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16);
+                setEditDeadline(deadlineLocal);
+
+                // Calculate initial cooldown end time
+                const c = data.assignment.cooldownDuration || 0;
+                const end = new Date(d.getTime() + c * 60000);
+                setEditCooldownEndTime(end.toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16));
             } else {
                 toast.error('Assignment not found');
             }
@@ -102,6 +109,15 @@ export default function AssignmentDetailsPage() {
             toast.error('Failed to load details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEditCooldownEndTimeChange = (newEndTime: string) => {
+        setEditCooldownEndTime(newEndTime);
+        if (editDeadline && newEndTime) {
+            const diffMs = new Date(newEndTime).getTime() - new Date(editDeadline).getTime();
+            const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+            setEditCooldown(diffMins);
         }
     };
 
@@ -807,15 +823,19 @@ export default function AssignmentDetailsPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-gray-400 mb-1">Cooldown Duration (minutes)</label>
+                                <label className="block text-sm text-gray-400 mb-1">Cooldown End Time</label>
                                 <input
-                                    type="number"
-                                    min="0"
-                                    value={editCooldown}
-                                    onChange={(e) => setEditCooldown(Number(e.target.value))}
+                                    type="datetime-local"
+                                    value={editCooldownEndTime}
+                                    onChange={(e) => handleEditCooldownEndTimeChange(e.target.value)}
+                                    min={editDeadline}
                                     className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
-                                    placeholder="e.g. 30"
                                 />
+                                {editDeadline && editCooldownEndTime && (
+                                    <p className="text-xs text-blue-400 mt-1 font-medium">
+                                        Duration: {editCooldown} minutes after deadline
+                                    </p>
+                                )}
                                 <p className="text-xs text-gray-500 mt-1">Extra time after deadline for late submissions</p>
                             </div>
                         </div>
