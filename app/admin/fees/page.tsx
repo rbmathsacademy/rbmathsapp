@@ -137,6 +137,7 @@ function FeesManagementContent() {
         amount: '',
         remarks: '',
         feesMonth: '', // YYYY-MM
+        paidOnMonth: '', // YYYY-MM
         mode: 'Offline' as PaymentMode,
         receiver: '' as PaymentReceiver | ''
     });
@@ -491,6 +492,12 @@ function FeesManagementContent() {
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 return `${yyyy}-${mm}`;
             })(), // YYYY-MM in Local Time
+            paidOnMonth: (() => {
+                const d = new Date(record.entryDate);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                return `${yyyy}-${mm}`;
+            })(),
             mode: record.paymentMode,
             receiver: (record.paymentReceiver as PaymentReceiver) || ''
         });
@@ -527,6 +534,7 @@ function FeesManagementContent() {
                     amount: parseFloat(editForm.amount),
                     remarks: editForm.remarks,
                     feesMonth: `${editForm.feesMonth}-01T12:00:00.000Z`, // Force UTC Noon to avoid timezone shifts
+                    paidOnMonth: `${editForm.paidOnMonth}-01T12:00:00.000Z`,
                     paymentMode: editForm.mode,
                     paymentReceiver: editForm.mode === 'Online' ? editForm.receiver : null
                 })
@@ -1447,7 +1455,7 @@ function FeesManagementContent() {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Amount</label>
                                     <input type="number" className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white font-bold" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
@@ -1455,6 +1463,10 @@ function FeesManagementContent() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
                                     <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase">Paid On Month</label>
+                                    <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white text-sm" value={editForm.paidOnMonth} onChange={(e) => setEditForm({ ...editForm, paidOnMonth: e.target.value })} />
                                 </div>
                             </div>
 
@@ -1523,6 +1535,10 @@ function FeesManagementContent() {
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Fees Month</label>
                                         <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
+                                    </div>
+                                    <div className="col-span-2 space-y-1.5">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase">Paid On Month</label>
+                                        <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.paidOnMonth} onChange={(e) => setEditForm({ ...editForm, paidOnMonth: e.target.value })} />
                                     </div>
                                 </div>
 
