@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw } from 'lucide-react';
+import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw, Archive, RotateCcw, Clock, AlertTriangle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Student {
@@ -32,7 +32,12 @@ export default function AdminStudents() {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [showRenameBatchModal, setShowRenameBatchModal] = useState(false);
+    const [showRecycleBinModal, setShowRecycleBinModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+
+    // Recycle bin state
+    const [deletedStudents, setDeletedStudents] = useState<any[]>([]);
+    const [deletedLoading, setDeletedLoading] = useState(false);
 
     // Selection state
     const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
@@ -140,15 +145,63 @@ export default function AdminStudents() {
     };
 
     const handleDeleteStudent = async (student: Student) => {
-        if (!confirm(`Are you sure you want to permanently delete ${student.name}? This cannot be undone.`)) return;
+        if (!confirm(`Move ${student.name} to recycle bin? Their data will be preserved for 100 days and can be restored.`)) return;
         try {
             const res = await fetch(`/api/admin/students/${student._id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete');
-            toast.success('Student deleted');
+            toast.success('Student moved to recycle bin');
             fetchStudents();
         } catch {
             toast.error('Failed to delete student');
         }
+    };
+
+    // --- Recycle Bin Handlers ---
+    const fetchDeletedStudents = async () => {
+        setDeletedLoading(true);
+        try {
+            const res = await fetch('/api/admin/students/deleted', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            setDeletedStudents(data.students || []);
+        } catch {
+            toast.error('Failed to fetch recycle bin');
+        } finally {
+            setDeletedLoading(false);
+        }
+    };
+
+    const handleRestoreStudent = async (archivedId: string, name: string) => {
+        const toastId = toast.loading(`Restoring ${name}...`);
+        try {
+            const res = await fetch(`/api/admin/students/deleted/${archivedId}/restore`, { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            toast.success(data.message, { id: toastId });
+            fetchDeletedStudents();
+            fetchStudents();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to restore', { id: toastId });
+        }
+    };
+
+    const handlePermanentDelete = async (archivedId: string, name: string) => {
+        if (!confirm(`PERMANENTLY delete ${name}? This cannot be undone and all archived data will be lost.`)) return;
+        const toastId = toast.loading(`Permanently deleting ${name}...`);
+        try {
+            const res = await fetch(`/api/admin/students/deleted/${archivedId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            toast.success(data.message, { id: toastId });
+            fetchDeletedStudents();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to delete', { id: toastId });
+        }
+    };
+
+    const openRecycleBin = () => {
+        setShowRecycleBinModal(true);
+        fetchDeletedStudents();
     };
 
     const openEditModal = (student: Student) => {
@@ -216,7 +269,7 @@ export default function AdminStudents() {
 
     const handleBulkDelete = async () => {
         if (selectedStudents.size === 0) return;
-        if (!confirm(`Are you sure you want to permanently delete ${selectedStudents.size} student(s)? This cannot be undone.`)) return;
+        if (!confirm(`Move ${selectedStudents.size} student(s) to recycle bin? Their data will be preserved for 100 days.`)) return;
         const toastId = toast.loading(`Deleting ${selectedStudents.size} student(s)...`);
         try {
             const res = await fetch('/api/admin/students/bulk-delete', {
@@ -226,7 +279,7 @@ export default function AdminStudents() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            toast.success(data.message, { id: toastId });
+            toast.success(`Moved ${data.deletedCount} student(s) to recycle bin`, { id: toastId });
             setSelectedStudents(new Set());
             fetchStudents();
         } catch (error: any) {
@@ -427,7 +480,13 @@ export default function AdminStudents() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+                    <button onClick={openRecycleBin}
+                        className="col-span-1 px-3 py-2 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold text-xs md:text-sm hover:bg-amber-600/30 transition-all flex items-center justify-center gap-2">
+                        <Archive className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">Recycle Bin</span>
+                        <span className="sm:hidden">Bin</span>
+                    </button>
                     <button onClick={() => setShowBulkModal(true)}
                         className="col-span-1 px-3 py-2 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold text-xs md:text-sm hover:bg-purple-600/30 transition-all flex items-center justify-center gap-2">
                         <Upload className="h-3 w-3 md:h-4 md:w-4" />
@@ -748,6 +807,88 @@ export default function AdminStudents() {
                                     Rename Batch
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Recycle Bin Modal */}
+            {showRecycleBinModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRecycleBinModal(false)}>
+                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-5 border-b border-white/10">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Archive className="h-5 w-5 text-amber-400" /> Recycle Bin
+                            </h2>
+                            <button onClick={() => setShowRecycleBinModal(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400"><X className="h-5 w-5" /></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
+                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-bold">Deleted students are kept here for 100 days.</p>
+                                    <p className="text-slate-400 mt-0.5">After 100 days, they are permanently removed. Restoring a student brings back all their test records, fees, and assignments.</p>
+                                </div>
+                            </div>
+
+                            {deletedLoading ? (
+                                <div className="py-12 text-center text-slate-500">
+                                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                    Loading recycle bin...
+                                </div>
+                            ) : deletedStudents.length === 0 ? (
+                                <div className="py-12 text-center text-slate-500">
+                                    <Archive className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                    <p>Recycle bin is empty</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {deletedStudents.map((student: any) => (
+                                        <div key={student._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                                    {student.name?.[0]?.toUpperCase() || '?'}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-white text-sm truncate">{student.name}</p>
+                                                    <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                                        <span className="text-xs text-slate-400">{student.phoneNumber}</span>
+                                                        {student.courses?.map((c: string) => (
+                                                            <span key={c} className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 text-[9px] font-semibold border border-blue-500/10">{c}</span>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 mt-1">
+                                                        <Clock className="h-3 w-3 text-slate-500" />
+                                                        <span className="text-[10px] text-slate-500">
+                                                            Deleted {new Date(student.deletedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            {' · '}
+                                                            <span className={student.daysRemaining <= 14 ? 'text-red-400 font-bold' : 'text-amber-400'}>
+                                                                {student.daysRemaining} days left
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                                                <button
+                                                    onClick={() => handleRestoreStudent(student._id, student.name)}
+                                                    className="px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs hover:bg-emerald-600/30 transition-all flex items-center gap-1.5"
+                                                >
+                                                    <RotateCcw className="h-3 w-3" />
+                                                    Restore
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePermanentDelete(student._id, student.name)}
+                                                    className="px-3 py-1.5 rounded-lg bg-red-600/20 border border-red-500/30 text-red-300 font-bold text-xs hover:bg-red-600/30 transition-all flex items-center gap-1.5"
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                    Delete Forever
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
