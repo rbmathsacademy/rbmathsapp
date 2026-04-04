@@ -647,7 +647,7 @@ function FeesManagementContent() {
 
     const exportHistory = () => {
         if (!historyRecords.length) return;
-        const headers = ['Invoice', 'Student', 'Batch', 'Amount', 'Fees Month', 'Paid On', 'Mode', 'Receiver', 'Remarks'];
+        const headers = ['Invoice', 'Student', 'Batch', 'Amount', 'Fees Month', 'Paid On', 'Entered At', 'Mode', 'Receiver', 'Remarks'];
         const rows = historyRecords.map(r => {
             const sName = r.isAdhoc ? `${r.adhocStudentName || 'Unknown'} (Ad-hoc)` : (r.studentName || (typeof r.student === 'object' && r.student ? r.student.name : null) || 'Unknown');
             return [
@@ -656,7 +656,8 @@ function FeesManagementContent() {
                 r.batch,
                 r.amount,
                 new Date(r.feesMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }),
-                new Date(r.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                new Date(r.entryDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' }),
+                r.createdAt ? new Date(r.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-',
                 r.paymentMode,
                 r.paymentReceiver || '-',
                 r.remarks || ''
@@ -1364,14 +1365,13 @@ function FeesManagementContent() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="text-white text-sm">
-                                                {new Date(record.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                                {new Date(record.entryDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}
                                             </div>
                                             {record.createdAt && (
                                                 <div className="text-[10px] text-slate-500 mt-0.5">
                                                     Entered: {new Date(record.createdAt).toLocaleString('en-IN', {
                                                         timeZone: 'Asia/Kolkata',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
+                                                        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
                                                         hour12: true
                                                     })}
                                                 </div>
@@ -1409,13 +1409,12 @@ function FeesManagementContent() {
                                             {record.invoiceNo}
                                         </div>
                                         <div className="flex-1 text-right">
-                                            <div>{new Date(record.entryDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
+                                            <div>{new Date(record.entryDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}</div>
                                             {record.createdAt && (
                                                 <div className="text-[9px] text-slate-500 mt-0.5">
                                                     {new Date(record.createdAt).toLocaleString('en-IN', {
                                                         timeZone: 'Asia/Kolkata',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
+                                                        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
                                                         hour12: true
                                                     })}
                                                 </div>
@@ -1742,3 +1741,4 @@ function FeesManagementContent() {
         </div>
     );
 }
+
