@@ -55,26 +55,6 @@ export default function StudentLayout({
         if (pathname === '/student/login') return;
     }, [pathname]);
 
-    useEffect(() => {
-        // NUKE ALL CACHES AND SERVICE WORKERS IMMEDIATELY (per user requested fix for glitch)
-        if (typeof window !== 'undefined') {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then((registrations) => {
-                    for (let registration of registrations) {
-                        registration.unregister();
-                    }
-                });
-            }
-            if ('caches' in window) {
-                caches.keys().then((names) => {
-                    for (let name of names) {
-                        caches.delete(name);
-                    }
-                });
-            }
-        }
-    }, [pathname]);
-
     const isLoginPage = pathname === '/student/login';
 
     return (

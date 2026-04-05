@@ -56,7 +56,7 @@ export default function QuestionBank() {
         setLoadingFolders(true);
         try {
             const parentParam = parentId ? `&parentId=${parentId}` : '';
-            const res = await fetch(`/api/student/data?course=${encodeURIComponent(course)}${parentParam}&_t=${Date.now()}`, { cache: 'no-store' });
+            const res = await fetch(`/api/student/data?course=${encodeURIComponent(course)}${parentParam}`, { cache: 'no-store' });
             const data = await res.json();
             setFolders(data.folders || []);
         } catch (e) {
@@ -77,8 +77,8 @@ export default function QuestionBank() {
 
         try {
             const [foldersRes, questionsRes] = await Promise.all([
-                fetch(`/api/student/data?course=${encodeURIComponent(activeCourse!)}&parentId=${folder._id}&_t=${Date.now()}`, { cache: 'no-store' }),
-                fetch(`/api/student/data?folderId=${folder._id}&_t=${Date.now()}`, { cache: 'no-store' })
+                fetch(`/api/student/data?course=${encodeURIComponent(activeCourse!)}&parentId=${folder._id}`, { cache: 'no-store' }),
+                fetch(`/api/student/data?folderId=${folder._id}`, { cache: 'no-store' })
             ]);
 
             const foldersData = await foldersRes.json();

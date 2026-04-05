@@ -11,22 +11,11 @@ export default function StudentLogin() {
     const router = useRouter();
 
     useEffect(() => {
-        const checkSession = async () => {
-            if (typeof window !== 'undefined' && localStorage.getItem('studentName')) {
-                try {
-                    const res = await fetch('/api/student/me');
-                    if (res.ok) {
-                        router.replace('/student');
-                    } else {
-                        localStorage.removeItem('studentName');
-                        localStorage.removeItem('studentCourses');
-                    }
-                } catch (e) {
-                    // ignore
-                }
-            }
-        };
-        checkSession();
+        // Quick localStorage check — if student appears logged in, redirect to dashboard.
+        // StudentProfileProvider on /student will do the real server-side session validation.
+        if (typeof window !== 'undefined' && localStorage.getItem('studentName')) {
+            router.replace('/student');
+        }
     }, [router]);
 
     const handleLogin = async (e: React.FormEvent) => {
