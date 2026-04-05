@@ -79,7 +79,7 @@ export default function StudentDashboard() {
     useEffect(() => {
         fetchData();
         fetchUnreadStatus();
-        const interval = setInterval(fetchUnreadStatus, 60000); // Check every minute
+        const interval = setInterval(fetchUnreadStatus, 120000); // Check every 2 minutes
         return () => clearInterval(interval);
     }, []);
 

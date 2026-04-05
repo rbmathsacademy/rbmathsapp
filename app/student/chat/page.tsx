@@ -108,7 +108,7 @@ export default function StudentChat() {
     useEffect(() => {
         if (selectedBatch) {
             fetchMessages(selectedBatch);
-            const interval = setInterval(() => fetchMessages(selectedBatch, true), 5000);
+            const interval = setInterval(() => fetchMessages(selectedBatch, true), 15000);
             return () => clearInterval(interval);
         }
     }, [selectedBatch]);

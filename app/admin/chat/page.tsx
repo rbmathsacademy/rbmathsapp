@@ -118,7 +118,7 @@ export default function AdminChat() {
 
     useEffect(() => {
         fetchBatches();
-        const interval = setInterval(fetchBatches, 30000); 
+        const interval = setInterval(fetchBatches, 60000); 
         
         // Push a state so back button navigates within the app
         window.history.pushState({ chatPage: true }, '', window.location.href);
@@ -137,7 +137,7 @@ export default function AdminChat() {
     useEffect(() => {
         if (selectedBatch) {
             fetchMessages(selectedBatch.id);
-            const interval = setInterval(() => fetchMessages(selectedBatch.id, true), 5000); 
+            const interval = setInterval(() => fetchMessages(selectedBatch.id, true), 15000); 
             return () => clearInterval(interval);
         }
     }, [selectedBatch]);

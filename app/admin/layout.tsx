@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     useEffect(() => {
         if (user) {
             fetchChatStatus();
-            const interval = setInterval(fetchChatStatus, 30000);
+            const interval = setInterval(fetchChatStatus, 120000);
             return () => clearInterval(interval);
         }
     }, [user]);
