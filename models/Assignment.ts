@@ -15,6 +15,12 @@ const AssignmentSchema = new mongoose.Schema({
     folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'AssignmentFolder', default: null },
     deadline: { type: Date, required: true },
     cooldownDuration: { type: Number, default: 0 }, // in minutes
+    boardWise: { type: Boolean, default: false },
+    boardContent: {
+        type: Map,
+        of: String, // board name → Drive URL
+        default: {}
+    },
     createdAt: { type: Date, default: Date.now }
 });
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Upload, FileText, List, Save, X, CheckCircle, Shuffle } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, List, Save, X, CheckCircle, Shuffle, Layers } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
@@ -28,11 +28,16 @@ export default function CreateAssignmentPage() {
     const [deadline, setDeadline] = useState('');
     const [cooldown, setCooldown] = useState(60);
     const [cooldownEndTime, setCooldownEndTime] = useState('');
-    const [type, setType] = useState<'PDF' | 'QUESTIONS'>('PDF');
+    const [type, setType] = useState<'PDF' | 'QUESTIONS' | 'BOARD_PDF'>('PDF');
 
     // PDF Content
     const [pdfFile, setPdfFile] = useState<string | null>(null);
     const [pdfName, setPdfName] = useState('');
+
+    // Board-wise PDF Content
+    const boards = ['CBSE', 'ISC', 'WBCHSE'] as const;
+    const [boardPdfFiles, setBoardPdfFiles] = useState<Record<string, string | null>>({ CBSE: null, ISC: null, WBCHSE: null });
+    const [boardPdfNames, setBoardPdfNames] = useState<Record<string, string>>({ CBSE: '', ISC: '', WBCHSE: '' });
 
     // Question Bank
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,11 +197,39 @@ export default function CreateAssignmentPage() {
         reader.readAsDataURL(file);
     };
 
+    const handleBoardPdfUpload = (board: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) {
+            toast.error(
+                `${board} file too large! Max 3MB. Compress at:\nhttps://www.ilovepdf.com/compress_pdf`,
+                { duration: 6000 }
+            );
+            e.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            setBoardPdfFiles(prev => ({ ...prev, [board]: base64 }));
+            setBoardPdfNames(prev => ({ ...prev, [board]: file.name }));
+            toast.success(`${board} PDF uploaded`);
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleCreate = async () => {
         if (!title.trim()) { toast.error('Please enter a title'); return; }
         if (!batch) { toast.error('Please select a batch'); return; }
         if (!deadline) { toast.error('Please set a deadline'); return; }
         if (type === 'PDF' && !pdfFile) { toast.error('Please upload a PDF'); return; }
+        if (type === 'BOARD_PDF') {
+            const missing = boards.filter(b => !boardPdfFiles[b]);
+            if (missing.length > 0) {
+                toast.error(`Please upload PDFs for: ${missing.join(', ')}`);
+                return;
+            }
+        }
         if (type === 'QUESTIONS' && selectedIds.size === 0) {
             toast.error('Please select at least one question');
             return;
@@ -212,8 +245,46 @@ export default function CreateAssignmentPage() {
         setLoading(true);
         try {
             let contentStringOrArray: string | string[] = '';
+            let boardContentMap: Record<string, string> = {};
+            let isBoardWise = false;
 
-            if (type === 'PDF' && pdfFile) {
+            if (type === 'BOARD_PDF') {
+                isBoardWise = true;
+                const toastId = toast.loading('Uploading board PDFs to Drive...');
+                try {
+                    for (const board of boards) {
+                        const fileData = boardPdfFiles[board];
+                        if (!fileData) throw new Error(`Missing PDF for ${board}`);
+                        toast.loading(`Uploading ${board} PDF...`, { id: toastId });
+                        const uploadRes = await fetch('/api/admin/assignments/upload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                batchName: batch,
+                                assignmentTitle: `${title.trim()} [${board}]`,
+                                studentName: 'Admin',
+                                phoneNumber: 'Uploads',
+                                fileData,
+                                mimeType: 'application/pdf',
+                                fileName: boardPdfNames[board] || `${board}_Assignment.pdf`
+                            })
+                        });
+                        if (!uploadRes.ok) throw new Error(`Upload failed for ${board}`);
+                        const uploadData = await uploadRes.json();
+                        if (uploadData.status === 'success') {
+                            boardContentMap[board] = uploadData.fileUrl || uploadData.downloadUrl;
+                        } else {
+                            throw new Error(uploadData.message || `Drive upload failed for ${board}`);
+                        }
+                    }
+                    toast.success('All board PDFs uploaded!', { id: toastId });
+                } catch (err: any) {
+                    toast.error(err.message || 'Failed to upload board PDFs', { id: toastId });
+                    setLoading(false);
+                    return;
+                }
+                contentStringOrArray = 'BOARD_WISE';
+            } else if (type === 'PDF' && pdfFile) {
                 const toastId = toast.loading('Uploading PDF to Drive...');
                 try {
                     const uploadRes = await fetch('/api/admin/assignments/upload', {
@@ -256,9 +327,11 @@ export default function CreateAssignmentPage() {
                     batch,
                     deadline: new Date(deadline).toISOString(),
                     cooldownDuration: Number(cooldown) || 0,
-                    type,
+                    type: isBoardWise ? 'PDF' : type,
                     content: contentStringOrArray,
-                    randomCount: (type === 'QUESTIONS' && randomDeploy) ? randomCount : 0
+                    randomCount: (type === 'QUESTIONS' && randomDeploy) ? randomCount : 0,
+                    boardWise: isBoardWise,
+                    boardContent: isBoardWise ? boardContentMap : undefined
                 })
             });
 
@@ -398,26 +471,36 @@ export default function CreateAssignmentPage() {
 
                     <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6">
                         <h2 className="text-lg font-semibold text-blue-400 mb-4">Assignment Type</h2>
-                        <div className="flex gap-4">
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setType('PDF')}
-                                className={`flex-1 p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'PDF'
+                                className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'PDF'
                                     ? 'bg-blue-500/20 border-blue-500 text-blue-400'
                                     : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
                                     }`}
                             >
-                                <FileText className="w-6 h-6" />
-                                <span className="text-sm font-medium">PDF Upload</span>
+                                <FileText className="w-5 h-5" />
+                                <span className="text-xs font-medium">PDF Upload</span>
+                            </button>
+                            <button
+                                onClick={() => setType('BOARD_PDF')}
+                                className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'BOARD_PDF'
+                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                                    : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
+                                    }`}
+                            >
+                                <Layers className="w-5 h-5" />
+                                <span className="text-xs font-medium">Board-Wise PDF</span>
                             </button>
                             <button
                                 onClick={() => setType('QUESTIONS')}
-                                className={`flex-1 p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'QUESTIONS'
+                                className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'QUESTIONS'
                                     ? 'bg-purple-500/20 border-purple-500 text-purple-400'
                                     : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
                                     }`}
                             >
-                                <List className="w-6 h-6" />
-                                <span className="text-sm font-medium">Question Bank</span>
+                                <List className="w-5 h-5" />
+                                <span className="text-xs font-medium">Question Bank</span>
                             </button>
                         </div>
                     </div>
@@ -453,6 +536,57 @@ export default function CreateAssignmentPage() {
                                         <span>{pdfName || 'PDF Ready'}</span>
                                     </div>
                                 )}
+                            </div>
+                        ) : type === 'BOARD_PDF' ? (
+                            <div className="space-y-4">
+                                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-2">
+                                    <p className="text-sm text-emerald-300 font-medium flex items-center gap-2">
+                                        <Layers className="w-4 h-4" />
+                                        Upload separate PDFs for each board. Each student will only see their board&apos;s paper.
+                                    </p>
+                                </div>
+                                {boards.map(board => (
+                                    <div key={board} className={`border-2 border-dashed rounded-xl p-6 transition-colors ${
+                                        boardPdfFiles[board] ? 'border-green-500/30 bg-green-500/5' : 'border-white/10 hover:border-emerald-500/30'
+                                    }`}>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                                                    board === 'CBSE' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                                                    board === 'ISC' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+                                                    'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                                                }`}>{board}</span>
+                                                <span className="text-gray-400 text-sm">Question Paper</span>
+                                            </div>
+                                            {boardPdfFiles[board] && (
+                                                <div className="flex items-center gap-2 text-green-400 text-xs">
+                                                    <CheckCircle className="w-3.5 h-3.5" />
+                                                    <span className="truncate max-w-[150px]">{boardPdfNames[board]}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                onChange={(e) => handleBoardPdfUpload(board, e)}
+                                                className="hidden"
+                                                id={`board-pdf-${board}`}
+                                            />
+                                            <label
+                                                htmlFor={`board-pdf-${board}`}
+                                                className={`px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm font-medium ${
+                                                    boardPdfFiles[board]
+                                                        ? 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
+                                                        : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                                }`}
+                                            >
+                                                {boardPdfFiles[board] ? 'Replace' : 'Select PDF'}
+                                            </label>
+                                            <p className="text-gray-600 text-xs">Max 3MB</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <div>

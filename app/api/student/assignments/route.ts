@@ -61,6 +61,9 @@ export async function GET(req: NextRequest) {
 
         // 5. Enhance Assignment Data with Status
         const now = new Date();
+        const studentBoard = student.board || null;
+        let hasBoardWiseAssignment = false;
+
         const enhancedAssignments = assignments.map((a: any) => {
             const submission = submissionMap.get(a._id.toString());
             const deadline = new Date(a.deadline);
@@ -81,8 +84,23 @@ export async function GET(req: NextRequest) {
                 }
             }
 
-            // Don't send PDF content to listing — too heavy
-            const safeContent = a.type === 'PDF' ? '[PDF]' : a.content;
+            // Handle content based on boardWise flag
+            let safeContent: any;
+            const isBoardWise = a.boardWise === true;
+            if (isBoardWise) {
+                hasBoardWiseAssignment = true;
+                if (studentBoard) {
+                    // Get the board-specific URL from boardContent Map
+                    const bc = a.boardContent;
+                    safeContent = bc?.get?.(studentBoard) || bc?.[studentBoard] || null;
+                } else {
+                    safeContent = null; // Student has no board set
+                }
+            } else if (a.type === 'PDF') {
+                safeContent = a.content;
+            } else {
+                safeContent = a.content;
+            }
 
             return {
                 _id: a._id,
@@ -98,11 +116,15 @@ export async function GET(req: NextRequest) {
                 submissionLink: submission?.link,
                 correctionStatus: submission?.status || 'PENDING',
                 quality: submission?.quality || null,
-                content: a.content // Sending content here so student can see it
+                content: safeContent,
+                boardWise: isBoardWise
             };
         });
 
-        return NextResponse.json({ assignments: enhancedAssignments });
+        return NextResponse.json({
+            assignments: enhancedAssignments,
+            needsBoardSetup: hasBoardWiseAssignment && !studentBoard
+        });
 
     } catch (error: any) {
         console.error('Failed to fetch student assignments', error);

@@ -34,6 +34,8 @@ interface Assignment {
     cooldownDuration?: number;
     content: any;
     folderId?: string;
+    boardWise?: boolean;
+    boardContent?: Record<string, string>;
 }
 
 export default function AssignmentDetailsPage() {
@@ -421,7 +423,41 @@ export default function AssignmentDetailsPage() {
                         </div>
                     </div>
                 </div>
-                {assignment.type === 'PDF' && (
+                {assignment.type === 'PDF' && assignment.boardWise && assignment.boardContent ? (
+                    <div className="mt-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">Board-Wise</span>
+                            <span className="text-xs text-gray-500">Separate PDFs per board</span>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            {(['CBSE', 'ISC', 'WBCHSE'] as const).map(board => {
+                                const url = assignment.boardContent?.[board];
+                                const colors = board === 'CBSE'
+                                    ? 'bg-blue-600 hover:bg-blue-500'
+                                    : board === 'ISC'
+                                        ? 'bg-amber-600 hover:bg-amber-500'
+                                        : 'bg-purple-600 hover:bg-purple-500';
+                                return url ? (
+                                    <a
+                                        key={board}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 ${colors} rounded-lg text-white font-medium transition-colors text-sm`}
+                                    >
+                                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        {board} Paper
+                                    </a>
+                                ) : (
+                                    <span key={board} className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-700 rounded-lg text-gray-400 text-sm cursor-not-allowed">
+                                        <FileText className="w-4 h-4" />
+                                        {board} — Not uploaded
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : assignment.type === 'PDF' && (
                     <div className="mt-4">
                         <a
                             href={typeof assignment.content === 'string' && assignment.content.startsWith('http') ? assignment.content : '#'}

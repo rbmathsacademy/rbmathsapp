@@ -5,6 +5,7 @@ import { Clock, CheckCircle, AlertTriangle, Upload, FileText, ExternalLink, XCir
 import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useStudentProfile } from '../StudentProfileContext';
+import SchoolBoardModal from '../SchoolBoardModal';
 
 interface Assignment {
     _id: string;
@@ -20,6 +21,7 @@ interface Assignment {
     submissionLink?: string;
     correctionStatus: 'PENDING' | 'CORRECTED';
     quality?: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
+    boardWise?: boolean;
 }
 
 type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
@@ -32,7 +34,8 @@ export default function StudentAssignmentsPage() {
     const [loading, setLoading] = useState(true);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
     const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
-    const { profile, loading: profileLoading } = useStudentProfile();
+    const [needsBoardSetup, setNeedsBoardSetup] = useState(false);
+    const { profile, loading: profileLoading, updateProfile } = useStudentProfile();
 
     useEffect(() => {
         fetchAssignments();
@@ -51,6 +54,9 @@ export default function StudentAssignmentsPage() {
             const data = await res.json();
             if (data.assignments) {
                 setAssignments(data.assignments);
+            }
+            if (data.needsBoardSetup) {
+                setNeedsBoardSetup(true);
             }
         } catch (error) {
             toast.error('Failed to load assignments');
@@ -275,6 +281,17 @@ export default function StudentAssignmentsPage() {
     return (
         <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200 relative">
             <Toaster position="top-center" />
+
+            {/* Board Setup Modal */}
+            {needsBoardSetup && (
+                <SchoolBoardModal
+                    onComplete={(schoolName, board) => {
+                        updateProfile(schoolName, board);
+                        setNeedsBoardSetup(false);
+                        fetchAssignments(); // Refresh to get board-specific content
+                    }}
+                />
+            )}
 
             {/* Upload Error Modal */}
             {showUploadErrorModal && (

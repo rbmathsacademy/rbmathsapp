@@ -95,7 +95,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             assignmentQuestions = await Question.find({ _id: { $in: assignment.content } }).lean();
         }
 
-        return NextResponse.json({ assignment, studentList, assignmentQuestions });
+        // Convert boardContent Map to plain object for safe JSON serialization
+        const assignmentData: any = { ...assignment };
+        if (assignmentData.boardContent instanceof Map) {
+            const bc: Record<string, string> = {};
+            assignmentData.boardContent.forEach((val: string, key: string) => { bc[key] = val; });
+            assignmentData.boardContent = bc;
+        }
+
+        return NextResponse.json({ assignment: assignmentData, studentList, assignmentQuestions });
     } catch (error: any) {
         console.error('Assignment detail error:', error);
         return NextResponse.json({ error: error.message || 'Failed to fetch assignment details' }, { status: 500 });
