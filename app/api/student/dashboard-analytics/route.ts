@@ -138,13 +138,29 @@ export async function GET(req: NextRequest) {
             const studentResult = exam.results.find((r: any) => r.studentPhone === phoneNumber);
             if (!studentResult) return null;
 
-            const allPercentages = exam.results.map((r: any) => r.percentage) as number[];
-            const highestPercentage = Math.max(...allPercentages);
-            const averagePercentage = parseFloat(
-                (allPercentages.reduce((sum, p) => sum + p, 0) / allPercentages.length).toFixed(2)
-            );
-            const sortedPercentages = [...new Set(allPercentages)].sort((a, b) => b - a);
-            const rank = sortedPercentages.indexOf(studentResult.percentage) + 1;
+            const validResults: any[] = [];
+            exam.results.forEach((r: any) => {
+                const numericPct = typeof r.percentage === 'number' ? r.percentage : parseFloat(r.percentage);
+                const numericMarks = typeof r.marksObtained === 'number' ? r.marksObtained : parseFloat(r.marksObtained);
+                if (!isNaN(numericPct)) {
+                    validResults.push({ ...r, numericMarks, numericPct, name: r.studentName || '' });
+                }
+            });
+
+            // Replicate PDF sorting logic for rank
+            validResults.sort((a, b) => b.numericMarks - a.numericMarks);
+            const top5 = validResults.slice(0, 5);
+            const rest = validResults.slice(5).sort((a, b) => a.name.localeCompare(b.name));
+            const finalValidResults = [...top5, ...rest];
+
+            const rankIndex = finalValidResults.findIndex(r => r.studentPhone === phoneNumber);
+            const rank = rankIndex !== -1 ? rankIndex + 1 : '-';
+
+            const allPercentages = validResults.map(r => r.numericPct);
+            const highestPercentage = allPercentages.length > 0 ? Math.max(...allPercentages) : 0;
+            const averagePercentage = allPercentages.length > 0 
+                ? parseFloat((allPercentages.reduce((sum, p) => sum + p, 0) / allPercentages.length).toFixed(2))
+                : 0;
 
             return {
                 examId: exam._id,
@@ -157,7 +173,7 @@ export async function GET(req: NextRequest) {
                 highestPercentage,
                 averagePercentage,
                 rank,
-                totalStudents: exam.results.length
+                totalStudents: validResults.length
             };
         }).filter(Boolean);
 
