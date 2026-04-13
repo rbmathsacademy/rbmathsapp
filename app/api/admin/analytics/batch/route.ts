@@ -214,20 +214,20 @@ export async function GET(request: NextRequest) {
                     const numericPct = typeof r.percentage === 'number' ? r.percentage : parseFloat(r.percentage);
                     const numericMarks = typeof r.marksObtained === 'number' ? r.marksObtained : parseFloat(r.marksObtained);
                     if (!isNaN(numericPct)) {
-                        validResults.push({ ...r, numericMarks, numericPct, name: r.studentName || '' });
+                        validResults.push({ ...r, numericMarks, numericPct });
                     }
                 });
 
-                // Replicate PDF sorting logic for rank
-                validResults.sort((a, b) => b.numericMarks - a.numericMarks);
-                const top5 = validResults.slice(0, 5);
-                const rest = validResults.slice(5).sort((a, b) => a.name.localeCompare(b.name));
-                const finalValidResults = [...top5, ...rest];
-
-                const rankIndex = finalValidResults.findIndex(r => r.studentPhone === student.phoneNumber);
-                const rank = rankIndex !== -1 ? rankIndex + 1 : '-';
-
+                // True Batch Rank based purely on marks (Dense Rank)
                 const allPercentages = validResults.map(r => r.numericPct);
+                const sortedPercentages = [...new Set(allPercentages)].sort((a, b) => b - a);
+                
+                let rank: number | string = '-';
+                const studentPct = typeof result.percentage === 'number' ? result.percentage : parseFloat(result.percentage);
+                if (!isNaN(studentPct)) {
+                    rank = sortedPercentages.indexOf(studentPct) + 1;
+                }
+
                 const highestPercentage = allPercentages.length > 0 ? Math.max(...allPercentages) : 0;
                 const averagePercentage = allPercentages.length > 0 
                     ? parseFloat((allPercentages.reduce((sum, p) => sum + p, 0) / allPercentages.length).toFixed(2))
