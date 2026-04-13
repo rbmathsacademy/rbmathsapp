@@ -9,8 +9,8 @@ const OfflineExamSchema = new mongoose.Schema({
         studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'BatchStudent', required: true },
         studentPhone: { type: String, required: true },
         studentName: { type: String, required: true },
-        marksObtained: { type: Number, required: true },
-        percentage: { type: Number, required: true }
+        marksObtained: { type: mongoose.Schema.Types.Mixed, required: true },
+        percentage: { type: mongoose.Schema.Types.Mixed }
     }]
 }, { timestamps: true });
 

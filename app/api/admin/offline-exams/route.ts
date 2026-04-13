@@ -16,10 +16,19 @@ export async function POST(req: NextRequest) {
         }
 
         // Calculate percentages
-        const processedResults = results.map((r: any) => ({
-            ...r,
-            percentage: parseFloat(((r.marksObtained / fullMarks) * 100).toFixed(2))
-        }));
+        const processedResults = results.map((r: any) => {
+            const numericMarks = parseFloat(r.marksObtained);
+            let pct: number | string = '-';
+            if (!isNaN(numericMarks) && typeof r.marksObtained !== 'string' || (typeof r.marksObtained === 'string' && !isNaN(Number(r.marksObtained)))) {
+                pct = parseFloat(((numericMarks / fullMarks) * 100).toFixed(2));
+            } else {
+                pct = r.marksObtained; // Keep the text as the percentage for display
+            }
+            return {
+                ...r,
+                percentage: pct
+            };
+        });
 
         const exam = await OfflineExam.create({
             batch,

@@ -3,7 +3,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Trash2, FileText, List, Clock, AlertTriangle, CheckCircle, File, Folder, FolderPlus, ArrowLeft, ArrowUpRight, ClipboardEdit, Save, X, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Eye, Trash2, FileText, List, Clock, AlertTriangle, CheckCircle, File, Folder, FolderPlus, ArrowLeft, ArrowUpRight, ClipboardEdit, Save, X, Edit3, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { toast, Toaster } from 'react-hot-toast';
 
 interface Assignment {
@@ -158,15 +160,26 @@ export default function AdminAssignmentsPage() {
         const results = offlineStudents
             .filter(s => s.marks.trim() !== '')
             .map(s => {
-                const marks = parseFloat(s.marks);
-                if (isNaN(marks) || marks < 0 || marks > fm) return null;
-                return {
-                    studentId: s._id,
-                    studentPhone: s.phoneNumber,
-                    studentName: s.name,
-                    marksObtained: marks,
-                    percentage: parseFloat(((marks / fm) * 100).toFixed(2))
-                };
+                const numericMarks = parseFloat(s.marks);
+                const isNumeric = !isNaN(numericMarks) && typeof s.marks !== 'string' || (typeof s.marks === 'string' && !isNaN(Number(s.marks)));
+                if (isNumeric) {
+                    if (numericMarks < 0 || numericMarks > fm) return null;
+                    return {
+                        studentId: s._id,
+                        studentPhone: s.phoneNumber,
+                        studentName: s.name,
+                        marksObtained: numericMarks,
+                        percentage: parseFloat(((numericMarks / fm) * 100).toFixed(2))
+                    };
+                } else {
+                    return {
+                        studentId: s._id,
+                        studentPhone: s.phoneNumber,
+                        studentName: s.name,
+                        marksObtained: s.marks.trim(),
+                        percentage: s.marks.trim()
+                    };
+                }
             }).filter(Boolean);
 
         if (results.length === 0) { toast.error('Enter marks for at least one student'); return; }
@@ -199,11 +212,32 @@ export default function AdminAssignmentsPage() {
         }
     };
 
-    const startEditExam = (exam: OfflineExam) => {
+    const startEditExam = async (exam: OfflineExam) => {
         setEditingExam(exam);
         setEditChapter(exam.chapterName);
         setEditTestDate(exam.testDate.split('T')[0]);
         setEditFullMarks(exam.fullMarks.toString());
+        setEditStudents([]); // Clear while loading
+
+        try {
+            const res = await fetch(`/api/admin/students?batch=${encodeURIComponent(exam.batch)}&limit=500`);
+            const data = await res.json();
+            if (data.students) {
+                const merged = data.students.map((s: any) => {
+                    const existing = exam.results.find(r => r.studentId === s._id);
+                    return {
+                        _id: s._id,
+                        name: s.name,
+                        phoneNumber: s.phoneNumber,
+                        marks: existing ? existing.marksObtained.toString() : ''
+                    };
+                });
+                const sorted = merged.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+                setEditStudents(sorted);
+                return;
+            }
+        } catch {}
+
         setEditStudents(exam.results.map(r => ({
             _id: r.studentId,
             name: r.studentName,
@@ -228,15 +262,26 @@ export default function AdminAssignmentsPage() {
         const results = editStudents
             .filter(s => s.marks.trim() !== '')
             .map(s => {
-                const marks = parseFloat(s.marks);
-                if (isNaN(marks) || marks < 0 || marks > fm) return null;
-                return {
-                    studentId: s._id,
-                    studentPhone: s.phoneNumber,
-                    studentName: s.name,
-                    marksObtained: marks,
-                    percentage: parseFloat(((marks / fm) * 100).toFixed(2))
-                };
+                const numericMarks = parseFloat(s.marks);
+                const isNumeric = !isNaN(numericMarks) && typeof s.marks !== 'string' || (typeof s.marks === 'string' && !isNaN(Number(s.marks)));
+                if (isNumeric) {
+                    if (numericMarks < 0 || numericMarks > fm) return null;
+                    return {
+                        studentId: s._id,
+                        studentPhone: s.phoneNumber,
+                        studentName: s.name,
+                        marksObtained: numericMarks,
+                        percentage: parseFloat(((numericMarks / fm) * 100).toFixed(2))
+                    };
+                } else {
+                    return {
+                        studentId: s._id,
+                        studentPhone: s.phoneNumber,
+                        studentName: s.name,
+                        marksObtained: s.marks.trim(),
+                        percentage: s.marks.trim()
+                    };
+                }
             }).filter(Boolean);
 
         setEditSaving(true);
@@ -356,6 +401,110 @@ export default function AdminAssignmentsPage() {
         } catch (error) {
             toast.error('Error deleting folder');
         }
+    };
+
+    const handleDownloadPDF = () => {
+        if (!editingExam) return;
+
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFillColor(30, 58, 138); // Blue
+        doc.rect(0, 0, 210, 40, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("RB Maths Academy", 105, 20, { align: 'center' });
+
+        doc.setFontSize(14);
+        doc.text("Offline Exam Marksheet", 105, 32, { align: 'center' });
+
+        // Details
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.text(`Chapter: ${editChapter}`, 14, 52);
+        doc.text(`Exam Date: ${new Date(editTestDate).toLocaleDateString('en-IN')}`, 14, 60);
+        doc.text(`Full Marks: ${editFullMarks}`, 14, 68);
+
+        // Process Data
+        const fullMarks = parseFloat(editFullMarks) || 0;
+
+        const validStudents: any[] = [];
+        const naStudents: any[] = [];
+
+        editStudents.forEach(s => {
+            if (s.marks.trim() === '') {
+                naStudents.push(s);
+            } else {
+                validStudents.push({ ...s, numericMarks: parseFloat(s.marks) });
+            }
+        });
+
+        // Sort descending
+        validStudents.sort((a, b) => b.numericMarks - a.numericMarks);
+
+        const tableBody: any[] = [];
+
+        validStudents.forEach((s, index) => {
+            let rankStr = `${index + 1}`;
+            if (index === 0) rankStr += ' 1st';
+            else if (index === 1) rankStr += ' 2nd';
+            else if (index === 2) rankStr += ' 3rd';
+
+            const pct = fullMarks > 0 ? ((s.numericMarks / fullMarks) * 100).toFixed(1) + '%' : '-';
+
+            tableBody.push([
+                rankStr,
+                s.name,
+                `${s.numericMarks}`,
+                pct
+            ]);
+        });
+
+        naStudents.forEach(s => {
+            tableBody.push([
+                '-',
+                s.name,
+                'Not applicable',
+                '-'
+            ]);
+        });
+
+        // Define options properly for jspdf-autotable
+        autoTable(doc, {
+            startY: 75,
+            head: [['Rank', 'Student Name', 'Marks Obtained', 'Percentage']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [249, 115, 22], textColor: 255, fontStyle: 'bold', halign: 'center' }, // Orange head
+            columnStyles: {
+                0: { halign: 'center', fontStyle: 'bold' },
+                1: { fontStyle: 'bold' },
+                2: { halign: 'center' },
+                3: { halign: 'center', fontStyle: 'bold' } 
+            },
+            alternateRowStyles: { fillColor: [255, 247, 237] }, // Light orange
+            styles: { font: 'helvetica', fontSize: 10, cellPadding: 4, textColor: [30, 30, 30] }, // fallback text color
+            didParseCell: function(data) {
+                if (data.section === 'body') {
+                    if (data.column.index === 0) {
+                        if (data.cell.raw && data.cell.raw.toString().includes('1st')) {
+                            data.cell.styles.fillColor = [255, 215, 0]; // Gold fill for 1st
+                        } else if (data.cell.raw && data.cell.raw.toString().includes('2nd')) {
+                            data.cell.styles.fillColor = [224, 224, 224]; // Silver fill for 2nd
+                        } else if (data.cell.raw && data.cell.raw.toString().includes('3rd')) {
+                            data.cell.styles.fillColor = [205, 127, 50]; // Bronze fill for 3rd
+                        }
+                    }
+                    if (data.column.index === 3 && data.cell.raw !== '-') {
+                         data.cell.styles.textColor = [21, 128, 61]; // green text
+                    }
+                }
+            }
+        });
+
+        doc.save(`${editChapter.replace(/\\s+/g, '_')}_Marksheet.pdf`);
     };
 
     // Filter Logic
@@ -714,18 +863,16 @@ export default function AdminAssignmentsPage() {
                                                             </div>
                                                             <div className="flex justify-center">
                                                                 <input
-                                                                    type="number"
+                                                                    type="text"
                                                                     value={student.marks}
                                                                     onChange={(e) => handleOfflineMarksChange(i, e.target.value)}
                                                                     placeholder="-"
-                                                                    min="0"
-                                                                    max={offlineFullMarks || undefined}
                                                                     className="w-20 bg-black/30 border border-white/10 rounded px-2 py-1.5 text-center text-white text-sm focus:outline-none focus:border-orange-500/50"
                                                                 />
                                                             </div>
                                                             <div className="text-center">
-                                                                <span className={`text-sm font-bold ${pct === '-' ? 'text-gray-600' : parseFloat(pct) >= 75 ? 'text-green-400' : parseFloat(pct) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
-                                                                    {pct}{pct !== '-' ? '%' : ''}
+                                                                <span className={`text-sm font-bold ${typeof pct === 'string' && pct !== '-' ? 'text-blue-400 text-xs' : pct === '-' ? 'text-gray-600' : parseFloat(pct as string) >= 75 ? 'text-green-400' : parseFloat(pct as string) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                                    {pct}{typeof pct === 'number' || (typeof pct === 'string' && pct !== '-' && !isNaN(parseFloat(pct))) ? '%' : ''}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -859,18 +1006,16 @@ export default function AdminAssignmentsPage() {
                                                 </div>
                                                 <div className="flex justify-center">
                                                     <input
-                                                        type="number"
+                                                        type="text"
                                                         value={student.marks}
                                                         onChange={(e) => handleEditMarksChange(i, e.target.value)}
                                                         placeholder="-"
-                                                        min="0"
-                                                        max={editFullMarks || undefined}
                                                         className="w-20 bg-black/30 border border-white/10 rounded px-2 py-1.5 text-center text-white text-sm focus:outline-none focus:border-amber-500/50"
                                                     />
                                                 </div>
                                                 <div className="text-center">
-                                                    <span className={`text-sm font-bold ${pct === '-' ? 'text-gray-600' : parseFloat(pct) >= 75 ? 'text-green-400' : parseFloat(pct) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
-                                                        {pct}{pct !== '-' ? '%' : ''}
+                                                    <span className={`text-sm font-bold ${typeof pct === 'string' && pct !== '-' ? 'text-blue-400 text-xs' : pct === '-' ? 'text-gray-600' : parseFloat(pct as string) >= 75 ? 'text-green-400' : parseFloat(pct as string) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                        {pct}{typeof pct === 'number' || (typeof pct === 'string' && pct !== '-' && !isNaN(parseFloat(pct))) ? '%' : ''}
                                                     </span>
                                                 </div>
                                             </div>
@@ -880,16 +1025,25 @@ export default function AdminAssignmentsPage() {
                             </div>
                         </div>
 
-                        <div className="p-5 border-t border-white/10 flex justify-end gap-3">
-                            <button onClick={() => setEditingExam(null)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                        <div className="p-5 border-t border-white/10 flex justify-between items-center bg-black/20">
                             <button
-                                onClick={handleUpdateExam}
-                                disabled={editSaving}
-                                className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-lg text-white font-medium shadow-lg disabled:opacity-50 transition-all"
+                                onClick={handleDownloadPDF}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 rounded-lg transition-colors text-sm font-medium"
                             >
-                                <Save className="w-4 h-4" />
-                                {editSaving ? 'Updating...' : 'Update Exam'}
+                                <Download className="w-4 h-4" />
+                                Download PDF
                             </button>
+                            <div className="flex gap-3">
+                                <button onClick={() => setEditingExam(null)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                                <button
+                                    onClick={handleUpdateExam}
+                                    disabled={editSaving}
+                                    className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-lg text-white font-medium shadow-lg disabled:opacity-50 transition-all"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    {editSaving ? 'Updating...' : 'Update Exam'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

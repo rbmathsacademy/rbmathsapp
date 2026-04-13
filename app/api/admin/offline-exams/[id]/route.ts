@@ -23,10 +23,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         if (results !== undefined && Array.isArray(results)) {
             const fm = fullMarks !== undefined ? fullMarks : exam.fullMarks;
-            exam.results = results.map((r: any) => ({
-                ...r,
-                percentage: parseFloat(((r.marksObtained / fm) * 100).toFixed(2))
-            }));
+            exam.results = results.map((r: any) => {
+                const numericMarks = parseFloat(r.marksObtained);
+                let pct: number | string = '-';
+                if (!isNaN(numericMarks) && typeof r.marksObtained !== 'string' || (typeof r.marksObtained === 'string' && !isNaN(Number(r.marksObtained)))) {
+                    pct = parseFloat(((numericMarks / fm) * 100).toFixed(2));
+                } else {
+                    pct = r.marksObtained;
+                }
+                return {
+                    ...r,
+                    percentage: pct
+                };
+            });
         }
 
         await exam.save();

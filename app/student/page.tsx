@@ -386,11 +386,12 @@ export default function StudentDashboard() {
                                             {/* Student Score & Percentage */}
                                             <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`text-2xl sm:text-3xl font-black ${exam.percentage >= 75 ? 'text-emerald-400' : exam.percentage >= 40 ? 'text-amber-400' : 'text-rose-400'}`}>
-                                                        {exam.percentage}%
+                                                    <div className={`text-2xl sm:text-3xl font-black ${typeof exam.percentage === 'string' ? "text-blue-400 text-xl" : exam.percentage >= 75 ? 'text-emerald-400' : typeof exam.percentage === 'number' && exam.percentage >= 40 ? 'text-amber-400' : 'text-rose-400'}`}>
+                                                        {exam.percentage}{typeof exam.percentage === 'number' || (typeof exam.percentage === 'string' && !isNaN(Number(exam.percentage))) ? '%' : ''}
                                                     </div>
                                                     <div className="text-xs text-slate-500">
-                                                        <span className="text-white font-bold">{exam.marksObtained}</span>/{exam.fullMarks}
+                                                        <span className="text-white font-bold">{exam.marksObtained}</span>
+                                                        {typeof exam.marksObtained === 'number' || !isNaN(Number(exam.marksObtained)) ? `/${exam.fullMarks}` : ''}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
