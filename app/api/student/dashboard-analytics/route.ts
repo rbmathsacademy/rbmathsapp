@@ -5,6 +5,7 @@ import StudentTestAttempt from '@/models/StudentTestAttempt';
 import OnlineTest from '@/models/OnlineTest';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
+import OfflineExam from '@/models/OfflineExam';
 import { jwtVerify } from 'jose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
@@ -128,6 +129,38 @@ export async function GET(req: NextRequest) {
         const submittedAssignments = formattedAssignments.filter(a => ['SUBMITTED', 'LATE_SUBMITTED', 'CORRECTED'].includes(a.status)).length;
         const missedAssignments = formattedAssignments.filter(a => a.status === 'MISSED').length;
 
+        // 5. Get Offline Exam Data
+        const offlineExams = await OfflineExam.find({
+            batch: { $in: student.courses }
+        }).sort({ testDate: -1 }).lean();
+
+        const formattedOfflineExams = offlineExams.map((exam: any) => {
+            const studentResult = exam.results.find((r: any) => r.studentPhone === phoneNumber);
+            if (!studentResult) return null;
+
+            const allPercentages = exam.results.map((r: any) => r.percentage) as number[];
+            const highestPercentage = Math.max(...allPercentages);
+            const averagePercentage = parseFloat(
+                (allPercentages.reduce((sum, p) => sum + p, 0) / allPercentages.length).toFixed(2)
+            );
+            const sortedPercentages = [...new Set(allPercentages)].sort((a, b) => b - a);
+            const rank = sortedPercentages.indexOf(studentResult.percentage) + 1;
+
+            return {
+                examId: exam._id,
+                batch: exam.batch,
+                chapterName: exam.chapterName,
+                testDate: exam.testDate,
+                fullMarks: exam.fullMarks,
+                marksObtained: studentResult.marksObtained,
+                percentage: studentResult.percentage,
+                highestPercentage,
+                averagePercentage,
+                rank,
+                totalStudents: exam.results.length
+            };
+        }).filter(Boolean);
+
         return NextResponse.json({
             student: {
                 name: student.name,
@@ -143,7 +176,8 @@ export async function GET(req: NextRequest) {
                 assignmentsMissed: missedAssignments
             },
             tests: formattedTests,
-            assignments: formattedAssignments
+            assignments: formattedAssignments,
+            offlineExams: formattedOfflineExams
         });
 
     } catch (error: any) {

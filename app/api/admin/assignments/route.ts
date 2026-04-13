@@ -42,11 +42,11 @@ export async function GET(req: Request) {
 
         const assignments = await Assignment.find(query).sort({ createdAt: -1 }).lean();
 
-        // Pre-fetch student counts per batch for efficiency
+        // Pre-fetch students per batch with join dates for accurate missed counts
         const uniqueBatches = [...new Set(assignments.map((a: any) => a.batch))];
-        const batchStudentCounts: Record<string, number> = {};
+        const batchStudentsMap: Record<string, Array<{ _id: any; createdAt: Date }>> = {};
         await Promise.all(uniqueBatches.map(async (b) => {
-            batchStudentCounts[b] = await BatchStudent.countDocuments({ courses: b });
+            batchStudentsMap[b] = await BatchStudent.find({ courses: b }).select('_id createdAt').lean();
         }));
 
         const now = new Date();
@@ -55,9 +55,11 @@ export async function GET(req: Request) {
         const assignmentsWithStats = await Promise.all(assignments.map(async (a: any) => {
             const submissions = await AssignmentSubmission.find({ assignment: a._id }, 'submittedAt student');
             const submissionCount = submissions.length;
-            const totalStudents = batchStudentCounts[a.batch] || 0;
+            const batchStudents = batchStudentsMap[a.batch] || [];
+            const totalStudents = batchStudents.length;
 
-            const deadlineTime = new Date(a.deadline).getTime();
+            const deadline = new Date(a.deadline);
+            const deadlineTime = deadline.getTime();
             const cooldownEnd = new Date(deadlineTime + (a.cooldownDuration || 0) * 60000);
 
             // Late = submitted after deadline
@@ -69,11 +71,17 @@ export async function GET(req: Request) {
                 }
             });
 
-            // Missed = no submission AND cooldown has expired
+            // Missed = no submission AND cooldown has expired AND student joined BEFORE deadline
             let missedCount = 0;
             if (now > cooldownEnd) {
-                // Students who didn't submit = total - submitted
-                missedCount = Math.max(0, totalStudents - submissionCount);
+                const submittedStudentIds = new Set(submissions.map((s: any) => s.student.toString()));
+                batchStudents.forEach((student: any) => {
+                    const studentJoinDate = new Date(student.createdAt);
+                    // Only count as missed if student joined before deadline and hasn't submitted
+                    if (studentJoinDate <= deadline && !submittedStudentIds.has(student._id.toString())) {
+                        missedCount++;
+                    }
+                });
             }
 
             return { ...a, submissionCount, lateCount, missedCount, totalStudents };

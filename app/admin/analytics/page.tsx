@@ -53,6 +53,18 @@ interface StudentAnalytics {
         title: string;
         deadline: string;
     }>;
+    offlineExams: Array<{
+        examId: string;
+        chapterName: string;
+        testDate: string;
+        fullMarks: number;
+        marksObtained: number;
+        percentage: number;
+        highestPercentage: number;
+        averagePercentage: number;
+        rank: number;
+        totalStudents: number;
+    }>;
 }
 
 interface BatchAnalyticsData {
@@ -446,6 +458,51 @@ export default function AnalyticsPage() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Offline Test Marks Section */}
+                            {selectedStudent.offlineExams && selectedStudent.offlineExams.length > 0 && (
+                                <div>
+                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <div className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm font-black uppercase tracking-wider">
+                                            Offline Test Marks
+                                        </div>
+                                    </h3>
+
+                                    <div className="space-y-3">
+                                        {selectedStudent.offlineExams.map((exam: any, index: number) => (
+                                            <div key={exam.examId || index} className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
+                                                <div className="bg-red-500/10 px-4 py-2.5 flex justify-between items-center border-b border-red-500/20">
+                                                    <span className="text-sm font-semibold text-white">{exam.chapterName}</span>
+                                                    <span className="text-[10px] font-bold text-gray-400">
+                                                        {new Date(exam.testDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}
+                                                    </span>
+                                                </div>
+                                                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                                                    <div>
+                                                        <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Marks</span>
+                                                        <span className="text-lg font-black text-white">{exam.marksObtained}<span className="text-xs text-gray-500">/{exam.fullMarks}</span></span>
+                                                        <span className={`block text-sm font-bold mt-0.5 ${exam.percentage >= 75 ? 'text-green-400' : exam.percentage >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                            {exam.percentage}%
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Highest</span>
+                                                        <span className="text-lg font-black text-purple-400">{exam.highestPercentage}%</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Average</span>
+                                                        <span className="text-lg font-black text-blue-400">{exam.averagePercentage}%</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Rank</span>
+                                                        <span className="text-lg font-black text-amber-400">#{exam.rank}<span className="text-xs text-gray-500">/{exam.totalStudents}</span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

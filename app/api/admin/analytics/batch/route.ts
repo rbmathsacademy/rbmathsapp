@@ -6,6 +6,7 @@ import OnlineTest from '@/models/OnlineTest';
 import Assignment from '@/models/Assignment';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
+import OfflineExam from '@/models/OfflineExam';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,11 @@ export async function GET(request: NextRequest) {
             .lean();
 
         const assignmentIds = assignments.map(a => a._id);
+
+        // 3b. Fetch Offline Exams for Batch
+        const offlineExams = await OfflineExam.find({ batch })
+            .sort({ testDate: -1 })
+            .lean();
 
         // 4. Fetch Student Attempts for these Tests
         const attempts = await StudentTestAttempt.find({
@@ -198,6 +204,33 @@ export async function GET(request: NextRequest) {
             const validAssignments = assignmentStatuses.filter(a => a.status !== 'NOT_ENROLLED').length;
             const completionRate = validAssignments > 0 ? (submittedCount / validAssignments) * 100 : 0;
 
+            // Offline Exam Results
+            const studentOfflineExams = offlineExams.map((exam: any) => {
+                const result = exam.results.find((r: any) => r.studentPhone === student.phoneNumber);
+                if (!result) return null;
+
+                const allPercentages = exam.results.map((r: any) => r.percentage);
+                const highestPercentage = Math.max(...allPercentages);
+                const averagePercentage = parseFloat(
+                    (allPercentages.reduce((sum: number, p: number) => sum + p, 0) / allPercentages.length).toFixed(2)
+                );
+                const sortedPercentages = [...new Set(allPercentages as number[])].sort((a: number, b: number) => b - a);
+                const rank = sortedPercentages.indexOf(result.percentage) + 1;
+
+                return {
+                    examId: exam._id,
+                    chapterName: exam.chapterName,
+                    testDate: exam.testDate,
+                    fullMarks: exam.fullMarks,
+                    marksObtained: result.marksObtained,
+                    percentage: result.percentage,
+                    highestPercentage,
+                    averagePercentage,
+                    rank,
+                    totalStudents: exam.results.length
+                };
+            }).filter(Boolean);
+
             return {
                 student: {
                     _id: student._id,
@@ -218,7 +251,8 @@ export async function GET(request: NextRequest) {
                     poorQuality
                 },
                 tests: testScores,
-                assignments: assignmentStatuses
+                assignments: assignmentStatuses,
+                offlineExams: studentOfflineExams
             };
         });
 
@@ -235,6 +269,7 @@ export async function GET(request: NextRequest) {
             batch,
             tests: testsWithStats,
             assignments,
+            offlineExams,
             analytics
         });
 

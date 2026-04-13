@@ -20,7 +20,8 @@ import {
     Target,
     Trophy,
     Users,
-    MessageSquare
+    MessageSquare,
+    Medal
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useStudentProfile } from './StudentProfileContext';
@@ -57,6 +58,19 @@ interface DashboardData {
         status: string;
         submittedAt: string | null;
         quality: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
+    }>;
+    offlineExams?: Array<{
+        examId: string;
+        batch: string;
+        chapterName: string;
+        testDate: string;
+        fullMarks: number;
+        marksObtained: number;
+        percentage: number;
+        highestPercentage: number;
+        averagePercentage: number;
+        rank: number;
+        totalStudents: number;
     }>;
 }
 
@@ -343,6 +357,66 @@ export default function StudentDashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Offline Test Marks Section - Above Test Progress Report */}
+                    {data.offlineExams && data.offlineExams.length > 0 && (
+                        <div className="mb-8">
+                            <h3 className="text-lg font-black text-white mb-6 tracking-wide flex items-center gap-3 uppercase">
+                                <div className="bg-red-500 text-white px-4 py-1.5 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-red-500/30 animate-pulse">
+                                    Offline Test Marks
+                                </div>
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {data.offlineExams.map((exam) => (
+                                    <div key={exam.examId} className="bg-[#1a1f2e] border border-red-500/20 rounded-2xl overflow-hidden shadow-xl hover:translate-y-[-2px] transition-all duration-300 hover:border-red-500/40">
+                                        {/* Header */}
+                                        <div className="bg-gradient-to-r from-red-500/15 to-orange-500/10 px-4 sm:px-5 py-2.5 sm:py-3 flex justify-between items-center border-b border-red-500/20">
+                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                                                <BookOpen className="w-3.5 h-3.5 text-red-400" />
+                                                <span className="font-bold tracking-tight line-clamp-1">{exam.chapterName}</span>
+                                            </div>
+                                            <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono">
+                                                {new Date(exam.testDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}
+                                            </span>
+                                        </div>
+
+                                        {/* Body */}
+                                        <div className="p-3 sm:p-5">
+                                            {/* Student Score & Percentage */}
+                                            <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`text-2xl sm:text-3xl font-black ${exam.percentage >= 75 ? 'text-emerald-400' : exam.percentage >= 40 ? 'text-amber-400' : 'text-rose-400'}`}>
+                                                        {exam.percentage}%
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        <span className="text-white font-bold">{exam.marksObtained}</span>/{exam.fullMarks}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
+                                                    <Medal className="w-4 h-4 text-amber-400" />
+                                                    <span className="text-sm font-black text-amber-400">#{exam.rank}</span>
+                                                    <span className="text-[9px] text-slate-500 font-bold">/{exam.totalStudents}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Stats Row */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="flex flex-col items-center bg-purple-500/5 border border-purple-500/10 rounded-xl py-2">
+                                                    <span className="text-[8px] uppercase font-black text-slate-500 tracking-widest mb-1">Highest</span>
+                                                    <span className="text-lg font-black text-purple-400">{exam.highestPercentage}%</span>
+                                                </div>
+                                                <div className="flex flex-col items-center bg-blue-500/5 border border-blue-500/10 rounded-xl py-2">
+                                                    <span className="text-[8px] uppercase font-black text-slate-500 tracking-widest mb-1">Batch Avg</span>
+                                                    <span className="text-lg font-black text-blue-400">{exam.averagePercentage}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Progress Reports (Chronological List - exact copy from Admin Analytics Modal) */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
