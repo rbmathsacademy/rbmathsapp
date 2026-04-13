@@ -77,11 +77,11 @@ export async function POST(
             return NextResponse.json({ error: 'Start time and end time are required' }, { status: 400 });
         }
 
-        const startStr = newStartTime.endsWith('Z') || newStartTime.includes('+') || newStartTime.includes('-')
+        const startStr = newStartTime.endsWith('Z') || newStartTime.match(/[+-]\d{2}:?\d{2}$/)
             ? newStartTime : `${newStartTime}+05:30`;
         const start = new Date(startStr);
 
-        const endStr = newEndTime.endsWith('Z') || newEndTime.includes('+') || newEndTime.includes('-')
+        const endStr = newEndTime.endsWith('Z') || newEndTime.match(/[+-]\d{2}:?\d{2}$/)
             ? newEndTime : `${newEndTime}+05:30`;
         const end = new Date(endStr);
 

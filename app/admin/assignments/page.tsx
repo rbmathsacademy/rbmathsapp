@@ -441,16 +441,23 @@ export default function AdminAssignmentsPage() {
             }
         });
 
-        // Sort descending
+        // Sort descending initially
         validStudents.sort((a, b) => b.numericMarks - a.numericMarks);
+
+        // Top 5 sorted by marks, the rest sorted alphabetically
+        const top5 = validStudents.slice(0, 5);
+        const rest = validStudents.slice(5).sort((a, b) => a.name.localeCompare(b.name));
+        const finalValidStudents = [...top5, ...rest];
 
         const tableBody: any[] = [];
 
-        validStudents.forEach((s, index) => {
+        finalValidStudents.forEach((s, index) => {
             let rankStr = `${index + 1}`;
-            if (index === 0) rankStr += ' 1st';
-            else if (index === 1) rankStr += ' 2nd';
-            else if (index === 2) rankStr += ' 3rd';
+            if (index === 0) rankStr = '1st';
+            else if (index === 1) rankStr = '2nd';
+            else if (index === 2) rankStr = '3rd';
+            else if (index === 3) rankStr = '4th';
+            else if (index === 4) rankStr = '5th';
 
             const pct = fullMarks > 0 ? ((s.numericMarks / fullMarks) * 100).toFixed(1) + '%' : '-';
 
@@ -488,17 +495,27 @@ export default function AdminAssignmentsPage() {
             styles: { font: 'helvetica', fontSize: 10, cellPadding: 4, textColor: [30, 30, 30] }, // fallback text color
             didParseCell: function(data) {
                 if (data.section === 'body') {
-                    if (data.column.index === 0) {
-                        if (data.cell.raw && data.cell.raw.toString().includes('1st')) {
-                            data.cell.styles.fillColor = [255, 215, 0]; // Gold fill for 1st
-                        } else if (data.cell.raw && data.cell.raw.toString().includes('2nd')) {
-                            data.cell.styles.fillColor = [224, 224, 224]; // Silver fill for 2nd
-                        } else if (data.cell.raw && data.cell.raw.toString().includes('3rd')) {
-                            data.cell.styles.fillColor = [205, 127, 50]; // Bronze fill for 3rd
-                        }
+                    const rowRank = data.row.cells[0].raw;
+                    if (rowRank === '1st') {
+                        data.cell.styles.fillColor = [255, 245, 204]; // Gold row highlight
+                    } else if (rowRank === '2nd') {
+                        data.cell.styles.fillColor = [240, 240, 240]; // Silver row highlight
+                    } else if (rowRank === '3rd') {
+                        data.cell.styles.fillColor = [245, 225, 205]; // Bronze row highlight
+                    } else if (rowRank === '4th') {
+                        data.cell.styles.fillColor = [230, 255, 230]; // Soft Green row highlight
+                    } else if (rowRank === '5th') {
+                        data.cell.styles.fillColor = [230, 240, 255]; // Soft Blue row highlight
                     }
-                    if (data.column.index === 3 && data.cell.raw !== '-') {
-                         data.cell.styles.textColor = [21, 128, 61]; // green text
+
+                    if (data.column.index === 3 && data.cell.raw && data.cell.raw !== '-') {
+                         const rawValue = data.cell.raw.toString();
+                         const val = parseFloat(rawValue.replace('%', ''));
+                         if (!isNaN(val)) {
+                             if (val >= 70) data.cell.styles.textColor = [21, 128, 61]; // green text
+                             else if (val >= 50) data.cell.styles.textColor = [234, 88, 12]; // orange text
+                             else data.cell.styles.textColor = [220, 38, 38]; // red text
+                         }
                     }
                 }
             }

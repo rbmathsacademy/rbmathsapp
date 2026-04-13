@@ -394,11 +394,13 @@ export default function StudentDashboard() {
                                                         {typeof exam.marksObtained === 'number' || !isNaN(Number(exam.marksObtained)) ? `/${exam.fullMarks}` : ''}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
-                                                    <Medal className="w-4 h-4 text-amber-400" />
-                                                    <span className="text-sm font-black text-amber-400">#{exam.rank}</span>
-                                                    <span className="text-[9px] text-slate-500 font-bold">/{exam.totalStudents}</span>
-                                                </div>
+                                                {(typeof exam.marksObtained === 'number' || !isNaN(Number(exam.marksObtained))) && (
+                                                    <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
+                                                        <Medal className="w-4 h-4 text-amber-400" />
+                                                        <span className="text-sm font-black text-amber-400">#{exam.rank}</span>
+                                                        <span className="text-[9px] text-slate-500 font-bold">/{exam.totalStudents}</span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Stats Row */}

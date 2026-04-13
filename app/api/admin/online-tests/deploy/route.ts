@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
 
         // Calculate end time
         // TIMEZONE FIX: Handle missing timezone info by defaulting to IST
-        const startStr = startTime.endsWith('Z') || startTime.includes('+') || startTime.includes('-')
+        const startStr = startTime.endsWith('Z') || startTime.match(/[+-]\d{2}:?\d{2}$/)
             ? startTime : `${startTime}+05:30`;
         const start = new Date(startStr);
 
         let end: Date;
         if (endTime) {
-            const endStr = endTime.endsWith('Z') || endTime.includes('+') || endTime.includes('-')
+            const endStr = endTime.endsWith('Z') || endTime.match(/[+-]\d{2}:?\d{2}$/)
                 ? endTime : `${endTime}+05:30`;
             end = new Date(endStr);
         } else {
