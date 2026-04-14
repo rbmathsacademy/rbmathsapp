@@ -137,26 +137,6 @@ export default function StudentDashboard() {
         }
     }, []);
 
-    const allNavItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: Menu, href: '/student', gradient: 'from-blue-600 to-indigo-600' },
-        { id: 'online-test', label: 'Online Test', icon: ClipboardCheck, href: '/student/online-test', gradient: 'from-emerald-500 to-teal-500' },
-        { id: 'assignments', label: 'Assignment Submission', icon: FileText, href: '/student/assignments', gradient: 'from-blue-500 to-cyan-500' },
-        { id: 'question-bank', label: 'Question Bank', icon: BookOpen, href: '/student/question-bank', gradient: 'from-purple-500 to-violet-500' },
-        { id: 'chat', label: 'Student Chat', icon: MessageSquare, href: '/student/chat', gradient: 'from-blue-400 to-indigo-400' },
-        { id: 'lesson-plan', label: 'Lesson Plan', icon: Calendar, href: '/student/lesson-plan', gradient: 'from-orange-500 to-amber-500' },
-        { id: 'fees', label: 'Fees Payment Records', icon: DollarSign, href: '/student/fees', gradient: 'from-pink-500 to-rose-500' },
-    ];
-
-    const isFreeBatchOnlyFallback = !!(data?.student?.courses?.length > 0 && data.student.courses.every(c => c.trim().toLowerCase() === 'class xi (free batch) 2026-27'));
-    const finalIsFreeBatchOnly = isFreeBatchOnly || isFreeBatchOnlyFallback;
-
-    const navItems = userRole === 'guardian'
-        ? allNavItems.filter(item => ['dashboard', 'fees', 'lesson-plan'].includes(item.id))
-        : finalIsFreeBatchOnly
-            ? allNavItems.filter(item => !['chat', 'fees'].includes(item.id))
-            : allNavItems;
-
-
     if (loading) {
         return (
             <div className="min-h-screen bg-[#050b14] flex items-center justify-center relative overflow-hidden">
@@ -167,6 +147,25 @@ export default function StudentDashboard() {
     }
 
     if (!data) return null;
+
+    const allNavItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: Menu, href: '/student', gradient: 'from-blue-600 to-indigo-600' },
+        { id: 'online-test', label: 'Online Test', icon: ClipboardCheck, href: '/student/online-test', gradient: 'from-emerald-500 to-teal-500' },
+        { id: 'assignments', label: 'Assignment Submission', icon: FileText, href: '/student/assignments', gradient: 'from-blue-500 to-cyan-500' },
+        { id: 'question-bank', label: 'Question Bank', icon: BookOpen, href: '/student/question-bank', gradient: 'from-purple-500 to-violet-500' },
+        { id: 'chat', label: 'Student Chat', icon: MessageSquare, href: '/student/chat', gradient: 'from-blue-400 to-indigo-400' },
+        { id: 'lesson-plan', label: 'Lesson Plan', icon: Calendar, href: '/student/lesson-plan', gradient: 'from-orange-500 to-amber-500' },
+        { id: 'fees', label: 'Fees Payment Records', icon: DollarSign, href: '/student/fees', gradient: 'from-pink-500 to-rose-500' },
+    ];
+
+    const isFreeBatchOnlyFallback = !!(data.student.courses.length > 0 && data.student.courses.every(c => c.trim().toLowerCase() === 'class xi (free batch) 2026-27'));
+    const finalIsFreeBatchOnly = isFreeBatchOnly || isFreeBatchOnlyFallback;
+
+    const navItems = userRole === 'guardian'
+        ? allNavItems.filter(item => ['dashboard', 'fees', 'lesson-plan'].includes(item.id))
+        : finalIsFreeBatchOnly
+            ? allNavItems.filter(item => !['chat', 'fees'].includes(item.id))
+            : allNavItems;
 
     return (
         <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden selection:bg-blue-500/30">
