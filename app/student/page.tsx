@@ -26,6 +26,8 @@ import {
 import { Toaster, toast } from 'react-hot-toast';
 import { useStudentProfile } from './StudentProfileContext';
 
+const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+
 interface DashboardData {
     student: {
         name: string;
@@ -76,7 +78,7 @@ interface DashboardData {
 
 export default function StudentDashboard() {
     const router = useRouter();
-    const { profile: studentProfile } = useStudentProfile();
+    const { profile: studentProfile, isFreeBatchOnly } = useStudentProfile();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -145,9 +147,15 @@ export default function StudentDashboard() {
         { id: 'fees', label: 'Fees Payment Records', icon: DollarSign, href: '/student/fees', gradient: 'from-pink-500 to-rose-500' },
     ];
 
+    const isFreeBatchOnlyFallback = !!(data?.student?.courses?.length > 0 && data.student.courses.every(c => c.trim().toLowerCase() === 'class xi (free batch) 2026-27'));
+    const finalIsFreeBatchOnly = isFreeBatchOnly || isFreeBatchOnlyFallback;
+
     const navItems = userRole === 'guardian'
         ? allNavItems.filter(item => ['dashboard', 'fees', 'lesson-plan'].includes(item.id))
-        : allNavItems;
+        : finalIsFreeBatchOnly
+            ? allNavItems.filter(item => !['chat', 'fees'].includes(item.id))
+            : allNavItems;
+
 
     if (loading) {
         return (
@@ -326,6 +334,7 @@ export default function StudentDashboard() {
                             </div>
                         </div>
 
+                        {!finalIsFreeBatchOnly && (
                         <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-blue-400/30 transition-all duration-300 cursor-pointer relative overflow-hidden" onClick={() => router.push('/student/chat')}>
                             {unreadChatCount > 0 && (
                                 <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg shadow-lg animate-pulse">
@@ -343,6 +352,7 @@ export default function StudentDashboard() {
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Ask Doubt</p>
                             </div>
                         </div>
+                        )}
 
                         <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-purple-500/30 transition-all duration-300">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">

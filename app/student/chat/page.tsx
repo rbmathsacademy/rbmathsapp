@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2 } from 'lucide-react';
+import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
+import { useStudentProfile } from '../StudentProfileContext';
 
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
@@ -41,6 +42,7 @@ interface Message {
 }
 
 export default function StudentChat() {
+    const { isFreeBatchOnly, loading: profileLoading } = useStudentProfile();
     const [batches, setBatches] = useState<string[]>([]);
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -432,10 +434,33 @@ export default function StudentChat() {
         return 'Anonymous';
     };
 
-    if (loading) {
+    if (loading || profileLoading) {
         return (
             <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    // Access guard for free batch students
+    if (isFreeBatchOnly) {
+        return (
+            <div className="min-h-screen bg-[#050b14] flex items-center justify-center p-4 font-sans">
+                <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-md text-center">
+                    <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                        <ShieldX className="h-8 w-8 text-red-400" />
+                    </div>
+                    <h2 className="text-xl font-black text-white mb-2">Access Restricted</h2>
+                    <p className="text-sm text-slate-400 mb-6">
+                        Student Chat is not available for the Free Batch. If you believe this is an error, please contact the admin.
+                    </p>
+                    <button
+                        onClick={() => router.push('/student')}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mx-auto active:scale-[0.98]"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+                    </button>
+                </div>
             </div>
         );
     }

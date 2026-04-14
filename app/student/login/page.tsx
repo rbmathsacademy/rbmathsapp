@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
-import { Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { KeyRound, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function StudentLogin() {
-    const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -20,6 +20,14 @@ export default function StudentLogin() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        const trimmed = password.trim();
+
+        // Detect guest code
+        if (trimmed.toLowerCase() === 'rbmaths11free') {
+            router.push('/student/guest-register');
+            return;
+        }
+
         setLoading(true);
         // Clear previous session data to prevent role conflicts (specific keys only)
         localStorage.removeItem('studentName');
@@ -32,7 +40,7 @@ export default function StudentLogin() {
             const res = await fetch('/api/student/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phoneNumber: phone.trim() })
+                body: JSON.stringify({ phoneNumber: trimmed })
             });
 
             const data = await res.json();
@@ -55,7 +63,7 @@ export default function StudentLogin() {
 
                 router.replace(data.redirectUrl || '/student');
             } else {
-                toast.error(data.error || 'Login failed. Please check your number.');
+                toast.error(data.error || 'Login failed. Please check your password.');
             }
         } catch (error) {
             toast.error('Something went wrong. Please try again.');
@@ -76,21 +84,21 @@ export default function StudentLogin() {
             <div className="bg-slate-900 border border-white/5 p-8 rounded-2xl shadow-2xl w-full max-w-md relative z-10">
                 <div className="text-center mb-8">
                     <div className="h-16 w-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
-                        <Phone className="h-8 w-8 text-blue-400" />
+                        <KeyRound className="h-8 w-8 text-blue-400" />
                     </div>
                     <h1 className="text-xl sm:text-2xl font-bold text-white mb-1.5">Student Login</h1>
-                    <p className="text-xs sm:text-sm text-slate-400">Enter your registered phone number to access your courses.</p>
+                    <p className="text-xs sm:text-sm text-slate-400">Enter your password to access your courses.</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1.5">Phone Number</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1.5">Enter Password</label>
                         <input
                             type="text"
-                            placeholder="e.g. 9876543210"
+                            placeholder="Enter your password"
                             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
@@ -116,3 +124,4 @@ export default function StudentLogin() {
         </div>
     );
 }
+

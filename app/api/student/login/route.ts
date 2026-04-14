@@ -95,12 +95,47 @@ export async function POST(req: NextRequest) {
         }
 
         // ---------------------------------------------------------
-        // 3. STUDENT LOGIN (BatchStudent)
+        // 3. FREE BATCH STUDENT LOGIN (loginId = DDMMYYYYPPPPP)
+        // ---------------------------------------------------------
+        const loginIdStudent = await BatchStudent.findOne({ loginId: rawInput }).lean();
+
+        if (loginIdStudent) {
+            const token = await new SignJWT({
+                userId: loginIdStudent.phoneNumber,
+                phoneNumber: loginIdStudent.phoneNumber,
+                studentName: loginIdStudent.name,
+                courses: loginIdStudent.courses,
+                role: 'student'
+            })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setExpirationTime('30d')
+                .sign(new TextEncoder().encode(JWT_SECRET));
+
+            const response = NextResponse.json({
+                success: true,
+                role: 'student',
+                user: {
+                    name: loginIdStudent.name,
+                    role: 'student',
+                    phoneNumber: loginIdStudent.phoneNumber
+                },
+                student: {
+                    studentName: loginIdStudent.name,
+                    batches: loginIdStudent.courses || []
+                },
+                redirectUrl: '/student'
+            });
+            setAuthCookie(response, token);
+            return response;
+        }
+
+        // ---------------------------------------------------------
+        // 4. STUDENT LOGIN (BatchStudent - by phone number)
         // ---------------------------------------------------------
         const student = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
 
         if (!student) {
-            return NextResponse.json({ error: 'Number not found in student or staff records.' }, { status: 401 });
+            return NextResponse.json({ error: 'Invalid password. Please try again.' }, { status: 401 });
         }
 
         const token = await new SignJWT({

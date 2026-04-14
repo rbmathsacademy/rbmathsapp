@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+
 interface StudentProfile {
     _id: string;
     studentName: string;
@@ -15,6 +17,7 @@ interface StudentProfileContextType {
     profile: StudentProfile | null;
     loading: boolean;
     error: boolean;
+    isFreeBatchOnly: boolean;
     updateProfile: (schoolName: string, board: string) => void;
 }
 
@@ -22,6 +25,7 @@ const StudentProfileContext = createContext<StudentProfileContextType>({
     profile: null,
     loading: true,
     error: false,
+    isFreeBatchOnly: false,
     updateProfile: () => {},
 });
 
@@ -59,9 +63,13 @@ export function StudentProfileProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const isFreeBatchOnly = !!(profile && profile.courses && profile.courses.length > 0
+        && profile.courses.every(c => c.trim().toLowerCase() === FREE_BATCH.trim().toLowerCase()));
+
     return (
-        <StudentProfileContext.Provider value={{ profile, loading, error, updateProfile }}>
+        <StudentProfileContext.Provider value={{ profile, loading, error, isFreeBatchOnly, updateProfile }}>
             {children}
         </StudentProfileContext.Provider>
     );
 }
+

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Download, AlertCircle, CheckCircle, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Download, AlertCircle, CheckCircle, Calendar, FileText, ShieldX } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
 import FeesReceiptModal from './FeesReceiptModal';
@@ -34,7 +34,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export default function FeesPayment() {
     const router = useRouter();
-    const { profile, loading: profileLoading, error: profileError } = useStudentProfile();
+    const { profile, loading: profileLoading, error: profileError, isFreeBatchOnly } = useStudentProfile();
     const student = profile ? { studentName: profile.studentName, phoneNumber: profile.phoneNumber, courses: profile.courses, createdAt: '' } : null;
     const [records, setRecords] = useState<FeeRecord[]>([]);
     const [loading, setLoading] = useState(true);
@@ -62,6 +62,29 @@ export default function FeesPayment() {
             fetchFees();
         }
     }, [profileLoading, profileError]);
+
+    // Access guard for free batch students
+    if (!profileLoading && isFreeBatchOnly) {
+        return (
+            <div className="min-h-screen bg-[#050b14] flex items-center justify-center p-4 font-sans">
+                <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-md text-center">
+                    <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                        <ShieldX className="h-8 w-8 text-red-400" />
+                    </div>
+                    <h2 className="text-xl font-black text-white mb-2">Access Restricted</h2>
+                    <p className="text-sm text-slate-400 mb-6">
+                        Fee records are not available for the Free Batch. If you believe this is an error, please contact the admin.
+                    </p>
+                    <button
+                        onClick={() => router.push('/student')}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mx-auto active:scale-[0.98]"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const fetchFees = async () => {
         try {
