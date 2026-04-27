@@ -114,50 +114,36 @@ export default function StudentAssignmentsPage() {
                 reader.readAsDataURL(file);
             });
 
-            const CHUNK_SIZE = 1024 * 512; // 500KB chunks
-            const totalChunks = Math.ceil(base64.length / CHUNK_SIZE);
-            const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            const payload = {
+                fileData: base64,
+                batchName: assignment.batch || profile?.courses?.[0] || 'General',
+                assignmentTitle: assignment.title,
+                studentName: profile?.studentName || 'Unknown',
+                phoneNumber: profile?.phoneNumber || 'Unknown',
+                mimeType: 'application/pdf',
+                fileName: `${profile?.studentName || 'Student'}_${profile?.phoneNumber || 'NA'}.pdf`
+            };
+
+            const GAS_APP_URL = 'https://script.google.com/macros/s/AKfycbyBLvemIMxTVbASJhsRO4yu0syjGw1m4kQxJzU8Lp37HYuMAIMCk2eDOjcxZ-i4WBnRbw/exec';
 
             let gasData = null;
-
-            for (let i = 0; i < totalChunks; i++) {
-                const chunk = base64.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-                const payload = {
-                    uploadId,
-                    chunkIndex: i,
-                    totalChunks,
-                    fileData: chunk,
-                    batchName: assignment.batch || profile?.courses?.[0] || 'General',
-                    assignmentTitle: assignment.title,
-                    studentName: profile?.studentName || 'Unknown',
-                    phoneNumber: profile?.phoneNumber || 'Unknown',
-                    mimeType: 'application/pdf',
-                    fileName: `${profile?.studentName || 'Student'}_${profile?.phoneNumber || 'NA'}.pdf`
-                };
-
-                // Added simple retry logic per chunk (up to 3 tries)
-                let attempts = 0;
-                let success = false;
-                while (attempts < 3 && !success) {
-                    try {
-                        const res = await fetch('/api/student/assignments/upload-to-drive', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        if (!res.ok) throw new Error('Chunk upload failed');
-                        const data = await res.json();
-                        
-                        // If it's the last chunk, it will trigger GAS and return final payload
-                        if (i === totalChunks - 1) {
-                            gasData = data;
-                        }
-                        success = true;
-                    } catch (err) {
-                        attempts++;
-                        if (attempts >= 3) throw new Error('Network error. Upload failed after multiple retries.');
-                        await new Promise(r => setTimeout(r, 1000 * attempts)); // backoff
-                    }
+            let attempts = 0;
+            let success = false;
+            
+            while (attempts < 3 && !success) {
+                try {
+                    const res = await fetch(GAS_APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) throw new Error('Upload failed');
+                    gasData = await res.json();
+                    success = true;
+                } catch (err) {
+                    attempts++;
+                    if (attempts >= 3) throw new Error('Network error. Upload failed after multiple retries.');
+                    await new Promise(r => setTimeout(r, 2000 * attempts));
                 }
             }
 
