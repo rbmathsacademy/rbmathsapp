@@ -129,15 +129,78 @@ export async function generateBatchPDF(data: BatchData) {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...COLORS.navy);
     doc.text('Table of Contents', MARGIN, 46);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(...COLORS.gray);
+    doc.text('(Click on name to open the page)', MARGIN + 52, 46);
     doc.setDrawColor(...COLORS.navy);
     doc.setLineWidth(0.6);
     doc.line(MARGIN, 48, MARGIN + 50, 48);
 
-    // TOC table
+    // First pass: render TOC table with placeholder page numbers to determine how many pages TOC takes
+    const tocPlaceholderBody = sortedStudents.map((s, i) => [
+        `${i + 1}`,
+        s.student.name,
+        '...' // placeholder
+    ]);
+
+    autoTable(doc, {
+        startY: 52,
+        head: [['Sl.', 'Student Name', 'Page']],
+        body: tocPlaceholderBody,
+        theme: 'grid',
+        margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_Y - 5 },
+        styles: { fontSize: 9, cellPadding: 2.5, textColor: COLORS.darkText, lineColor: COLORS.lightGray, lineWidth: 0.2 },
+        headStyles: { fillColor: COLORS.navy, textColor: COLORS.white, fontStyle: 'bold', fontSize: 9 },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        columnStyles: { 0: { halign: 'center', cellWidth: 14 }, 1: { cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 18 } },
+    });
+
+    // Count how many pages the TOC used
+    const tocPageCount = doc.getNumberOfPages();
+
+    // Now delete all pages and redo with correct page numbers
+    // Remove pages in reverse so indices don't shift
+    for (let p = doc.getNumberOfPages(); p >= 1; p--) {
+        doc.deletePage(p);
+    }
+
+    // Re-add first page
+    doc.addPage();
+    currentPage = 1;
+
+    // Re-draw header
+    doc.setFillColor(...COLORS.navy);
+    doc.rect(0, 0, PAGE_W, 28, 'F');
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.white);
+    doc.text(`${data.batch}`, PAGE_W / 2, 13, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Student Progress Report', PAGE_W / 2, 21, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.gray);
+    doc.text(`Generated on ${today}`, PAGE_W / 2, 35, { align: 'center' });
+
+    // Re-draw TOC label
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.navy);
+    doc.text('Table of Contents', MARGIN, 46);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(...COLORS.gray);
+    doc.text('(Click on name to open the page)', MARGIN + 52, 46);
+    doc.setDrawColor(...COLORS.navy);
+    doc.setLineWidth(0.6);
+    doc.line(MARGIN, 48, MARGIN + 50, 48);
+
+    // Final TOC table with correct page numbers
     const tocBody = sortedStudents.map((s, i) => [
         `${i + 1}`,
         s.student.name,
-        `${i + 2}` // page number (TOC is page 1, students start page 2)
+        `${tocPageCount + i + 1}` // student pages start after all TOC pages
     ]);
 
     autoTable(doc, {
@@ -145,22 +208,26 @@ export async function generateBatchPDF(data: BatchData) {
         head: [['Sl.', 'Student Name', 'Page']],
         body: tocBody,
         theme: 'grid',
-        margin: { left: MARGIN, right: MARGIN },
+        margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_Y - 5 },
         styles: { fontSize: 9, cellPadding: 2.5, textColor: COLORS.darkText, lineColor: COLORS.lightGray, lineWidth: 0.2 },
         headStyles: { fillColor: COLORS.navy, textColor: COLORS.white, fontStyle: 'bold', fontSize: 9 },
         alternateRowStyles: { fillColor: [245, 247, 250] },
         columnStyles: { 0: { halign: 'center', cellWidth: 14 }, 1: { cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 18 } },
         didDrawCell: (hookData: any) => {
-            // Add internal link on student name cells
             if (hookData.section === 'body' && hookData.column.index === 1) {
                 const idx = hookData.row.index;
-                const pageNum = idx + 2;
+                const pageNum = tocPageCount + idx + 1;
                 doc.link(hookData.cell.x, hookData.cell.y, hookData.cell.width, hookData.cell.height, { pageNumber: pageNum });
             }
         }
     });
 
-    addFooter(doc, currentPage);
+    // Add footers to all TOC pages
+    for (let p = 1; p <= doc.getNumberOfPages(); p++) {
+        doc.setPage(p);
+        addFooter(doc, p);
+    }
+    currentPage = doc.getNumberOfPages();
 
     // ═══════════════════════════════════════════
     // STUDENT PAGES
@@ -276,13 +343,13 @@ export async function generateBatchPDF(data: BatchData) {
                     }
                 }
             });
-            y = (doc as any).lastAutoTable.finalY + 3;
+            y = (doc as any).lastAutoTable.finalY + 6;
         } else {
             doc.setFontSize(7);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(...COLORS.gray);
             doc.text('No tests available.', MARGIN + 4, y + 6);
-            y += 10;
+            y += 13;
         }
 
         // ── ASSIGNMENTS BOX ──
@@ -331,17 +398,18 @@ export async function generateBatchPDF(data: BatchData) {
                     }
                 }
             });
-            y = (doc as any).lastAutoTable.finalY + 3;
+            y = (doc as any).lastAutoTable.finalY + 6;
         } else {
             doc.setFontSize(7);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(...COLORS.gray);
             doc.text('No assignments available.', MARGIN + 4, y + 6);
-            y += 10;
+            y += 13;
         }
 
         // ── LINE GRAPH: Student vs Highest ──
-        const graphTests = completedTests.filter(t => t.status !== 'missed' && t.percentage !== null);
+        // Reverse so oldest test is on the left, newest on the right
+        const graphTests = completedTests.filter(t => t.status !== 'missed' && t.percentage !== null).slice().reverse();
         if (graphTests.length >= 2) {
             const graphX = MARGIN + 8;
             const graphW = CONTENT_W - 16;
@@ -374,6 +442,16 @@ export async function generateBatchPDF(data: BatchData) {
             }
 
             const stepX = graphW / (graphTests.length - 1);
+
+            // X-axis test name labels (rotated)
+            doc.setFontSize(4);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...COLORS.gray);
+            graphTests.forEach((t, i) => {
+                const px = graphX + i * stepX;
+                const label = t.title.length > 14 ? t.title.substring(0, 13) + '..' : t.title;
+                doc.text(label, px, graphBottom + 4, { angle: 35 });
+            });
 
             // Build points
             const studentPoints: { x: number; y: number }[] = [];
@@ -432,7 +510,7 @@ export async function generateBatchPDF(data: BatchData) {
             doc.setTextColor(...COLORS.purple);
             doc.text('Class Highest', MARGIN + 72, legendY + 1);
 
-            y = legendY + 5;
+            y = legendY + 10;
         } else {
             y += 2;
         }
