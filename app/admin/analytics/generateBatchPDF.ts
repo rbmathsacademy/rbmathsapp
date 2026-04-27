@@ -132,7 +132,7 @@ export async function generateBatchPDF(data: BatchData) {
         head: [['Sl.', 'Student Name', 'Page']],
         body: tempBody,
         theme: 'grid',
-        margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_Y - 5 },
+        margin: { left: MARGIN, right: MARGIN, bottom: 20 },
         styles: { fontSize: 9, cellPadding: 2.5 },
         columnStyles: { 0: { halign: 'center', cellWidth: 14 }, 1: { cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 18 } },
     });
@@ -163,7 +163,7 @@ export async function generateBatchPDF(data: BatchData) {
         head: [['Sl.', 'Student Name', 'Page']],
         body: tocBody,
         theme: 'grid',
-        margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_Y - 5 },
+        margin: { left: MARGIN, right: MARGIN, bottom: 20 },
         styles: { fontSize: 9, cellPadding: 2.5, textColor: COLORS.darkText, lineColor: COLORS.lightGray, lineWidth: 0.2 },
         headStyles: { fillColor: COLORS.navy, textColor: COLORS.white, fontStyle: 'bold', fontSize: 9 },
         alternateRowStyles: { fillColor: [245, 247, 250] },
@@ -177,11 +177,6 @@ export async function generateBatchPDF(data: BatchData) {
         }
     });
 
-    // Add footers to all TOC pages
-    for (let p = 1; p <= doc.getNumberOfPages(); p++) {
-        doc.setPage(p);
-        addFooter(doc, p);
-    }
     currentPage = doc.getNumberOfPages();
 
     // ═══════════════════════════════════════════
@@ -190,8 +185,14 @@ export async function generateBatchPDF(data: BatchData) {
     for (let si = 0; si < sortedStudents.length; si++) {
         const s = sortedStudents[si];
         doc.addPage();
-        currentPage++;
         let y = 6;
+
+        const checkPageBreak = (neededHeight: number) => {
+            if (y + neededHeight > PAGE_H - 20) {
+                doc.addPage();
+                y = MARGIN;
+            }
+        };
 
         // ── Header bar with name + rank ──
         doc.setFillColor(...COLORS.navy);
@@ -265,6 +266,7 @@ export async function generateBatchPDF(data: BatchData) {
         });
 
         // Section label
+        checkPageBreak(40);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...COLORS.testBoxBorder);
@@ -318,6 +320,7 @@ export async function generateBatchPDF(data: BatchData) {
             }
         });
 
+        checkPageBreak(40);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...COLORS.assignBoxBorder);
@@ -359,6 +362,7 @@ export async function generateBatchPDF(data: BatchData) {
         // Reverse so oldest test is on the left, newest on the right
         const graphTests = completedTests.filter(t => t.status !== 'missed' && t.percentage !== null).slice().reverse();
         if (graphTests.length >= 2) {
+            checkPageBreak(60);
             const graphX = MARGIN + 8;
             const graphW = CONTENT_W - 16;
             const graphH = 36;
@@ -465,6 +469,7 @@ export async function generateBatchPDF(data: BatchData) {
 
         // ── OFFLINE EXAMS BOX ──
         if (s.offlineExams && s.offlineExams.length > 0) {
+            checkPageBreak(40);
             doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(...COLORS.offlineBoxBorder);
@@ -490,8 +495,13 @@ export async function generateBatchPDF(data: BatchData) {
             });
             y = (doc as any).lastAutoTable.finalY + 3;
         }
+    }
 
-        addFooter(doc, currentPage);
+    // Add footers to all pages at the very end
+    const totalPages = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        addFooter(doc, p);
     }
 
     // Save
