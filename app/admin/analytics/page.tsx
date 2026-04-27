@@ -12,9 +12,11 @@ import {
     Target,
     BarChart2,
     BookOpen,
-    FileText
+    FileText,
+    Download
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import { generateBatchPDF } from './generateBatchPDF';
 
 interface StudentAnalytics {
     student: {
@@ -22,6 +24,8 @@ interface StudentAnalytics {
         name: string;
         phoneNumber: string;
         joinedAt: string;
+        schoolName?: string;
+        board?: string;
     };
     stats: {
         avgTestPercentage: number;
@@ -81,6 +85,7 @@ export default function AnalyticsPage() {
     const [data, setData] = useState<BatchAnalyticsData | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<StudentAnalytics | null>(null);
+    const [pdfLoading, setPdfLoading] = useState(false);
 
     // Fetch Batches
     useEffect(() => {
@@ -160,17 +165,42 @@ export default function AnalyticsPage() {
                     <p className="text-gray-400 mt-1">Detailed student performance insights</p>
                 </div>
 
-                <div className="w-full sm:w-64">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                     <select
                         value={selectedBatch}
                         onChange={(e) => setSelectedBatch(e.target.value)}
-                        className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500/50"
+                        className="w-full sm:w-64 bg-[#1a1f2e] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500/50"
                     >
                         <option value="">Select Batch</option>
                         {batches.map(batch => (
                             <option key={batch} value={batch}>{batch}</option>
                         ))}
                     </select>
+                    {data && (
+                        <button
+                            onClick={async () => {
+                                setPdfLoading(true);
+                                try {
+                                    await generateBatchPDF(data);
+                                    toast.success('PDF downloaded!');
+                                } catch (e: any) {
+                                    toast.error('PDF generation failed');
+                                    console.error(e);
+                                } finally {
+                                    setPdfLoading(false);
+                                }
+                            }}
+                            disabled={pdfLoading}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-medium text-sm shadow-lg shadow-purple-500/20 disabled:opacity-50 whitespace-nowrap"
+                        >
+                            {pdfLoading ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                            ) : (
+                                <Download className="w-4 h-4" />
+                            )}
+                            Download Report
+                        </button>
+                    )}
                 </div>
             </div>
 

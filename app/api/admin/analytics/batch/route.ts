@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
         // 1. Fetch Students in Batch with createdAt
         const students = await BatchStudent.find({ courses: batch })
-            .select('name phoneNumber createdAt')
+            .select('name phoneNumber createdAt schoolName board')
             .lean();
 
         if (!students.length) {
@@ -252,7 +252,9 @@ export async function GET(request: NextRequest) {
                     _id: student._id,
                     name: student.name,
                     phoneNumber: student.phoneNumber,
-                    joinedAt: student.createdAt
+                    joinedAt: student.createdAt,
+                    schoolName: student.schoolName || '',
+                    board: student.board || ''
                 },
                 stats: {
                     avgTestPercentage: parseFloat(avgPercentage.toFixed(2)),
