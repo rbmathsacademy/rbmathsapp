@@ -49,15 +49,16 @@ export async function GET(req: NextRequest) {
         const tests = await OnlineTest.find({
             status: 'deployed',
             'deployment.batches': { $in: batchFilter }
-        }).select('title description totalMarks deployment config questions._id')
-            .sort({ 'deployment.startTime': -1 });
+        }).select('title description totalMarks deployment config questions.type')
+            .sort({ 'deployment.startTime': -1 })
+            .lean();
 
         // Get all student's attempts
         const testIds = tests.map(t => t._id.toString());
         const attempts = await StudentTestAttempt.find({
             testId: { $in: testIds },
             studentPhone: student.phoneNumber
-        }).select('testId status score percentage submittedAt');
+        }).select('testId status score percentage submittedAt').lean();
         const attemptMap = new Map<string, any>();
         attempts.forEach(a => attemptMap.set(a.testId.toString(), a));
 

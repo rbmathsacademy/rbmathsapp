@@ -42,12 +42,12 @@ export async function GET(req: NextRequest) {
         const allTests = await OnlineTest.find({
             status: 'deployed',
             'deployment.batches': { $in: batchFilter }
-        }).select('_id title totalMarks deployment config');
+        }).select('_id title totalMarks deployment config').lean();
 
         // 3. Fetch all attempts by this student
         const attempts = await StudentTestAttempt.find({
             studentPhone: phoneNumber
-        }).select('testId status percentage score submittedAt').sort({ submittedAt: -1 });
+        }).select('testId status percentage score submittedAt').sort({ submittedAt: -1 }).lean();
 
         const attemptMap = new Map();
         attempts.forEach(a => attemptMap.set(a.testId.toString(), a));
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
                 studentPhone: { $in: batchPhones },
                 testId: { $in: visibleTestIds },
                 status: 'completed'
-            }).select('studentPhone percentage timeSpent');
+            }).select('studentPhone percentage timeSpent').lean();
 
             // Group attempts by student phone
             const studentAttemptsMap = new Map<string, { percentage: number; timeSpent: number }[]>();
