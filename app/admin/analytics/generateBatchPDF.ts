@@ -272,19 +272,15 @@ export async function generateBatchPDF(data: BatchData) {
         y += 5;
 
         const testBoxStartY = y;
-        // Draw box background first, then table on top
         if (testTableRows.length > 0) {
-            const estHeight = Math.max(8 + testTableRows.length * 6.2, 14);
-            drawRoundedRect(doc, MARGIN - 1, y, CONTENT_W + 2, estHeight, 2, COLORS.testBoxBg, COLORS.testBoxBorder);
-
             autoTable(doc, {
-                startY: y + 1,
+                startY: y,
                 head: [['Test Name', 'Score (%)', 'Highest (%)']],
                 body: testTableRows.map(r => [r[0], r[1], r[2]]),
-                theme: 'plain',
-                margin: { left: MARGIN + 1, right: MARGIN + 1 },
-                tableWidth: CONTENT_W - 2,
-                styles: { fontSize: 7, cellPadding: 1.5, textColor: COLORS.darkText, overflow: 'ellipsize' },
+                theme: 'grid',
+                margin: { left: MARGIN, right: MARGIN, bottom: 20 },
+                tableWidth: CONTENT_W,
+                styles: { fontSize: 7, cellPadding: 1.8, textColor: COLORS.darkText, overflow: 'ellipsize', fillColor: COLORS.testBoxBg, lineColor: COLORS.testBoxBorder, lineWidth: 0.2 },
                 headStyles: { fillColor: COLORS.testBoxBorder, textColor: COLORS.white, fontStyle: 'bold', fontSize: 7 },
                 columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center', cellWidth: 28 }, 2: { halign: 'center', cellWidth: 28 } },
                 didParseCell: (hookData: any) => {
@@ -329,17 +325,14 @@ export async function generateBatchPDF(data: BatchData) {
         y += 5;
 
         if (assignRows.length > 0) {
-            const estH = Math.max(8 + assignRows.length * 6.2, 14);
-            drawRoundedRect(doc, MARGIN - 1, y, CONTENT_W + 2, estH, 2, COLORS.assignBoxBg, COLORS.assignBoxBorder);
-
             autoTable(doc, {
-                startY: y + 1,
+                startY: y,
                 head: [['Assignment', 'Quality / Status']],
                 body: assignRows.map(r => [r[0], r[1]]),
-                theme: 'plain',
-                margin: { left: MARGIN + 1, right: MARGIN + 1 },
-                tableWidth: CONTENT_W - 2,
-                styles: { fontSize: 7, cellPadding: 1.5, textColor: COLORS.darkText, overflow: 'ellipsize' },
+                theme: 'grid',
+                margin: { left: MARGIN, right: MARGIN, bottom: 20 },
+                tableWidth: CONTENT_W,
+                styles: { fontSize: 7, cellPadding: 1.8, textColor: COLORS.darkText, overflow: 'ellipsize', fillColor: COLORS.assignBoxBg, lineColor: COLORS.assignBoxBorder, lineWidth: 0.2 },
                 headStyles: { fillColor: COLORS.assignBoxBorder, textColor: COLORS.white, fontStyle: 'bold', fontSize: 7 },
                 columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center', cellWidth: 40 } },
                 didParseCell: (hookData: any) => {
@@ -484,17 +477,14 @@ export async function generateBatchPDF(data: BatchData) {
                 return [e.chapterName, `${e.marksObtained}/${e.fullMarks}`, pct, hPct];
             });
 
-            const estH2 = Math.max(8 + offRows.length * 6.2, 14);
-            drawRoundedRect(doc, MARGIN - 1, y, CONTENT_W + 2, estH2, 2, COLORS.offlineBoxBg, COLORS.offlineBoxBorder);
-
             autoTable(doc, {
-                startY: y + 1,
+                startY: y,
                 head: [['Exam', 'Marks', 'Score (%)', 'Highest (%)']],
                 body: offRows,
-                theme: 'plain',
-                margin: { left: MARGIN + 1, right: MARGIN + 1 },
-                tableWidth: CONTENT_W - 2,
-                styles: { fontSize: 7, cellPadding: 1.5, textColor: COLORS.darkText },
+                theme: 'grid',
+                margin: { left: MARGIN, right: MARGIN, bottom: 20 },
+                tableWidth: CONTENT_W,
+                styles: { fontSize: 7, cellPadding: 1.8, textColor: COLORS.darkText, fillColor: COLORS.offlineBoxBg, lineColor: COLORS.offlineBoxBorder, lineWidth: 0.2 },
                 headStyles: { fillColor: COLORS.offlineBoxBorder, textColor: COLORS.white, fontStyle: 'bold', fontSize: 7 },
                 columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center', cellWidth: 22 }, 2: { halign: 'center', cellWidth: 22 }, 3: { halign: 'center', cellWidth: 22 } },
             });
