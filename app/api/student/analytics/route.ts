@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         // 3. Fetch all attempts by this student
         const attempts = await StudentTestAttempt.find({
             studentPhone: phoneNumber
-        }).sort({ submittedAt: -1 });
+        }).select('testId status percentage score submittedAt').sort({ submittedAt: -1 });
 
         const attemptMap = new Map();
         attempts.forEach(a => attemptMap.set(a.testId.toString(), a));
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
                 studentPhone: { $in: batchPhones },
                 testId: { $in: visibleTestIds },
                 status: 'completed'
-            });
+            }).select('studentPhone percentage timeSpent');
 
             // Group attempts by student phone
             const studentAttemptsMap = new Map<string, { percentage: number; timeSpent: number }[]>();

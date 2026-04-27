@@ -143,14 +143,19 @@ export default function OnlineTestPage() {
     };
 
     const formatDate = (dateStr: string) => {
+        if (!dateStr) return 'N/A';
         const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 'N/A';
         const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' });
         const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
         return `${date} & ${time}`;
     };
 
     const getTimeRemaining = (dateStr: string) => {
-        const diff = new Date(dateStr).getTime() - Date.now();
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        const diff = d.getTime() - Date.now();
         if (diff <= 0) return 'Starting now';
         const hours = Math.floor(diff / 3600000);
         const mins = Math.floor((diff % 3600000) / 60000);
