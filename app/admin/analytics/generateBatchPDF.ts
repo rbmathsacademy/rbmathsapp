@@ -124,6 +124,21 @@ export async function generateBatchPDF(data: BatchData) {
     const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
     doc.text(`Generated on ${today}`, PAGE_W / 2, 35, { align: 'center' });
 
+    // ── Measure TOC page count using a temporary document ──
+    const tempDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const tempBody = sortedStudents.map((s, i) => [`${i + 1}`, s.student.name, '...']);
+    autoTable(tempDoc, {
+        startY: 52,
+        head: [['Sl.', 'Student Name', 'Page']],
+        body: tempBody,
+        theme: 'grid',
+        margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_Y - 5 },
+        styles: { fontSize: 9, cellPadding: 2.5 },
+        columnStyles: { 0: { halign: 'center', cellWidth: 14 }, 1: { cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 18 } },
+    });
+    const tocPageCount = tempDoc.getNumberOfPages();
+
+    // ── Draw real TOC on main doc ──
     // TOC label
     doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
@@ -137,70 +152,10 @@ export async function generateBatchPDF(data: BatchData) {
     doc.setLineWidth(0.6);
     doc.line(MARGIN, 48, MARGIN + 50, 48);
 
-    // First pass: render TOC table with placeholder page numbers to determine how many pages TOC takes
-    const tocPlaceholderBody = sortedStudents.map((s, i) => [
-        `${i + 1}`,
-        s.student.name,
-        '...' // placeholder
-    ]);
-
-    autoTable(doc, {
-        startY: 52,
-        head: [['Sl.', 'Student Name', 'Page']],
-        body: tocPlaceholderBody,
-        theme: 'grid',
-        margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_Y - 5 },
-        styles: { fontSize: 9, cellPadding: 2.5, textColor: COLORS.darkText, lineColor: COLORS.lightGray, lineWidth: 0.2 },
-        headStyles: { fillColor: COLORS.navy, textColor: COLORS.white, fontStyle: 'bold', fontSize: 9 },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-        columnStyles: { 0: { halign: 'center', cellWidth: 14 }, 1: { cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 18 } },
-    });
-
-    // Count how many pages the TOC used
-    const tocPageCount = doc.getNumberOfPages();
-
-    // Now delete all pages and redo with correct page numbers
-    // Remove pages in reverse so indices don't shift
-    for (let p = doc.getNumberOfPages(); p >= 1; p--) {
-        doc.deletePage(p);
-    }
-
-    // Re-add first page
-    doc.addPage();
-    currentPage = 1;
-
-    // Re-draw header
-    doc.setFillColor(...COLORS.navy);
-    doc.rect(0, 0, PAGE_W, 28, 'F');
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...COLORS.white);
-    doc.text(`${data.batch}`, PAGE_W / 2, 13, { align: 'center' });
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Student Progress Report', PAGE_W / 2, 21, { align: 'center' });
-    doc.setFontSize(8);
-    doc.setTextColor(...COLORS.gray);
-    doc.text(`Generated on ${today}`, PAGE_W / 2, 35, { align: 'center' });
-
-    // Re-draw TOC label
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...COLORS.navy);
-    doc.text('Table of Contents', MARGIN, 46);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(...COLORS.gray);
-    doc.text('(Click on name to open the page)', MARGIN + 52, 46);
-    doc.setDrawColor(...COLORS.navy);
-    doc.setLineWidth(0.6);
-    doc.line(MARGIN, 48, MARGIN + 50, 48);
-
-    // Final TOC table with correct page numbers
     const tocBody = sortedStudents.map((s, i) => [
         `${i + 1}`,
         s.student.name,
-        `${tocPageCount + i + 1}` // student pages start after all TOC pages
+        `${tocPageCount + i + 1}`
     ]);
 
     autoTable(doc, {
