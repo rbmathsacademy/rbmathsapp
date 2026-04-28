@@ -12,36 +12,68 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const lightweight = url.searchParams.get('lightweight') === 'true';
     
+    // Server-side filter params
+    const topicParam = url.searchParams.get('topic');
+    const subtopicParam = url.searchParams.get('subtopic');
+    const examParam = url.searchParams.get('exam');
+    const batchParam = url.searchParams.get('batch');
+    const searchParam = url.searchParams.get('search');
+    
     // Use projection to exclude heavy fields if lightweight=true
     const projection = lightweight ? { image: 0, explanation: 0, options: 0, answer: 0, hint: 0 } : {};
 
-    // 1. One-time physical structural metadata purge (Atomic $unset)
-    // Runs on each call to ensure the legacy metadata is eventually cleared from every document.
-    try {
-        await Question.collection.updateMany(
-            { deployments: { $exists: true } },
-            { $unset: { deployments: "" } }
-        );
-    } catch (e) {
-        console.error("Purge Error:", e);
-    }
-
+    // Build base query based on auth
+    const baseQuery: any = {};
     if (adminKey === GLOBAL_ADMIN_KEY) {
-        try {
-            const questions = await Question.find({}, projection).sort({ createdAt: 1 }).lean();
-            return NextResponse.json(questions);
-        } catch (error: any) {
-            return NextResponse.json({ error: error.message }, { status: 500 });
-        }
-    }
-
-    if (!email) {
+        // Global admin sees all
+    } else if (email) {
+        baseQuery.uploadedBy = email;
+    } else {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Apply server-side filters
+    if (topicParam) {
+        baseQuery.topic = { $in: topicParam.split(',') };
+    }
+    if (subtopicParam) {
+        baseQuery.subtopic = { $in: subtopicParam.split(',') };
+    }
+    if (examParam) {
+        baseQuery.examNames = { $in: examParam.split(',') };
+    }
+    if (batchParam) {
+        const batchValues = batchParam.split(',');
+        const wantUntagged = batchValues.includes('Untagged');
+        const realBatches = batchValues.filter(b => b !== 'Untagged');
+        
+        if (wantUntagged && realBatches.length > 0) {
+            baseQuery.$or = [
+                { batches: { $size: 0 } },
+                { batches: { $exists: false } },
+                { batches: { $in: realBatches } }
+            ];
+        } else if (wantUntagged) {
+            baseQuery.$or = [
+                { batches: { $size: 0 } },
+                { batches: { $exists: false } }
+            ];
+        } else if (realBatches.length > 0) {
+            baseQuery.batches = { $in: realBatches };
+        }
+    }
+    if (searchParam) {
+        baseQuery.$or = [
+            ...(baseQuery.$or || []),
+            { text: { $regex: searchParam, $options: 'i' } },
+            { topic: { $regex: searchParam, $options: 'i' } },
+            { subtopic: { $regex: searchParam, $options: 'i' } },
+            { id: { $regex: searchParam, $options: 'i' } }
+        ];
+    }
+
     try {
-        // Filter by uploadedBy to only show questions owned by the faculty
-        const questions = await Question.find({ uploadedBy: email }, projection).sort({ createdAt: 1 }).lean();
+        const questions = await Question.find(baseQuery, projection).sort({ createdAt: 1 }).lean();
         return NextResponse.json(questions);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

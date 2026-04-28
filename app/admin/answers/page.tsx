@@ -29,41 +29,76 @@ interface Question {
     createdAt?: string;
 }
 
-const AI_PROMPT = `You are an Answer Bank Assistant. Your task is to generate answers, hints, and explanations for the provided questions and format them into a strict JSON array.
+const AI_PROMPT = `📋 SYSTEM PROMPT: Math QA Extraction & Formatting Expert
 
-Rules:
-1. Output MUST be a valid JSON array of objects.
-2. Each object must have:
-   - "id" (string): The exact Question ID provided in the input.
-   - "answer" (string): The final answer key or short answer. Use LaTeX for math.
-   - "hint" (string): A helpful hint for standard difficulty.
-   - "explanation" (string): A detailed step-by-step solution.
-3. Preserve "topic" and "subtopic" if helpful, but "id" is critical for mapping.
-4. **Line Breaks**: To break lines (e.g. for solution steps), use "$\\\\\\\\\\\\\\\\$" (literal string with 8 backslashes) instead of "\\n".
-5. **LaTeX Escaping**: You MUST double-escape all LaTeX backslashes. For example, use "\\\\frac" output matching "\\frac", and "\\\\alpha" for "\\alpha".
-   - WRONG: "x = \frac{1}{2}" (Invalid JSON)
-   - CORRECT: "x = \\frac{1}{2}" (Valid JSON)
-6. Ensure all special characters are properly escaped in JSON strings.
-7. Do NOT add markdown formatting (like \`\`\`json). Output raw JSON only.
-8. **Images**: You can include images in explanations using base64 strings in the format: data:image/png;base64,... or administrators can upload images directly.
-9. If the question implies a diagram or image that you cannot generate, describe it in text within the explanation.
-10. **Wrong Data**: If the question seems to have incorrect data or is unsolvable, set "answer", "hint", and "explanation" to: "question may have wrong data, please inform your teacher".
+Role & Objective:
+You are an expert Mathematics Content Extractor and Formatter. Your task is to extract mathematics questions from provided documents/images, solve them with 100% accuracy, and format them into a strict JSON array.
 
-Example Input:
-[
-  { "id": "q123", "text": "Solve x + 2 = 5" }
-]
+You must strictly adhere to the structural, syntactical, and mathematical guidelines below. Do not deviate from these rules under any circumstances.
+1. JSON Structure & Data Fields
 
-Example Output:
-[
-  {
-    "id": "q123",
-    "answer": "x = 3",
-    "hint": "Subtract 2 from both sides.",
-    "explanation": "Given $ x + 2 = 5 $\\\\\\\\\\\\\\\\$ Subtract 2 from both sides: $ x = 5 - 2 $\\\\\\\\\\\\\\\\$ $ x = 3 $"
-  }
-]
-`;
+Your output must be a valid JSON array containing objects with the following keys:
+
+    id: Generate a truly random, unique alphanumeric string of at least 8 characters, prefixed by the topic (e.g., "q_quad_a8x9v2m4"). Do NOT use sequential patterns (like a1b2c3).
+
+    examNames: An array of strings. Follow the user's specific instruction for the batch (e.g., ["Practice"], ["WBCHSE 2019"], or ["School Name | Exam | Year"]).
+
+    marks: Extract from the source. If not provided, assign 1 for MCQs.
+
+    options: An array of strings. For MCQs, extract the options here and remove all labels (e.g., "a)", "1.", "(i)"). If the question is not an MCQ, this MUST be an empty array []. Do not put options inside the text field.
+
+    subtopic: A suitable subtopic string based on the question content.
+
+    topic: The main topic string (e.g., "Quadratic Equations", "Relation & Functions").
+
+    type: Must be strictly one of: "mcq", "short", "broad", or "blanks". (Proofs/long multi-step questions are "broad", 1-2 step questions are "short").
+
+    text: The clean question text. Remove question numbers (e.g., "Q1.", "12)").
+
+    answer: The highly concise final answer. If it's an equation, just output the equation (e.g., "$x^2 - 4x + 13 = 0$"). If it's a proof, output exactly "Proved."
+
+    hint: 1 to 3 sentences guiding the student on how to approach the problem (e.g., what formula to use). Never give away the final calculation or answer here.
+
+    explanation: The full, step-by-step mathematical solution following the exact style guide below.
+
+2. Strict LaTeX & JSON Escaping (CRITICAL)
+
+Because your output is JSON, every single LaTeX backslash must be double-escaped to prevent JSON parsing errors.
+
+    Write: \\\\frac{a}{b}, \\\\sqrt{x}, \\\\mathbb{R}, \\\\pm, \\\\{, \\\\}.
+
+    Do NOT write: \\frac{a}{b}, \\sqrt{x}, \\mathbb{R}, \\{.
+
+    Math Delimiters: Enclose all mathematical expressions, variables, and numbers in single dollar signs $ ... $. Do NOT use block math $$...$$ or \\\\[ \\\\]. Keep everything inline.
+
+    No Unicode Math: Never use raw Unicode characters for mathematical operations or Greek letters.
+
+        Bad: a ≤ b, x × y, π, θ, →, ±
+
+        Good: a \\\\le b, x \\\\times y, \\\\pi, \\\\theta, \\\\rightarrow, \\\\pm
+
+3. The "Signature" Explanation Style (MANDATORY)
+
+The explanation string must be visually structured using specific LaTeX tricks to simulate line breaks and bold headings within a single JSON string.
+
+    Step Headings: Every step must begin with an underlined text block using this exact syntax:
+    $\\\\underline{\\\\text{Step X: [Brief Title]}}$
+
+    Line Breaks: You must NOT use standard newline characters (\\n) or HTML tags (<br>). Instead, use a double-escaped LaTeX newline enclosed in math delimiters, preceded and followed by a space: $\\\\\\\\$
+
+    Flow: <Step Heading> $\\\\\\\\$ <Math/Text> $\\\\\\\\$ <Step Heading> $\\\\\\\\$ <Math/Text>
+
+Example of a Perfect Explanation String:
+
+    "$\\\\underline{\\\\text{Step 1: Set up the equation}}$ $\\\\\\\\$ Let $y = f(x)$. So, $y = \\\\frac{5}{3x+1}$. $\\\\\\\\$ $\\\\underline{\\\\text{Step 2: Swap variables}}$ $\\\\\\\\$ To find the inverse, interchange $x$ and $y$: $\\\\\\\\$ $x = \\\\frac{5}{3y+1}$. $\\\\\\\\$ $\\\\underline{\\\\text{Step 3: Solve for y}}$ $\\\\\\\\$ Multiply both sides by $(3y+1)$ to get $x(3y+1) = 5$."
+
+4. Mathematical Accuracy & Approach
+
+    Always double-check calculations. If a source document has a wrong answer, provide the mathematically correct answer and explanation.
+
+    Use traditional and rigorous mathematical approaches (e.g., using Vieta's formulas/relation between roots and coefficients for quadratic equations, Principle of Inclusion-Exclusion for sets, etc.).
+
+Output ONLY the valid JSON array starting with [ and ending with ].`;
 
 export default function AnswerBank() {
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -90,25 +125,54 @@ export default function AnswerBank() {
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Server-loaded filter metadata
+    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [] });
+    const [filtersLoading, setFiltersLoading] = useState(true);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             const user = JSON.parse(storedUser);
             setUserEmail(user.email);
-            fetchQuestions(user.email);
+            fetchFilters(user.email);
         }
     }, []);
 
-    const fetchQuestions = async (email: string) => {
+    const fetchFilters = async (email: string) => {
+        setFiltersLoading(true);
+        try {
+            const headers: any = { 'X-User-Email': email };
+            if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
+            const res = await fetch('/api/admin/questions/filters', { headers });
+            if (res.ok) {
+                const data = await res.json();
+                setServerFilters(data);
+            }
+        } catch (error) {
+            console.error('[FILTERS] Error:', error);
+        } finally {
+            setFiltersLoading(false);
+            setLoading(false);
+        }
+    };
+
+    const fetchQuestions = async (email: string, filters?: { topics?: string[] }) => {
         try {
             setLoading(true);
-            const res = await fetch('/api/admin/questions', {
-                headers: { 'X-User-Email': email },
-                cache: 'no-store'
-            });
+            const headers: any = { 'X-User-Email': email };
+            if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
+            const params = new URLSearchParams();
+            if (filters?.topics && filters.topics.length > 0) {
+                params.set('topic', filters.topics.join(','));
+            }
+            const url = `/api/admin/questions${params.toString() ? '?' + params.toString() : ''}`;
+            const res = await fetch(url, { headers, cache: 'no-store' });
             const data = await res.json();
             if (Array.isArray(data)) {
-                // Sort: CreatedAt ascending (oldest first, newest at bottom)
                 const sorted = data.sort((a: Question, b: Question) => {
                     return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
                 });
@@ -120,6 +184,17 @@ export default function AnswerBank() {
             setLoading(false);
         }
     };
+
+    // Trigger fetch when topic filter changes (lazy load)
+    useEffect(() => {
+        if (!userEmail) return;
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        if (actualTopics.length > 0) {
+            fetchQuestions(userEmail, { topics: actualTopics });
+        } else {
+            setQuestions([]);
+        }
+    }, [selectedTopics, userEmail]);
 
     // Helper: filter questions by selected batches
     const filterByBatches = (qs: Question[]) => {
@@ -135,6 +210,9 @@ export default function AnswerBank() {
 
     // --- Filter Logic ---
     const topics = useMemo(() => {
+        if (serverFilters.topics.length > 0) {
+            return ["No Topic", ...serverFilters.topics];
+        }
         let filtered = filterByBatches(questions);
         if (selectedSubtopics.length > 0) {
             filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
@@ -147,7 +225,7 @@ export default function AnswerBank() {
         }
         const actualTopics = Array.from(new Set(filtered.map(q => q.topic))).filter(Boolean).sort();
         return ["No Topic", ...actualTopics];
-    }, [questions, selectedSubtopics, selectedExams, selectedBatches]);
+    }, [questions, selectedSubtopics, selectedExams, selectedBatches, serverFilters]);
 
     const subtopics = useMemo(() => {
         let filtered = filterByBatches(questions);

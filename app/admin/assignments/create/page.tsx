@@ -90,35 +90,56 @@ export default function CreateAssignmentPage() {
         }
     };
 
-    // Load questions when modal opens
+    // Load filter metadata when modal opens
+    const [filterMeta, setFilterMeta] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [] });
+
     const loadQuestions = async () => {
-        if (allQuestions.length > 0) {
-            setIsModalOpen(true);
-            return;
-        }
         setQuestionsLoading(true);
         try {
-            const res = await fetch('/api/admin/questions', {
+            const res = await fetch('/api/admin/questions/filters', {
                 headers: { 'X-Global-Admin-Key': 'globaladmin_25' }
             });
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setAllQuestions(data);
-            } else if (data.questions) {
-                setAllQuestions(data.questions);
+            if (res.ok) {
+                const data = await res.json();
+                setFilterMeta(data);
             }
         } catch (err) {
-            toast.error('Failed to load questions');
+            toast.error('Failed to load filters');
         } finally {
             setQuestionsLoading(false);
             setIsModalOpen(true);
         }
     };
 
+    // Load questions when topic filter changes
+    useEffect(() => {
+        if (!topicFilter) { setAllQuestions([]); setFilteredQuestions([]); return; }
+        const fetchByTopic = async () => {
+            setQuestionsLoading(true);
+            try {
+                const params = new URLSearchParams();
+                params.set('topic', topicFilter);
+                const res = await fetch(`/api/admin/questions?${params.toString()}`, {
+                    headers: { 'X-Global-Admin-Key': 'globaladmin_25' }
+                });
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setAllQuestions(data);
+                } else if (data.questions) {
+                    setAllQuestions(data.questions);
+                }
+            } catch (err) {
+                toast.error('Failed to load questions');
+            } finally {
+                setQuestionsLoading(false);
+            }
+        };
+        fetchByTopic();
+    }, [topicFilter]);
+
     // Apply filters
     useEffect(() => {
         let res = allQuestions;
-        if (topicFilter) res = res.filter(q => q.topic === topicFilter);
         if (subtopicFilter) res = res.filter(q => q.subtopic === subtopicFilter);
         if (typeFilter) res = res.filter(q => q.type === typeFilter);
         if (batchFilter) {
@@ -142,39 +163,14 @@ export default function CreateAssignmentPage() {
             }
         }
         setFilteredQuestions(res);
-    }, [allQuestions, topicFilter, subtopicFilter, typeFilter, batchFilter, examFilter]);
+    }, [allQuestions, subtopicFilter, typeFilter, batchFilter, examFilter]);
 
-    // Generic filtering for cascading dropdowns
-    const getDropdownOptionsFor = (excludeFilter: 'topic' | 'subtopic' | 'type' | 'batch' | 'exam') => {
-        return allQuestions.filter(q => {
-            if (excludeFilter !== 'topic' && topicFilter && q.topic !== topicFilter) return false;
-            if (excludeFilter !== 'subtopic' && subtopicFilter && q.subtopic !== subtopicFilter) return false;
-            if (excludeFilter !== 'type' && typeFilter && q.type !== typeFilter) return false;
-            if (excludeFilter !== 'batch' && batchFilter) {
-                if (batchFilter === 'Untagged') {
-                    if ((q as any).batches && (q as any).batches.length > 0) return false;
-                } else {
-                    if (!(q as any).batches || !(q as any).batches.includes(batchFilter)) return false;
-                }
-            }
-            if (excludeFilter !== 'exam' && examFilter) {
-                const exams = (q as any).examNames?.length > 0 ? (q as any).examNames : ((q as any).examName ? [(q as any).examName] : []);
-                if (examFilter === 'Untagged') {
-                    if (exams.length > 0) return false;
-                } else {
-                    if (!exams.includes(examFilter)) return false;
-                }
-            }
-            return true;
-        });
-    };
-
-    // Unique values for filter dropdowns (cascading)
-    const topics = [...new Set(getDropdownOptionsFor('topic').map(q => q.topic).filter(Boolean))].sort();
-    const subtopics = [...new Set(getDropdownOptionsFor('subtopic').map(q => q.subtopic).filter(Boolean))].sort();
-    const types = [...new Set(getDropdownOptionsFor('type').map(q => q.type).filter(Boolean))];
-    const batchNames = ['Untagged', ...Array.from(new Set(getDropdownOptionsFor('batch').flatMap(q => (q as any).batches || []).filter(Boolean))).sort()];
-    const examNames = ['Untagged', ...Array.from(new Set(getDropdownOptionsFor('exam').flatMap(q => (q as any).examNames || ((q as any).examName ? [(q as any).examName] : [])).filter(Boolean))).sort()];
+    // Unique values for filter dropdowns
+    const topics = filterMeta.topics.length > 0 ? filterMeta.topics : [...new Set(allQuestions.map(q => q.topic).filter(Boolean))].sort();
+    const subtopics = [...new Set(allQuestions.map(q => q.subtopic).filter(Boolean))].sort();
+    const types = [...new Set(allQuestions.map(q => q.type).filter(Boolean))];
+    const batchNames = ['Untagged', ...Array.from(new Set(allQuestions.flatMap(q => (q as any).batches || []).filter(Boolean))).sort()];
+    const examNames = ['Untagged', ...Array.from(new Set(allQuestions.flatMap(q => (q as any).examNames || ((q as any).examName ? [(q as any).examName] : [])).filter(Boolean))).sort()];
 
     const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

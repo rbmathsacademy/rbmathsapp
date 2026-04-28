@@ -119,41 +119,76 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
     );
 };
 
-const AI_PROMPT = `You are a Question Bank Assistant. Your task is to extract questions from the provided content and format them into a strict JSON array.
+const AI_PROMPT = `📋 SYSTEM PROMPT: Math QA Extraction & Formatting Expert
 
-Rules:
-1. Output MUST be a valid JSON array of objects.
-2. Each question object must have: 
-   - "text" (string)
-   - "type" (string: "broad", "mcq", "blanks", or "short")
-   - "topic" (string)
-   - "subtopic" (string)
-   - "examNames" (array of strings, e.g. ["JEE Main 2024"]) or [] if empty
-   - "marks" (number) or null
-   - "options" (array of strings) if MCQ, else []
-3. Preserve LaTeX math notation using $ for inline and $$ for display math.
-4. **Line Breaks**: To break lines (e.g. for subparts like a, b, c), use "$\\\\\\\\$" instead of "\\n".
-5. IF THE CONTENT CONTAINS IMAGES (diagrams, circuits, graphs):
-   - Extract the image and convert it to a Base64 string.
-   - Add an "image" field to the JSON object with the Base64 string.
-   - If no image is present, omit the "image" field.
-6. Do NOT add any explanation, markdown formatting, or extra text. Output ONLY the JSON array.
-7. Ensure all special characters are properly escaped in JSON strings.
+Role & Objective:
+You are an expert Mathematics Content Extractor and Formatter. Your task is to extract mathematics questions from provided documents/images, solve them with 100% accuracy, and format them into a strict JSON array.
 
-Example Output:
-[
-  {
-    "text": "Find the rank of the matrix $ A = \\\\begin{pmatrix} 1 & 2 \\\\\\\\ 3 & 4 \\\\end{pmatrix} $",
-    "type": "broad",
-    "topic": "Matrix",
-    "subtopic": "Rank",
-    "examNames": ["JEE Main 2023"],
-    "marks": 4,
-    "options": [],
-    "image": "data:image/png;base64,..."
-  }
-]
-`;
+You must strictly adhere to the structural, syntactical, and mathematical guidelines below. Do not deviate from these rules under any circumstances.
+1. JSON Structure & Data Fields
+
+Your output must be a valid JSON array containing objects with the following keys:
+
+    id: Generate a truly random, unique alphanumeric string of at least 8 characters, prefixed by the topic (e.g., "q_quad_a8x9v2m4"). Do NOT use sequential patterns (like a1b2c3).
+
+    examNames: An array of strings. Follow the user's specific instruction for the batch (e.g., ["Practice"], ["WBCHSE 2019"], or ["School Name | Exam | Year"]).
+
+    marks: Extract from the source. If not provided, assign 1 for MCQs.
+
+    options: An array of strings. For MCQs, extract the options here and remove all labels (e.g., "a)", "1.", "(i)"). If the question is not an MCQ, this MUST be an empty array []. Do not put options inside the text field.
+
+    subtopic: A suitable subtopic string based on the question content.
+
+    topic: The main topic string (e.g., "Quadratic Equations", "Relation & Functions").
+
+    type: Must be strictly one of: "mcq", "short", "broad", or "blanks". (Proofs/long multi-step questions are "broad", 1-2 step questions are "short").
+
+    text: The clean question text. Remove question numbers (e.g., "Q1.", "12)").
+
+    answer: The highly concise final answer. If it's an equation, just output the equation (e.g., "$x^2 - 4x + 13 = 0$"). If it's a proof, output exactly "Proved."
+
+    hint: 1 to 3 sentences guiding the student on how to approach the problem (e.g., what formula to use). Never give away the final calculation or answer here.
+
+    explanation: The full, step-by-step mathematical solution following the exact style guide below.
+
+2. Strict LaTeX & JSON Escaping (CRITICAL)
+
+Because your output is JSON, every single LaTeX backslash must be double-escaped to prevent JSON parsing errors.
+
+    Write: \\\\frac{a}{b}, \\\\sqrt{x}, \\\\mathbb{R}, \\\\pm, \\\\{, \\\\}.
+
+    Do NOT write: \\frac{a}{b}, \\sqrt{x}, \\mathbb{R}, \\{.
+
+    Math Delimiters: Enclose all mathematical expressions, variables, and numbers in single dollar signs $ ... $. Do NOT use block math $$...$$ or \\\\[ \\\\]. Keep everything inline.
+
+    No Unicode Math: Never use raw Unicode characters for mathematical operations or Greek letters.
+
+        Bad: a ≤ b, x × y, π, θ, →, ±
+
+        Good: a \\\\le b, x \\\\times y, \\\\pi, \\\\theta, \\\\rightarrow, \\\\pm
+
+3. The "Signature" Explanation Style (MANDATORY)
+
+The explanation string must be visually structured using specific LaTeX tricks to simulate line breaks and bold headings within a single JSON string.
+
+    Step Headings: Every step must begin with an underlined text block using this exact syntax:
+    $\\\\underline{\\\\text{Step X: [Brief Title]}}$
+
+    Line Breaks: You must NOT use standard newline characters (\\n) or HTML tags (<br>). Instead, use a double-escaped LaTeX newline enclosed in math delimiters, preceded and followed by a space: $\\\\\\\\$
+
+    Flow: <Step Heading> $\\\\\\\\$ <Math/Text> $\\\\\\\\$ <Step Heading> $\\\\\\\\$ <Math/Text>
+
+Example of a Perfect Explanation String:
+
+    "$\\\\underline{\\\\text{Step 1: Set up the equation}}$ $\\\\\\\\$ Let $y = f(x)$. So, $y = \\\\frac{5}{3x+1}$. $\\\\\\\\$ $\\\\underline{\\\\text{Step 2: Swap variables}}$ $\\\\\\\\$ To find the inverse, interchange $x$ and $y$: $\\\\\\\\$ $x = \\\\frac{5}{3y+1}$. $\\\\\\\\$ $\\\\underline{\\\\text{Step 3: Solve for y}}$ $\\\\\\\\$ Multiply both sides by $(3y+1)$ to get $x(3y+1) = 5$."
+
+4. Mathematical Accuracy & Approach
+
+    Always double-check calculations. If a source document has a wrong answer, provide the mathematically correct answer and explanation.
+
+    Use traditional and rigorous mathematical approaches (e.g., using Vieta's formulas/relation between roots and coefficients for quadratic equations, Principle of Inclusion-Exclusion for sets, etc.).
+
+Output ONLY the valid JSON array starting with [ and ending with ].`;
 
 type EditorMode = 'manual' | 'json' | 'image' | 'pdf' | 'latex';
 
@@ -205,28 +240,12 @@ export default function QuestionBank() {
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Paper Generator State
-    const [isPaperModalOpen, setIsPaperModalOpen] = useState(false);
-    const [paperStep, setPaperStep] = useState(0); // 0: Select, 1: Details, 2: Preview
-    const [paperQuestions, setPaperQuestions] = useState<any[]>([]);
-    const [paperHtml, setPaperHtml] = useState('');
-    const [paperJson, setPaperJson] = useState('');
-    const [paperPreviewKey, setPaperPreviewKey] = useState(0);
-    const [paperConfig, setPaperConfig] = useState({
-        course: 'B. Tech.', sem: '1st', session: '', paperName: '', code: '', date: '', stream: '', time: '', marks: '', exam: ''
-    });
+    // Server-loaded filter metadata (for instant filter loading)
+    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [] });
+    const [filtersLoading, setFiltersLoading] = useState(true);
+    const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+    const [isGlobalSearching, setIsGlobalSearching] = useState(false);
 
-    // Mock Test State
-    const [isMockTestModalOpen, setIsMockTestModalOpen] = useState(false);
-    const [mockTopicConfigs, setMockTopicConfigs] = useState<any[]>([]);
-    const [mockConfigLoading, setMockConfigLoading] = useState(false);
-    const [currentFacultyName, setCurrentFacultyName] = useState('');
-    const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
-
-    // Dropdowns for deployments - dynamically loaded from students
-    const [availableDepts, setAvailableDepts] = useState<string[]>([]);
-    const [availableYears, setAvailableYears] = useState<string[]>([]);
-    const [availableCourses, setAvailableCourses] = useState<string[]>([]);
 
     // Batch Tagging Modal State
     const [isBatchTagModalOpen, setIsBatchTagModalOpen] = useState(false);
@@ -246,8 +265,13 @@ export default function QuestionBank() {
         });
     };
 
-    // Derived Lists - All with bidirectional cascading (including Batch)
+    // Derived Lists - Use server filters for instant dropdown, fall back to questions
     const topics = useMemo(() => {
+        // Use server-loaded filters for the topic dropdown (instant, no questions needed)
+        if (serverFilters.topics.length > 0) {
+            return ["No Topic", ...serverFilters.topics];
+        }
+        // Fallback: derive from loaded questions
         let filtered = filterByBatches(questions);
         if (selectedSubtopics.length > 0) {
             filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
@@ -260,7 +284,7 @@ export default function QuestionBank() {
         }
         const actualTopics = Array.from(new Set(filtered.map(q => q.topic))).sort();
         return ["No Topic", ...actualTopics];
-    }, [questions, selectedSubtopics, selectedExams, selectedBatches]);
+    }, [questions, selectedSubtopics, selectedExams, selectedBatches, serverFilters]);
 
     // Cascading Subtopics: Filter based on selected topics and exams
     const subtopics = useMemo(() => {
@@ -318,19 +342,17 @@ export default function QuestionBank() {
         return ['Untagged', ...batchNames];
     }, [questions, selectedTopics, selectedSubtopics, selectedExams]);
 
-    // Paper Modal Subtopics
-    const paperSubtopics = useMemo(() => {
-        const filteredByTopic = selectedTopic
-            ? questions.filter(q => q.topic === selectedTopic)
-            : questions;
-        return Array.from(new Set(filteredByTopic.map(q => q.subtopic))).filter(Boolean).sort();
-    }, [questions, selectedTopic]);
+
 
     // Compute filtered questions based on selected topics and subtopics
     const filteredQuestions = useMemo(() => {
-        // If "No Topic" is selected, return empty (unless searching)
-        if (selectedTopics.includes("No Topic") && !searchQuery) {
+        // If "No Topic" is selected and no search, return empty
+        if (selectedTopics.includes("No Topic") && !searchQuery && !isGlobalSearching) {
             return [];
+        }
+        // If global search results are loaded, show all
+        if (isGlobalSearching || (globalSearchQuery && questions.length > 0 && selectedTopics.includes("No Topic"))) {
+            return questions;
         }
 
         // Filter out "No Topic" for actual filtering
@@ -370,7 +392,7 @@ export default function QuestionBank() {
             const parsed = JSON.parse(user);
             setUserEmail(parsed.email);
             setUserName(parsed.name);
-            fetchQuestions(parsed.email);
+            fetchFilters(parsed.email);
         }
         // Fetch available batches from courses API
         fetch('/api/admin/courses')
@@ -379,42 +401,62 @@ export default function QuestionBank() {
             .catch(() => {});
     }, []);
 
-    const fetchQuestions = async (email: string) => {
+    // Fetch lightweight filter metadata (instant)
+    const fetchFilters = async (email: string) => {
+        setFiltersLoading(true);
+        try {
+            const headers: any = { 'X-User-Email': email };
+            if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
+            const res = await fetch('/api/admin/questions/filters', { headers });
+            if (res.ok) {
+                const data = await res.json();
+                setServerFilters(data);
+            }
+        } catch (error) {
+            console.error('[FILTERS] Error:', error);
+        } finally {
+            setFiltersLoading(false);
+        }
+    };
+
+    // Fetch questions with server-side filters (on-demand)
+    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; search?: string }) => {
         setLoading(true);
         try {
-            // Fetch questions and students in parallel
-            const [questionsRes, studentsRes] = await Promise.all([
-                fetch('/api/admin/questions', {
-                    headers: { 'X-User-Email': email },
-                    cache: 'no-store'
-                }),
-                fetch('/api/admin/students/all').catch(() => null)
-            ]);
+            const headers: any = { 'X-User-Email': email };
+            if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
+
+            const params = new URLSearchParams();
+            if (filters?.topics && filters.topics.length > 0) {
+                params.set('topic', filters.topics.join(','));
+            }
+            if (filters?.subtopics && filters.subtopics.length > 0) {
+                params.set('subtopic', filters.subtopics.join(','));
+            }
+            if (filters?.exams && filters.exams.length > 0) {
+                params.set('exam', filters.exams.join(','));
+            }
+            if (filters?.batches && filters.batches.length > 0) {
+                params.set('batch', filters.batches.join(','));
+            }
+            if (filters?.search) {
+                params.set('search', filters.search);
+            }
+
+            const url = `/api/admin/questions${params.toString() ? '?' + params.toString() : ''}`;
+            const questionsRes = await fetch(url, { headers, cache: 'no-store' });
 
             if (questionsRes.ok) {
                 const data = await questionsRes.json();
-                // Sort: Order -> CreatedAt (Sequential)
                 const sorted = data.sort((a: any, b: any) => {
                     if (a.order !== b.order) return a.order - b.order;
                     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 });
                 setQuestions(sorted);
-                if (sorted.length > 0) setCurrentFacultyName(sorted[0].facultyName);
-            }
-
-            // Extract unique departments, years, and courses from students
-            if (studentsRes && studentsRes.ok) {
-                const students = await studentsRes.json();
-                const depts = Array.from(new Set(students.map((s: any) => s.department).filter(Boolean)));
-                const years = Array.from(new Set(students.map((s: any) => s.year).filter(Boolean)));
-                const courses = Array.from(new Set(students.map((s: any) => s.course_code).filter(Boolean)));
-
-                console.log('[QUESTIONS] Loaded dropdowns - Depts:', depts, 'Years:', years, 'Courses:', courses);
-
-                // Update dropdown state (we need to  add these state variables)
-                setAvailableDepts(depts as string[]);
-                setAvailableYears(years as string[]);
-                setAvailableCourses(courses as string[]);
             }
         } catch (error) {
             console.error(error);
@@ -423,169 +465,39 @@ export default function QuestionBank() {
         }
     };
 
-    // --- Mock Test Logic ---
-    // --- Mock Test Logic ---
-    const openMockTestModal = async () => {
-        setIsMockTestModalOpen(true);
-        setMockConfigLoading(true);
+    // Trigger fetch when topic filter changes (lazy load)
+    useEffect(() => {
+        if (!userEmail) return;
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        if (actualTopics.length > 0) {
+            fetchQuestions(userEmail, { topics: actualTopics });
+        } else {
+            setQuestions([]); // No topic selected = empty
+        }
+    }, [selectedTopics, userEmail]);
+
+    // Global search handler
+    const handleGlobalSearch = async () => {
+        if (!userEmail || !globalSearchQuery.trim()) return;
+        setIsGlobalSearching(true);
         try {
-            const storedUser = localStorage.getItem('user');
-            const user = storedUser ? JSON.parse(storedUser) : null;
-
-            if (!user || !user.email) {
-                toast.error('User email not found');
-                return;
-            }
-
-            const headers: any = { 'X-User-Email': user.email };
+            const headers: any = { 'X-User-Email': userEmail };
             if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
                 headers['X-Global-Admin-Key'] = 'globaladmin_25';
             }
-
-            const res = await fetch('/api/admin/mock-test-config', { headers });
-            let data: any[] = [];
+            const res = await fetch(`/api/admin/questions?search=${encodeURIComponent(globalSearchQuery)}`, { headers });
             if (res.ok) {
-                const responseData = await res.json();
-                console.log('[MOCK TEST LOAD] Loaded config:', responseData);
-                // API returns { facultyName, topics: [] }
-                // Use default empty array if topics is undefined
-                data = responseData.topics || [];
+                const data = await res.json();
+                setQuestions(data);
+                setSelectedTopics(["No Topic"]); // Reset topic filter to show all results
             }
-
-            // Get all unique topics from loaded questions
-            const uniqueTopics = Array.from(new Set(questions.map((q: any) => q.topic))).filter(Boolean).sort();
-
-            const allTopicsConfigs = uniqueTopics.map((topicName: any) => {
-                const existing = data.find((d: any) => d.topic === topicName);
-                if (existing) return existing;
-                return {
-                    topic: topicName,
-                    enabled: false,
-                    deployments: []
-                };
-            });
-
-            setMockTopicConfigs(allTopicsConfigs);
         } catch (error) {
             console.error(error);
-            toast.error('Error loading config');
         } finally {
-            setMockConfigLoading(false);
+            setIsGlobalSearching(false);
         }
     };
 
-    const toggleTopicEnabled = (topic: string) => {
-        setMockTopicConfigs(prev => {
-            const existing = prev.find(t => t.topic === topic);
-            if (existing) {
-                const newEnabled = !existing.enabled;
-                // Auto-expand when enabling
-                if (newEnabled) {
-                    setExpandedTopics(prevExpanded => {
-                        const next = new Set(prevExpanded);
-                        next.add(topic);
-                        return next;
-                    });
-                }
-                return prev.map(t =>
-                    t.topic === topic ? { ...t, enabled: newEnabled } : t
-                );
-            } else {
-                // New topic, enable and expand
-                setExpandedTopics(prevExpanded => {
-                    const next = new Set(prevExpanded);
-                    next.add(topic);
-                    return next;
-                });
-                return [...prev, { topic, enabled: true, deployments: [] }];
-            }
-        });
-    };
-
-    const addDeployment = (topic: string) => {
-        setMockTopicConfigs(prev => prev.map(t =>
-            t.topic === topic
-                ? { ...t, deployments: [...(t.deployments || []), { department: '', year: '', course: '' }] }
-                : t
-        ));
-    };
-
-    const updateDeployment = (topic: string, index: number, field: string, value: string) => {
-        setMockTopicConfigs(prev => prev.map(t =>
-            t.topic === topic
-                ? {
-                    ...t,
-                    deployments: t.deployments.map((d: any, i: number) =>
-                        i === index ? { ...d, [field]: value } : d
-                    )
-                }
-                : t
-        ));
-    };
-
-    const removeDeployment = (topic: string, index: number) => {
-        setMockTopicConfigs(prev => prev.map(t =>
-            t.topic === topic
-                ? { ...t, deployments: t.deployments.filter((_: any, i: number) => i !== index) }
-                : t
-        ));
-    };
-
-    const saveMockSettings = async () => {
-        // If we don't have facultyName yet, we can't save effectively for the student side unless we guess.
-        // We'll use the one we have in state.
-        if (!currentFacultyName && userName) setCurrentFacultyName(userName);
-
-        // Validation: Check if any enabled topic has incomplete deployments
-        const enabledTopics = mockTopicConfigs.filter(t => t.enabled);
-        for (const topicConfig of enabledTopics) {
-            if (!topicConfig.deployments || topicConfig.deployments.length === 0) {
-                toast.error(`Topic "${topicConfig.topic}" is enabled but has no deployments. Please add at least one deployment.`);
-                return;
-            }
-            // Check if any deployment has missing fields
-            for (const dep of topicConfig.deployments) {
-                if (!dep.department || !dep.year || !dep.course) {
-                    toast.error(`Topic "${topicConfig.topic}" has incomplete deployment details. Please fill all fields (Department, Year, Course).`);
-                    return;
-                }
-            }
-        }
-
-        setMockConfigLoading(true);
-        try {
-            const storedUser = localStorage.getItem('user');
-            const user = storedUser ? JSON.parse(storedUser) : null;
-            if (!user || !user.email) return;
-
-            const finalFacultyName = currentFacultyName || userName;
-            console.log('[MOCK TEST SAVE] Saving with faculty name:', finalFacultyName);
-            console.log('[MOCK TEST SAVE] Config to save:', mockTopicConfigs);
-
-            const res = await fetch('/api/admin/mock-test-config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-User-Email': user.email
-                },
-                body: JSON.stringify({
-                    facultyName: finalFacultyName,
-                    topics: mockTopicConfigs
-                })
-            });
-
-            if (res.ok) {
-                toast.success('Mock test settings saved!');
-                setIsMockTestModalOpen(false);
-            } else {
-                toast.error('Failed to save settings');
-            }
-        } catch (error) {
-            toast.error('Error saving settings');
-        } finally {
-            setMockConfigLoading(false);
-        }
-    };
 
     // --- Editor Logic ---
     const handleManualChange = (field: string, value: string) => {
@@ -795,7 +707,13 @@ export default function QuestionBank() {
                 // but for edits we have manualData.id or lastEditedId
                 const targetId = lastEditedId.current;
 
-                if (userEmail) await fetchQuestions(userEmail);
+                if (userEmail) {
+                    fetchFilters(userEmail); // Refresh filters for new topics
+                    const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+                    if (actualTopics.length > 0) {
+                        await fetchQuestions(userEmail, { topics: actualTopics });
+                    }
+                }
 
                 // Auto-scroll to edited question
                 if (targetId) {
@@ -822,21 +740,6 @@ export default function QuestionBank() {
     };
 
     // --- Viewer Logic ---
-    // Filter Questions for Paper Modal
-    const paperModalFilteredQuestions = questions.filter((q) => {
-        if (!q.topic) return false;
-        if (selectedTopic && q.topic !== selectedTopic) return false;
-        if (selectedSubtopic && q.subtopic !== selectedSubtopic) return false;
-        return true;
-    });
-
-    // Reset filters when closing modal
-    useEffect(() => {
-        if (!isPaperModalOpen) {
-            setSelectedTopic('');
-            setSelectedSubtopic('');
-        }
-    }, [isPaperModalOpen]);
 
     const toggleSelectAll = () => {
         if (selectedQuestionIds.size === filteredQuestions.length) {
@@ -1113,110 +1016,6 @@ export default function QuestionBank() {
         }
     };
 
-    // --- Paper Generator Logic ---
-    const generatePreview = () => {
-        const selectedQs = questions.filter(q => selectedQuestionIds.has(q.id));
-        setPaperQuestions(selectedQs);
-
-        const paperStructure = {
-            header: paperConfig,
-            questions: selectedQs.map((q, i) => ({
-                number: i + 1,
-                text: q.text,
-                marks: q.type === 'mcq' ? 1 : q.type === 'broad' ? 5 : 2,
-                type: q.type
-            }))
-        };
-        setPaperJson(JSON.stringify(paperStructure, null, 2));
-        updatePaperHtml(paperStructure);
-        setPaperPreviewKey(prev => prev + 1); // Force iframe remount
-        setPaperStep(2);
-    };
-
-    const updatePaperHtml = (structure: any) => {
-        const { header, questions } = structure;
-        const html = `
-            <html>
-            <head>
-                <title>Question Paper</title>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
-                <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
-                <style>
-                    body { font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px; margin: 0 auto; background: white; }
-                    .main-title { text-align: center; font-weight: bold; font-size: 20pt; text-transform: uppercase; margin-bottom: 20px; }
-                    .header-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; align-items: start; font-size: 12pt; font-weight: bold; }
-                    .header-row { display: flex; justify-content: space-between; }
-                    .title { text-align: center; font-weight: bold; font-size: 16pt; text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; }
-                    .subtitle { text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 20px; }
-                    .q-item { margin-bottom: 15px; font-size: 12pt; }
-                    @media print { body { padding: 0; } }
-                </style>
-            </head>
-            <body>
-                <div class="main-title">Heritage Institute of Technology</div>
-                <div class="header-grid">
-                    <div>${header.course} (${header.sem})</div>
-                    <div style="text-align:right">Time: ${header.time}</div>
-                    <div>Stream: ${header.stream}</div>
-                    <div style="text-align:right">Full Marks: ${header.marks}</div>
-                    <div>Session: ${header.session}</div>
-                    <div style="text-align:right">Exam: ${header.exam} (${header.date})</div>
-                </div>
-                <div class="title">${header.paperName}</div>
-                <div class="subtitle">Paper Code: ${header.code}</div>
-                <hr style="border-top: 2px solid black; margin-bottom: 30px;" />
-                <div>
-                    ${questions.map((q: any) => `
-                        <div class="q-item">
-                            <b>Q${q.number}.</b> ${q.text} 
-                            <span style="float:right; font-weight:bold">[${q.marks}]</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        renderMathInElement(document.body, {
-                            delimiters: [
-                                {left: '$$', right: '$$', display: true},
-                                {left: '$', right: '$', display: false},
-                                {left: '\\\\(', right: '\\\\)', display: false},
-                                {left: '\\\\[', right: '\\\\]', display: true}
-                            ],
-                            throwOnError: false
-                        });
-                    });
-                </script>
-            </body>
-            </html>
-        `;
-        setPaperHtml(html);
-    };
-
-    const handlePaperJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const val = e.target.value;
-        setPaperJson(val);
-        try {
-            const parsed = JSON.parse(val);
-            updatePaperHtml(parsed);
-        } catch (e) {
-            // Invalid JSON
-        }
-    };
-
-    const printPaper = () => {
-        const iframe = document.getElementById('paper-preview-frame') as HTMLIFrameElement;
-        if (iframe && iframe.contentWindow) {
-            // Wait a bit to ensure iframe content is fully loaded
-            setTimeout(() => {
-                if (iframe.contentWindow) {
-                    iframe.contentWindow.print();
-                } else if (iframe.contentDocument) {
-                    iframe.contentDocument.defaultView?.print();
-                }
-            }, 500);
-        }
-    };
 
     return (
         <div className="p-4 md:p-8 space-y-6 h-full flex flex-col">
@@ -1282,18 +1081,41 @@ export default function QuestionBank() {
                             <MultiSelect options={availableBatchNames} selected={selectedBatches} onChange={setSelectedBatches} placeholder="All Batches" />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-medium text-gray-500 ml-1">Search</label>
+                            <label className="text-xs font-medium text-gray-500 ml-1">Search (within topic)</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search questions..."
+                                    placeholder="Filter loaded questions..."
                                     className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-indigo-500"
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Global Search */}
+                    <div className="flex items-center gap-2 mt-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                            <input
+                                type="text"
+                                value={globalSearchQuery}
+                                onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleGlobalSearch()}
+                                placeholder="Global search across ALL topics..."
+                                className="w-full bg-gray-900 border border-amber-600/30 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-amber-500"
+                            />
+                        </div>
+                        <button
+                            onClick={handleGlobalSearch}
+                            disabled={isGlobalSearching || !globalSearchQuery.trim()}
+                            className="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/30 rounded text-sm font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                        >
+                            {isGlobalSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                            Global Search
+                        </button>
                     </div>
 
                     {/* Bulk Actions */}
