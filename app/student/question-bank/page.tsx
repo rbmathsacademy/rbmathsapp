@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
-import { Folder as FolderIcon, ChevronRight, FileText, ArrowLeft, LogOut, LayoutGrid, Bookmark } from 'lucide-react';
+import { Folder, ChevronRight, FileText, ArrowLeft, LogOut, Bookmark } from 'lucide-react';
 import { useStudentProfile } from '../StudentProfileContext';
 
-interface Folder {
+interface IFolder {
     _id: string;
     name: string;
     parentId?: string | null;
@@ -18,17 +18,17 @@ interface Question {
     text: string;
     type: string;
     topic: string;
-    subtopic: string;
+    createdAt: string;
 }
 
 export default function QuestionBank() {
     const router = useRouter();
     const { profile: student, loading: profileLoading, error: profileError } = useStudentProfile();
     const [activeCourse, setActiveCourse] = useState<string | null>(null);
-    const [folders, setFolders] = useState<Folder[]>([]);
+    const [folders, setFolders] = useState<IFolder[]>([]);
 
     // Folder navigation stack for sub-folder support
-    const [folderStack, setFolderStack] = useState<Folder[]>([]);
+    const [folderStack, setFolderStack] = useState<IFolder[]>([]);
 
     const loadingCourses = profileLoading;
     const [loadingFolders, setLoadingFolders] = useState(false);
@@ -66,7 +66,7 @@ export default function QuestionBank() {
         }
     };
 
-    const enterFolder = async (folder: Folder) => {
+    const enterFolder = async (folder: IFolder) => {
         // First check if this folder has sub-folders
         const newStack = [...folderStack, folder];
         setFolderStack(newStack);
@@ -203,7 +203,7 @@ export default function QuestionBank() {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
                         <h2 className="text-[10px] sm:text-sm text-slate-500 font-bold uppercase tracking-wider mb-4">Your Courses</h2>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                            {student?.courses?.map((course: string, idx: number) => (
+                            {Array.isArray(student?.courses) && student.courses.map((course: string, idx: number) => (
                                 <button
                                     key={course}
                                     onClick={() => setActiveCourse(course)}
@@ -211,11 +211,11 @@ export default function QuestionBank() {
                                     style={{ animationDelay: `${idx * 100}ms` }}
                                 >
                                     <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <FolderIcon className="h-16 w-16 -mr-6 -mt-6 rotate-12" />
+                                        <Folder className="h-16 w-16 -mr-6 -mt-6 rotate-12" />
                                     </div>
 
                                     <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                                        {course.charAt(0)}
+                                        {course && course.length > 0 ? course.charAt(0) : '?'}
                                     </div>
                                     <div>
                                         <h3 className="text-xs font-bold text-white leading-tight mb-1 line-clamp-2">{course}</h3>
@@ -254,33 +254,14 @@ export default function QuestionBank() {
                                     {activeCourse}
                                 </button>
                                 {folderStack.map((folder, idx) => (
-                                    <span key={folder._id} className="flex items-center gap-1">
-                                        <ChevronRight className="h-2.5 w-2.5 text-slate-600" />
-                                        <button
-                                            onClick={() => {
-                                                if (idx < folderStack.length - 1) {
-                                                    const newStack = folderStack.slice(0, idx + 1);
-                                                    setFolderStack(newStack);
-                                                    setFolderHasQuestions(false);
-                                                    fetchFolders(activeCourse!, newStack[newStack.length - 1]._id);
-                                                }
-                                            }}
-                                            className={`transition-colors ${idx === folderStack.length - 1 ? 'text-white font-medium' : 'text-slate-400 hover:text-white'}`}
-                                        >
+                                    <div key={folder._id} className="flex items-center">
+                                        <ChevronRight className="h-4 w-4 text-slate-600 mx-1" />
+                                        <span className={`text-[10px] sm:text-xs font-semibold ${idx === folderStack.length - 1 ? 'text-blue-400' : 'text-slate-400'}`}>
                                             {folder.name}
-                                        </button>
-                                    </span>
+                                        </span>
+                                    </div>
                                 ))}
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 mb-6">
-                            <h2 className="text-xl font-bold text-white truncate">
-                                {isInsideFolder ? currentFolder!.name : activeCourse}
-                            </h2>
-                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[9px] font-bold border border-blue-500/20 uppercase">
-                                Active
-                            </span>
                         </div>
 
                         {/* Practice Questions button if current folder has questions */}
@@ -294,39 +275,48 @@ export default function QuestionBank() {
                             </button>
                         )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                            {loadingFolders ? (
-                                <div className="col-span-full py-10 text-center">
-                                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                                    <p className="text-[10px] text-slate-500">Loading...</p>
+                        {loadingFolders ? (
+                            <div className="flex flex-col justify-center items-center h-48 space-y-4">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+                                    <Folder className="h-8 w-8 text-blue-400 animate-bounce relative z-10" />
                                 </div>
-                            ) : folders.length === 0 && !folderHasQuestions ? (
-                                <div className="col-span-full bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
-                                    <FolderIcon className="h-8 w-8 text-slate-700 mx-auto mb-2" />
-                                    <p className="text-sm text-slate-400 font-medium">No content yet</p>
-                                </div>
-                            ) : (
-                                folders.map((folder, idx) => (
-                                    <div
+                                <span className="text-xs font-medium text-slate-400 animate-pulse tracking-widest uppercase">Opening...</span>
+                            </div>
+                        ) : folders.length === 0 && !folderHasQuestions ? (
+                            <div className="col-span-full bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
+                                <Folder className="h-8 w-8 text-slate-700 mx-auto mb-2" />
+                                <p className="text-sm text-slate-400 font-medium">No content yet</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                {folders.map((folder, idx) => (
+                                    <button
                                         key={folder._id}
                                         onClick={() => enterFolder(folder)}
-                                        className="group bg-[#0f172a]/60 backdrop-blur-sm border border-white/5 hover:border-blue-500/50 p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:bg-[#0f172a] active:scale-95 relative overflow-hidden flex flex-col items-center text-center gap-3 aspect-square justify-center shadow-lg shadow-black/20"
+                                        disabled={checkingQuestions}
+                                        className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md border border-white/5 p-4 sm:p-5 rounded-2xl hover:border-blue-500/50 transition-all duration-300 active:scale-95 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >
-                                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-inner shadow-blue-500/20">
-                                            <FolderIcon className="h-5 w-5" />
+                                        <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 group-hover:-rotate-12 duration-500">
+                                            <Folder className="h-20 w-20 sm:h-24 sm:w-24 -mr-8 -mt-8" />
                                         </div>
 
-                                        <div className="w-full">
-                                            <h3 className="text-[11px] font-bold text-slate-200 mb-1 line-clamp-2 leading-relaxed group-hover:text-blue-300 transition-colors">{folder.name}</h3>
-                                            <p className="text-[9px] text-slate-500 font-medium">
-                                                {new Date(folder.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' })}
-                                            </p>
+                                        <div className="flex flex-col h-full gap-3 sm:gap-4 relative z-10">
+                                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:bg-blue-500/20 transition-colors">
+                                                <Folder className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-300" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-200 mb-1 line-clamp-2 leading-relaxed group-hover:text-blue-300 transition-colors">{folder.name}</h3>
+                                                <p className="text-[9px] text-slate-500 font-medium">
+                                                    {folder.createdAt ? new Date(folder.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </main>
