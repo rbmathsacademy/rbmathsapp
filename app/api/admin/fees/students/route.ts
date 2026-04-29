@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 
+const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
@@ -11,7 +13,10 @@ export async function GET(req: Request) {
         const batch = searchParams.get('batch');
         const studentName = searchParams.get('studentName');
 
-        const query: any = {};
+        const query: any = {
+            // Always exclude students who are enrolled ONLY in the free batch
+            $nor: [{ courses: [FREE_BATCH] }]
+        };
 
         if (batch) {
             // Escape regex special characters to handle batches like "1st Sem Engg (Maths)"

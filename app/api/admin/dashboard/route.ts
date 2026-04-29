@@ -5,6 +5,8 @@ import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 
+const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -14,7 +16,10 @@ export async function GET() {
         const [questionCount, testCount, studentCount, staff] = await Promise.all([
             Question.countDocuments(),
             OnlineTest.countDocuments({ status: 'deployed' }),
-            BatchStudent.countDocuments(),
+            // Exclude students who are enrolled ONLY in the free batch
+            BatchStudent.countDocuments({
+                $nor: [{ courses: [FREE_BATCH] }]
+            }),
             User.find({
                 role: { $in: ['manager', 'copy_checker'] }
             }).select('name phoneNumber role email createdAt').sort({ createdAt: -1 })

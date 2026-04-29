@@ -3,6 +3,9 @@ import dbConnect from '@/lib/db';
 import FeeRecord from '@/models/FeeRecord';
 import BatchStudent from '@/models/BatchStudent';
 
+const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+
+
 export async function POST(req: Request) {
     try {
         await dbConnect();
@@ -246,8 +249,9 @@ export async function GET(req: Request) {
             const fuzzyName = studentName.trim().split(/\s+/).join('.*');
             const searchRegex = { $regex: fuzzyName, $options: 'i' };
 
-            // Search by name OR phone number
+            // Search by name OR phone number, excluding free-batch-only students
             const students = await BatchStudent.find({
+                $nor: [{ courses: [FREE_BATCH] }],
                 $or: [
                     { name: searchRegex },
                     { phoneNumber: searchRegex }

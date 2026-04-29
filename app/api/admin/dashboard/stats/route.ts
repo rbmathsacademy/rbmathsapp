@@ -4,6 +4,8 @@ import Question from '@/models/Question';
 import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
 
+const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -13,7 +15,10 @@ export async function GET() {
         const [questionCount, testCount, studentCount] = await Promise.all([
             Question.countDocuments(),
             OnlineTest.countDocuments({ status: 'deployed' }),
-            BatchStudent.countDocuments()
+            // Exclude students who are enrolled ONLY in the free batch
+            BatchStudent.countDocuments({
+                $nor: [{ courses: [FREE_BATCH] }]
+            })
         ]);
 
         return NextResponse.json({
