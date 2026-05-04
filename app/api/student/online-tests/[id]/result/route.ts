@@ -97,56 +97,78 @@ export async function GET(
             }, { status: 200 });
         }
 
-        // Build question map from attempt's questions (accounts for random subsets)
+        // Build source questions (accounts for random subsets)
         const sourceQuestions = (attempt.questions && attempt.questions.length > 0)
             ? attempt.questions
             : test.questions;
 
-        const questionMap = new Map<string, any>();
-        for (const q of sourceQuestions) {
-            questionMap.set(q.id, q);
-            if (q.type === 'comprehension' && q.subQuestions) {
-                for (const sq of q.subQuestions) {
-                    questionMap.set(sq.id, sq);
-                }
+        // Create a map of the student's answers for quick lookup
+        const answerMap = new Map<string, any>();
+        if (attempt.answers) {
+            for (const ans of attempt.answers) {
+                answerMap.set(ans.questionId, ans);
             }
         }
 
-        // Compute actual total marks from served questions
-        let servedTotalMarks = 0;
+        // Flatten questions so comprehension sub-questions are unrolled
+        const flattenedQuestions: any[] = [];
         for (const q of sourceQuestions) {
             if (q.type === 'comprehension' && q.subQuestions) {
                 for (const sq of q.subQuestions) {
-                    servedTotalMarks += sq.marks || 1;
+                    flattenedQuestions.push({
+                        ...sq,
+                        // Pass down parent's comprehension fields
+                        comprehensionText: q.comprehensionText,
+                        comprehensionImage: q.comprehensionImage,
+                        // Subtopic/topic usually on parent but could be on subq
+                        topic: sq.topic || q.topic,
+                        subtopic: sq.subtopic || q.subtopic,
+                        // Solution text/image could be on either
+                        solutionText: sq.solutionText || q.solutionText,
+                        solutionImage: sq.solutionImage || q.solutionImage,
+                        // Grace flag fallback
+                        isGrace: sq.isGrace || q.isGrace
+                    });
                 }
             } else {
-                servedTotalMarks += q.marks || 1;
+                flattenedQuestions.push(q);
             }
+        }
+
+        // Compute actual total marks from flattened questions
+        let servedTotalMarks = 0;
+        for (const q of flattenedQuestions) {
+            servedTotalMarks += q.marks || 1;
         }
         const actualTotalMarks = servedTotalMarks || test.totalMarks;
 
-        // Build detailed question-by-question review
-        const questionReview = attempt.answers.map((ans: any) => {
-            const question = questionMap.get(ans.questionId);
-            if (!question) return null;
+        // Build detailed question-by-question review from flattened questions
+        const questionReview = flattenedQuestions.map((question: any) => {
+            const ans = answerMap.get(question.id);
 
             const review: any = {
-                questionId: ans.questionId,
+                questionId: question.id,
                 text: question.text,
                 image: question.image,
                 latexContent: question.latexContent,
                 type: question.type,
                 marks: question.marks,
                 negativeMarks: question.negativeMarks,
-                studentAnswer: ans.answer,
-                isCorrect: ans.isCorrect,
-                marksAwarded: ans.marksAwarded,
-                isGraceAwarded: ans.isGraceAwarded || question.isGrace, // Fallback to question def
+                studentAnswer: ans ? ans.answer : null,
+                isCorrect: ans ? ans.isCorrect : false,
+                marksAwarded: ans ? ans.marksAwarded : 0,
+                isGraceAwarded: ans ? (ans.isGraceAwarded || question.isGrace) : question.isGrace,
                 topic: question.topic,
                 subtopic: question.subtopic,
                 solutionText: question.solutionText,
                 solutionImage: question.solutionImage
             };
+
+            // Include comprehension fields if it came from a passage
+            if (question.comprehensionText || question.comprehensionImage) {
+                review.comprehensionText = question.comprehensionText;
+                review.comprehensionImage = question.comprehensionImage;
+            }
 
             // Include correct answers for review
             if (question.type === 'mcq' || question.type === 'msq') {
@@ -160,13 +182,10 @@ export async function GET(
                     review.numberRangeMin = question.numberRangeMin;
                     review.numberRangeMax = question.numberRangeMax;
                 }
-            } else if (question.type === 'comprehension') {
-                review.comprehensionText = question.comprehensionText;
-                review.comprehensionImage = question.comprehensionImage;
             }
 
             return review;
-        }).filter(Boolean);
+        });
 
         // Topic-wise analysis
         const topicStats = new Map<string, { correct: number; total: number; marks: number; maxMarks: number }>();
