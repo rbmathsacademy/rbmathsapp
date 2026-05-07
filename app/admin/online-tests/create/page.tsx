@@ -202,6 +202,12 @@ export default function CreateTestPage() {
     };
 
     const saveTest = async (deploy: boolean = false, gMarks: number = 0, gReason: string = '', silent: boolean = false, questionsOverride?: Question[]) => {
+        // Guard: never save without a valid userEmail to avoid creating orphaned tests
+        if (!userEmail || userEmail === 'null') {
+            if (!silent) toast.error('Session error - please refresh the page');
+            return;
+        }
+
         if (!title.trim()) {
             if (!silent) toast.error('Please enter a title');
             return;

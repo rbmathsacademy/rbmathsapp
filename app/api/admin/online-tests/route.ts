@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
         const folderId = searchParams.get('folderId');
         const userEmail = request.headers.get('X-User-Email');
 
-        if (!userEmail) {
+        if (!userEmail || userEmail === 'null' || userEmail.trim() === '') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
         await dbConnect();
 
         const userEmail = request.headers.get('X-User-Email');
-        if (!userEmail) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!userEmail || userEmail === 'null' || userEmail.trim() === '') {
+            return NextResponse.json({ error: 'Unauthorized - valid user email required' }, { status: 401 });
         }
 
         const body = await request.json();
@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest) {
         await dbConnect();
 
         const userEmail = request.headers.get('X-User-Email');
-        if (!userEmail) {
+        if (!userEmail || userEmail === 'null' || userEmail.trim() === '') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

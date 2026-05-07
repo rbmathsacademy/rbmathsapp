@@ -63,8 +63,8 @@ export default function AdminLogin() {
             } else {
                 localStorage.removeItem('admin_saved_email');
                 localStorage.removeItem('admin_remember_me');
-                // For non-remembered sessions, use 30 minutes
-                localStorage.setItem('admin_session_expiry', (30 * 60 * 1000).toString());
+                // For non-remembered sessions, use 7 days
+                localStorage.setItem('admin_session_expiry', (7 * 24 * 60 * 60 * 1000).toString());
             }
 
             // Force hard navigation and replace history so back button doesn't return to login

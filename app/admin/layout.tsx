@@ -49,9 +49,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const storedUser = localStorage.getItem('user');
         const sessionStart = localStorage.getItem('adminSessionStart');
 
-        // Session duration: Use custom expiry if set (for remember me), otherwise default to 30 minutes
+        // Session duration: Use custom expiry if set (for remember me), otherwise default to 7 days
         const customExpiry = localStorage.getItem('admin_session_expiry');
-        const SESSION_DURATION = customExpiry ? parseInt(customExpiry) : 30 * 60 * 1000;
+        const SESSION_DURATION = customExpiry ? parseInt(customExpiry) : 7 * 24 * 60 * 60 * 1000;
 
         if (!storedUser || !sessionStart) {
             router.push('/admin/login');
@@ -114,6 +114,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         return () => clearTimeout(timer);
     }, [router, pathname]); // Re-run on pathname change to protect navigation
+
+    // Keep session alive while user is actively working
+    useEffect(() => {
+        if (!user) return;
+
+        let lastRefresh = Date.now();
+        const REFRESH_INTERVAL = 5 * 60 * 1000; // Refresh session every 5 minutes of activity
+
+        const refreshSession = () => {
+            const now = Date.now();
+            if (now - lastRefresh >= REFRESH_INTERVAL) {
+                localStorage.setItem('adminSessionStart', now.toString());
+                lastRefresh = now;
+            }
+        };
+
+        // Listen to user activity events
+        const events = ['click', 'keydown', 'scroll', 'mousemove', 'touchstart'];
+        events.forEach(event => window.addEventListener(event, refreshSession, { passive: true }));
+
+        return () => {
+            events.forEach(event => window.removeEventListener(event, refreshSession));
+        };
+    }, [user]);
 
     // Prevent mobile back button from logging out
     useEffect(() => {
