@@ -116,7 +116,8 @@ export async function POST(req: NextRequest) {
                 user: {
                     name: staffUser.name,
                     role: staffUser.role,
-                    phoneNumber: staffUser.phoneNumber
+                    phoneNumber: staffUser.phoneNumber,
+                    email: staffUser.email
                 },
                 redirectUrl: redirectUrl
             });
