@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
+import User from '@/models/User';
 
 // GET - Fetch single test by ID
 export async function GET(
@@ -17,7 +18,12 @@ export async function GET(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const test = await OnlineTest.findOne({ _id: id, createdBy: userEmail });
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const test = await OnlineTest.findById(id);
         if (!test) {
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }

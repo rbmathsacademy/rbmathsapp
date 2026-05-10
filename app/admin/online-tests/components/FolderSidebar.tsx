@@ -125,16 +125,17 @@ export default function FolderSidebar({
             </div>
 
             {/* Folder List (Responsive) */}
-            <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide -mx-2 px-2 lg:mx-0 lg:px-0">
+            <div className="flex flex-col gap-1 max-h-48 overflow-y-auto lg:max-h-none lg:overflow-visible pr-1 lg:pr-0 custom-scrollbar">
                 {/* View All Tests */}
                 <button
                     onClick={() => onSelectFolder(null)}
-                    className={`flex-shrink-0 lg:w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${selectedFolder === null
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg mb-2 transition-colors ${selectedFolder === null
                             ? 'bg-emerald-500/20 text-emerald-300'
                             : 'text-slate-300 hover:bg-slate-800'
                         }`}
                 >
-                    <span className="text-sm whitespace-nowrap">📂 View All Tests</span>
+                    <FolderIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm truncate">📂 View All Tests</span>
                 </button>
 
             {/* Create New Folder Input */}
@@ -176,7 +177,7 @@ export default function FolderSidebar({
             )}
 
                 {folders.map((folder) => (
-                    <div key={folder._id} className="flex-shrink-0 lg:w-full">
+                    <div key={folder._id} className="w-full">
                         {isEditing === folder._id ? (
                             <div className="p-2 bg-slate-800/50 rounded-lg">
                                 <input
@@ -223,7 +224,7 @@ export default function FolderSidebar({
                                     className="flex-1 flex items-center gap-2 min-w-0"
                                 >
                                     <FolderIcon className="h-4 w-4 flex-shrink-0" />
-                                    <span className="text-sm truncate whitespace-nowrap">{folder.name}</span>
+                                    <span className="text-sm truncate">{folder.name}</span>
                                 </button>
                                 <div className="flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button

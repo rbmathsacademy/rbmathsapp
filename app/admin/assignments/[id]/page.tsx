@@ -708,8 +708,13 @@ export default function AssignmentDetailsPage() {
                                                             </button>
                                                             <button
                                                                 onClick={() => {
-                                                                    const deadline = assignment?.deadline ? new Date(assignment.deadline).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
-                                                                    const text = `${student.student.name.split(' ')[0]} you have not yet submitted your assignment and the deadline is ${deadline}. Make sure you complete it within time.`;
+                                                                    let timeToCopy = assignment?.deadline ? new Date(assignment.deadline) : new Date();
+                                                                    const now = new Date();
+                                                                    if (timeToCopy < now && assignment?.cooldownDuration) {
+                                                                        timeToCopy = new Date(timeToCopy.getTime() + assignment.cooldownDuration * 60000);
+                                                                    }
+                                                                    const timeStr = timeToCopy.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+                                                                    const text = `${student.student.name.split(' ')[0]} you have not yet submitted your assignment and the deadline is ${timeStr}. Make sure you complete it within time.`;
                                                                     navigator.clipboard.writeText(text);
                                                                     toast.success('Message copied!');
                                                                 }}
@@ -869,8 +874,13 @@ export default function AssignmentDetailsPage() {
                                                     </button>
                                                     <button
                                                         onClick={() => {
-                                                            const deadline = assignment?.deadline ? new Date(assignment.deadline).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
-                                                            const text = `${student.student.name.split(' ')[0]} you have not yet submitted your assignment and the deadline is ${deadline}. Make sure you complete it within time.`;
+                                                            let timeToCopy = assignment?.deadline ? new Date(assignment.deadline) : new Date();
+                                                            const now = new Date();
+                                                            if (timeToCopy < now && assignment?.cooldownDuration) {
+                                                                timeToCopy = new Date(timeToCopy.getTime() + assignment.cooldownDuration * 60000);
+                                                            }
+                                                            const timeStr = timeToCopy.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+                                                            const text = `${student.student.name.split(' ')[0]} you have not yet submitted your assignment and the deadline is ${timeStr}. Make sure you complete it within time.`;
                                                             navigator.clipboard.writeText(text);
                                                             toast.success('Message copied!');
                                                         }}
