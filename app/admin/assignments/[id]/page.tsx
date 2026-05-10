@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2, Filter, ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Latex from 'react-latex-next';
@@ -357,13 +358,13 @@ export default function AssignmentDetailsPage() {
             <Toaster />
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
-                <button
-                    onClick={() => router.push('/admin/assignments')}
+                <Link
+                    href="/admin/assignments"
                     className="flex items-center w-fit gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
                 >
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <ArrowLeft className="w-4 h-4 sm:h-5 sm:w-5" />
                     Back
-                </button>
+                </Link>
                 {assignment?.type === 'QUESTIONS' && (
                     <div className="flex items-center gap-2 flex-wrap">
                         <button
@@ -692,7 +693,35 @@ export default function AssignmentDetailsPage() {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <span className="text-gray-600 text-xs italic">Not submitted</span>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {(student.submissionStatus === 'PENDING' || student.submissionStatus === 'MISSED') && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    navigator.clipboard.writeText(student.student.phoneNumber);
+                                                                    toast.success('Phone number copied!');
+                                                                }}
+                                                                className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                                                                title="Copy Phone Number"
+                                                            >
+                                                                📞
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const deadline = assignment?.deadline ? new Date(assignment.deadline).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
+                                                                    const text = `${student.student.name.split(' ')[0]} you have not yet submitted your assignment and the deadline is ${deadline}. Make sure you complete it within time.`;
+                                                                    navigator.clipboard.writeText(text);
+                                                                    toast.success('Message copied!');
+                                                                }}
+                                                                className="p-1.5 hover:bg-amber-500/20 rounded text-amber-400 hover:text-amber-300 transition-colors"
+                                                                title="Copy Reminder Message"
+                                                            >
+                                                                📋
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <span className="text-gray-600 text-xs italic">Not submitted</span>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -824,7 +853,36 @@ export default function AssignmentDetailsPage() {
                                                 <Trash2 className="w-3 h-3" />
                                             </button>
                                         </div>
-                                    ) : null}
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                                            {(student.submissionStatus === 'PENDING' || student.submissionStatus === 'MISSED') && (
+                                                <>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(student.student.phoneNumber);
+                                                            toast.success('Phone copied!');
+                                                        }}
+                                                        className="p-1 hover:bg-blue-500/20 rounded text-blue-400"
+                                                        title="Copy Phone"
+                                                    >
+                                                        📞
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            const deadline = assignment?.deadline ? new Date(assignment.deadline).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
+                                                            const text = `${student.student.name.split(' ')[0]} you have not yet submitted your assignment and the deadline is ${deadline}. Make sure you complete it within time.`;
+                                                            navigator.clipboard.writeText(text);
+                                                            toast.success('Message copied!');
+                                                        }}
+                                                        className="p-1 hover:bg-amber-500/20 rounded text-amber-400"
+                                                        title="Copy Message"
+                                                    >
+                                                        📋
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))

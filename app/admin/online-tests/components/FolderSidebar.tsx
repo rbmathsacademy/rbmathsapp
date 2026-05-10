@@ -124,7 +124,7 @@ export default function FolderSidebar({
                 </button>
             </div>
 
-            {/* All Tests */}
+            {/* View All Tests */}
             <button
                 onClick={() => onSelectFolder(null)}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg mb-2 transition-colors ${selectedFolder === null
@@ -133,7 +133,7 @@ export default function FolderSidebar({
                     }`}
             >
                 <FolderIcon className="h-4 w-4" />
-                <span className="text-sm">All Tests</span>
+                <span className="text-sm">📂 View All Tests</span>
             </button>
 
             {/* Create New Folder Input */}

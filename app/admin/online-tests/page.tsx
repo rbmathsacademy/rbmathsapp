@@ -35,7 +35,7 @@ export default function OnlineTestsPage() {
     const router = useRouter();
     const [tests, setTests] = useState<OnlineTest[]>([]);
     const [folders, setFolders] = useState<Folder[]>([]);
-    const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+    const [selectedFolder, setSelectedFolder] = useState<string | null>('__none__');
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'draft' | 'deployed' | 'completed'>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -52,8 +52,14 @@ export default function OnlineTestsPage() {
 
     useEffect(() => {
         if (userEmail) {
-            fetchTests();
             fetchFolders();
+            // Only fetch tests if a folder is selected or 'View All' was clicked
+            if (selectedFolder !== '__none__') {
+                fetchTests();
+            } else {
+                setTests([]);
+                setLoading(false);
+            }
         }
     }, [userEmail, filter, selectedFolder]);
 
@@ -71,8 +77,8 @@ export default function OnlineTestsPage() {
                 params.append('status', filter);
             }
 
-            // Only add folderId param when a folder is actively selected (not viewing all tests)
-            if (selectedFolder !== null) {
+            // Only add folderId param when a specific folder is selected (not viewing all tests)
+            if (selectedFolder !== null && selectedFolder !== '__none__') {
                 params.append('folderId', selectedFolder);
             }
 
@@ -309,7 +315,21 @@ export default function OnlineTestsPage() {
                     </div>
 
                     {/* Tests Grid */}
-                    {loading ? (
+                    {selectedFolder === '__none__' ? (
+                        <div className="text-center py-20">
+                            <FolderInput className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-bold text-white mb-2">Select a Folder</h3>
+                            <p className="text-slate-400 mb-6">
+                                Choose a folder from the sidebar to view tests, or click "View All Tests" to load everything.
+                            </p>
+                            <button
+                                onClick={() => router.push('/admin/online-tests/create')}
+                                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all"
+                            >
+                                + Create New Test
+                            </button>
+                        </div>
+                    ) : loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {[1, 2, 3].map(i => (
                                 <div key={i} className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 animate-pulse">
@@ -324,7 +344,7 @@ export default function OnlineTestsPage() {
                             <FileText className="h-16 w-16 text-slate-600 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-white mb-2">No tests found</h3>
                             <p className="text-slate-400 mb-6">
-                                {searchQuery ? 'Try a different search term' : 'Create your first online test to get started'}
+                                {searchQuery ? 'Try a different search term' : 'No tests in this folder yet'}
                             </p>
                             {!searchQuery && (
                                 <button

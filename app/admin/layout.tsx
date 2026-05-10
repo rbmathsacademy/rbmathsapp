@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 const user = JSON.parse(storedUser);
                 const allowedRoutes: Record<string, string[]> = {
                     'manager': ['/admin/fees'],
-                    'copy_checker': ['/admin/assignments'],
+                    'copy_checker': ['/admin/questions', '/admin/answers', '/admin/online-tests', '/admin/assignments'],
                     'admin': [], // Admin allows all
                     'superadmin': []
                 };
@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         console.warn(`[RouteGuard] Blocked access to ${pathname} for role ${role}`);
                         // Redirect to their main page
                         if (role === 'manager') router.push('/admin/fees');
-                        else if (role === 'copy_checker') router.push('/admin/assignments');
+                        else if (role === 'copy_checker') router.push('/admin/questions');
                         else router.push('/admin/dashboard');
                     }
                 }
@@ -234,8 +234,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
 
         if (user.role === 'copy_checker') {
-            // Copy Checker: Assignments Only
-            return ['Assignments'].includes(item.name);
+            // Copy Checker: Question Bank, Answer Bank, Online Tests, Assignments
+            return ['Question Bank', 'Answer Bank', 'Online Tests', 'Assignments'].includes(item.name);
         }
 
         return false;

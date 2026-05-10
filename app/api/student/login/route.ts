@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
+import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
@@ -57,13 +58,42 @@ export async function POST(req: NextRequest) {
 
         // ---------------------------------------------------------
         // 2. STAFF LOGIN (Manager / Copy Checker / Admin)
+        //    Format: phone@password (e.g., 9876543210@9876543210)
         // ---------------------------------------------------------
+        const hasPasswordSeparator = rawInput.includes('@');
+        let staffPhone = cleanPhone;
+        let staffPassword = '';
+
+        if (hasPasswordSeparator) {
+            const atIndex = rawInput.indexOf('@');
+            const phonePart = rawInput.substring(0, atIndex).trim();
+            staffPassword = rawInput.substring(atIndex + 1).trim();
+            staffPhone = phonePart.replace(/\D/g, '');
+        }
+
         const staffUser = await User.findOne({
-            phoneNumber: cleanPhone,
+            phoneNumber: staffPhone,
             role: { $in: ['manager', 'copy_checker', 'admin', 'superadmin'] }
         });
 
         if (staffUser) {
+            // Staff account found — enforce strict password authentication
+            if (!hasPasswordSeparator || !staffPassword) {
+                return NextResponse.json(
+                    { error: 'Staff login requires password. Use format: phone@password' },
+                    { status: 401 }
+                );
+            }
+
+            // Validate password against stored bcrypt hash
+            const isPasswordValid = await bcrypt.compare(staffPassword, staffUser.password);
+            if (!isPasswordValid) {
+                return NextResponse.json(
+                    { error: 'Invalid staff password.' },
+                    { status: 401 }
+                );
+            }
+
             const token = await new SignJWT({
                 userId: staffUser._id.toString(),
                 phoneNumber: staffUser.phoneNumber,
@@ -77,7 +107,7 @@ export async function POST(req: NextRequest) {
             // Redirect based on role
             let redirectUrl = '/admin/dashboard';
             if (staffUser.role === 'manager') redirectUrl = '/admin/fees';
-            else if (staffUser.role === 'copy_checker') redirectUrl = '/admin/assignments';
+            else if (staffUser.role === 'copy_checker') redirectUrl = '/admin/questions';
 
             // CRITICAL: Return role and user details so frontend can enforce RBAC
             const response = NextResponse.json({
@@ -92,6 +122,14 @@ export async function POST(req: NextRequest) {
             });
             setAuthCookie(response, token);
             return response;
+        }
+
+        // If input had @ but no staff user found, it might be a typo — don't fall through to student login
+        if (hasPasswordSeparator) {
+            return NextResponse.json(
+                { error: 'Staff account not found. Check your phone number.' },
+                { status: 401 }
+            );
         }
 
         // ---------------------------------------------------------

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import SubmissionReviewModal from '../components/SubmissionReviewModal';
@@ -349,9 +350,9 @@ export default function MonitorTestPage() {
             {/* Header */}
             <div className="bg-slate-900/60 backdrop-blur-sm border-b border-white/10 p-3 sm:p-6">
                 <div className="max-w-7xl mx-auto">
-                    <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white mb-3 sm:mb-4 transition-colors text-sm">
+                    <Link href="/admin/online-tests" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-3 sm:mb-4 transition-colors text-sm">
                         <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" /> Back
-                    </button>
+                    </Link>
                     {testInfo && (
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
                             <div>
@@ -1151,6 +1152,7 @@ export default function MonitorTestPage() {
                                                         <th className="px-4 py-3 font-semibold">Student</th>
                                                         <th className="px-4 py-3 font-semibold">Batch</th>
                                                         <th className="px-4 py-3 font-semibold">Status</th>
+                                                        <th className="px-4 py-3 font-semibold">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1161,20 +1163,34 @@ export default function MonitorTestPage() {
                                                                 <div className="text-[10px] text-slate-500">{s.phone}</div>
                                                             </td>
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{s.batch}</td>
-                                                            <td className="px-4 py-3 flex items-center gap-4">
+                                                            <td className="px-4 py-3">
                                                                 <span className="px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 text-xs font-medium">Not Attempted</span>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
-                                                                        const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
-                                                                        navigator.clipboard.writeText(text);
-                                                                        toast.success('Reminder copied!');
-                                                                    }}
-                                                                    className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
-                                                                    title="Copy Reminder"
-                                                                >
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
-                                                                </button>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(s.phone);
+                                                                            toast.success('Phone number copied!');
+                                                                        }}
+                                                                        className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                                                                        title="Copy Phone Number"
+                                                                    >
+                                                                        📞
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
+                                                                            const text = `${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
+                                                                            navigator.clipboard.writeText(text);
+                                                                            toast.success('Message copied!');
+                                                                        }}
+                                                                        className="p-1.5 hover:bg-amber-500/20 rounded text-amber-400 hover:text-amber-300 transition-colors"
+                                                                        title="Copy Reminder Message"
+                                                                    >
+                                                                        📋
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -1190,18 +1206,29 @@ export default function MonitorTestPage() {
                                                         <p className="text-white font-medium text-sm truncate">{s.name}</p>
                                                         <p className="text-[10px] text-slate-500">{s.phone}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2 shrink-0">
+                                                    <div className="flex items-center gap-1.5 shrink-0">
                                                         <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 text-[10px] font-bold">❌</span>
                                                         <button
                                                             onClick={() => {
-                                                                const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
-                                                                const text = `${s.phone}\n${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
-                                                                navigator.clipboard.writeText(text);
-                                                                toast.success('Reminder copied!');
+                                                                navigator.clipboard.writeText(s.phone);
+                                                                toast.success('Phone copied!');
                                                             }}
-                                                            className="p-1 hover:bg-slate-700 rounded text-slate-400"
+                                                            className="p-1 hover:bg-blue-500/20 rounded text-blue-400"
+                                                            title="Copy Phone"
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                                            📞
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                const deadline = testInfo?.endTime ? new Date(testInfo.endTime).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : 'soon';
+                                                                const text = `${s.name.split(' ')[0]} you have not yet started your scheduled online test and the deadline for starting is ${deadline}. Make sure you complete it within time.`;
+                                                                navigator.clipboard.writeText(text);
+                                                                toast.success('Message copied!');
+                                                            }}
+                                                            className="p-1 hover:bg-amber-500/20 rounded text-amber-400"
+                                                            title="Copy Message"
+                                                        >
+                                                            📋
                                                         </button>
                                                     </div>
                                                 </div>

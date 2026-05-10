@@ -171,17 +171,18 @@ export async function PUT(request: NextRequest) {
             console.log('🔄 Re-grading all completed attempts for test:', id);
             const attempts = await StudentTestAttempt.find({ testId: id, status: 'completed' });
 
-            // Map new questions for fast lookup
+            // Map new questions for fast lookup (including comprehension sub-questions)
             const newQuestionsMap = new Map();
-            updates.questions.forEach((q: any) => newQuestionsMap.set(q.id, q));
+            updates.questions.forEach((q: any) => {
+                newQuestionsMap.set(q.id, q);
+                // Also map comprehension sub-questions so their answers can be re-graded
+                if (q.type === 'comprehension' && q.subQuestions) {
+                    q.subQuestions.forEach((sq: any) => newQuestionsMap.set(sq.id, sq));
+                }
+            });
 
             for (const attempt of attempts) {
-                let scoreChanged = false;
                 let newScore = 0;
-                let newTotalMarks = 0; // Calculate total marks based on the questions present in this attempt (if subsets) or all?
-                // Usually attempt.totalMarks is stored? No, schema doesn't have totalMarks on Attempt, only score.
-                // But percentage needs totalMarks.
-                // We'll calculate total based on the questions in the attempt snapshot (updated).
 
                 // If attempt has snapshot 'questions', update them.
                 if (attempt.questions && attempt.questions.length > 0) {
@@ -196,6 +197,9 @@ export async function PUT(request: NextRequest) {
                     attempt.markModified('questions');
                 }
 
+                // Track whether any per-question isGrace flags are active
+                let hasPerQuestionGrace = false;
+
                 // Re-grade answers
                 attempt.answers = attempt.answers.map((ans: any) => {
                     const qDef = newQuestionsMap.get(ans.questionId);
@@ -209,8 +213,8 @@ export async function PUT(request: NextRequest) {
                         // Grace question: Always correct, full marks
                         isCorrect = true;
                         marksAwarded = qDef.marks || 1;
-                        // We can flag it as grace awarded in the answer if we want UI to show it
                         ans.isGraceAwarded = true;
+                        hasPerQuestionGrace = true;
                     } else {
                         ans.isGraceAwarded = false; // Reset if grace removed
 
@@ -225,8 +229,6 @@ export async function PUT(request: NextRequest) {
                             }
                         } else if (qDef.type === 'msq') {
                             const studentIndices = Array.isArray(ans.answer) ? ans.answer.map((i: any) => parseInt(i)) : [];
-                            // Exact match required for MSQ usually (or partial? Assuming exact for now as per likely standard)
-                            // Strict comparison of sorted indices
                             const correctSorted = [...(qDef.correctIndices || [])].sort();
                             const studentSorted = [...studentIndices].sort();
 
@@ -235,8 +237,6 @@ export async function PUT(request: NextRequest) {
                                 isCorrect = true;
                                 marksAwarded = qDef.marks || 1;
                             } else {
-                                // MSQ logic often varies (partial marking?). Assuming strict for now or negative? 
-                                // Taking safe bet: 0 if wrong, unless negative defined.
                                 marksAwarded = -Math.abs(qDef.negativeMarks || 0);
                             }
                         } else if (qDef.type === 'fillblank') {
@@ -266,31 +266,39 @@ export async function PUT(request: NextRequest) {
 
                     ans.isCorrect = isCorrect;
                     ans.marksAwarded = marksAwarded;
-                    newScore += marksAwarded;
+                    // Preserve existing per-question adjustment marks
+                    newScore += marksAwarded + (ans.adjustmentMarks || 0);
 
                     return ans;
                 });
 
-                // Overwrite global grace marks
-                // If body.graceMarks is undefined (not sent), it defaults to 0, wiping previous marks.
-                attempt.graceMarks = body.graceMarks || 0;
-
-                if (attempt.graceMarks > 0) {
-                    attempt.graceReason = body.graceReason || 'Grace marks awarded';
-                } else {
+                // Handle global grace marks — but ONLY if no per-question isGrace flags are active.
+                // Per-question isGrace already gives full marks for the affected question(s), so 
+                // adding global graceMarks on top would double-count the same correction.
+                if (hasPerQuestionGrace) {
+                    // Per-question grace is handling the correction; reset global grace to avoid double-counting
+                    attempt.graceMarks = 0;
                     attempt.graceReason = '';
+                } else {
+                    // No per-question grace — apply global grace marks from dialog
+                    attempt.graceMarks = body.graceMarks || 0;
+                    if (attempt.graceMarks > 0) {
+                        attempt.graceReason = body.graceReason || 'Grace marks awarded';
+                    } else {
+                        attempt.graceReason = '';
+                    }
+                    newScore += attempt.graceMarks;
                 }
 
-                newScore += attempt.graceMarks;
-
-                // Calculate Total Marks (based on updated questions in attempt)
-                // If attempt.questions exists, sum their marks.
-                // Else use test total (risky if randomized subset).
+                // Calculate Total Marks — properly handle comprehension sub-questions
                 let currentTotalMarks = 0;
-                if (attempt.questions && attempt.questions.length > 0) {
-                    currentTotalMarks = attempt.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0);
-                } else {
-                    currentTotalMarks = updates.questions.reduce((sum: number, q: any) => sum + (q.marks || 0), 0);
+                const questionsSource = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : updates.questions;
+                for (const q of questionsSource) {
+                    if (q.type === 'comprehension' && q.subQuestions) {
+                        for (const sq of q.subQuestions) currentTotalMarks += sq.marks || 1;
+                    } else {
+                        currentTotalMarks += q.marks || 0;
+                    }
                 }
 
                 if (currentTotalMarks === 0) currentTotalMarks = 1; // Prevent div/0
@@ -298,8 +306,8 @@ export async function PUT(request: NextRequest) {
                 attempt.score = newScore;
                 attempt.percentage = Math.round((newScore / currentTotalMarks) * 100);
 
-                scoreChanged = true;
-                if (scoreChanged) await attempt.save();
+                attempt.markModified('answers');
+                await attempt.save();
             }
         }
 

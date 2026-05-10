@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle2, XCircle, Save, RefreshCw, AlertCircle, Clock } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Save, RefreshCw, AlertCircle, Clock, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import LatexRender from '@/components/LatexRenderer';
 
@@ -37,7 +37,7 @@ export default function SubmissionReviewModal({
                     const initialAdjustments: Record<string, number> = {};
                     if (json.attempt?.answers) {
                         json.attempt.answers.forEach((ans: any) => {
-                            if (ans.adjustmentMarks) {
+                            if (ans.adjustmentMarks !== undefined && ans.adjustmentMarks !== null && ans.adjustmentMarks !== 0) {
                                 initialAdjustments[ans.questionId] = ans.adjustmentMarks;
                             }
                         });
@@ -129,11 +129,16 @@ export default function SubmissionReviewModal({
         const timeTakenDesc = timeTakenMs > 0 ? (m > 0 ? `${m}m ${s}s` : `${s}s`) : '-';
 
         return (
-            <div key={q.id} className="bg-slate-800/50 border border-white/5 rounded-xl p-5 mb-4">
+            <div key={q.id} className={`bg-slate-800/50 border rounded-xl p-5 mb-4 ${ans?.isGraceAwarded ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5'}`}>
                 <div className="flex flex-col lg:flex-row justify-between items-start gap-3 sm:gap-4 mb-3">
                     <div className="flex items-center gap-2 shrink-0">
                         <span className="px-2 py-1 bg-slate-700 rounded-md text-xs font-bold text-white">Q{index + 1}</span>
                         <span className="text-xs font-semibold text-slate-400 capitalize">{q.type}</span>
+                        {ans?.isGraceAwarded && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold border border-amber-500/30">
+                                <Gift className="w-3 h-3" /> Grace
+                            </span>
+                        )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2 bg-slate-900/80 rounded-lg p-1.5 border border-white/10 w-full lg:w-auto justify-between lg:justify-start">
                         <div className="text-[10px] text-slate-400 flex flex-col items-center px-1 sm:px-2 pr-1 sm:pr-3">
@@ -168,7 +173,7 @@ export default function SubmissionReviewModal({
 
                 <div className="mb-4 text-white text-sm prose prose-invert max-w-none">
                     <LatexRender content={q.text} />
-                    {q.imageUrl && <img src={q.imageUrl} alt="Question" className="mt-3 rounded-lg max-h-64 object-contain" />}
+                    {q.image && <img src={q.image} alt="Question" className="mt-3 rounded-lg max-h-64 object-contain" />}
                 </div>
 
                 <div className="bg-black/30 rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,19 +185,39 @@ export default function SubmissionReviewModal({
                             <div className="flex items-start gap-2">
                                 {ans.isCorrect ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> : <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />}
                                 <div className="text-sm text-white break-words">
-                                    {Array.isArray(ans.answer) ? ans.answer.join(', ') : String(ans.answer)}
+                                    {(q.type === 'mcq' || q.type === 'msq') && q.options ? (
+                                        // Render MCQ/MSQ option text through LaTeX
+                                        Array.isArray(ans.answer)
+                                            ? ans.answer.map((idx: number, i: number) => (
+                                                <span key={i}>{i > 0 && ', '}<LatexRender content={q.options[idx] || `Option ${idx}`} /></span>
+                                            ))
+                                            : <LatexRender content={q.options[parseInt(ans.answer)] || String(ans.answer)} />
+                                    ) : (
+                                        Array.isArray(ans.answer) ? ans.answer.join(', ') : String(ans.answer)
+                                    )}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Simplified Correct Answer Display (could be expanded based on type) */}
                     <div>
-                        <div className="text-xs text-slate-400 mb-2 font-semibold">Correct Answer (Info):</div>
+                        <div className="text-xs text-slate-400 mb-2 font-semibold">Correct Answer:</div>
                         <div className="text-sm text-emerald-400">
-                            {q.type === 'mcq' || q.type === 'msq' ? `Option Indices: ${q.correctIndices?.join(', ')}` :
-                                q.type === 'fillblank' ? (q.isNumberRange ? `Range: ${q.numberRangeMin} - ${q.numberRangeMax}` : `Text: ${q.fillBlankAnswer}`) :
-                                    'Manual grading'}
+                            {(q.type === 'mcq' || q.type === 'msq') && q.options ? (
+                                // Show actual option text through LaTeX
+                                (q.correctIndices || []).map((idx: number, i: number) => (
+                                    <span key={i} className="block">
+                                        <span className="text-slate-500 text-[10px] mr-1">({String.fromCharCode(65 + idx)})</span>
+                                        <LatexRender content={q.options[idx] || `Option ${idx}`} />
+                                    </span>
+                                ))
+                            ) : q.type === 'fillblank' ? (
+                                q.isNumberRange
+                                    ? `Range: ${q.numberRangeMin} – ${q.numberRangeMax}`
+                                    : <><span className="text-slate-500 text-[10px] mr-1">Text:</span> <LatexRender content={q.fillBlankAnswer || ''} /></>
+                            ) : (
+                                'Manual grading'
+                            )}
                         </div>
                     </div>
                 </div>
@@ -214,6 +239,11 @@ export default function SubmissionReviewModal({
                             <span className="whitespace-nowrap">📱 {student.phone}</span>
                             <span className="whitespace-nowrap">📚 {student.batch}</span>
                             <span className="whitespace-nowrap">🎯 Current Score: <strong className="text-white">{attempt.score}</strong></span>
+                            {attempt.graceMarks > 0 && (
+                                <span className="whitespace-nowrap inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[10px] font-bold border border-amber-500/20">
+                                    <Gift className="w-3 h-3" /> +{attempt.graceMarks} Grace ({attempt.graceReason || 'Awarded'})
+                                </span>
+                            )}
                         </div>
                     </div>
                     <button
@@ -244,7 +274,7 @@ export default function SubmissionReviewModal({
                                         <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Comprehension Passage</div>
                                         <div className="text-sm text-slate-300 prose prose-invert">
                                             <LatexRender content={q.text} />
-                                            {q.imageUrl && <img src={q.imageUrl} alt="Passage" className="mt-2 rounded-lg max-h-48" />}
+                                            {q.image && <img src={q.image} alt="Passage" className="mt-2 rounded-lg max-h-48" />}
                                         </div>
                                     </div>
                                     <div className="p-4">
