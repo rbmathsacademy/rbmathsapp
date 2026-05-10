@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Folder from '@/models/Folder';
+import User from '@/models/User';
 
 export async function GET(req: NextRequest) {
     try {
@@ -11,9 +12,13 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Get all folders with type 'test' for this user
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Allow authorized staff to view all test folders
         const folders = await Folder.find({
-            createdBy: userEmail,
             type: 'test'
         }).sort({ name: 1 });
 
