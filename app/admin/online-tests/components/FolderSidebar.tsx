@@ -124,17 +124,18 @@ export default function FolderSidebar({
                 </button>
             </div>
 
-            {/* View All Tests */}
-            <button
-                onClick={() => onSelectFolder(null)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg mb-2 transition-colors ${selectedFolder === null
-                        ? 'bg-emerald-500/20 text-emerald-300'
-                        : 'text-slate-300 hover:bg-slate-800'
-                    }`}
-            >
-                <FolderIcon className="h-4 w-4" />
-                <span className="text-sm">📂 View All Tests</span>
-            </button>
+            {/* Folder List (Responsive) */}
+            <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide -mx-2 px-2 lg:mx-0 lg:px-0">
+                {/* View All Tests */}
+                <button
+                    onClick={() => onSelectFolder(null)}
+                    className={`flex-shrink-0 lg:w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${selectedFolder === null
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'text-slate-300 hover:bg-slate-800'
+                        }`}
+                >
+                    <span className="text-sm whitespace-nowrap">📂 View All Tests</span>
+                </button>
 
             {/* Create New Folder Input */}
             {isCreating && (
@@ -174,10 +175,8 @@ export default function FolderSidebar({
                 </div>
             )}
 
-            {/* Folder List */}
-            <div className="space-y-1">
                 {folders.map((folder) => (
-                    <div key={folder._id}>
+                    <div key={folder._id} className="flex-shrink-0 lg:w-full">
                         {isEditing === folder._id ? (
                             <div className="p-2 bg-slate-800/50 rounded-lg">
                                 <input
@@ -221,12 +220,12 @@ export default function FolderSidebar({
                             >
                                 <button
                                     onClick={() => onSelectFolder(folder._id)}
-                                    className="flex-1 flex items-center gap-2"
+                                    className="flex-1 flex items-center gap-2 min-w-0"
                                 >
-                                    <FolderIcon className="h-4 w-4" />
-                                    <span className="text-sm truncate">{folder.name}</span>
+                                    <FolderIcon className="h-4 w-4 flex-shrink-0" />
+                                    <span className="text-sm truncate whitespace-nowrap">{folder.name}</span>
                                 </button>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => {
                                             setIsEditing(folder._id);
