@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 
+import User from '@/models/User';
+
 // POST - Deploy test to batches/students
 export async function POST(request: NextRequest) {
     try {
@@ -9,6 +11,11 @@ export async function POST(request: NextRequest) {
 
         const userEmail = request.headers.get('X-User-Email');
         if (!userEmail) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -20,10 +27,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Test ID is required' }, { status: 400 });
         }
 
-        // Find test and check ownership
-        const test = await OnlineTest.findOne({ _id: testId, createdBy: userEmail });
+        // Find test
+        const test = await OnlineTest.findOne({ _id: testId });
         if (!test) {
-            return NextResponse.json({ error: 'Test not found or unauthorized' }, { status: 404 });
+            return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
         // Handle batches fallback for deployed tests

@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 
+import User from '@/models/User';
+
 export async function POST(request: NextRequest) {
     try {
         await dbConnect();
 
         const userEmail = request.headers.get('X-User-Email');
         if (!userEmail) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -18,7 +25,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Find original test
-        const originalTest = await OnlineTest.findOne({ _id: testId, createdBy: userEmail });
+        const originalTest = await OnlineTest.findOne({ _id: testId });
 
         if (!originalTest) {
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });

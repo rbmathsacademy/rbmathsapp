@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
+import User from '@/models/User';
 
 export async function GET(
     request: NextRequest,
@@ -17,8 +18,13 @@ export async function GET(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Find test and verify ownership
-        const test = await OnlineTest.findOne({ _id: testId, createdBy: userEmail }).lean();
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Find test
+        const test = await OnlineTest.findOne({ _id: testId }).lean();
         if (!test) {
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
@@ -66,8 +72,13 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Find test and verify ownership
-        const test = await OnlineTest.findOne({ _id: testId, createdBy: userEmail });
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Find test
+        const test = await OnlineTest.findOne({ _id: testId });
         if (!test) {
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }

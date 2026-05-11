@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
+import User from '@/models/User';
 
 /**
  * POST /api/admin/online-tests/[id]/auto-complete
@@ -24,11 +25,16 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         await dbConnect();
         const { id: testId } = await props.params;
 
-        // Verify test exists and ownership
-        const test = await OnlineTest.findOne({ _id: testId, createdBy: userEmail });
+        // Verify test exists
+        const test = await OnlineTest.findOne({ _id: testId });
         if (!test) {
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }

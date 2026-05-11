@@ -140,6 +140,11 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await request.json();
         const { id, graceMarksForModified, ...updates } = body;
 
@@ -149,11 +154,11 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Test ID is required' }, { status: 400 });
         }
 
-        // Find test and check ownership
-        const test = await OnlineTest.findOne({ _id: id, createdBy: userEmail });
+        // Find test (no longer restricted to creator, admins/checkers can edit)
+        const test = await OnlineTest.findOne({ _id: id });
         if (!test) {
-            console.log('❌ Test not found or unauthorized');
-            return NextResponse.json({ error: 'Test not found or unauthorized' }, { status: 404 });
+            console.log('❌ Test not found');
+            return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
         console.log('📋 Current test status:', test.status, 'Current folderId:', test.folderId);
@@ -348,6 +353,11 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -355,10 +365,10 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Test ID is required' }, { status: 400 });
         }
 
-        // Find test and check ownership
-        const test = await OnlineTest.findOne({ _id: id, createdBy: userEmail });
+        // Find test
+        const test = await OnlineTest.findOne({ _id: id });
         if (!test) {
-            return NextResponse.json({ error: 'Test not found or unauthorized' }, { status: 404 });
+            return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
         // Delete associated student attempts first

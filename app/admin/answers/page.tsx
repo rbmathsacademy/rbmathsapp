@@ -123,10 +123,11 @@ export default function AnswerBank() {
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedExams, setSelectedExams] = useState<string[]>([]);
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+    const [selectedUploadedBy, setSelectedUploadedBy] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Server-loaded filter metadata
-    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [] });
+    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[]; uploadedBys: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [], uploadedBys: [] });
     const [filtersLoading, setFiltersLoading] = useState(true);
 
     useEffect(() => {
@@ -169,6 +170,9 @@ export default function AnswerBank() {
             if (filters?.topics && filters.topics.length > 0) {
                 params.set('topic', filters.topics.join(','));
             }
+            if (filters?.uploadedBys && filters.uploadedBys.length > 0) {
+                params.set('uploadedBy', filters.uploadedBys.join(','));
+            }
             const url = `/api/admin/questions${params.toString() ? '?' + params.toString() : ''}`;
             const res = await fetch(url, { headers, cache: 'no-store' });
             const data = await res.json();
@@ -190,11 +194,11 @@ export default function AnswerBank() {
         if (!userEmail) return;
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
         if (actualTopics.length > 0) {
-            fetchQuestions(userEmail, { topics: actualTopics });
+            fetchQuestions(userEmail, { topics: actualTopics, uploadedBys: selectedUploadedBy });
         } else {
             setQuestions([]);
         }
-    }, [selectedTopics, userEmail]);
+    }, [selectedTopics, selectedUploadedBy, userEmail]);
 
     // Helper: filter questions by selected batches
     const filterByBatches = (qs: Question[]) => {
@@ -320,9 +324,11 @@ export default function AnswerBank() {
                     q.id.toLowerCase().includes(query)
                 );
             }
-            return true;
+
+            const uploadedByMatch = selectedUploadedBy.length === 0 || selectedUploadedBy.includes(q.uploadedBy);
+            return uploadedByMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedUploadedBy, searchQuery]);
 
     // --- Selection Logic ---
     const toggleSelection = (id: string) => {
@@ -781,18 +787,26 @@ export default function AnswerBank() {
                     {/* Filters & Actions */}
                     <div className="bg-gray-900 border-b border-gray-800 p-3 md:p-4">
                         <div className="flex flex-col gap-4">
-                            {/* Mobile Stacked Filters */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                                <div className="flex items-center h-[38px] px-2 bg-gray-800 rounded border border-gray-700 w-fit">
+                            {/* List Toolbar */}
+                            <div className="flex items-center gap-4 bg-gray-900/50 p-2 rounded-lg border border-gray-800 mb-2 w-fit">
+                                <label className="flex items-center gap-2 cursor-pointer hover:text-white text-gray-400 transition-colors select-none">
                                     <input
                                         type="checkbox"
                                         checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
                                         onChange={toggleSelectAll}
-                                        className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
-                                        title="Select All"
+                                        className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500/50"
                                     />
-                                    <span className="ml-2 text-xs text-gray-400 font-medium sm:hidden">Select All</span>
-                                </div>
+                                    <span className="text-sm font-medium">Select All</span>
+                                </label>
+                                {selectedQuestionIds.size > 0 && (
+                                    <span className="text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded text-xs font-bold border border-blue-500/20">
+                                        {selectedQuestionIds.size} selected
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Mobile Stacked Filters */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <div className="space-y-1">
                                     <label className="text-xs text-gray-400 ml-1 block">Topic</label>
                                     <MultiSelect
@@ -829,6 +843,15 @@ export default function AnswerBank() {
                                         placeholder="All Batches"
                                     />
                                 </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1 block">Created By</label>
+                                    <MultiSelect
+                                        options={serverFilters.uploadedBys || []}
+                                        selected={selectedUploadedBy}
+                                        onChange={setSelectedUploadedBy}
+                                        placeholder="All Creators"
+                                    />
+                                </div>
                                 <div className="space-y-1 relative">
                                     <label className="text-xs text-gray-400 ml-1 block">Search</label>
                                     <div className="relative">
@@ -838,7 +861,7 @@ export default function AnswerBank() {
                                             placeholder="Search questions..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded h-[40px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                            className="w-full bg-gray-800 border border-gray-700 rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
                                         />
                                     </div>
                                 </div>

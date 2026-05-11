@@ -66,6 +66,11 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id, name } = await req.json();
 
         if (!id || !name || !name.trim()) {
@@ -73,7 +78,7 @@ export async function PUT(req: NextRequest) {
         }
 
         const folder = await Folder.findOneAndUpdate(
-            { _id: id, createdBy: userEmail, type: 'test' },
+            { _id: id, type: 'test' },
             { name: name.trim() },
             { new: true }
         );
@@ -98,6 +103,11 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const user = await User.findOne({ email: userEmail });
+        if (!user || !['admin', 'manager', 'copy_checker'].includes(user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
 
@@ -107,7 +117,6 @@ export async function DELETE(req: NextRequest) {
 
         const folder = await Folder.findOneAndDelete({
             _id: id,
-            createdBy: userEmail,
             type: 'test'
         });
 

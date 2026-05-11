@@ -232,6 +232,7 @@ export default function QuestionBank() {
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedExams, setSelectedExams] = useState<string[]>([]);
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+    const [selectedUploadedBy, setSelectedUploadedBy] = useState<string[]>([]);
     const [availableBatches, setAvailableBatches] = useState<string[]>([]);
     // Singular Selection for Modal
     const [selectedTopic, setSelectedTopic] = useState('');
@@ -241,7 +242,7 @@ export default function QuestionBank() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Server-loaded filter metadata (for instant filter loading)
-    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [] });
+    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[]; uploadedBys: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [], uploadedBys: [] });
     const [filtersLoading, setFiltersLoading] = useState(true);
     const [globalSearchQuery, setGlobalSearchQuery] = useState('');
     const [isGlobalSearching, setIsGlobalSearching] = useState(false);
@@ -382,9 +383,11 @@ export default function QuestionBank() {
                 (q.subtopic || '').toLowerCase().includes(searchLower) ||
                 (q.id || '').toLowerCase().includes(searchLower);
 
-            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch;
+            const uploadedByMatch = selectedUploadedBy.length === 0 || selectedUploadedBy.includes(q.uploadedBy);
+
+            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch && uploadedByMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedUploadedBy, searchQuery]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -443,6 +446,9 @@ export default function QuestionBank() {
             if (filters?.batches && filters.batches.length > 0) {
                 params.set('batch', filters.batches.join(','));
             }
+            if (filters?.uploadedBys && filters.uploadedBys.length > 0) {
+                params.set('uploadedBy', filters.uploadedBys.join(','));
+            }
             if (filters?.search) {
                 params.set('search', filters.search);
             }
@@ -470,11 +476,11 @@ export default function QuestionBank() {
         if (!userEmail) return;
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
         if (actualTopics.length > 0) {
-            fetchQuestions(userEmail, { topics: actualTopics });
+            fetchQuestions(userEmail, { topics: actualTopics, uploadedBys: selectedUploadedBy });
         } else {
             setQuestions([]); // No topic selected = empty
         }
-    }, [selectedTopics, userEmail]);
+    }, [selectedTopics, selectedUploadedBy, userEmail]);
 
     // Global search handler
     const handleGlobalSearch = async () => {
@@ -1063,7 +1069,7 @@ export default function QuestionBank() {
                     </div>
 
                     {/* Filters */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Topic</label>
                             <MultiSelect options={topics} selected={selectedTopics} onChange={setSelectedTopics} placeholder="All Topics" />
@@ -1081,6 +1087,10 @@ export default function QuestionBank() {
                             <MultiSelect options={availableBatchNames} selected={selectedBatches} onChange={setSelectedBatches} placeholder="All Batches" />
                         </div>
                         <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Created By</label>
+                            <MultiSelect options={serverFilters.uploadedBys || []} selected={selectedUploadedBy} onChange={setSelectedUploadedBy} placeholder="All Creators" />
+                        </div>
+                        <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Search (within topic)</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -1089,7 +1099,7 @@ export default function QuestionBank() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Filter loaded questions..."
-                                    className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                    className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-indigo-500 h-[38px]"
                                 />
                             </div>
                         </div>

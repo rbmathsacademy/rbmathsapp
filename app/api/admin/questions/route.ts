@@ -17,6 +17,7 @@ export async function GET(req: Request) {
     const subtopicParam = url.searchParams.get('subtopic');
     const examParam = url.searchParams.get('exam');
     const batchParam = url.searchParams.get('batch');
+    const uploadedByParam = url.searchParams.get('uploadedBy');
     const searchParam = url.searchParams.get('search');
     
     // Use projection to exclude heavy fields if lightweight=true
@@ -61,6 +62,9 @@ export async function GET(req: Request) {
         } else if (realBatches.length > 0) {
             baseQuery.batches = { $in: realBatches };
         }
+    }
+    if (uploadedByParam) {
+        baseQuery.uploadedBy = { $in: uploadedByParam.split(',') };
     }
     if (searchParam) {
         baseQuery.$or = [
@@ -130,9 +134,28 @@ export async function POST(req: Request) {
 
             if (!hasExamInfo) {
                 console.warn('[API] Warning: Question missing exam info:', q.id);
-                // For now, allow it to pass if we are just updating answers? No, safely enforce but log.
-                // Actually, let's allow it to proceed if it's an existing question (id exists).
-                // But wait, the user complaint is "reverts back". This means error.
+            }
+        }
+
+        // Fetch user to check role for permissions
+        let userRole = 'admin';
+        if (email) {
+            const user = await User.findOne({ email });
+            if (user) userRole = user.role;
+        }
+
+        if (userRole === 'copy_checker') {
+            const incomingIds = questions.map((q: any) => q.id).filter(Boolean);
+            if (incomingIds.length > 0) {
+                const existingQs = await Question.find({ id: { $in: incomingIds } }).lean();
+                const existingMap = new Map(existingQs.map((q: any) => [q.id, q]));
+                for (const q of questions) {
+                    const existing = existingMap.get(q.id);
+                    // checker can only edit if they created it
+                    if (existing && existing.uploadedBy !== email) {
+                        return NextResponse.json({ error: `Checker restricted: Cannot edit question ${q.id} because it was added by someone else.` }, { status: 403 });
+                    }
+                }
             }
         }
 
@@ -215,13 +238,21 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
         }
 
-        // Only delete questions owned by this user
+        // Only delete questions owned by this user if they are a copy_checker
         const query: any = { id: { $in: ids } };
-        if (adminKey !== GLOBAL_ADMIN_KEY) {
-            query.uploadedBy = email;
+        
+        if (email) {
+            const user = await User.findOne({ email });
+            if (user && user.role === 'copy_checker') {
+                query.uploadedBy = email;
+            }
         }
 
-        await Question.deleteMany(query);
+        const deleteResult = await Question.deleteMany(query);
+        if (deleteResult.deletedCount < ids.length) {
+            // Some weren't deleted, probably due to permissions
+            console.warn(`[API] Expected to delete ${ids.length}, but deleted ${deleteResult.deletedCount}`);
+        }
 
         return NextResponse.json({ message: 'Questions deleted successfully' });
     } catch (error: any) {
