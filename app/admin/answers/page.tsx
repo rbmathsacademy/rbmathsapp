@@ -159,7 +159,7 @@ export default function AnswerBank() {
         }
     };
 
-    const fetchQuestions = async (email: string, filters?: { topics?: string[] }) => {
+    const fetchQuestions = async (email: string, filters?: { topics?: string[]; uploadedBys?: string[] }) => {
         try {
             setLoading(true);
             const headers: any = { 'X-User-Email': email };
@@ -325,7 +325,7 @@ export default function AnswerBank() {
                 );
             }
 
-            const uploadedByMatch = selectedUploadedBy.length === 0 || selectedUploadedBy.includes(q.uploadedBy);
+            const uploadedByMatch = selectedUploadedBy.length === 0 || (q.uploadedBy ? selectedUploadedBy.includes(q.uploadedBy) : false);
             return uploadedByMatch;
         });
     }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedUploadedBy, searchQuery]);

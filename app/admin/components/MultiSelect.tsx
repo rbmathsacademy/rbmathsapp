@@ -65,7 +65,7 @@ export default function MultiSelect({ options, selected, onChange, placeholder }
                 <ChevronDown className="h-3 w-3 text-gray-400" />
             </div>
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-60 overflow-hidden flex flex-col">
+                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-96 overflow-hidden flex flex-col">
                     {/* Search Input */}
                     <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
                         <input
@@ -89,7 +89,7 @@ export default function MultiSelect({ options, selected, onChange, placeholder }
                     )}
 
                     {/* Options List */}
-                    <div className="overflow-y-auto max-h-48">
+                    <div className="overflow-y-auto max-h-80">
                         {filteredOptions.length === 0 ? (
                             <div className="px-3 py-2 text-xs text-gray-500 italic">No matches found</div>
                         ) : (

@@ -18,7 +18,7 @@ export async function GET(req: Request) {
         if (!email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        matchFilter.uploadedBy = email;
+        // Checkers and other admins can view all filter metrics
     }
 
     try {

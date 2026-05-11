@@ -71,7 +71,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
                 <ChevronDown className="h-3 w-3 text-gray-400" />
             </div>
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-60 overflow-hidden flex flex-col">
+                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-96 overflow-hidden flex flex-col">
                     {/* Search Input */}
                     <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
                         <input
@@ -95,7 +95,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
                     )}
 
                     {/* Options List */}
-                    <div className="overflow-y-auto max-h-48">
+                    <div className="overflow-y-auto max-h-80">
                         {filteredOptions.length === 0 ? (
                             <div className="px-3 py-2 text-xs text-gray-500 italic">No matches found</div>
                         ) : (
@@ -383,7 +383,7 @@ export default function QuestionBank() {
                 (q.subtopic || '').toLowerCase().includes(searchLower) ||
                 (q.id || '').toLowerCase().includes(searchLower);
 
-            const uploadedByMatch = selectedUploadedBy.length === 0 || selectedUploadedBy.includes(q.uploadedBy);
+            const uploadedByMatch = selectedUploadedBy.length === 0 || (q.uploadedBy ? selectedUploadedBy.includes(q.uploadedBy) : false);
 
             return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch && uploadedByMatch;
         });
@@ -425,7 +425,7 @@ export default function QuestionBank() {
     };
 
     // Fetch questions with server-side filters (on-demand)
-    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; search?: string }) => {
+    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; uploadedBys?: string[]; search?: string }) => {
         setLoading(true);
         try {
             const headers: any = { 'X-User-Email': email };

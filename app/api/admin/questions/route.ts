@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     if (adminKey === GLOBAL_ADMIN_KEY) {
         // Global admin sees all
     } else if (email) {
-        baseQuery.uploadedBy = email;
+        // Checkers and other admins can view all questions
     } else {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
