@@ -430,28 +430,34 @@ export default function AdminAssignmentsPage() {
         // Process Data
         const fullMarks = parseFloat(editFullMarks) || 0;
 
-        const validStudents: any[] = [];
-        const naStudents: any[] = [];
+        // 1. Separate valid numeric students to avoid NaN comparisons in sorting
+        const numericStudents: any[] = [];
 
         editStudents.forEach(s => {
-            if (s.marks.trim() === '') {
-                naStudents.push(s);
-            } else {
-                validStudents.push({ ...s, numericMarks: parseFloat(s.marks) });
+            const trimmed = s.marks.trim();
+            if (trimmed !== '') {
+                const num = parseFloat(trimmed);
+                if (!isNaN(num)) {
+                    numericStudents.push({ ...s, numericMarks: num });
+                }
             }
         });
 
-        // Sort descending initially
-        validStudents.sort((a, b) => b.numericMarks - a.numericMarks);
+        // Sort descending initially by valid numeric marks
+        numericStudents.sort((a, b) => b.numericMarks - a.numericMarks);
 
-        // Top 5 sorted by marks, the rest sorted alphabetically
-        const top5 = validStudents.slice(0, 5);
-        const rest = validStudents.slice(5).sort((a, b) => a.name.localeCompare(b.name));
-        const finalValidStudents = [...top5, ...rest];
+        // Top 5 sorted by marks
+        const top5 = numericStudents.slice(0, 5);
 
-        const tableBody: any[] = [];
+        // Render "TOP 5 PERFORMERS" heading
+        doc.setTextColor(30, 58, 138);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("TOP 5 PERFORMERS", 14, 78);
 
-        finalValidStudents.forEach((s, index) => {
+        const top5Body: any[] = [];
+
+        top5.forEach((s, index) => {
             let rankStr = `${index + 1}`;
             if (index === 0) rankStr = '1st';
             else if (index === 1) rankStr = '2nd';
@@ -461,7 +467,7 @@ export default function AdminAssignmentsPage() {
 
             const pct = fullMarks > 0 ? ((s.numericMarks / fullMarks) * 100).toFixed(1) + '%' : '-';
 
-            tableBody.push([
+            top5Body.push([
                 rankStr,
                 s.name,
                 `${s.numericMarks}`,
@@ -469,20 +475,14 @@ export default function AdminAssignmentsPage() {
             ]);
         });
 
-        naStudents.forEach(s => {
-            tableBody.push([
-                '-',
-                s.name,
-                'Not applicable',
-                '-'
-            ]);
-        });
+        if (top5Body.length === 0) {
+            top5Body.push(['-', 'No top performers found', '-', '-']);
+        }
 
-        // Define options properly for jspdf-autotable
         autoTable(doc, {
-            startY: 75,
+            startY: 83,
             head: [['Rank', 'Student Name', 'Marks Obtained', 'Percentage']],
-            body: tableBody,
+            body: top5Body,
             theme: 'grid',
             headStyles: { fillColor: [249, 115, 22], textColor: 255, fontStyle: 'bold', halign: 'center' }, // Orange head
             columnStyles: {
@@ -492,7 +492,7 @@ export default function AdminAssignmentsPage() {
                 3: { halign: 'center', fontStyle: 'bold' } 
             },
             alternateRowStyles: { fillColor: [255, 247, 237] }, // Light orange
-            styles: { font: 'helvetica', fontSize: 10, cellPadding: 4, textColor: [30, 30, 30] }, // fallback text color
+            styles: { font: 'helvetica', fontSize: 10, cellPadding: 4, textColor: [30, 30, 30] },
             didParseCell: function(data) {
                 if (data.section === 'body') {
                     const rowRank = data.row.cells[0].raw;
@@ -521,7 +521,82 @@ export default function AdminAssignmentsPage() {
             }
         });
 
-        doc.save(`${editChapter.replace(/\\s+/g, '_')}_Marksheet.pdf`);
+        // Break table and render All Scores
+        let finalY = (doc as any).lastAutoTable?.finalY || 130;
+        const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+
+        if (finalY > pageHeight - 30) {
+            doc.addPage();
+            finalY = 20;
+        } else {
+            finalY += 12;
+        }
+
+        doc.setTextColor(30, 58, 138);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.text("All scores in alphabetical order of names", 14, finalY);
+
+        // Prepare all students list sorted alphabetically
+        const allStudentsSorted = [...editStudents].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        const allScoresBody: any[] = [];
+
+        allStudentsSorted.forEach((s, index) => {
+            const trimmed = s.marks.trim();
+            let marksStr = trimmed;
+            let pctStr = '-';
+
+            if (trimmed === '') {
+                marksStr = 'Not applicable';
+            } else {
+                const num = parseFloat(trimmed);
+                if (!isNaN(num)) {
+                    marksStr = `${num}`;
+                    pctStr = fullMarks > 0 ? ((num / fullMarks) * 100).toFixed(1) + '%' : '-';
+                } else {
+                    marksStr = trimmed; // Non-numeric entries like "Absent"
+                    pctStr = '-';
+                }
+            }
+
+            allScoresBody.push([
+                `${index + 1}`,
+                s.name,
+                marksStr,
+                pctStr
+            ]);
+        });
+
+        autoTable(doc, {
+            startY: finalY + 4,
+            head: [['S.No.', 'Student Name', 'Marks Obtained', 'Percentage']],
+            body: allScoresBody,
+            theme: 'grid',
+            headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: 'bold', halign: 'center' }, // Blue head
+            columnStyles: {
+                0: { halign: 'center', fontStyle: 'bold' },
+                1: { fontStyle: 'bold' },
+                2: { halign: 'center' },
+                3: { halign: 'center', fontStyle: 'bold' } 
+            },
+            alternateRowStyles: { fillColor: [240, 245, 255] }, // Soft blue light tint
+            styles: { font: 'helvetica', fontSize: 10, cellPadding: 4, textColor: [30, 30, 30] },
+            didParseCell: function(data) {
+                if (data.section === 'body') {
+                    if (data.column.index === 3 && data.cell.raw && data.cell.raw !== '-') {
+                         const rawValue = data.cell.raw.toString();
+                         const val = parseFloat(rawValue.replace('%', ''));
+                         if (!isNaN(val)) {
+                             if (val >= 70) data.cell.styles.textColor = [21, 128, 61]; // green text
+                             else if (val >= 50) data.cell.styles.textColor = [234, 88, 12]; // orange text
+                             else data.cell.styles.textColor = [220, 38, 38]; // red text
+                         }
+                    }
+                }
+            }
+        });
+
+        doc.save(`${editChapter.replace(/\s+/g, '_')}_Marksheet.pdf`);
     };
 
     // Filter Logic
