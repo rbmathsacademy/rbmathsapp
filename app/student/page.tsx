@@ -301,7 +301,7 @@ export default function StudentDashboard() {
                                     <TrendingUp className="h-3.5 w-3.5 sm:h-4 w-4" />
                                 </div>
                             </div>
-                            <div className="flex items-baseline gap-1.5 sm:gap-2">
+                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                                 <p className="text-xl sm:text-3xl font-black text-blue-400">{data.stats.avgTestPercentage}%</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Overall</p>
                             </div>
@@ -314,7 +314,7 @@ export default function StudentDashboard() {
                                     <Award className="h-3.5 w-3.5 sm:h-4 w-4" />
                                 </div>
                             </div>
-                            <div className="flex items-baseline gap-1.5 sm:gap-2">
+                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                                 <p className="text-xl sm:text-3xl font-black text-emerald-400">{data.stats.testsAttempted}</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Appearances</p>
                             </div>
@@ -327,7 +327,7 @@ export default function StudentDashboard() {
                                     <XCircle className="h-3.5 w-3.5 sm:h-4 w-4" />
                                 </div>
                             </div>
-                            <div className="flex items-baseline gap-1.5 sm:gap-2">
+                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                                 <p className="text-xl sm:text-3xl font-black text-rose-400">{data.stats.testsMissed}</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Missed</p>
                             </div>
@@ -346,8 +346,8 @@ export default function StudentDashboard() {
                                     <MessageSquare className="h-3.5 w-3.5 sm:h-4 w-4" />
                                 </div>
                             </div>
-                            <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-2xl font-black text-blue-400">Student Chat</p>
+                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+                                <p className="text-xl sm:text-2xl font-black text-blue-400">Chat Now</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Ask Doubt</p>
                             </div>
                         </div>
@@ -360,7 +360,7 @@ export default function StudentDashboard() {
                                     <FileText className="h-3.5 w-3.5 sm:h-4 w-4" />
                                 </div>
                             </div>
-                            <div className="flex items-baseline gap-1.5 sm:gap-2">
+                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                                 <p className="text-xl sm:text-3xl font-black text-purple-400">{data.stats.assignmentsSubmitted}</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Solved</p>
                             </div>
@@ -381,11 +381,11 @@ export default function StudentDashboard() {
                                     <div key={exam.examId} className="bg-[#1a1f2e] border border-red-500/20 rounded-2xl overflow-hidden shadow-xl hover:translate-y-[-2px] transition-all duration-300 hover:border-red-500/40">
                                         {/* Header */}
                                         <div className="bg-gradient-to-r from-red-500/15 to-orange-500/10 px-4 sm:px-5 py-2.5 sm:py-3 flex justify-between items-center border-b border-red-500/20">
-                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
-                                                <BookOpen className="w-3.5 h-3.5 text-red-400" />
+                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-200 min-w-0 flex-1 mr-2">
+                                                <BookOpen className="w-3.5 h-3.5 text-red-400 shrink-0" />
                                                 <span className="font-bold tracking-tight line-clamp-1">{exam.chapterName}</span>
                                             </div>
-                                            <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono">
+                                            <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono shrink-0">
                                                 {new Date(exam.testDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}
                                             </span>
                                         </div>
@@ -443,14 +443,14 @@ export default function StudentDashboard() {
                                 {data.tests.filter(t => t.status !== 'not_enrolled').map((test) => (
                                     <div key={test.testId} className="bg-[#1a1f2e] border border-white/5 rounded-2xl overflow-hidden shadow-xl hover:translate-y-[-2px] transition-all duration-300">
                                         <div className="bg-white/5 px-4 sm:px-5 py-2.5 sm:py-3.5 flex justify-between items-center border-b border-white/5">
-                                            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-200">
-                                                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                                            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-200 min-w-0 flex-1 mr-2">
+                                                <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                                 <span className="font-bold tracking-tight line-clamp-1">{test.title}</span>
                                             </div>
                                             {test.status === 'missed' ? (
-                                                <span className="bg-rose-500/20 text-rose-400 text-[8px] sm:text-[9px] uppercase font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-rose-500/30 whitespace-nowrap tracking-wider">Missed</span>
+                                                <span className="bg-rose-500/20 text-rose-400 text-[8px] sm:text-[9px] uppercase font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-rose-500/30 whitespace-nowrap tracking-wider shrink-0">Missed</span>
                                             ) : (
-                                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono">{new Date(test.deploymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
+                                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 tracking-wider font-mono shrink-0">{new Date(test.deploymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                                             )}
                                         </div>
 
