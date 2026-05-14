@@ -168,13 +168,13 @@ export default function StudentDashboard() {
             : allNavItems;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden selection:bg-blue-500/30">
             <Toaster position="top-center" />
 
-            {/* Background Accents (matching premium feel) */}
+            {/* Background Accents (matching premium feel without heavy blur to prevent banding) */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/5 blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/5 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle,rgba(79,70,229,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }}></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
             </div>
 
             {/* Mobile Sidebar Overlay */}
@@ -252,7 +252,7 @@ export default function StudentDashboard() {
                 <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
 
                     {/* Header Card (Matching Admin Analytics Detail Header) */}
-                    <div className="bg-[#1a1f2e] border border-white/5 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4">
+                    <div className="bg-[#1a1f2e] ring-1 ring-white/5 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 relative z-10 shadow-lg shadow-black/20">
                         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
                             <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-500/30">
                                 {data.student.name?.[0]}
@@ -293,8 +293,8 @@ export default function StudentDashboard() {
                     </div>
 
                     {/* Stats Summary Grid (Matching Admin Overview) */}
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4">
-                        <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-blue-500/30 transition-all duration-300">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4 relative z-10">
+                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-blue-500/40 transition-all duration-300 shadow-lg shadow-black/20">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
                                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Test Average</p>
                                 <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10 text-blue-400">
@@ -307,7 +307,7 @@ export default function StudentDashboard() {
                             </div>
                         </div>
 
-                        <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-emerald-500/30 transition-all duration-300">
+                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-emerald-500/40 transition-all duration-300 shadow-lg shadow-black/20">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
                                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Tests Attempted</p>
                                 <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
@@ -320,7 +320,7 @@ export default function StudentDashboard() {
                             </div>
                         </div>
 
-                        <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-rose-500/30 transition-all duration-300">
+                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-rose-500/40 transition-all duration-300 shadow-lg shadow-black/20">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
                                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Tests Missed</p>
                                 <div className="p-1.5 sm:p-2 rounded-lg bg-rose-500/10 text-rose-400">
@@ -334,7 +334,7 @@ export default function StudentDashboard() {
                         </div>
 
                         {!finalIsFreeBatchOnly && (
-                        <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-blue-400/30 transition-all duration-300 cursor-pointer relative overflow-hidden" onClick={() => router.push('/student/chat')}>
+                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-blue-400/40 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-lg shadow-black/20" onClick={() => router.push('/student/chat')}>
                             {unreadChatCount > 0 && (
                                 <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg shadow-lg animate-pulse">
                                     {unreadChatCount} NEW
@@ -353,7 +353,7 @@ export default function StudentDashboard() {
                         </div>
                         )}
 
-                        <div className="bg-[#1a1f2e] border border-white/5 p-4 sm:p-5 rounded-2xl group hover:border-purple-500/30 transition-all duration-300">
+                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-purple-500/40 transition-all duration-300 shadow-lg shadow-black/20">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
                                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Assignments Sub</p>
                                 <div className="p-1.5 sm:p-2 rounded-lg bg-purple-500/10 text-purple-400">
