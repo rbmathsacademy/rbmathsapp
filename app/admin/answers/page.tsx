@@ -168,10 +168,10 @@ export default function AnswerBank() {
             }
             const params = new URLSearchParams();
             if (filters?.topics && filters.topics.length > 0) {
-                params.set('topic', filters.topics.join(','));
+                params.set('topic', filters.topics.join('|||'));
             }
             if (filters?.uploadedBys && filters.uploadedBys.length > 0) {
-                params.set('uploadedBy', filters.uploadedBys.join(','));
+                params.set('uploadedBy', filters.uploadedBys.join('|||'));
             }
             const url = `/api/admin/questions${params.toString() ? '?' + params.toString() : ''}`;
             const res = await fetch(url, { headers, cache: 'no-store' });

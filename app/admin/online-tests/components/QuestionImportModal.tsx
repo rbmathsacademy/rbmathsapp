@@ -72,7 +72,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
             const user = localStorage.getItem('user');
             const email = user ? JSON.parse(user).email : '';
             const params = new URLSearchParams();
-            params.set('topic', topicsList.join(','));
+            params.set('topic', topicsList.join('|||'));
             const res = await fetch(`/api/admin/questions?${params.toString()}`, {
                 headers: { 'X-User-Email': email }
             });

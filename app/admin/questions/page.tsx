@@ -435,19 +435,19 @@ export default function QuestionBank() {
 
             const params = new URLSearchParams();
             if (filters?.topics && filters.topics.length > 0) {
-                params.set('topic', filters.topics.join(','));
+                params.set('topic', filters.topics.join('|||'));
             }
             if (filters?.subtopics && filters.subtopics.length > 0) {
-                params.set('subtopic', filters.subtopics.join(','));
+                params.set('subtopic', filters.subtopics.join('|||'));
             }
             if (filters?.exams && filters.exams.length > 0) {
-                params.set('exam', filters.exams.join(','));
+                params.set('exam', filters.exams.join('|||'));
             }
             if (filters?.batches && filters.batches.length > 0) {
-                params.set('batch', filters.batches.join(','));
+                params.set('batch', filters.batches.join('|||'));
             }
             if (filters?.uploadedBys && filters.uploadedBys.length > 0) {
-                params.set('uploadedBy', filters.uploadedBys.join(','));
+                params.set('uploadedBy', filters.uploadedBys.join('|||'));
             }
             if (filters?.search) {
                 params.set('search', filters.search);
@@ -714,10 +714,16 @@ export default function QuestionBank() {
                 const targetId = lastEditedId.current;
 
                 if (userEmail) {
-                    fetchFilters(userEmail); // Refresh filters for new topics
+                    await fetchFilters(userEmail); // Refresh filters for new topics
                     const actualTopics = selectedTopics.filter(t => t !== "No Topic");
                     if (actualTopics.length > 0) {
                         await fetchQuestions(userEmail, { topics: actualTopics });
+                    } else {
+                        // Auto-select the topic(s) of newly saved questions so they appear immediately
+                        const savedTopics = [...new Set(toSave.map(q => q.topic))];
+                        if (savedTopics.length > 0) {
+                            setSelectedTopics(savedTopics); // This triggers the useEffect to fetch questions
+                        }
                     }
                 }
 

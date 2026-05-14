@@ -35,16 +35,16 @@ export async function GET(req: Request) {
 
     // Apply server-side filters
     if (topicParam) {
-        baseQuery.topic = { $in: topicParam.split(',') };
+        baseQuery.topic = { $in: topicParam.split('|||') };
     }
     if (subtopicParam) {
-        baseQuery.subtopic = { $in: subtopicParam.split(',') };
+        baseQuery.subtopic = { $in: subtopicParam.split('|||') };
     }
     if (examParam) {
-        baseQuery.examNames = { $in: examParam.split(',') };
+        baseQuery.examNames = { $in: examParam.split('|||') };
     }
     if (batchParam) {
-        const batchValues = batchParam.split(',');
+        const batchValues = batchParam.split('|||');
         const wantUntagged = batchValues.includes('Untagged');
         const realBatches = batchValues.filter(b => b !== 'Untagged');
         
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
         }
     }
     if (uploadedByParam) {
-        baseQuery.uploadedBy = { $in: uploadedByParam.split(',') };
+        baseQuery.uploadedBy = { $in: uploadedByParam.split('|||') };
     }
     if (searchParam) {
         baseQuery.$or = [
