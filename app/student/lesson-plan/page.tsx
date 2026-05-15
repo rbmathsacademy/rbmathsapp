@@ -44,10 +44,10 @@ export default function StudentLessonPlan() {
 
     const getTypeColor = (type: string) => {
         switch (type) {
-            case 'Class': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-            case 'Online': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-            case 'Offline': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-            default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+            case 'Class': return 'bg-blue-500/10 text-blue-400 ring-blue-500/20';
+            case 'Online': return 'bg-purple-500/10 text-purple-400 ring-purple-500/20';
+            case 'Offline': return 'bg-amber-500/10 text-amber-400 ring-amber-500/20';
+            default: return 'bg-slate-500/10 text-slate-400 ring-slate-500/20';
         }
     };
 
@@ -115,8 +115,8 @@ export default function StudentLessonPlan() {
                 )}
 
                 {/* Content Area */}
-                <div className="bg-[#1a1f2e] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between bg-slate-800/20">
+                <div className="bg-[#1a1f2e] ring-1 ring-white/5 rounded-3xl overflow-hidden shadow-2xl">
+                    <div className="p-4 sm:p-6 shadow-[0_1px_0_0_rgba(255,255,255,0.05)] flex items-center justify-between bg-slate-800/20">
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                                 <BookText className="h-5 w-5 text-blue-400" />
@@ -157,7 +157,7 @@ export default function StudentLessonPlan() {
                                                     {formatDate(plan.date)}
                                                 </span>
                                             </div>
-                                            <div className={`px-2 py-1 rounded-lg border flex items-center gap-1.5 shrink-0 ${getTypeColor(plan.type)}`}>
+                                            <div className={`px-2 py-1 rounded-lg ring-1 flex items-center gap-1.5 shrink-0 ${getTypeColor(plan.type)}`}>
                                                 {getTypeIcon(plan.type)}
                                                 <span className="text-[9px] font-black uppercase tracking-widest leading-none">
                                                     {plan.type === 'Online' ? 'Online Test' : plan.type === 'Offline' ? 'Offline Test' : plan.type}

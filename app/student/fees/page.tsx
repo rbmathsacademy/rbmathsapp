@@ -274,9 +274,9 @@ export default function FeesPayment() {
     const years = [selectedYear - 1, selectedYear, selectedYear + 1];
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden">
+        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden">
             {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/70 px-4 py-3">
+            <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button onClick={() => selectedBatch ? setSelectedBatch(null) : router.push('/student')} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-all">
@@ -289,7 +289,7 @@ export default function FeesPayment() {
 
             {!selectedBatch ? (
                 <main className="max-w-md mx-auto px-4 py-12 relative z-10">
-                    <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-xl">
+                    <div className="bg-slate-900/50 backdrop-blur-xl ring-1 ring-white/10 rounded-3xl p-6 shadow-xl">
                         <h1 className="text-2xl font-bold text-white mb-2">Select Batch</h1>
                         <p className="text-slate-400 text-sm mb-6">Choose a batch to view fee details</p>
 
@@ -299,7 +299,7 @@ export default function FeesPayment() {
                                     <button
                                         key={batch}
                                         onClick={() => setSelectedBatch(batch)}
-                                        className="w-full text-left p-4 rounded-xl bg-slate-800/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/30 transition-all group"
+                                        className="w-full text-left p-4 rounded-xl bg-slate-800/50 hover:bg-blue-600/20 ring-1 ring-white/5 hover:ring-blue-500/30 transition-all group"
                                     >
                                         <h3 className="text-lg font-bold text-white group-hover:text-blue-400">{batch}</h3>
                                         <p className="text-xs text-slate-500">Click to view fees</p>
@@ -323,7 +323,7 @@ export default function FeesPayment() {
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="bg-slate-800 border-white/10 rounded-lg px-4 py-2 text-sm focus:ring-pink-500"
+                            className="bg-slate-800 ring-1 ring-white/10 rounded-lg px-4 py-2 text-sm focus:ring-pink-500"
                         >
                             {years.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
@@ -333,21 +333,21 @@ export default function FeesPayment() {
                         {MONTHS.map((monthName, index) => {
                             const { status, record } = getStatusForMonth(selectedYear, index);
 
-                            let cardClass = "bg-slate-900/60 border-white/10";
+                            let cardClass = "bg-slate-900/60 ring-white/10";
 
                             if (status === 'PAID') {
-                                cardClass = "bg-green-950/30 border-green-500/30 hover:border-green-500 hover:bg-green-900/20 cursor-pointer group";
+                                cardClass = "bg-green-950/30 ring-green-500/30 hover:ring-green-500 hover:bg-green-900/20 cursor-pointer group";
                             } else if (status === 'NEW_ADMISSION' || status === 'BEFORE_ADMISSION' || status === 'EXEMPTED') {
-                                cardClass = "bg-slate-900/40 border-white/5 opacity-60";
+                                cardClass = "bg-slate-900/40 ring-white/5 opacity-60";
                             } else {
                                 // Pending
-                                cardClass = "bg-red-950/20 border-red-500/20";
+                                cardClass = "bg-red-950/20 ring-red-500/20";
                             }
 
                             return (
                                 <div
                                     key={monthName}
-                                    className={`relative rounded-xl md:rounded-2xl p-2 md:p-6 border transition-all duration-300 ${cardClass} flex flex-col justify-between min-h-[100px] md:min-h-auto`}
+                                    className={`relative rounded-xl md:rounded-2xl p-2 md:p-6 transition-all duration-300 ring-1 ${cardClass} flex flex-col justify-between min-h-[100px] md:min-h-auto`}
                                     onClick={() => status === 'PAID' && record ? handleReceiptClick(record) : null}
                                 >
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-2 md:mb-4">

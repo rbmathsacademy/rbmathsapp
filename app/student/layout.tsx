@@ -69,7 +69,7 @@ export default function StudentLayout({
                 </div>
             </StudentProfileProvider>
             {pathname !== '/student/chat' && (
-                <footer className="py-4 text-center bg-[#0a0f1a] text-gray-500 border-t border-white/5 mt-auto z-10 relative shrink-0">
+                <footer className="py-4 text-center bg-[#0a0f1a] text-gray-500 shadow-[0_-1px_0_0_rgba(255,255,255,0.05)] mt-auto z-10 relative shrink-0">
                     <p className="text-[10px] md:text-sm">&copy; 2026, RB Maths Academy || Coded and developed by Dr. Ritwick Banerjee</p>
                 </footer>
             )}

@@ -144,17 +144,17 @@ export default function QuestionBank() {
     const isInsideFolder = folderStack.length > 0;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-hidden selection:bg-blue-500/30 pb-20">
+        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden selection:bg-blue-500/30 pb-20">
             <Toaster position="top-center" />
 
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(79,70,229,0.07)_0%,transparent_70%)] animate-pulse"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.07)_0%,transparent_70%)] animate-pulse" style={{ animationDelay: '1s' }}></div>
             </div>
 
             {/* Header / Navbar - Compact */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/70 px-4 py-3">
+            <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
@@ -190,7 +190,7 @@ export default function QuestionBank() {
                     </div>
                     <button
                         onClick={() => router.push('/student/bookmarks')}
-                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 hover:border-amber-500/50 transition-all group active:scale-95"
+                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-600/10 ring-1 ring-amber-500/20 hover:ring-amber-500/50 transition-all group active:scale-95"
                     >
                         <Bookmark className="h-4 w-4 text-amber-500 group-hover:scale-110 transition-transform mb-1" />
                         <span className="text-[9px] font-bold text-amber-500/80">Saved</span>
@@ -207,7 +207,7 @@ export default function QuestionBank() {
                                 <button
                                     key={course}
                                     onClick={() => setActiveCourse(course)}
-                                    className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md border border-white/5 p-4 rounded-2xl hover:border-blue-500/50 transition-all duration-300 active:scale-95 text-left h-32 flex flex-col justify-between"
+                                    className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md ring-1 ring-white/5 p-4 rounded-2xl hover:ring-blue-500/50 transition-all duration-300 active:scale-95 text-left h-32 flex flex-col justify-between"
                                     style={{ animationDelay: `${idx * 100}ms` }}
                                 >
                                     <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -295,7 +295,7 @@ export default function QuestionBank() {
                                         key={folder._id}
                                         onClick={() => enterFolder(folder)}
                                         disabled={checkingQuestions}
-                                        className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md border border-white/5 p-4 sm:p-5 rounded-2xl hover:border-blue-500/50 transition-all duration-300 active:scale-95 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl hover:ring-blue-500/50 transition-all duration-300 active:scale-95 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >
                                         <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 group-hover:-rotate-12 duration-500">
@@ -303,7 +303,7 @@ export default function QuestionBank() {
                                         </div>
 
                                         <div className="flex flex-col h-full gap-3 sm:gap-4 relative z-10">
-                                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:bg-blue-500/20 transition-colors">
+                                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:bg-blue-500/20 transition-colors">
                                                 <Folder className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-300" />
                                             </div>
                                             <div>

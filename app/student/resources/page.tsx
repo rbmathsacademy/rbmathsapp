@@ -149,13 +149,13 @@ export default function StudentResources() {
         <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans">
             {/* Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-purple-900/20 via-transparent to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute top-[-30%] right-[-20%] w-[60%] h-[60%] bg-[radial-gradient(circle,rgba(88,28,135,0.15)_0%,transparent_70%)] rounded-full"></div>
             </div>
 
             <div className="relative z-10 max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
                 {/* Header - Compact */}
                 <div className="flex items-center gap-3 mb-4">
-                    <Link href="/student" className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-gray-400">
+                    <Link href="/student" className="p-2 sm:p-3 rounded-xl bg-white/5 ring-1 ring-white/10 text-gray-400">
                         <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Link>
                     <h1 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
@@ -197,7 +197,7 @@ export default function StudentResources() {
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveView(cat.id as any)}
-                                        className={`p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-white/10 hover:border-white/20 transition-all text-left`}
+                                        className={`p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-800/60 to-gray-900/40 ring-1 ring-white/10 hover:ring-white/20 transition-all text-left`}
                                     >
                                         <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                                             <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br ${cat.gradient}`}>
@@ -247,7 +247,7 @@ export default function StudentResources() {
                                 </div>
 
                                 {getResourcesByType(activeView).length === 0 ? (
-                                    <div className="text-center py-10 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="text-center py-10 rounded-xl bg-white/5 ring-1 ring-white/10">
                                         <Folder className="h-6 w-6 text-gray-600 mx-auto mb-2" />
                                         <p className="text-[10px] text-gray-500">No {activeView} found</p>
                                     </div>
@@ -260,7 +260,7 @@ export default function StudentResources() {
                                                     <Link
                                                         key={resource._id}
                                                         href={`/student/resources/${resource._id}`}
-                                                        className="block p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/30 transition-all"
+                                                        className="block p-3 sm:p-4 rounded-xl bg-white/5 ring-1 ring-white/10 hover:bg-white/10 hover:ring-purple-500/30 transition-all"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="p-2 rounded-lg shrink-0 bg-purple-500/20">
@@ -282,7 +282,7 @@ export default function StudentResources() {
 
                                             // For materials and videos with URLs
                                             return (
-                                                <div key={resource._id} className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10">
+                                                <div key={resource._id} className="p-3 sm:p-4 rounded-xl bg-white/5 ring-1 ring-white/10">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`p-2 rounded-lg shrink-0 ${activeView === 'materials' ? 'bg-blue-500/20' : 'bg-rose-500/20'}`}>
                                                             {activeView === 'materials' && <FileText className="h-4 w-4 text-blue-400" />}
@@ -329,7 +329,7 @@ export default function StudentResources() {
 
                                 <button
                                     onClick={() => router.push('/student/resources/mock-test')}
-                                    className="w-full p-6 sm:p-8 rounded-xl bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-500/30 hover:border-emerald-400/50 transition-all text-center"
+                                    className="w-full p-6 sm:p-8 rounded-xl bg-gradient-to-br from-emerald-900/40 to-teal-900/30 ring-1 ring-emerald-500/30 hover:ring-emerald-400/50 transition-all text-center"
                                 >
                                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
                                         <Zap className="h-7 w-7 text-white" />

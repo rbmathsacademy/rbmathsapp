@@ -265,7 +265,7 @@ export default function StudentAssignmentsPage() {
     }
 
     return (
-        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200 relative">
+        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200 relative overflow-x-hidden">
             <Toaster position="top-center" />
 
             {/* Board Setup Modal */}
@@ -282,14 +282,14 @@ export default function StudentAssignmentsPage() {
             {/* Upload Error Modal */}
             {showUploadErrorModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-[#1a1f2e] ring-1 ring-white/10 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Decorative Top Bar */}
                         <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-orange-500"></div>
                         
                         <div className="p-6">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center ring-1 ring-red-500/20">
                                         <AlertTriangle className="w-5 h-5 text-red-500" />
                                     </div>
                                     <h2 className="text-lg font-bold text-white">Upload Failed</h2>
@@ -306,7 +306,7 @@ export default function StudentAssignmentsPage() {
                                 <p className="font-medium">
                                     Your file might be too large or the network connection was interrupted.
                                 </p>
-                                <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                                <div className="bg-white/5 p-4 rounded-xl ring-1 ring-white/10 space-y-3">
                                     <p className="font-bold text-white">How to fix this:</p>
                                     <ol className="list-decimal pl-4 space-y-2 text-gray-400">
                                         <li>Go to Google and search for <strong className="text-white">"Compress pdf online"</strong></li>
@@ -319,7 +319,7 @@ export default function StudentAssignmentsPage() {
 
                             <button 
                                 onClick={() => setShowUploadErrorModal(false)}
-                                className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 transition-colors"
+                                className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl ring-1 ring-white/10 transition-colors"
                             >
                                 Got it, I'll compress it
                             </button>
@@ -342,7 +342,7 @@ export default function StudentAssignmentsPage() {
             </h1>
 
             {/* 3 Tabs */}
-            <div className="flex bg-[#1a1f2e] p-1 rounded-xl mb-6 border border-white/5">
+            <div className="flex bg-[#1a1f2e] p-1 rounded-xl mb-6 ring-1 ring-white/5">
                 <button
                     onClick={() => setActiveTab('PENDING')}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'PENDING'
@@ -386,7 +386,7 @@ export default function StudentAssignmentsPage() {
                 ))}
 
                 {displayedAssignments.length === 0 && (
-                    <div className="text-center py-12 text-gray-500 bg-[#1a1f2e] rounded-xl border border-white/5">
+                    <div className="text-center py-12 text-gray-500 bg-[#1a1f2e] rounded-xl ring-1 ring-white/5">
                         <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                         <p>
                             {activeTab === 'PENDING' && 'No pending assignments'}
@@ -448,10 +448,10 @@ function AssignmentCard({
     const deadlineDate = new Date(assignment.deadline);
 
     return (
-        <div className={`bg-[#1a1f2e] border rounded-xl overflow-hidden transition-all ${isLateAllowed ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
-            isSubmitted ? 'border-green-500/20' :
-                isClosed ? 'border-red-500/10 opacity-70' :
-                    'border-white/5 hover:border-blue-500/30'
+        <div className={`bg-[#1a1f2e] rounded-xl overflow-hidden transition-all ${isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
+            isSubmitted ? 'ring-1 ring-green-500/20' :
+                isClosed ? 'ring-1 ring-red-500/10 opacity-70' :
+                    'ring-1 ring-white/5 hover:ring-blue-500/30'
             }`}>
             <div className="p-5">
                 {/* Top Row */}
@@ -471,8 +471,8 @@ function AssignmentCard({
                     {isSubmitted && (
                         <div className="flex flex-col items-end gap-1">
                             <span className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 ${isLateSubmitted
-                                ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
-                                : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                ? 'bg-orange-500/10 text-orange-400 ring-1 ring-orange-500/20'
+                                : 'bg-green-500/10 text-green-400 ring-1 ring-green-500/20'
                                 }`}>
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 {isLateSubmitted ? 'Late Submitted' : 'Completed'}
@@ -497,7 +497,7 @@ function AssignmentCard({
                         </div>
                     )}
                     {isClosed && (
-                        <span className="px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold flex items-center gap-1.5 border border-red-500/20">
+                        <span className="px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold flex items-center gap-1.5 ring-1 ring-red-500/20">
                             <XCircle className="w-3.5 h-3.5" />
                             Missed
                         </span>
@@ -524,7 +524,7 @@ function AssignmentCard({
 
                 {/* Late Warning */}
                 {isLateAllowed && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4 flex gap-3">
+                    <div className="bg-red-500/10 ring-1 ring-red-500/20 rounded-lg p-3 mb-4 flex gap-3">
                         <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
                         <p className="text-xs text-red-200">
                             Deadline passed! You are in the cooldown period.
@@ -538,7 +538,7 @@ function AssignmentCard({
                     {/* View Button */}
                     <button
                         onClick={onOpen}
-                        className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm font-medium transition-colors border border-white/5"
+                        className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm font-medium transition-colors ring-1 ring-white/5"
                     >
                         View Assignment
                     </button>
@@ -550,7 +550,7 @@ function AssignmentCard({
                             href={assignment.submissionLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-2.5 bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-lg text-sm font-medium transition-colors border border-green-500/30 flex items-center justify-center gap-2"
+                            className="flex-1 py-2.5 bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-lg text-sm font-medium transition-colors ring-1 ring-green-500/30 flex items-center justify-center gap-2"
                         >
                             View Submission <ExternalLink className="w-3.5 h-3.5" />
                         </a>
@@ -569,7 +569,7 @@ function AssignmentCard({
                         </button>
                         </>
                     ) : isClosed ? (
-                        <button disabled className="flex-1 py-2.5 bg-red-900/20 text-red-400/60 rounded-lg text-sm font-medium cursor-not-allowed border border-red-500/10">
+                        <button disabled className="flex-1 py-2.5 bg-red-900/20 text-red-400/60 rounded-lg text-sm font-medium cursor-not-allowed ring-1 ring-red-500/10">
                             Missed
                         </button>
                     ) : (

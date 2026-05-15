@@ -960,11 +960,11 @@ export default function TakeTestPage() {
 
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex flex-col relative">
+        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex flex-col relative overflow-x-hidden">
 
             <div className="test-content flex flex-col min-h-screen">
                 {/* Top Bar - Timer & Progress */}
-                <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-4 py-3 shadow-sm">
+                <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] px-4 py-3 shadow-sm">
                     <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                             <h1 className="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-xs">{test.title}</h1>
@@ -1047,9 +1047,9 @@ export default function TakeTestPage() {
                                 </div>
 
                                 {/* Question Text */}
-                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-3 sm:p-6 shadow-lg">
+                                <div className="bg-slate-900/60 ring-1 ring-white/10 rounded-2xl p-3 sm:p-6 shadow-lg">
                                     {currentQuestion.type === 'comprehension' && (
-                                        <div className="mb-8 pb-8 border-b border-white/10">
+                                        <div className="mb-8 pb-8 shadow-[0_1px_0_0_rgba(255,255,255,0.1)]">
                                             <div className="inline-block px-3 py-1 rounded-lg bg-purple-500/10 text-xs font-bold text-purple-400 uppercase tracking-wider mb-4 border border-purple-500/20">
                                                 Passage
                                             </div>
@@ -1080,7 +1080,7 @@ export default function TakeTestPage() {
                                         /* Comprehension sub-questions */
                                         <div className="space-y-8">
                                             {currentQuestion.subQuestions?.map((sq, i) => (
-                                                <div key={sq.id} className="bg-slate-950/50 rounded-xl p-3 sm:p-5 border border-white/5 relative">
+                                                <div key={sq.id} className="bg-slate-950/50 rounded-xl p-3 sm:p-5 ring-1 ring-white/5 relative">
                                                     <div className="absolute top-0 left-0 -mt-2 -ml-2 w-7 h-7 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-bold text-white shadow-lg">
                                                         {String.fromCharCode(65 + i)}
                                                     </div>
@@ -1183,7 +1183,7 @@ export default function TakeTestPage() {
 
                 {/* Bottom Navigation Bar */}
                 {/* Bottom Navigation Bar */}
-                <div className="fixed bottom-0 left-0 right-0 bg-[#0a0f1a]/95 backdrop-blur-xl border-t border-white/5 px-4 py-3 z-40 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+                <div className="fixed bottom-0 left-0 right-0 bg-[#0a0f1a]/95 backdrop-blur-xl shadow-[0_-1px_0_0_rgba(255,255,255,0.05)] px-4 py-3 z-40 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
                     <div className="max-w-4xl mx-auto">
                         {/* Mobile Layout (Stacked) */}
                         <div className="flex sm:hidden flex-col gap-2 items-start">
@@ -1251,7 +1251,7 @@ export default function TakeTestPage() {
                 {/* Submit Confirmation Modal */}
                 {showSubmitConfirm && (
                     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                        <div className="bg-slate-900 ring-1 ring-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-3 rounded-xl bg-red-500/20">
                                     <AlertTriangle className="h-6 w-6 text-red-400" />
@@ -1301,7 +1301,7 @@ export default function TakeTestPage() {
                 {/* Warning Modal */}
                 {showWarningModal && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-                        <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+                        <div className="bg-slate-900 ring-1 ring-red-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
 
                             <div className="flex flex-col items-center text-center space-y-4">
