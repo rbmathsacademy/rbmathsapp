@@ -241,12 +241,12 @@ export default function PracticeQuestionsPage() {
         <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans flex flex-col">
             {/* Animated Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-30%] left-[-20%] w-[60%] h-[60%] bg-gradient-radial from-purple-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute bottom-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-violet-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle,rgba(88,28,135,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }}></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle,rgba(109,40,217,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
             </div>
 
             {/* Header */}
-            <header className="relative z-10 px-3 py-2 md:px-4 md:py-4 border-b border-white/5 bg-black/20 backdrop-blur-md">
+            <header className="relative z-10 px-3 py-2 md:px-4 md:py-4 ring-1 ring-white/5 bg-[#0a0f1a]/95">
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
                         <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export default function PracticeQuestionsPage() {
 
                     <div className="flex gap-2 w-full md:w-auto justify-center">
                         <select
-                            className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500 max-w-[120px]"
+                            className="bg-white/5 ring-1 ring-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-purple-500 max-w-[120px]"
                             value={selectedSubtopic}
                             onChange={(e) => setSelectedSubtopic(e.target.value)}
                         >
@@ -280,7 +280,7 @@ export default function PracticeQuestionsPage() {
                             {subtopics.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         <select
-                            className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500 max-w-[120px]"
+                            className="bg-white/5 ring-1 ring-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-purple-500 max-w-[120px]"
                             value={selectedExam}
                             onChange={(e) => setSelectedExam(e.target.value)}
                         >
@@ -288,7 +288,7 @@ export default function PracticeQuestionsPage() {
                             {examNames.map(e => <option key={e} value={e}>{e}</option>)}
                         </select>
                         <select
-                            className="bg-white/5 border border-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-purple-500 max-w-[120px]"
+                            className="bg-white/5 ring-1 ring-white/10 text-gray-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-purple-500 max-w-[120px]"
                             value={selectedType}
                             onChange={(e) => setSelectedType(e.target.value)}
                         >
@@ -304,7 +304,7 @@ export default function PracticeQuestionsPage() {
                 <div className={`w-full max-w-3xl transition-all duration-300 transform ${animating ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'}`}>
 
                     {/* Question Card */}
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative group">
+                    <div className="bg-[#1a1f2e] ring-1 ring-white/10 rounded-3xl shadow-2xl relative group">
                         {/* Bookmark Badge */}
                         <button
                             onClick={() => toggleBookmark(currentQuestion._id)}
@@ -317,19 +317,19 @@ export default function PracticeQuestionsPage() {
                         <div className="p-4 md:p-8">
                             {/* Metadata */}
                             <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-6 pr-8 md:pr-12">
-                                <span className={`px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold uppercase tracking-wider ${currentQuestion.type === 'broad' ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>
+                                <span className={`px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold uppercase tracking-wider ${currentQuestion.type === 'broad' ? 'bg-pink-500/10 text-pink-400 ring-1 ring-pink-500/20' : 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/20'}`}>
                                     {currentQuestion.type}
                                 </span>
-                                <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-white/5 text-gray-400 border border-white/10">
+                                <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-white/5 text-gray-400 ring-1 ring-white/10">
                                     {currentQuestion.topic}
                                 </span>
                                 {currentQuestion.examNames && currentQuestion.examNames.map((exam: string, i: number) => (
-                                    <span key={i} className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    <span key={i} className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20">
                                         {exam}
                                     </span>
                                 ))}
                                 {currentQuestion.marks != null && currentQuestion.marks > 0 && (
-                                    <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <span className="px-2 py-1 rounded-[4px] text-[10px] md:text-xs font-bold bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
                                         {currentQuestion.marks} Marks
                                     </span>
                                 )}
@@ -346,7 +346,7 @@ export default function PracticeQuestionsPage() {
                                     {currentQuestion.options.map((opt: string, i: number) => (
                                         <div
                                             key={i}
-                                            className="px-4 py-3 rounded-xl border-2 border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-start gap-3 group cursor-default"
+                                            className="px-4 py-3 rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-start gap-3 group cursor-default"
                                         >
                                             <span className="font-bold text-blue-400 text-lg uppercase min-w-[24px]">
                                                 {String.fromCharCode(65 + i)}.
@@ -365,14 +365,14 @@ export default function PracticeQuestionsPage() {
                                     <img
                                         src={currentQuestion.image}
                                         alt="Question"
-                                        className="rounded-xl border border-white/10 max-h-80 object-contain bg-black/50 mx-auto"
+                                        className="rounded-xl ring-1 ring-white/10 max-h-80 object-contain bg-black/50 mx-auto"
                                     />
                                 </div>
                             )}
                         </div>
 
                         {/* Interactive Toggles Toolbar */}
-                        <div className="bg-black/20 border-t border-white/5 p-3 md:p-4 flex flex-wrap gap-2 md:gap-3 justify-center">
+                        <div className="bg-black/20 ring-1 ring-white/5 rounded-b-3xl p-3 md:p-4 flex flex-wrap gap-2 md:gap-3 justify-center">
                             {(questionHints.length > 0) && (
                                 <button
                                     onClick={() => {
@@ -384,7 +384,7 @@ export default function PracticeQuestionsPage() {
                                             setShowHint(false);
                                         }
                                     }}
-                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showHint ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30'}`}
+                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showHint ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 ring-1 ring-amber-500/30'}`}
                                 >
                                     <Lightbulb className="h-3 w-3 md:h-4 md:w-4" />
                                     {showHint ? 'Hide Hint' : 'Show Hint'}
@@ -402,7 +402,7 @@ export default function PracticeQuestionsPage() {
                                             setShowAnswer(false);
                                         }
                                     }}
-                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showAnswer ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30'}`}
+                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showAnswer ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 ring-1 ring-emerald-500/30'}`}
                                 >
                                     <CheckCircle className="h-3 w-3 md:h-4 md:w-4" />
                                     {showAnswer ? 'Hide Answer' : 'Show Answer'}
@@ -420,7 +420,7 @@ export default function PracticeQuestionsPage() {
                                             setShowExplanation(false);
                                         }
                                     }}
-                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showExplanation ? 'bg-blue-500 text-black shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30'}`}
+                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showExplanation ? 'bg-blue-500 text-black shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 ring-1 ring-blue-500/30'}`}
                                 >
                                     <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
                                     {showExplanation ? 'Hide Explanation' : 'Show Explanation'}
@@ -431,7 +431,7 @@ export default function PracticeQuestionsPage() {
                             {resource.aiEnabled && (
                                 <button
                                     onClick={() => setShowAIModal(true)}
-                                    className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30"
+                                    className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all ring-1 ring-indigo-400/30"
                                 >
                                     <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
                                     AI Verify
@@ -443,7 +443,7 @@ export default function PracticeQuestionsPage() {
                     {/* Revealing Sections */}
                     <div className="space-y-4 mt-6">
                         {showHint && questionHints.length > 0 && (
-                            <div className="bg-amber-950/30 border border-amber-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                            <div className="bg-amber-950/30 ring-1 ring-amber-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
                                 <h3 className="text-amber-400 font-bold mb-3 flex items-center gap-2">
                                     <Lightbulb className="h-4 w-4" /> Hints
                                 </h3>
@@ -459,7 +459,7 @@ export default function PracticeQuestionsPage() {
                         )}
 
                         {showAnswer && currentQuestion.answer && (
-                            <div className="bg-emerald-950/30 border border-emerald-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                            <div className="bg-emerald-950/30 ring-1 ring-emerald-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
                                 <h3 className="text-emerald-400 font-bold mb-3 flex items-center gap-2">
                                     <CheckCircle className="h-4 w-4" /> Correct Answer
                                 </h3>
@@ -470,7 +470,7 @@ export default function PracticeQuestionsPage() {
                         )}
 
                         {showExplanation && currentQuestion.explanation && (
-                            <div className="bg-blue-950/30 border border-blue-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                            <div className="bg-blue-950/30 ring-1 ring-blue-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
                                 <h3 className="text-blue-400 font-bold mb-3 flex items-center gap-2">
                                     <BookOpen className="h-4 w-4" /> Explanation
                                 </h3>
@@ -489,7 +489,7 @@ export default function PracticeQuestionsPage() {
                 <button
                     onClick={handlePrev}
                     disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 transition-all active:scale-95"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed ring-1 ring-white/10 transition-all active:scale-95"
                 >
                     <ArrowLeft className="h-5 w-5" /> Previous
                 </button>
@@ -509,8 +509,8 @@ export default function PracticeQuestionsPage() {
 
             {/* AI Modal (Simplified reusing existing logic) */}
             {showAIModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bg-gray-900 border border-gray-700 p-6 rounded-2xl max-w-md w-full text-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in">
+                    <div className="bg-[#1a1f2e] ring-1 ring-white/10 p-6 rounded-2xl max-w-md w-full text-center">
                         <Sparkles className="h-12 w-12 text-purple-400 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Verify with AI</h3>
                         <p className="text-gray-400 mb-6 text-sm">We'll copy a prompt for you to paste into Gemini.</p>
@@ -522,11 +522,7 @@ export default function PracticeQuestionsPage() {
                 </div>
             )}
 
-            <style jsx>{`
-                .bg-gradient-radial {
-                    background: radial-gradient(circle, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 70%);
-                }
-            `}</style>
+
         </div>
     );
 }
