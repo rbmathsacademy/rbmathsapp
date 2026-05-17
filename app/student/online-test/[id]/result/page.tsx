@@ -1,10 +1,71 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Trophy, Clock, Target, CheckCircle, XCircle, Minus, Award, TrendingUp, BarChart3 } from 'lucide-react';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
+
+/**
+ * Runtime KaTeX CSS health-check — same guard as in the test-taking page.
+ * Silently injects CDN fallback if bundled KaTeX CSS/fonts failed to load.
+ */
+function useKatexCssGuard() {
+    const cdnInjectedRef = useRef(false);
+
+    useEffect(() => {
+        const KATEX_CDN = 'https://cdn.jsdelivr.net/npm/katex@0.16.27/dist/katex.min.css';
+
+        function isKatexCssLoaded(): boolean {
+            const probe = document.createElement('span');
+            probe.className = 'katex';
+            probe.style.position = 'absolute';
+            probe.style.left = '-9999px';
+            probe.style.top = '-9999px';
+            probe.innerHTML = '<span class="katex-html"><span class="base"><span class="mord mathnormal">x</span></span></span>';
+            document.body.appendChild(probe);
+
+            const style = getComputedStyle(probe);
+            const hasKatexFont = /katex/i.test(style.fontFamily || '');
+
+            const katexHtml = probe.querySelector('.katex-html') as HTMLElement;
+            let hasKatexDisplay = false;
+            if (katexHtml) {
+                hasKatexDisplay = getComputedStyle(katexHtml).display !== 'inline';
+            }
+
+            document.body.removeChild(probe);
+            return hasKatexFont || hasKatexDisplay;
+        }
+
+        function injectCdnFallback() {
+            if (cdnInjectedRef.current) return;
+            const existing = document.querySelector(`link[href*="katex"][href*="cdn"]`);
+            if (existing) { cdnInjectedRef.current = true; return; }
+
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = KATEX_CDN;
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+            cdnInjectedRef.current = true;
+            console.info('[KaTeX Guard] Bundled KaTeX CSS missing — injected CDN fallback.');
+        }
+
+        function checkAndFix() {
+            if (!isKatexCssLoaded()) injectCdnFallback();
+        }
+
+        const timer = setTimeout(checkAndFix, 1500);
+        const handleVisibility = () => { if (!document.hidden) setTimeout(checkAndFix, 500); };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
+    }, []);
+}
 
 interface QuestionReview {
     questionId: string;
@@ -43,6 +104,9 @@ export default function TestResultPage() {
     const router = useRouter();
     const params = useParams();
     const testId = params?.id as string;
+
+    // Ensure KaTeX CSS is loaded — silently injects CDN fallback if bundled CSS failed
+    useKatexCssGuard();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');

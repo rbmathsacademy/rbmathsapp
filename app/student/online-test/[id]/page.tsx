@@ -7,6 +7,90 @@ import { toast } from 'react-hot-toast';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
+/**
+ * Runtime KaTeX CSS health-check.
+ * Students cannot hard-refresh during an exam, so if KaTeX CSS/fonts fail to load
+ * (network hiccup, aggressive mobile memory management, CSS chunk failure), math
+ * renders as raw LaTeX strings. This hook detects that scenario by rendering an
+ * invisible KaTeX element and checking if KaTeX styles are actually applied. If not,
+ * it injects a CDN fallback stylesheet silently — no user action needed.
+ */
+function useKatexCssGuard() {
+    const cdnInjectedRef = useRef(false);
+
+    useEffect(() => {
+        const KATEX_CDN = 'https://cdn.jsdelivr.net/npm/katex@0.16.27/dist/katex.min.css';
+
+        function isKatexCssLoaded(): boolean {
+            // Create a temporary element styled as KaTeX would style it
+            const probe = document.createElement('span');
+            probe.className = 'katex';
+            probe.style.position = 'absolute';
+            probe.style.left = '-9999px';
+            probe.style.top = '-9999px';
+            probe.innerHTML = '<span class="katex-html"><span class="base"><span class="mord mathnormal">x</span></span></span>';
+            document.body.appendChild(probe);
+
+            // If KaTeX CSS is loaded, .katex has specific font-family and sizing rules.
+            // Without it, the element uses the page's default font.
+            const style = getComputedStyle(probe);
+            const fontFamily = style.fontFamily || '';
+            // KaTeX CSS sets font-family to "KaTeX_Main", ...; if missing, it'll be the page default
+            const hasKatexFont = /katex/i.test(fontFamily);
+
+            // Also check if the .katex-html display rule is applied (KaTeX CSS sets specific line-height)
+            const katexHtml = probe.querySelector('.katex-html') as HTMLElement;
+            let hasKatexDisplay = false;
+            if (katexHtml) {
+                const htmlStyle = getComputedStyle(katexHtml);
+                // KaTeX CSS explicitly sets display and line-height on .katex-html
+                hasKatexDisplay = htmlStyle.display !== 'inline';
+            }
+
+            document.body.removeChild(probe);
+            return hasKatexFont || hasKatexDisplay;
+        }
+
+        function injectCdnFallback() {
+            if (cdnInjectedRef.current) return;
+
+            // Check if a CDN link is already present
+            const existing = document.querySelector(`link[href*="katex"][href*="cdn"]`);
+            if (existing) { cdnInjectedRef.current = true; return; }
+
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = KATEX_CDN;
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+            cdnInjectedRef.current = true;
+            console.info('[KaTeX Guard] Bundled KaTeX CSS missing — injected CDN fallback.');
+        }
+
+        function checkAndFix() {
+            if (!isKatexCssLoaded()) {
+                injectCdnFallback();
+            }
+        }
+
+        // Check after a short delay (allow CSS chunks to finish loading)
+        const initialTimer = setTimeout(checkAndFix, 1500);
+
+        // Re-check when page becomes visible again (mobile may purge cached styles)
+        const handleVisibility = () => {
+            if (!document.hidden) {
+                setTimeout(checkAndFix, 500);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        return () => {
+            clearTimeout(initialTimer);
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
+    }, []);
+}
+
 interface Question {
     id: string;
     text: string;
@@ -50,6 +134,9 @@ export default function TakeTestPage() {
     const router = useRouter();
     const params = useParams();
     const testId = params?.id as string;
+
+    // Ensure KaTeX CSS is loaded — silently injects CDN fallback if bundled CSS failed
+    useKatexCssGuard();
 
     const [loading, setLoading] = useState(true);
     const [test, setTest] = useState<TestData | null>(null);
