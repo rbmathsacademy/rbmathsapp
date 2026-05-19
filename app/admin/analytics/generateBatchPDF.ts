@@ -29,10 +29,8 @@ const COLORS = {
 };
 
 const PAGE_W = 210;
-const PAGE_H = 297;
 const MARGIN = 14;
 const CONTENT_W = PAGE_W - 2 * MARGIN;
-const FOOTER_Y = PAGE_H - 16;
 
 interface StudentAnalytics {
     student: { _id: string; name: string; phoneNumber: string; joinedAt: string; schoolName?: string; board?: string };
@@ -49,8 +47,8 @@ interface BatchData {
     analytics: StudentAnalytics[];
 }
 
-function addFooter(doc: jsPDF, pageNum: number) {
-    const y = FOOTER_Y;
+function addFooter(doc: jsPDF, pageNum: number, pageH: number) {
+    const y = pageH - 16;
     doc.setDrawColor(...COLORS.gray);
     doc.setLineWidth(0.3);
     doc.line(MARGIN, y, PAGE_W - MARGIN, y);
@@ -87,6 +85,8 @@ export async function generateBatchPDF(data: BatchData) {
     const rankMap: Record<string, number> = {};
     rankedStudents.forEach((s, i) => { rankMap[s.student._id] = i + 1; });
     const totalStudents = sortedStudents.length;
+
+    const topperAvgTestPercentage = data.analytics.length > 0 ? Math.max(...data.analytics.map(st => st.stats.avgTestPercentage || 0)) : 0;
 
     // Build test date lookup
     const testDateMap: Record<string, string> = {};
@@ -178,20 +178,35 @@ export async function generateBatchPDF(data: BatchData) {
     });
 
     currentPage = doc.getNumberOfPages();
+    const pageHeights: Record<number, number> = {}; // Store page heights for footer
+    for (let p = 1; p <= currentPage; p++) pageHeights[p] = 297; // TOC pages are A4
 
     // ═══════════════════════════════════════════
     // STUDENT PAGES
     // ═══════════════════════════════════════════
     for (let si = 0; si < sortedStudents.length; si++) {
         const s = sortedStudents[si];
-        doc.addPage();
+        const completedTests = s.tests.filter(t => t.status !== 'not_enrolled');
+        const graphTests = completedTests.filter(t => t.status !== 'missed' && t.percentage !== null).slice().reverse();
+        
+        // Calculate required page height
+        const baseH = 90; // Header, Cards, spacing
+        const testsH = 20 + (completedTests.length > 0 ? 10 + completedTests.length * 10 : 15);
+        const graphH = graphTests.length >= 2 ? 65 : 0;
+        const offlineH = (s.offlineExams && s.offlineExams.length > 0) ? 20 + 10 + s.offlineExams.length * 10 : 0;
+        const footerH = 20;
+        
+        const requiredH = baseH + testsH + graphH + offlineH + footerH;
+        const PAGE_H = Math.max(297, requiredH);
+        
+        doc.addPage([PAGE_W, PAGE_H], 'portrait');
+        currentPage++;
+        pageHeights[currentPage] = PAGE_H;
+        
         let y = 6;
 
         const checkPageBreak = (neededHeight: number) => {
-            if (y + neededHeight > PAGE_H - 20) {
-                doc.addPage();
-                y = MARGIN;
-            }
+            // No page breaks, since we increased page length to fit everything.
         };
 
         // ── Header bar with name + rank ──
@@ -227,29 +242,54 @@ export async function generateBatchPDF(data: BatchData) {
         y = 27;
 
         // ── Summary stat cards ──
-        const cardW = (CONTENT_W - 9) / 4;
-        const cards = [
+        
+        // Row 1: Tests (4 cards)
+        const testCardW = (CONTENT_W - 3 * 3) / 4;
+        const testCards = [
             { label: 'Tests Given', value: `${s.stats.testsAttempted}`, color: COLORS.blue },
             { label: 'Tests Missed', value: `${s.stats.testsMissed}`, color: COLORS.red },
-            { label: 'Assignments Done', value: `${s.stats.assignmentsSubmitted}`, color: COLORS.green },
-            { label: 'Assignments Missed', value: `${s.stats.assignmentsMissed}`, color: COLORS.red },
+            { label: 'Test %', value: `${s.stats.avgTestPercentage}%`, color: COLORS.green },
+            { label: 'Test % (Topper)', value: `${topperAvgTestPercentage}%`, color: COLORS.purple },
         ];
-        cards.forEach((c, i) => {
-            const cx = MARGIN + i * (cardW + 3);
+        testCards.forEach((c, i) => {
+            const cx = MARGIN + i * (testCardW + 3);
             doc.setFillColor(c.color[0], c.color[1], c.color[2]);
-            doc.roundedRect(cx, y, cardW, 14, 2, 2, 'F');
+            doc.roundedRect(cx, y, testCardW, 14, 2, 2, 'F');
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(...COLORS.white);
-            doc.text(c.value, cx + cardW / 2, y + 7, { align: 'center' });
+            doc.text(c.value, cx + testCardW / 2, y + 7, { align: 'center' });
             doc.setFontSize(5.5);
             doc.setFont('helvetica', 'normal');
-            doc.text(c.label, cx + cardW / 2, y + 12, { align: 'center' });
+            doc.text(c.label, cx + testCardW / 2, y + 12, { align: 'center' });
+        });
+        y += 18;
+
+        // Row 2: Assignments (5 cards)
+        const assignCardW = (CONTENT_W - 4 * 3) / 5;
+        const assignCards = [
+            { label: 'Assign. Done', value: `${s.stats.assignmentsSubmitted}`, color: COLORS.blue },
+            { label: 'Assign. Missed', value: `${s.stats.assignmentsMissed}`, color: COLORS.red },
+            { label: 'Good', value: `${s.stats.goodQuality}`, color: COLORS.green },
+            { label: 'Satisfactory', value: `${s.stats.satisfactoryQuality}`, color: COLORS.gold },
+            { label: 'Poor', value: `${s.stats.poorQuality}`, color: COLORS.gray },
+        ];
+        assignCards.forEach((c, i) => {
+            const cx = MARGIN + i * (assignCardW + 3);
+            doc.setFillColor(c.color[0], c.color[1], c.color[2]);
+            doc.roundedRect(cx, y, assignCardW, 14, 2, 2, 'F');
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...COLORS.white);
+            doc.text(c.value, cx + assignCardW / 2, y + 7, { align: 'center' });
+            doc.setFontSize(5.5);
+            doc.setFont('helvetica', 'normal');
+            doc.text(c.label, cx + assignCardW / 2, y + 12, { align: 'center' });
         });
         y += 18;
 
         // ── ONLINE TESTS BOX ──
-        const completedTests = s.tests.filter(t => t.status !== 'not_enrolled');
+        // ── ONLINE TESTS BOX ──
         const testTableRows: any[][] = [];
         completedTests.forEach(t => {
             const testMeta = data.tests.find(tm => tm._id === t.testId);
@@ -305,62 +345,7 @@ export async function generateBatchPDF(data: BatchData) {
             y += 13;
         }
 
-        // ── ASSIGNMENTS BOX ──
-        const validAssignments = s.assignments.filter(a => a.status !== 'NOT_ENROLLED');
-        const assignRows: any[][] = [];
-        validAssignments.forEach(a => {
-            const info = assignmentMap[a.assignmentId];
-            const title = a.title || info?.title || 'Assignment';
-            const deadline = info?.deadline || '';
-            if (a.status === 'MISSED') {
-                assignRows.push([title, `MISSED (${deadline})`, { missed: true }]);
-            } else {
-                const qualityStr = a.quality || a.status || 'Submitted';
-                assignRows.push([title, qualityStr, { missed: false }]);
-            }
-        });
-
-        checkPageBreak(40);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...COLORS.assignBoxBorder);
-        doc.text('ASSIGNMENTS', MARGIN, y + 3);
-        y += 5;
-
-        if (assignRows.length > 0) {
-            autoTable(doc, {
-                startY: y,
-                head: [['Assignment', 'Quality / Status']],
-                body: assignRows.map(r => [r[0], r[1]]),
-                theme: 'grid',
-                margin: { left: MARGIN, right: MARGIN, bottom: 20 },
-                tableWidth: CONTENT_W,
-                styles: { fontSize: 7, cellPadding: 1.8, textColor: COLORS.darkText, overflow: 'ellipsize', fillColor: COLORS.assignBoxBg, lineColor: COLORS.assignBoxBorder, lineWidth: 0.2 },
-                headStyles: { fillColor: COLORS.assignBoxBorder, textColor: COLORS.white, fontStyle: 'bold', fontSize: 7 },
-                columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center', cellWidth: 40 } },
-                didParseCell: (hookData: any) => {
-                    if (hookData.section === 'body') {
-                        const meta = assignRows[hookData.row.index]?.[2];
-                        if (meta?.missed) {
-                            hookData.cell.styles.textColor = COLORS.red;
-                            hookData.cell.styles.fontStyle = 'bold';
-                            hookData.cell.styles.fillColor = COLORS.assignMissedBg;
-                        }
-                    }
-                }
-            });
-            y = (doc as any).lastAutoTable.finalY + 6;
-        } else {
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'italic');
-            doc.setTextColor(...COLORS.gray);
-            doc.text('No assignments available.', MARGIN + 4, y + 6);
-            y += 13;
-        }
-
         // ── LINE GRAPH: Student vs Highest ──
-        // Reverse so oldest test is on the left, newest on the right
-        const graphTests = completedTests.filter(t => t.status !== 'missed' && t.percentage !== null).slice().reverse();
         if (graphTests.length >= 2) {
             checkPageBreak(60);
             const graphX = MARGIN + 8;
@@ -501,7 +486,7 @@ export async function generateBatchPDF(data: BatchData) {
     const totalPages = doc.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
-        addFooter(doc, p);
+        addFooter(doc, p, pageHeights[p] || 297);
     }
 
     // Save
