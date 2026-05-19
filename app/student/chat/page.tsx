@@ -8,6 +8,9 @@ import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 import { useStudentProfile } from '../StudentProfileContext';
+import BatchTabSwitcher from '../../components/BatchTabSwitcher';
+
+const FREE_BATCH_LOWER = 'class xi (free batch) 2026-27';
 
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
@@ -487,6 +490,20 @@ export default function StudentChat() {
                     </div>
                 )}
             </div>
+
+            {/* Batch Tab Switcher */}
+            {batches.filter(b => b.trim().toLowerCase() !== FREE_BATCH_LOWER).length > 1 && (
+                <div className="px-3 py-2 bg-[#0a0f1a]/60 border-b border-white/5 shrink-0 z-10">
+                    <BatchTabSwitcher
+                        batches={batches}
+                        selectedBatch={selectedBatch || batches[0]}
+                        onSelect={(batch) => {
+                            lastBatchIdScrolled.current = null;
+                            setSelectedBatch(batch);
+                        }}
+                    />
+                </div>
+            )}
 
             {/* Messages */}
             <div 

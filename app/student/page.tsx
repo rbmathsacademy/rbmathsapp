@@ -25,8 +25,10 @@ import {
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useStudentProfile } from './StudentProfileContext';
+import BatchTabSwitcher from '../components/BatchTabSwitcher';
 
 const FREE_BATCH = 'Class XI (Free batch) 2026-27';
+const FREE_BATCH_LOWER = FREE_BATCH.trim().toLowerCase();
 
 interface DashboardData {
     student: {
@@ -83,6 +85,8 @@ export default function StudentDashboard() {
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
+    const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+    const [batchesReady, setBatchesReady] = useState(false);
 
     const fetchUnreadStatus = async () => {
         try {
@@ -99,9 +103,30 @@ export default function StudentDashboard() {
         return () => clearInterval(interval);
     }, []);
 
-    const fetchData = async () => {
+    // Once data loads, set default selected batch (first non-free batch)
+    useEffect(() => {
+        if (data && !batchesReady) {
+            const nonFreeBatches = (data.student.courses || []).filter(c => c.trim().toLowerCase() !== FREE_BATCH_LOWER);
+            if (nonFreeBatches.length > 1) {
+                setSelectedBatch(nonFreeBatches[0]);
+            }
+            setBatchesReady(true);
+        }
+    }, [data, batchesReady]);
+
+    // Re-fetch when selectedBatch changes (after initial load)
+    useEffect(() => {
+        if (batchesReady && selectedBatch) {
+            fetchData(selectedBatch);
+        }
+    }, [selectedBatch]);
+
+    const fetchData = async (batch?: string) => {
         try {
-            const res = await fetch('/api/student/dashboard-analytics');
+            const url = batch
+                ? `/api/student/dashboard-analytics?batch=${encodeURIComponent(batch)}`
+                : '/api/student/dashboard-analytics';
+            const res = await fetch(url);
             if (res.ok) {
                 const result = await res.json();
                 setData(result);
@@ -211,8 +236,8 @@ export default function StudentDashboard() {
                                 className={`w-full group relative overflow-hidden rounded-xl p-3.5 transition-all duration-300 border border-transparent hover:border-white/10 active:scale-[0.98] text-left ${item.id === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'hover:bg-white/5 text-slate-400'}`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg bg-gradient-to-br transition-colors ${item.id === 'dashboard' ? 'bg-white/20' : 'bg-slate-800 group-hover:bg-slate-700'}`}>
-                                        <item.icon className="h-4 w-4 text-white" />
+                                    <div className={`p-2 rounded-lg bg-gradient-to-br transition-all duration-300 shadow-md ${item.id === 'dashboard' ? item.gradient + ' ring-1 ring-white/20 shadow-blue-500/30' : item.gradient + ' opacity-75 group-hover:opacity-100 group-hover:scale-110 group-hover:shadow-white/10 group-hover:ring-1 group-hover:ring-white/20'}`}>
+                                        <item.icon className="h-4 w-4 text-white drop-shadow-sm" />
                                     </div>
                                     <span className={`text-[13px] font-semibold transition-colors ${item.id === 'dashboard' ? 'text-white' : 'group-hover:text-white'}`}>
                                         {item.label}
@@ -291,6 +316,17 @@ export default function StudentDashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Batch Switcher */}
+                    {data.student.courses.filter(c => c.trim().toLowerCase() !== FREE_BATCH_LOWER).length > 1 && (
+                        <div className="relative z-10">
+                            <BatchTabSwitcher
+                                batches={data.student.courses}
+                                selectedBatch={selectedBatch || data.student.courses.filter(c => c.trim().toLowerCase() !== FREE_BATCH_LOWER)[0]}
+                                onSelect={(batch) => setSelectedBatch(batch)}
+                            />
+                        </div>
+                    )}
 
                     {/* Stats Summary Grid (Matching Admin Overview) */}
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4 relative z-10">

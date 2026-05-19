@@ -51,17 +51,18 @@ export async function GET(
         // --- Lazy auto-cleanup: complete expired in_progress attempts ---
         const now = new Date();
         const durationMs = (test.deployment?.durationMinutes || 60) * 60 * 1000;
-        const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
 
         for (const attempt of attempts) {
             if (attempt.status !== 'in_progress') continue;
 
             const startedAt = new Date(attempt.startedAt).getTime();
             const elapsed = now.getTime() - startedAt;
-            const isExpiredByDuration = elapsed > durationMs;
-            const isExpiredByEndTime = endTime ? now > endTime : false;
+            
+            // Auto-complete only if they have exceeded their personal duration 
+            // (added 5 mins grace period to allow for slow connections during submission)
+            const isExpiredByDuration = elapsed > (durationMs + 5 * 60 * 1000);
 
-            if (!isExpiredByDuration && !isExpiredByEndTime) continue;
+            if (!isExpiredByDuration) continue;
 
             // Auto-grade with whatever answers exist
             const sourceQuestions = (attempt.questions && attempt.questions.length > 0)

@@ -82,12 +82,11 @@ export default function StudentLessonPlan() {
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <button
-                        onClick={() => router.push('/student')}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group self-start"
+                    <button 
+                        onClick={() => router.push('/student')} 
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0 self-start"
                     >
-                        <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                        Back to Dashboard
+                        <ChevronLeft className="h-5 w-5" /> Back
                     </button>
 
                     <div className="text-center sm:text-right">

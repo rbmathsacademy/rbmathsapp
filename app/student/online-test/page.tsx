@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Clock, AlertCircle, Play, Trophy, Calendar, Timer, ChevronRight, Sparkles, Lock, TrendingUp, Activity, Medal, Crown, Star } from 'lucide-react';
+import BatchTabSwitcher from '../../components/BatchTabSwitcher';
 
 interface TestInfo {
     _id: string;
@@ -217,8 +218,11 @@ export default function OnlineTestPage() {
             {/* Header */}
             <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center gap-3">
-                    <button onClick={() => router.push('/student')} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all">
-                        <ArrowLeft className="h-4 w-4" />
+                    <button 
+                        onClick={() => router.push('/student')} 
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0"
+                    >
+                        <ArrowLeft className="h-5 w-5" /> Back
                     </button>
                     <h1 className="text-sm font-bold text-white">Online<span className="text-emerald-400">Tests</span></h1>
                 </div>
@@ -227,45 +231,13 @@ export default function OnlineTestPage() {
             <main className="max-w-7xl mx-auto px-4 py-2 sm:py-6 relative z-10 space-y-8">
 
                 {/* ===== BATCH SELECTION TABS ===== */}
-                {batches.length > 0 && (
-                    <div className="flex overflow-x-auto pb-4 gap-3 mb-6 no-scrollbar snap-x">
-                        {batches.map((batch, index) => {
-                            // Generate a unique prominent gradient for each batch based on index
-                            const gradients = [
-                                'from-blue-600 to-indigo-600 shadow-blue-500/25',
-                                'from-emerald-600 to-teal-600 shadow-emerald-500/25',
-                                'from-violet-600 to-purple-600 shadow-violet-500/25',
-                                'from-amber-500 to-orange-600 shadow-amber-500/25',
-                                'from-rose-600 to-pink-600 shadow-rose-500/25',
-                                'from-cyan-600 to-sky-600 shadow-cyan-500/25'
-                            ];
-                            const activeGradient = gradients[index % gradients.length];
-
-                            return (
-                                <button
-                                    key={batch}
-                                    onClick={() => setSelectedBatch(batch)}
-                                    className={`
-                                        relative group px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 transform flex-shrink-0 snap-center
-                                        ${selectedBatch === batch
-                                            ? `bg-gradient-to-r ${activeGradient} text-white shadow-lg scale-105 ring-2 ring-white/20`
-                                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5 hover:border-white/10'
-                                        }
-                                    `}
-                                >
-                                    {selectedBatch === batch && (
-                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                                        </span>
-                                    )}
-                                    <span className="relative z-10 flex items-center gap-2">
-                                        {batch}
-                                        {selectedBatch === batch && <Sparkles className="h-3 w-3" />}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                {batches.length > 1 && (
+                    <div className="mb-6">
+                        <BatchTabSwitcher
+                            batches={batches}
+                            selectedBatch={selectedBatch}
+                            onSelect={(batch) => setSelectedBatch(batch)}
+                        />
                     </div>
                 )}
 

@@ -6,6 +6,9 @@ import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useStudentProfile } from '../StudentProfileContext';
 import SchoolBoardModal from '../SchoolBoardModal';
+import BatchTabSwitcher from '../../components/BatchTabSwitcher';
+
+const FREE_BATCH_LOWER = 'class xi (free batch) 2026-27';
 
 interface Assignment {
     _id: string;
@@ -36,6 +39,17 @@ export default function StudentAssignmentsPage() {
     const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
     const [needsBoardSetup, setNeedsBoardSetup] = useState(false);
     const { profile, loading: profileLoading, updateProfile } = useStudentProfile();
+    const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+
+    // Derive non-free batches from profile
+    const nonFreeBatches = (profile?.courses || []).filter(c => c.trim().toLowerCase() !== FREE_BATCH_LOWER);
+
+    // Set default batch once profile loads
+    useEffect(() => {
+        if (profile && !selectedBatch && nonFreeBatches.length > 0) {
+            setSelectedBatch(nonFreeBatches[0]);
+        }
+    }, [profile]);
 
     useEffect(() => {
         fetchAssignments();
@@ -241,13 +255,18 @@ export default function StudentAssignmentsPage() {
         return new Blob([buf], { type });
     };
 
+    // Filter by selected batch first
+    const batchFilteredAssignments = (nonFreeBatches.length > 1 && selectedBatch)
+        ? assignments.filter(a => a.batch === selectedBatch)
+        : assignments;
+
     // Tab Filters:
     // Pending = PENDING + LATE_ALLOWED (can still submit)
     // Completed = SUBMITTED + LATE_SUBMITTED (has submitted)
     // Missed = CLOSED (deadline + cooldown expired, never submitted)
-    const pendingAssignments = assignments.filter(a => ['PENDING', 'LATE_ALLOWED'].includes(a.status));
-    const completedAssignments = assignments.filter(a => ['SUBMITTED', 'LATE_SUBMITTED'].includes(a.status));
-    const missedAssignments = assignments.filter(a => a.status === 'CLOSED');
+    const pendingAssignments = batchFilteredAssignments.filter(a => ['PENDING', 'LATE_ALLOWED'].includes(a.status));
+    const completedAssignments = batchFilteredAssignments.filter(a => ['SUBMITTED', 'LATE_SUBMITTED'].includes(a.status));
+    const missedAssignments = batchFilteredAssignments.filter(a => a.status === 'CLOSED');
 
     const getDisplayed = () => {
         if (activeTab === 'PENDING') return pendingAssignments;
@@ -329,17 +348,27 @@ export default function StudentAssignmentsPage() {
             )}
 
             {/* Back Button */}
-            <button
-                onClick={() => router.push('/student')}
-                className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
+            <button 
+                onClick={() => router.push('/student')} 
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0 -ml-2"
             >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Dashboard
+                <ArrowLeft className="w-5 h-5" /> Back
             </button>
 
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6">
                 My Assignments
             </h1>
+
+            {/* Batch Tab Switcher */}
+            {nonFreeBatches.length > 1 && (
+                <div className="mb-4">
+                    <BatchTabSwitcher
+                        batches={profile?.courses || []}
+                        selectedBatch={selectedBatch || nonFreeBatches[0]}
+                        onSelect={(batch) => setSelectedBatch(batch)}
+                    />
+                </div>
+            )}
 
             {/* 3 Tabs */}
             <div className="flex bg-[#1a1f2e] p-1 rounded-xl mb-6 ring-1 ring-white/5">

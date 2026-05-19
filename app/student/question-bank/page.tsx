@@ -157,11 +157,11 @@ export default function QuestionBank() {
             <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.push('/student')}
-                            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all"
+                        <button 
+                            onClick={() => router.push('/student')} 
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0"
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="h-5 w-5" /> Back
                         </button>
                         <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 text-[10px]">
                             {student.studentName?.[0] || 'S'}

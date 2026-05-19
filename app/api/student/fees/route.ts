@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
@@ -11,7 +11,7 @@ const key = new TextEncoder().encode(JWT_SECRET);
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         await dbConnect();
 
@@ -63,9 +63,13 @@ export async function GET() {
         }
 
         // 3. Fetch Fee Records
-        const records = await FeeRecord.find({
-            student: targetStudentId
-        }).sort({ feesMonth: 1 });
+        const batchParam = req.nextUrl.searchParams.get('batch');
+        const query: any = { student: targetStudentId };
+        if (batchParam) {
+            query.batch = batchParam;
+        }
+
+        const records = await FeeRecord.find(query).sort({ feesMonth: 1 });
 
         return NextResponse.json({ records });
 

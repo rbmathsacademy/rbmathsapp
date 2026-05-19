@@ -29,9 +29,13 @@ export async function GET(req: NextRequest) {
         }
         const studentCreatedAt = student.createdAt ? new Date(student.createdAt) : new Date(parseInt(student._id.toString().slice(0, 8), 16) * 1000);
 
+        // Optional batch filter — scope data to a single batch
+        const batchParam = req.nextUrl.searchParams.get('batch');
+        const targetBatches = batchParam ? [batchParam] : student.courses;
+
         // 2. Get Tests Data
         const tests = await OnlineTest.find({
-            'deployment.batches': { $in: student.courses },
+            'deployment.batches': { $in: targetBatches },
             status: { $in: ['deployed', 'completed'] }
         }).sort({ 'deployment.startTime': -1 }).lean();
 
@@ -89,7 +93,7 @@ export async function GET(req: NextRequest) {
 
         // 3. Get Assignments Data
         const assignments = await Assignment.find({
-            batch: { $in: student.courses }
+            batch: { $in: targetBatches }
         }).sort({ deadline: -1 }).lean();
 
         const studentSubmissions = await AssignmentSubmission.find({ student: student._id }).lean();
@@ -131,7 +135,7 @@ export async function GET(req: NextRequest) {
 
         // 5. Get Offline Exam Data
         const offlineExams = await OfflineExam.find({
-            batch: { $in: student.courses }
+            batch: { $in: targetBatches }
         }).sort({ testDate: -1 }).lean();
 
         const formattedOfflineExams = offlineExams.map((exam: any) => {

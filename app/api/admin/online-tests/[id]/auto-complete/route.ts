@@ -8,9 +8,8 @@ import User from '@/models/User';
  * POST /api/admin/online-tests/[id]/auto-complete
  * 
  * Server-side auto-completion for stuck "in_progress" test attempts.
- * Finds all in_progress attempts where either:
- *   1. startedAt + durationMinutes has elapsed, OR
- *   2. Current time > test endTime
+ * Finds all in_progress attempts where:
+ *   1. startedAt + durationMinutes + 5 min grace period has elapsed
  * 
  * Auto-grades with whatever answers exist and marks them as completed
  * with terminationReason: 'server_auto_expired'.
@@ -41,7 +40,6 @@ export async function POST(
 
         const now = new Date();
         const durationMs = (test.deployment?.durationMinutes || 60) * 60 * 1000;
-        const endTime = test.deployment?.endTime ? new Date(test.deployment.endTime) : null;
 
         // Find all in_progress attempts for this test
         const stuckAttempts = await StudentTestAttempt.find({
@@ -69,10 +67,9 @@ export async function POST(
         for (const attempt of stuckAttempts) {
             const startedAt = new Date(attempt.startedAt).getTime();
             const elapsed = now.getTime() - startedAt;
-            const isExpiredByDuration = elapsed > durationMs;
-            const isExpiredByEndTime = endTime ? now > endTime : false;
+            const isExpiredByDuration = elapsed > (durationMs + 5 * 60 * 1000);
 
-            if (!isExpiredByDuration && !isExpiredByEndTime) continue;
+            if (!isExpiredByDuration) continue;
 
             // Use the attempt's own question snapshot for grading if available
             const sourceQuestions = (attempt.questions && attempt.questions.length > 0)

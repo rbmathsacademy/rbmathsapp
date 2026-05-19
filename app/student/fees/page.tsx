@@ -59,9 +59,25 @@ export default function FeesPayment() {
             return;
         }
         if (!profileLoading) {
-            fetchFees();
+            // If student has only 1 course, auto-select and fetch
+            if (student?.courses && student.courses.length === 1 && !selectedBatch) {
+                setSelectedBatch(student.courses[0]);
+            } else if (!student?.courses || student.courses.length === 0) {
+                setLoading(false);
+            } else {
+                setLoading(false); // Let batch selection screen show
+            }
         }
     }, [profileLoading, profileError]);
+
+    // Fetch fees whenever selectedBatch changes
+    useEffect(() => {
+        if (selectedBatch) {
+            setRecords([]); // Clear old records immediately
+            setLoading(true);
+            fetchFees(selectedBatch);
+        }
+    }, [selectedBatch]);
 
     // Access guard for free batch students
     if (!profileLoading && isFreeBatchOnly) {
@@ -86,9 +102,12 @@ export default function FeesPayment() {
         );
     }
 
-    const fetchFees = async () => {
+    const fetchFees = async (batch?: string) => {
         try {
-            const feesRes = await fetch('/api/student/fees');
+            const url = batch
+                ? `/api/student/fees?batch=${encodeURIComponent(batch)}`
+                : '/api/student/fees';
+            const feesRes = await fetch(url, { cache: 'no-store' });
             if (feesRes.ok) {
                 const data = await feesRes.json();
                 setRecords(data.records || []);
@@ -279,8 +298,11 @@ export default function FeesPayment() {
             <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => selectedBatch ? setSelectedBatch(null) : router.push('/student')} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-all">
-                            <ArrowLeft className="h-4 w-4" />
+                        <button 
+                            onClick={() => selectedBatch ? setSelectedBatch(null) : router.push('/student')} 
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0"
+                        >
+                            <ArrowLeft className="h-5 w-5" /> Back
                         </button>
                         <h1 className="text-sm font-bold text-white">My <span className="text-pink-400">Fees</span></h1>
                     </div>
