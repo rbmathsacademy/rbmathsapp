@@ -46,12 +46,18 @@ export async function GET(req: NextRequest) {
             : studentCourses;
 
         // Find all deployed tests where at least one batch matches the student's courses (or selected batch)
-        const tests = await OnlineTest.find({
+        const allTests = await OnlineTest.find({
             status: 'deployed',
             'deployment.batches': { $in: batchFilter }
-        }).select('title description totalMarks deployment config questions.type')
+        }).select('title description totalMarks deployment config questions.type excludedStudents')
             .sort({ 'deployment.startTime': -1 })
             .lean();
+
+        // Filter out tests where this student is excluded
+        const tests = allTests.filter((t: any) => {
+            const excluded: string[] = t.excludedStudents || [];
+            return !excluded.includes(student.phoneNumber);
+        });
 
         // Get all student's attempts
         const testIds = tests.map(t => t._id.toString());

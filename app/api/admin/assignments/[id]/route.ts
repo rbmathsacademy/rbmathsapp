@@ -20,7 +20,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             .lean();
 
         // Fetch all students in the batch
-        const students = await BatchStudent.find({ courses: assignment.batch }).lean();
+        const allStudents = await BatchStudent.find({ courses: assignment.batch }).lean();
+        const excludedPhones: string[] = (assignment as any).excludedStudents || [];
+        const excludedSet = new Set(excludedPhones);
+
+        // Separate active vs excluded students
+        const students = allStudents.filter((s: any) => !excludedSet.has(s.phoneNumber));
+        const excludedStudentsList = allStudents
+            .filter((s: any) => excludedSet.has(s.phoneNumber))
+            .map((s: any) => ({ _id: s._id, name: s.name, phoneNumber: s.phoneNumber, board: s.board || null }));
 
         // Merge student data
         const studentList = students.map((student: any) => {
@@ -103,7 +111,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             assignmentData.boardContent = bc;
         }
 
-        return NextResponse.json({ assignment: assignmentData, studentList, assignmentQuestions });
+        return NextResponse.json({ assignment: assignmentData, studentList, assignmentQuestions, excludedStudents: excludedStudentsList });
     } catch (error: any) {
         console.error('Assignment detail error:', error);
         return NextResponse.json({ error: error.message || 'Failed to fetch assignment details' }, { status: 500 });

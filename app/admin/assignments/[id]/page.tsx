@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2, Filter, ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
+import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2, Filter, ChevronDown, ChevronUp, Plus, Search, UserMinus, UserPlus } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
@@ -46,6 +46,10 @@ export default function AssignmentDetailsPage() {
     const [students, setStudents] = useState<StudentSubmission[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Excluded Students State
+    const [excludedStudents, setExcludedStudents] = useState<{_id: string; name: string; phoneNumber: string; board?: string | null}[]>([]);
+    const [showExcluded, setShowExcluded] = useState(false);
+
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editTitle, setEditTitle] = useState('');
@@ -86,6 +90,7 @@ export default function AssignmentDetailsPage() {
                     (a.student.name || '').localeCompare(b.student.name || '')
                 );
                 setStudents(sortedStudents);
+                setExcludedStudents(data.excludedStudents || []);
 
                 // Set assignment questions
                 if (data.assignmentQuestions) {
@@ -307,6 +312,43 @@ export default function AssignmentDetailsPage() {
             }
         } catch {
             toast.error('Error removing question');
+        }
+    };
+
+    // Exclude a student from this assignment
+    const handleExcludeStudent = async (phoneNumber: string, studentName: string) => {
+        if (!assignment) return;
+        if (!confirm(`Remove ${studentName} from this assignment? They will no longer see it in their portal.`)) return;
+
+        try {
+            const res = await fetch('/api/admin/assignments/exclude-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignmentId: assignment._id, phoneNumber })
+            });
+            if (!res.ok) throw new Error('Failed to exclude student');
+            toast.success(`${studentName} removed from assignment`);
+            fetchDetails();
+        } catch {
+            toast.error('Failed to remove student');
+        }
+    };
+
+    // Re-include an excluded student
+    const handleReIncludeStudent = async (phoneNumber: string, studentName: string) => {
+        if (!assignment) return;
+
+        try {
+            const res = await fetch('/api/admin/assignments/exclude-student', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignmentId: assignment._id, phoneNumber })
+            });
+            if (!res.ok) throw new Error('Failed to re-include student');
+            toast.success(`${studentName} re-included in assignment`);
+            fetchDetails();
+        } catch {
+            toast.error('Failed to re-include student');
         }
     };
 
@@ -691,6 +733,13 @@ export default function AssignmentDetailsPage() {
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
+                                                    <button
+                                                        onClick={() => handleExcludeStudent(student.student.phoneNumber, student.student.name)}
+                                                        className="inline-flex items-center justify-center w-7 h-7 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors border border-orange-500/20"
+                                                        title="Remove Student from Assignment"
+                                                    >
+                                                        <UserMinus className="w-3.5 h-3.5" />
+                                                    </button>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center justify-end gap-2">
@@ -726,6 +775,13 @@ export default function AssignmentDetailsPage() {
                                                         </>
                                                     )}
                                                     <span className="text-gray-600 text-xs italic">Not submitted</span>
+                                                    <button
+                                                        onClick={() => handleExcludeStudent(student.student.phoneNumber, student.student.name)}
+                                                        className="inline-flex items-center justify-center w-7 h-7 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors border border-orange-500/20"
+                                                        title="Remove Student from Assignment"
+                                                    >
+                                                        <UserMinus className="w-3.5 h-3.5" />
+                                                    </button>
                                                 </div>
                                             )}
                                         </td>
@@ -857,6 +913,13 @@ export default function AssignmentDetailsPage() {
                                             >
                                                 <Trash2 className="w-3 h-3" />
                                             </button>
+                                            <button
+                                                onClick={() => handleExcludeStudent(student.student.phoneNumber, student.student.name)}
+                                                className="inline-flex items-center justify-center w-6 h-6 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded border border-orange-500/20 flex-shrink-0"
+                                                title="Remove Student"
+                                            >
+                                                <UserMinus className="w-3 h-3" />
+                                            </button>
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -891,6 +954,13 @@ export default function AssignmentDetailsPage() {
                                                     </button>
                                                 </>
                                             )}
+                                            <button
+                                                onClick={() => handleExcludeStudent(student.student.phoneNumber, student.student.name)}
+                                                className="inline-flex items-center justify-center w-6 h-6 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded border border-orange-500/20 flex-shrink-0"
+                                                title="Remove Student"
+                                            >
+                                                <UserMinus className="w-3 h-3" />
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -899,6 +969,45 @@ export default function AssignmentDetailsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Excluded Students Section */}
+            {excludedStudents.length > 0 && (
+                <div className="bg-[#1a1f2e] border border-orange-500/20 rounded-xl mt-6 overflow-hidden">
+                    <button
+                        onClick={() => setShowExcluded(!showExcluded)}
+                        className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-white/5 transition-colors"
+                    >
+                        <div className="flex items-center gap-2">
+                            <UserMinus className="w-4 h-4 text-orange-400" />
+                            <span className="text-sm font-semibold text-orange-400">Excluded Students ({excludedStudents.length})</span>
+                        </div>
+                        {showExcluded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    {showExcluded && (
+                        <div className="border-t border-white/5 divide-y divide-white/5">
+                            {excludedStudents.map(es => (
+                                <div key={es.phoneNumber} className="flex items-center justify-between px-4 sm:px-5 py-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-white">{es.name}</p>
+                                            <p className="text-xs text-gray-500">{es.phoneNumber}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleReIncludeStudent(es.phoneNumber, es.name)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 rounded-lg text-green-400 text-xs font-bold transition-colors"
+                                    >
+                                        <UserPlus className="w-3.5 h-3.5" /> Re-include
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Edit Modal */}
             {isEditModalOpen && (

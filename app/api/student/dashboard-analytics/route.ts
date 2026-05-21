@@ -34,10 +34,16 @@ export async function GET(req: NextRequest) {
         const targetBatches = batchParam ? [batchParam] : student.courses;
 
         // 2. Get Tests Data
-        const tests = await OnlineTest.find({
+        const allTests = await OnlineTest.find({
             'deployment.batches': { $in: targetBatches },
             status: { $in: ['deployed', 'completed'] }
         }).sort({ 'deployment.startTime': -1 }).lean();
+
+        // Filter out tests where this student is excluded
+        const tests = allTests.filter((t: any) => {
+            const excluded: string[] = t.excludedStudents || [];
+            return !excluded.includes(phoneNumber);
+        });
 
         const testIds = tests.map(t => t._id);
 
@@ -92,9 +98,15 @@ export async function GET(req: NextRequest) {
         });
 
         // 3. Get Assignments Data
-        const assignments = await Assignment.find({
+        const allAssignments = await Assignment.find({
             batch: { $in: targetBatches }
         }).sort({ deadline: -1 }).lean();
+
+        // Filter out assignments where this student is excluded
+        const assignments = allAssignments.filter((a: any) => {
+            const excluded: string[] = a.excludedStudents || [];
+            return !excluded.includes(phoneNumber);
+        });
 
         const studentSubmissions = await AssignmentSubmission.find({ student: student._id }).lean();
 

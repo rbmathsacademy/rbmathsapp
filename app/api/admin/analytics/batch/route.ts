@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             'deployment.batches': batch,
             status: { $in: ['deployed', 'completed'] }
         })
-            .select('title totalMarks deployment.startTime')
+            .select('title totalMarks deployment.startTime excludedStudents')
             .sort({ 'deployment.startTime': -1 })
             .lean();
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
         // 3. Fetch Assignments for Batch
         const assignments = await Assignment.find({ batch })
-            .select('title deadline createdAt') // Added createdAt for assignments too
+            .select('title deadline createdAt excludedStudents')
             .sort({ deadline: -1 })
             .lean();
 
@@ -104,10 +104,14 @@ export async function GET(request: NextRequest) {
         const analytics = students.map((student: any) => {
             const studentCreatedAt = new Date(student.createdAt);
 
-            // Test Analytics
+            // Test Analytics — filter out tests where this student is excluded
             const studentAttempts = attempts.filter((a: any) => a.studentPhone === student.phoneNumber);
+            const studentTests = tests.filter((t: any) => {
+                const excluded: string[] = (t as any).excludedStudents || [];
+                return !excluded.includes(student.phoneNumber);
+            });
 
-            const testScores = tests.map((test: any) => {
+            const testScores = studentTests.map((test: any) => {
                 const attempt = studentAttempts.find((a: any) => a.testId.toString() === test._id.toString());
                 const testStartDate = new Date(test.deployment.startTime);
 
@@ -152,9 +156,13 @@ export async function GET(request: NextRequest) {
                 ? totalPercentage / attemptsCount
                 : 0;
 
-            // Assignment Analytics
+            // Assignment Analytics — filter out assignments where this student is excluded
             const studentSubmissions = submissions.filter((s: any) => s.student.toString() === student._id.toString());
-            const assignmentStatuses = assignments.map((assignment: any) => {
+            const studentAssignments = assignments.filter((a: any) => {
+                const excluded: string[] = (a as any).excludedStudents || [];
+                return !excluded.includes(student.phoneNumber);
+            });
+            const assignmentStatuses = studentAssignments.map((assignment: any) => {
                 const submission = studentSubmissions.find((s: any) => s.assignment.toString() === assignment._id.toString());
                 const assignmentDate = new Date(assignment.createdAt);
                 const deadline = new Date(assignment.deadline);

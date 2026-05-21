@@ -75,6 +75,7 @@ const OnlineTestSchema = new mongoose.Schema({
         enablePerQuestionTimer: { type: Boolean, default: false }, // Per-question timer toggle
         perQuestionDuration: { type: Number, default: 60 } // Default duration in seconds per question
     },
+    excludedStudents: [{ type: String }], // Phone numbers of students excluded from this test
     status: { type: String, enum: ['draft', 'deployed', 'completed'], default: 'draft' },
     createdBy: { type: String, required: true }, // Admin/Faculty Email
     folderId: { type: String, default: null }, // Optional folder organization

@@ -35,14 +35,22 @@ export async function GET(
         const dbStudents = await BatchStudent.find({ courses: { $in: deployedBatches } }).select('phoneNumber name courses').lean() as any[];
 
         // Create student map
+        const excludedPhones: string[] = test.excludedStudents || [];
+        const excludedSet = new Set(excludedPhones);
         const studentMap = new Map<string, any>();
+        const excludedStudentsList: any[] = [];
         dbStudents.forEach(s => {
             const matchingBatch = s.courses?.find((c: string) => deployedBatches.includes(c)) || s.courses?.[0] || '';
-            studentMap.set(s.phoneNumber, {
+            const info = {
                 name: s.name || 'Unknown',
                 phone: s.phoneNumber,
                 batch: matchingBatch
-            });
+            };
+            if (excludedSet.has(s.phoneNumber)) {
+                excludedStudentsList.push(info);
+            } else {
+                studentMap.set(s.phoneNumber, info);
+            }
         });
 
         // Get all attempts for this test
@@ -284,7 +292,8 @@ export async function GET(
             analytics,
             completed,
             inProgress,
-            notStarted
+            notStarted,
+            excludedStudents: excludedStudentsList
         });
     } catch (error: any) {
         console.error('Error fetching test results:', error);

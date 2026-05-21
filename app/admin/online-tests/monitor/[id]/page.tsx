@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, XCircle, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert, UserMinus, UserPlus, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import SubmissionReviewModal from '../components/SubmissionReviewModal';
 
@@ -69,6 +69,10 @@ export default function MonitorTestPage() {
     // Force-complete expired students
     const [forceCompleting, setForceCompleting] = useState(false);
 
+    // Excluded students state
+    const [excludedStudents, setExcludedStudents] = useState<any[]>([]);
+    const [showExcluded, setShowExcluded] = useState(false);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -94,6 +98,7 @@ export default function MonitorTestPage() {
                 setCompleted(data.completed);
                 setInProgress(data.inProgress);
                 setNotStarted(data.notStarted);
+                setExcludedStudents(data.excludedStudents || []);
                 setSelectedPhones(new Set()); // Clear selection on refresh
             } else {
                 toast.error('Failed to load test results');
@@ -215,6 +220,39 @@ export default function MonitorTestPage() {
             toast.error('Network error');
         } finally {
             setForceCompleting(false);
+        }
+    };
+
+    // Exclude a student from this test
+    const handleExcludeStudent = async (phone: string, name: string) => {
+        if (!confirm(`Remove ${name} from this test? They will no longer see it in their portal.`)) return;
+        try {
+            const res = await fetch('/api/admin/online-tests/exclude-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ testId, phoneNumber: phone })
+            });
+            if (!res.ok) throw new Error('Failed');
+            toast.success(`${name} removed from test`);
+            fetchResults();
+        } catch {
+            toast.error('Failed to remove student');
+        }
+    };
+
+    // Re-include an excluded student
+    const handleReIncludeStudent = async (phone: string, name: string) => {
+        try {
+            const res = await fetch('/api/admin/online-tests/exclude-student', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ testId, phoneNumber: phone })
+            });
+            if (!res.ok) throw new Error('Failed');
+            toast.success(`${name} re-included in test`);
+            fetchResults();
+        } catch {
+            toast.error('Failed to re-include student');
         }
     };
 
@@ -581,6 +619,7 @@ export default function MonitorTestPage() {
                                                 <th className="px-4 py-3 font-semibold">Time</th>
                                                 <th className="px-4 py-3 font-semibold">Score</th>
                                                 <th className="px-4 py-3 font-semibold">Warnings</th>
+                                                <th className="px-4 py-3 font-semibold text-right">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -634,6 +673,15 @@ export default function MonitorTestPage() {
                                                             <span className="text-slate-600">—</span>
                                                         )}
                                                     </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <button
+                                                            onClick={() => handleExcludeStudent(s.phone, s.name)}
+                                                            className="inline-flex items-center justify-center w-7 h-7 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded-lg transition-colors border border-orange-500/20"
+                                                            title="Remove Student from Test"
+                                                        >
+                                                            <UserMinus className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -671,6 +719,13 @@ export default function MonitorTestPage() {
                                                         <ShieldAlert className="w-2.5 h-2.5" /> {(s as any).warningCount}
                                                     </span>
                                                 )}
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleExcludeStudent(s.phone, s.name); }}
+                                                    className="inline-flex items-center justify-center w-5 h-5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 rounded border border-orange-500/20 flex-shrink-0"
+                                                    title="Remove Student"
+                                                >
+                                                    <UserMinus className="w-2.5 h-2.5" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -1242,6 +1297,47 @@ export default function MonitorTestPage() {
                     </>
                 )}
             </div>
+
+            {/* Excluded Students Section */}
+            {excludedStudents.length > 0 && (
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 pb-6">
+                    <div className="bg-slate-900/60 border border-orange-500/20 rounded-xl overflow-hidden">
+                        <button
+                            onClick={() => setShowExcluded(!showExcluded)}
+                            className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-white/5 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <UserMinus className="w-4 h-4 text-orange-400" />
+                                <span className="text-sm font-semibold text-orange-400">Excluded Students ({excludedStudents.length})</span>
+                            </div>
+                            {showExcluded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                        </button>
+                        {showExcluded && (
+                            <div className="border-t border-white/5 divide-y divide-white/5">
+                                {excludedStudents.map(es => (
+                                    <div key={es.phone} className="flex items-center justify-between px-4 sm:px-5 py-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+                                                <User className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-white">{es.name}</p>
+                                                <p className="text-xs text-slate-500">{es.phone} · {es.batch}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleReIncludeStudent(es.phone, es.name)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 rounded-lg text-green-400 text-xs font-bold transition-colors"
+                                        >
+                                            <UserPlus className="w-3.5 h-3.5" /> Re-include
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

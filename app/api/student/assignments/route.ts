@@ -44,9 +44,15 @@ export async function GET(req: NextRequest) {
         }
 
         // 3. Find Assignments for these batches
-        const assignments = await Assignment.find({
+        const allAssignments = await Assignment.find({
             batch: { $in: batches }
         }).sort({ deadline: -1 }).lean();
+
+        // Filter out assignments where this student is excluded
+        const assignments = allAssignments.filter((a: any) => {
+            const excluded: string[] = a.excludedStudents || [];
+            return !excluded.includes(phoneNumber);
+        });
 
         // 4. Find Submissions by this student
         const submissions = await AssignmentSubmission.find({

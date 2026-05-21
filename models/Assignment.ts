@@ -21,6 +21,7 @@ const AssignmentSchema = new mongoose.Schema({
         of: String, // board name → Drive URL
         default: {}
     },
+    excludedStudents: [{ type: String }], // Phone numbers of students excluded from this assignment
     createdAt: { type: Date, default: Date.now }
 });
 
