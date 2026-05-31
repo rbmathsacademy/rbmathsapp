@@ -95,7 +95,10 @@ export async function GET(
                     let isCorrect = false;
                     let marksAwarded = 0;
 
-                    if (question.type === 'mcq') {
+                    if (question.isGrace) {
+                        isCorrect = true;
+                        marksAwarded = question.marks || 1;
+                    } else if (question.type === 'mcq') {
                         if (question.correctIndices && question.correctIndices.length > 0) {
                             isCorrect = question.correctIndices[0] === ans.answer;
                         }
@@ -136,11 +139,13 @@ export async function GET(
                         answer: ans.answer,
                         isCorrect,
                         marksAwarded,
+                        isGraceAwarded: question.isGrace || false,
                         timeTaken: ans.timeTaken || 0
                     });
                 }
 
                 totalScore = Math.max(0, totalScore);
+                totalScore += (attempt.graceMarks || 0);
                 let servedTotalMarks = 0;
                 for (const q of sourceQuestions) {
                     if (q.type === 'comprehension' && q.subQuestions) {
@@ -468,7 +473,10 @@ export async function PUT(
             let isCorrect = false;
             let marksAwarded = 0;
 
-            if (question.type === 'mcq') {
+            if (question.isGrace) {
+                isCorrect = true;
+                marksAwarded = question.marks || 1;
+            } else if (question.type === 'mcq') {
                 // MCQ: single correct answer (index)
                 if (question.correctIndices && question.correctIndices.length > 0) {
                     isCorrect = question.correctIndices[0] === ans.answer;
@@ -515,12 +523,14 @@ export async function PUT(
                 answer: ans.answer,
                 isCorrect,
                 marksAwarded,
+                isGraceAwarded: question.isGrace || false,
                 timeTaken: ans.timeTaken || 0
             });
         }
 
         // Ensure score doesn't go below 0
         totalScore = Math.max(0, totalScore);
+        totalScore += (attempt.graceMarks || 0);
         // Calculate totalMarks from the served questions (not the full pool)
         let servedTotalMarks = 0;
         for (const q of sourceQuestions) {

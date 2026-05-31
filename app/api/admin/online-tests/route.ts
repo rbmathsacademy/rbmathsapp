@@ -146,7 +146,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { id, graceMarksForModified, ...updates } = body;
+        const { id, ...updates } = body;
 
         console.log('🔧 PUT request - ID:', id, 'Updates:', Object.keys(updates));
 
@@ -200,8 +200,10 @@ export async function PUT(request: NextRequest) {
                     attempt.questions = attempt.questions.map((q: any) => {
                         const updatedQ = newQuestionsMap.get(q.id);
                         if (updatedQ) {
-                            // Explicitly overwrite properties including isGrace to ensure false overrides true
-                            return { ...q, ...updatedQ, isGrace: updatedQ.isGrace };
+                            // If the admin explicitly checked "Award Grace Marks" (updatedQ.isGrace === true), we set it to true.
+                            // Otherwise, we PRESERVE the existing grace state so we don't accidentally revoke grace marks awarded in previous edits.
+                            const finalIsGrace = updatedQ.isGrace ? true : (q.isGrace || false);
+                            return { ...q, ...updatedQ, isGrace: finalIsGrace };
                         }
                         return q;
                     });
@@ -283,23 +285,8 @@ export async function PUT(request: NextRequest) {
                     return ans;
                 });
 
-                // Handle global grace marks — but ONLY if no per-question isGrace flags are active.
-                // Per-question isGrace already gives full marks for the affected question(s), so 
-                // adding global graceMarks on top would double-count the same correction.
-                if (hasPerQuestionGrace) {
-                    // Per-question grace is handling the correction; reset global grace to avoid double-counting
-                    attempt.graceMarks = 0;
-                    attempt.graceReason = '';
-                } else {
-                    // No per-question grace — apply global grace marks from dialog
-                    attempt.graceMarks = body.graceMarks || 0;
-                    if (attempt.graceMarks > 0) {
-                        attempt.graceReason = body.graceReason || 'Grace marks awarded';
-                    } else {
-                        attempt.graceReason = '';
-                    }
-                    newScore += attempt.graceMarks;
-                }
+                // Add any existing global grace marks that were awarded historically
+                newScore += (attempt.graceMarks || 0);
 
                 // Calculate Total Marks — properly handle comprehension sub-questions
                 let currentTotalMarks = 0;
@@ -328,6 +315,15 @@ export async function PUT(request: NextRequest) {
             Object.assign(test.deployment, updates.deployment);
             test.markModified('deployment');
             delete updates.deployment;
+        }
+
+        // Strip isGrace from updates.questions so it doesn't affect future attempts
+        if (updates.questions) {
+            updates.questions = updates.questions.map((q: any) => {
+                const cleanQ = { ...q };
+                delete cleanQ.isGrace;
+                return cleanQ;
+            });
         }
 
         // Update test - allow remaining fields

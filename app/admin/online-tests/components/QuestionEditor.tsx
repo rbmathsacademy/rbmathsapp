@@ -106,16 +106,10 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
 
     const toggleCorrectAnswer = (index: number) => {
         const currentIndices = question.correctIndices || [];
-        if (question.type === 'mcq') {
-            // MCQ: only one correct answer
-            setQuestion({ ...question, correctIndices: [index] });
+        if (currentIndices.includes(index)) {
+            setQuestion({ ...question, correctIndices: currentIndices.filter(i => i !== index) });
         } else {
-            // MSQ: multiple correct answers
-            if (currentIndices.includes(index)) {
-                setQuestion({ ...question, correctIndices: currentIndices.filter(i => i !== index) });
-            } else {
-                setQuestion({ ...question, correctIndices: [...currentIndices, index] });
-            }
+            setQuestion({ ...question, correctIndices: [...currentIndices, index] });
         }
     };
 
@@ -348,10 +342,10 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
                                                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                                 }`}
-                                            title="If enabled, all students will receive full marks for this question."
+                                            title="If enabled, all existing student attempts will receive full marks for this question upon saving. This will NOT affect future students who haven't started yet."
                                         >
                                             <ToggleRight className={`h-4 w-4 ${question.isGrace ? "rotate-0" : "rotate-180"}`} />
-                                            Grace Question
+                                            Award Grace Marks to existing attempts
                                         </button>
                                         <button
                                             onClick={() => setQuestion({ ...question, latexContent: !question.latexContent })}
@@ -464,7 +458,7 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                         Add Option
                                     </button>
                                     <p className="text-xs text-slate-500">
-                                        {question.type === 'mcq' ? 'Click checkbox to mark ONE correct answer' : 'Click checkboxes to mark multiple correct answers'}
+                                        Click checkboxes to mark correct answer(s). You can select multiple correct answers.
                                     </p>
                                 </div>
                             )}

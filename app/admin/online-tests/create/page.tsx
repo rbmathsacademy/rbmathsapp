@@ -72,10 +72,6 @@ export default function CreateTestPage() {
     const [loading, setLoading] = useState(false);
     const [testStatus, setTestStatus] = useState<string>('draft');
     const [showQuestionImport, setShowQuestionImport] = useState(false);
-    const [showGraceDialog, setShowGraceDialog] = useState(false);
-    const [pendingDeploy, setPendingDeploy] = useState(false);
-    const [graceMarks, setGraceMarks] = useState(0);
-    const [graceReason, setGraceReason] = useState('');
 
     const [isAutoSaving, setIsAutoSaving] = useState(false);
 
@@ -123,7 +119,7 @@ export default function CreateTestPage() {
         setQuestions(newQuestions);
         setShowQuestionEditor(false);
         // Auto-save
-        saveTest(false, 0, '', true, newQuestions);
+        saveTest(false, true, newQuestions);
     };
 
     const handleImportQuestions = (newImportedQuestions: Question[]) => {
@@ -131,7 +127,7 @@ export default function CreateTestPage() {
         setQuestions(mergedQuestions);
         setShowQuestionImport(false);
         // Auto-save
-        saveTest(false, 0, '', true, mergedQuestions);
+        saveTest(false, true, mergedQuestions);
     };
 
     const updateQuestion = (question: Question) => {
@@ -140,7 +136,7 @@ export default function CreateTestPage() {
         setShowQuestionEditor(false);
         setEditingQuestion(undefined);
         // Auto-save
-        saveTest(false, 0, '', true, newQuestions);
+        saveTest(false, true, newQuestions);
     };
 
     const deleteQuestion = (id: string) => {
@@ -148,7 +144,7 @@ export default function CreateTestPage() {
             const newQuestions = questions.filter(q => q.id !== id);
             setQuestions(newQuestions);
             // Auto-save
-            saveTest(false, 0, '', true, newQuestions);
+            saveTest(false, true, newQuestions);
         }
     };
 
@@ -165,7 +161,7 @@ export default function CreateTestPage() {
         [newQuestions[index], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[index]];
         setQuestions(newQuestions);
         // Auto-save
-        saveTest(false, 0, '', true, newQuestions);
+        saveTest(false, true, newQuestions);
     };
 
     const calculateTotalMarks = () => {
@@ -201,7 +197,7 @@ export default function CreateTestPage() {
         return Math.ceil(totalSeconds / 60);
     };
 
-    const saveTest = async (deploy: boolean = false, gMarks: number = 0, gReason: string = '', silent: boolean = false, questionsOverride?: Question[]) => {
+    const saveTest = async (deploy: boolean = false, silent: boolean = false, questionsOverride?: Question[]) => {
         // Guard: never save without a valid userEmail to avoid creating orphaned tests
         if (!userEmail || userEmail === 'null') {
             if (!silent) toast.error('Session error - please refresh the page');
@@ -217,13 +213,6 @@ export default function CreateTestPage() {
 
         if (currentQuestions.length === 0) {
             if (!silent) toast.error('Please add at least one question');
-            return;
-        }
-
-        // If editing a deployed test, show grace marks dialog first if not provided
-        if (testId && testStatus === 'deployed' && !showGraceDialog && gMarks === 0 && !gReason && !silent) {
-            setPendingDeploy(deploy);
-            setShowGraceDialog(true);
             return;
         }
 
@@ -247,10 +236,6 @@ export default function CreateTestPage() {
 
             if (testId) {
                 body.id = testId;
-                if (testStatus === 'deployed' && gMarks > 0) {
-                    body.graceMarks = gMarks;
-                    body.graceReason = gReason;
-                }
             }
 
             const res = await fetch('/api/admin/online-tests', {
@@ -293,7 +278,6 @@ export default function CreateTestPage() {
         } finally {
             setLoading(false);
             setIsAutoSaving(false);
-            setShowGraceDialog(false);
         }
     };
 
@@ -726,111 +710,6 @@ export default function CreateTestPage() {
                     onImport={handleImportQuestions}
                     onCancel={() => setShowQuestionImport(false)}
                 />
-            )}
-
-            {/* Grace Marks Confirmation Dialog */}
-            {showGraceDialog && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-xl w-full shadow-2xl animate-in fade-in zoom-in duration-300">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 rounded-xl bg-amber-500/20 shadow-lg shadow-amber-500/10">
-                                <AlertTriangle className="h-6 w-6 text-amber-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-white">Editing Deployed Test</h3>
-                                <p className="text-slate-400 text-sm">This test is live and may have submissions</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 mb-6">
-                            <p className="text-slate-300 text-sm leading-relaxed">
-                                Modifications to a deployed test can affect student scores.
-                                Would you like to award grace marks to students who have <strong className="text-emerald-400">already submitted</strong> their answers?
-                            </p>
-
-                            <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5 space-y-4">
-                                <label className="flex items-start gap-3 cursor-pointer group">
-                                    <div className="relative flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={graceMarks > 0 || graceReason.length > 0}
-                                            onChange={(e) => {
-                                                if (!e.target.checked) return; // Can't uncheck directly, use separate state logic if needed or just toggle
-                                                // Actually, let's use a simple toggle logic
-                                            }}
-                                            onClick={() => {
-                                                if (graceMarks > 0 || graceReason.length > 0) {
-                                                    setGraceMarks(0);
-                                                    setGraceReason('');
-                                                } else {
-                                                    setGraceMarks(1);
-                                                }
-                                            }}
-                                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-600 bg-slate-700 transition-all checked:border-emerald-500 checked:bg-emerald-500 hover:border-emerald-400"
-                                        />
-                                        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div className="text-sm">
-                                        <span className="font-bold text-white group-hover:text-emerald-400 transition-colors block">Award Grace Marks</span>
-                                        <span className="text-slate-400">Apply to existing submissions</span>
-                                    </div>
-                                </label>
-
-                                {(graceMarks > 0 || graceReason.length > 0) && (
-                                    <div className="pl-8 space-y-3 animate-in slide-in-from-top-2 fade-in duration-300">
-                                        <div className="grid grid-cols-3 gap-3">
-                                            <div className="col-span-1">
-                                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Marks</label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={graceMarks}
-                                                    onChange={(e) => setGraceMarks(Math.max(0, parseInt(e.target.value) || 0))}
-                                                    className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-                                                />
-                                            </div>
-                                            <div className="col-span-2">
-                                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Reason (Required)</label>
-                                                <input
-                                                    type="text"
-                                                    value={graceReason}
-                                                    onChange={(e) => setGraceReason(e.target.value)}
-                                                    placeholder="e.g. Question 5 error"
-                                                    className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <button
-                                onClick={() => setShowGraceDialog(false)}
-                                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition-all border border-white/5 hover:border-white/10"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if ((graceMarks > 0 || graceReason.length > 0) && !graceReason) {
-                                        toast.error('Please provide a reason for grace marks');
-                                        return;
-                                    }
-                                    saveTest(pendingDeploy, graceMarks, graceReason);
-                                }}
-                                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
-                            >
-                                Save Changes
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     );
