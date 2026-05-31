@@ -200,10 +200,12 @@ export async function PUT(request: NextRequest) {
                     attempt.questions = attempt.questions.map((q: any) => {
                         const updatedQ = newQuestionsMap.get(q.id);
                         if (updatedQ) {
+                            // Convert Mongoose subdocument to plain object before spreading
+                            const qObj = typeof q.toObject === 'function' ? q.toObject() : q;
                             // If the admin explicitly checked "Award Grace Marks" (updatedQ.isGrace === true), we set it to true.
                             // Otherwise, we PRESERVE the existing grace state so we don't accidentally revoke grace marks awarded in previous edits.
-                            const finalIsGrace = updatedQ.isGrace ? true : (q.isGrace || false);
-                            return { ...q, ...updatedQ, isGrace: finalIsGrace };
+                            const finalIsGrace = updatedQ.isGrace ? true : (qObj.isGrace || false);
+                            return { ...qObj, ...updatedQ, isGrace: finalIsGrace };
                         }
                         return q;
                     });
@@ -335,7 +337,7 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json(test);
     } catch (error: any) {
         console.error('Error updating test:', error);
-        return NextResponse.json({ error: 'Failed to update test' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update test', details: error.message || String(error) }, { status: 500 });
     }
 }
 
