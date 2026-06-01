@@ -52,6 +52,8 @@ export default function MonitorTestPage() {
     const [loading, setLoading] = useState(true);
     const [userEmail, setUserEmail] = useState<string | null>(null);
 
+    const formatScore = (val: any) => (val !== null && val !== undefined && !isNaN(val)) ? Number(Number(val).toFixed(2)) : val;
+
     // Reassign completed students state
     const [selectedPhones, setSelectedPhones] = useState<Set<string>>(new Set());
     const [showReassignModal, setShowReassignModal] = useState(false);
@@ -296,7 +298,7 @@ export default function MonitorTestPage() {
                                         <p className="text-white text-sm font-medium">{s.name}</p>
                                         <p className="text-slate-500 text-xs">{s.phone} · {s.batch}</p>
                                     </div>
-                                    <span className="text-xs text-slate-400 font-bold">{s.score}/{testInfo?.totalMarks} ({s.percentage}%)</span>
+                                    <span className="text-xs text-slate-400 font-bold">{formatScore(s.score)}/{testInfo?.totalMarks} ({formatScore(s.percentage)}%)</span>
                                 </div>
                             ))}
                         </div>
@@ -475,16 +477,16 @@ export default function MonitorTestPage() {
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Average Score</div>
-                                        <div className="text-xl font-bold text-white">{analytics.averageScore ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
-                                        <div className="text-xs text-slate-400">{analytics.averagePercentage ?? 0}% avg</div>
+                                        <div className="text-xl font-bold text-white">{formatScore(analytics.averageScore) ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
+                                        <div className="text-xs text-slate-400">{formatScore(analytics.averagePercentage) ?? 0}% avg</div>
                                     </div>
                                     <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Highest Score</div>
-                                        <div className="text-xl font-bold text-emerald-400">{analytics.highestScore ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
+                                        <div className="text-xl font-bold text-emerald-400">{formatScore(analytics.highestScore) ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
                                     </div>
                                     <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Lowest Score</div>
-                                        <div className="text-xl font-bold text-red-400">{analytics.lowestScore ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
+                                        <div className="text-xl font-bold text-red-400">{formatScore(analytics.lowestScore) ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
                                     </div>
                                     <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Pass Rate</div>
@@ -561,7 +563,7 @@ export default function MonitorTestPage() {
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <div className="text-base font-black text-emerald-400 whitespace-nowrap">{s.score} <span className="text-[10px] text-slate-500 font-normal">/ {testInfo?.totalMarks}</span></div>
+                                                            <div className="text-base font-black text-emerald-400 whitespace-nowrap">{formatScore(s.score)} <span className="text-[10px] text-slate-500 font-normal">/ {testInfo?.totalMarks}</span></div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -659,7 +661,7 @@ export default function MonitorTestPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
                                                         {s._status === 'completed' ? (
-                                                            <span className="text-white font-bold">{s.score}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
+                                                            <span className="text-white font-bold">{formatScore(s.score)}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
                                                         ) : (
                                                             <span className="text-slate-600">—</span>
                                                         )}
@@ -707,7 +709,7 @@ export default function MonitorTestPage() {
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {s._status === 'completed' && (
-                                                    <span className="text-white font-bold text-xs">{s.score}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
+                                                    <span className="text-white font-bold text-xs">{formatScore(s.score)}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
                                                 )}
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s._status === 'completed' ? 'bg-emerald-500/15 text-emerald-400' :
                                                     s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-400' : 'bg-red-500/15 text-red-400'
@@ -817,12 +819,12 @@ export default function MonitorTestPage() {
                                                             </td>
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{student.batch}</td>
                                                             <td className="px-4 py-3">
-                                                                <span className="text-white font-bold text-sm">{student.score}</span>
+                                                                <span className="text-white font-bold text-sm">{formatScore(student.score)}</span>
                                                                 <span className="text-slate-500 text-xs">/{testInfo?.totalMarks}</span>
                                                             </td>
                                                             <td className="px-4 py-3">
                                                                 <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'
-                                                                    }`}>{student.percentage}%</span>
+                                                                    }`}>{formatScore(student.percentage)}%</span>
                                                                 {student.terminationReason && (
                                                                     <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold border ${['time_limit', 'server_auto_expired'].includes(student.terminationReason)
                                                                         ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
@@ -890,14 +892,14 @@ export default function MonitorTestPage() {
                                                         </div>
                                                         <div className="flex items-center gap-1.5 shrink-0">
                                                             <span className={`font-bold text-sm ${student.percentage >= (testInfo?.passingPercentage || 40) ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                                {student.score}<span className="text-slate-500 text-[10px] font-normal">/{testInfo?.totalMarks}</span>
+                                                                {formatScore(student.score)}<span className="text-slate-500 text-[10px] font-normal">/{testInfo?.totalMarks}</span>
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between pl-[52px]">
                                                         <div className="flex items-center gap-2 text-[10px] text-slate-500">
                                                             <span>{formatTime(student.timeSpent)}</span>
-                                                            <span>{student.percentage}%</span>
+                                                            <span>{formatScore(student.percentage)}%</span>
                                                             {student.warningCount > 0 && (
                                                                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold border border-red-500/20">
                                                                     <ShieldAlert className="w-2.5 h-2.5" /> {student.warningCount}

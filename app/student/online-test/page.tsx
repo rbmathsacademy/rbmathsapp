@@ -55,6 +55,8 @@ const remarkLegend = [
 
 export default function OnlineTestPage() {
     const router = useRouter();
+    const formatScore = (val: any) => (val !== null && val !== undefined && !isNaN(val)) ? Number(Number(val).toFixed(2)) : val;
+
     const [loading, setLoading] = useState(true);
     const [available, setAvailable] = useState<TestInfo[]>([]);
     const [upcoming, setUpcoming] = useState<TestInfo[]>([]);
@@ -248,15 +250,15 @@ export default function OnlineTestPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-slate-900/80 ring-1 ring-white/5 rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Your Avg Score</div>
-                                <div className="text-xl sm:text-3xl font-black text-white">{analytics.averageScore}%</div>
+                                <div className="text-xl sm:text-3xl font-black text-white">{formatScore(analytics.averageScore)}%</div>
                             </div>
                             <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Batch Topper Avg</div>
-                                <div className="text-xl sm:text-3xl font-black text-amber-400">{analytics.batchHighestAverage}%</div>
+                                <div className="text-xl sm:text-3xl font-black text-amber-400">{formatScore(analytics.batchHighestAverage)}%</div>
                             </div>
                             <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Your Highest Score</div>
-                                <div className="text-xl sm:text-3xl font-black text-emerald-400">{analytics.highestScore}%</div>
+                                <div className="text-xl sm:text-3xl font-black text-emerald-400">{formatScore(analytics.highestScore)}%</div>
                             </div>
                             <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/20 ring-1 ring-indigo-500/20 rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Batch Rank</div>
@@ -283,7 +285,7 @@ export default function OnlineTestPage() {
                                 {remark && (
                                     <div className={`${remark.bg} ${remark.border} border rounded-xl px-4 py-3 mb-4 text-center`}>
                                         <div className={`text-base sm:text-xl font-black ${remark.color}`}>{remark.label}</div>
-                                        <div className="text-[9px] text-slate-400 mt-1">{analytics.averageScore}% average</div>
+                                        <div className="text-[9px] text-slate-400 mt-1">{formatScore(analytics.averageScore)}% average</div>
                                     </div>
                                 )}
 
@@ -360,7 +362,7 @@ export default function OnlineTestPage() {
                                             <div className="flex justify-between text-[9px] text-slate-500 pl-8">
                                                 {analytics.history.map((h, i) => (
                                                     <span key={i} className="text-center truncate max-w-[60px]" title={h.title}>
-                                                        {h.percentage}%
+                                                        {formatScore(h.percentage)}%
                                                     </span>
                                                 ))}
                                             </div>
@@ -420,7 +422,7 @@ export default function OnlineTestPage() {
                                                         <td className="py-2.5 px-1.5 text-center text-slate-400 text-xs">{entry.testsAttempted}</td>
                                                         <td className="py-2.5 px-1.5 text-right">
                                                             <span className={`font-bold text-xs sm:text-sm ${entry.average >= 80 ? 'text-emerald-400' : entry.average >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
-                                                                {entry.average}%
+                                                                {formatScore(entry.average)}%
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -575,7 +577,7 @@ export default function OnlineTestPage() {
                                                     // Published State
                                                     <>
                                                         <div className={`text-lg font-black ${pct >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                            {pct}%
+                                                            {formatScore(pct)}%
                                                         </div>
                                                         <span className="text-[9px] text-blue-400 font-bold mt-1 flex items-center gap-1">
                                                             View Result <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
@@ -593,14 +595,14 @@ export default function OnlineTestPage() {
                                                     <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
                                                         <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${Math.max(pct, 2)}%` }}></div>
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-emerald-400 w-8 text-right">{pct}%</span>
+                                                    <span className="text-[10px] font-bold text-emerald-400 w-8 text-right">{formatScore(pct)}%</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[9px] text-slate-500 w-24 flex-shrink-0">Topper&apos;s score</span>
                                                     <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
                                                         <div className="h-full bg-amber-500/60 rounded-full transition-all duration-700" style={{ width: `${Math.max(batchHighest, 2)}%` }}></div>
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-amber-400 w-8 text-right">{batchHighest}%</span>
+                                                    <span className="text-[10px] font-bold text-amber-400 w-8 text-right">{formatScore(batchHighest)}%</span>
                                                 </div>
                                             </div>
                                         )}

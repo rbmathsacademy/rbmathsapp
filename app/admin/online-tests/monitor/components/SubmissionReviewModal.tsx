@@ -18,6 +18,8 @@ export default function SubmissionReviewModal({
     onClose: () => void;
     onSuccess: () => void;
 }) {
+    const formatScore = (val: any) => (val !== null && val !== undefined && !isNaN(val)) ? Number(Number(val).toFixed(2)) : val;
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [data, setData] = useState<any>(null);
@@ -238,7 +240,7 @@ export default function SubmissionReviewModal({
                         <div className="text-xs md:text-sm text-slate-400 mt-1 md:mt-2 flex flex-wrap items-center gap-2 md:gap-3">
                             <span className="whitespace-nowrap">📱 {student.phone}</span>
                             <span className="whitespace-nowrap">📚 {student.batch}</span>
-                            <span className="whitespace-nowrap">🎯 Current Score: <strong className="text-white">{attempt.score}</strong></span>
+                            <span className="whitespace-nowrap">🎯 Current Score: <strong className="text-white">{formatScore(attempt.score)}</strong></span>
                             {attempt.graceMarks > 0 && (
                                 <span className="whitespace-nowrap inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[10px] font-bold border border-amber-500/20">
                                     <Gift className="w-3 h-3" /> +{attempt.graceMarks} Grace ({attempt.graceReason || 'Awarded'})

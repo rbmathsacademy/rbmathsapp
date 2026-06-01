@@ -150,6 +150,8 @@ export default function StudentDashboard() {
         window.location.replace('/student/login');
     };
 
+    const formatScore = (val: any) => (val !== null && val !== undefined && !isNaN(val)) ? Number(Number(val).toFixed(2)) : val;
+
     const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
@@ -338,7 +340,7 @@ export default function StudentDashboard() {
                                 </div>
                             </div>
                             <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-3xl font-black text-blue-400">{data.stats.avgTestPercentage}%</p>
+                                <p className="text-xl sm:text-3xl font-black text-blue-400">{formatScore(data.stats.avgTestPercentage)}%</p>
                                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Overall</p>
                             </div>
                         </div>
@@ -432,10 +434,10 @@ export default function StudentDashboard() {
                                             <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`text-2xl sm:text-3xl font-black ${typeof exam.percentage === 'string' ? "text-blue-400 text-xl" : exam.percentage >= 75 ? 'text-emerald-400' : typeof exam.percentage === 'number' && exam.percentage >= 40 ? 'text-amber-400' : 'text-rose-400'}`}>
-                                                        {exam.percentage}{typeof exam.percentage === 'number' || (typeof exam.percentage === 'string' && !isNaN(Number(exam.percentage))) ? '%' : ''}
+                                                        {formatScore(exam.percentage)}{typeof exam.percentage === 'number' || (typeof exam.percentage === 'string' && !isNaN(Number(exam.percentage))) ? '%' : ''}
                                                     </div>
                                                     <div className="text-xs text-slate-500">
-                                                        <span className="text-white font-bold">{exam.marksObtained}</span>
+                                                        <span className="text-white font-bold">{formatScore(exam.marksObtained)}</span>
                                                         {typeof exam.marksObtained === 'number' || !isNaN(Number(exam.marksObtained)) ? `/${exam.fullMarks}` : ''}
                                                     </div>
                                                 </div>
@@ -452,11 +454,11 @@ export default function StudentDashboard() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="flex flex-col items-center bg-purple-500/5 border border-purple-500/10 rounded-xl py-2">
                                                     <span className="text-[8px] uppercase font-black text-slate-500 tracking-widest mb-1">Highest</span>
-                                                    <span className="text-lg font-black text-purple-400">{exam.highestPercentage}%</span>
+                                                    <span className="text-lg font-black text-purple-400">{formatScore(exam.highestPercentage)}%</span>
                                                 </div>
                                                 <div className="flex flex-col items-center bg-blue-500/5 border border-blue-500/10 rounded-xl py-2">
                                                     <span className="text-[8px] uppercase font-black text-slate-500 tracking-widest mb-1">Batch Avg</span>
-                                                    <span className="text-lg font-black text-blue-400">{exam.averagePercentage}%</span>
+                                                    <span className="text-lg font-black text-blue-400">{formatScore(exam.averagePercentage)}%</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -500,7 +502,7 @@ export default function StudentDashboard() {
                                                         (test.percentage || 0) >= 75 ? 'text-emerald-400' :
                                                             (test.percentage || 0) >= 40 ? 'text-amber-400' : 'text-rose-400'
                                                         }`}>
-                                                        {test.score !== null ? test.score : '-'}
+                                                        {test.score !== null ? formatScore(test.score) : '-'}
                                                     </span>
                                                     {test.score !== null && (
                                                         <span className="text-[8px] sm:text-[10px] font-bold text-slate-600">/{test.totalMarks}</span>
@@ -512,7 +514,7 @@ export default function StudentDashboard() {
                                                 <span className="text-slate-500 text-[8px] sm:text-[9px] uppercase font-black tracking-widest mb-1 sm:mb-2 flex items-center gap-1 sm:gap-1.5 justify-center">
                                                     <Trophy className="w-2.5 h-2.5 sm:w-3 h-3 text-purple-400" /> Highest
                                                 </span>
-                                                <p className="text-lg sm:text-2xl font-black text-purple-400">{test.highestScore}</p>
+                                                <p className="text-lg sm:text-2xl font-black text-purple-400">{formatScore(test.highestScore)}</p>
                                                 <span className="text-[8px] sm:text-[10px] font-bold text-slate-600 tracking-tight mt-0.5">Topper</span>
                                             </div>
 
@@ -520,7 +522,7 @@ export default function StudentDashboard() {
                                                 <span className="text-slate-500 text-[8px] sm:text-[9px] uppercase font-black tracking-widest mb-1 sm:mb-2 flex items-center gap-1 sm:gap-1.5 justify-center">
                                                     <Users className="w-2.5 h-2.5 sm:w-3 h-3 text-blue-400" /> Average
                                                 </span>
-                                                <p className="text-lg sm:text-2xl font-black text-blue-400">{test.averageScore}</p>
+                                                <p className="text-lg sm:text-2xl font-black text-blue-400">{formatScore(test.averageScore)}</p>
                                                 <span className="text-[8px] sm:text-[10px] font-bold text-slate-600 tracking-tight mt-0.5">Avg</span>
                                             </div>
                                         </div>

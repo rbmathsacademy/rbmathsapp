@@ -108,6 +108,8 @@ export default function TestResultPage() {
     // Ensure KaTeX CSS is loaded — silently injects CDN fallback if bundled CSS failed
     useKatexCssGuard();
 
+    const formatScore = (val: any) => (val !== null && val !== undefined && !isNaN(val)) ? Number(Number(val).toFixed(2)) : val;
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [testInfo, setTestInfo] = useState<any>(null);
@@ -277,7 +279,7 @@ export default function TestResultPage() {
                                                 </svg>
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                                                     <span className={`text-3xl font-black tracking-tight ${result?.passed ? 'text-white' : 'text-red-100'}`}>
-                                                        {result?.percentage}%
+                                                        {formatScore(result?.percentage)}%
                                                     </span>
                                                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Your Score</span>
                                                 </div>
@@ -401,8 +403,8 @@ export default function TestResultPage() {
                                                 </td>
                                                 <td className="px-3 py-3 text-right">
                                                     <div className="flex flex-col items-end">
-                                                        <span className="font-bold text-white text-xs">{entry.score}</span>
-                                                        <span className="text-[9px] text-slate-500 font-bold">{entry.percentage}%</span>
+                                                        <span className="font-bold text-white text-xs">{formatScore(entry.score)}</span>
+                                                        <span className="text-[9px] text-slate-500 font-bold">{formatScore(entry.percentage)}%</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-3 py-3 text-right">
