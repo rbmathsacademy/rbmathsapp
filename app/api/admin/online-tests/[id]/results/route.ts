@@ -117,6 +117,7 @@ export async function GET(
                     }
                     marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
                 }
+                marksAwarded = Number(marksAwarded.toFixed(2));
                 totalScore += marksAwarded;
                 gradedAnswers.push({ questionId: ans.questionId, answer: ans.answer, isCorrect, marksAwarded });
             }
@@ -131,7 +132,7 @@ export async function GET(
             const tm = servedTotalMarks || test.totalMarks || 1;
 
             attempt.answers = gradedAnswers;
-            attempt.score = totalScore;
+            attempt.score = Number(totalScore.toFixed(2));
             attempt.percentage = Math.round((totalScore / tm) * 100);
             attempt.status = 'completed';
             attempt.submittedAt = now;

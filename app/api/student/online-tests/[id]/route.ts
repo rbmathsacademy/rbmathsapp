@@ -133,6 +133,7 @@ export async function GET(
                         marksAwarded = 0;
                         isCorrect = false;
                     }
+                    marksAwarded = Number(marksAwarded.toFixed(2));
                     totalScore += marksAwarded;
                     gradedAnswers.push({
                         questionId: ans.questionId,
@@ -156,9 +157,8 @@ export async function GET(
                 }
                 const totalMarks = servedTotalMarks || test.totalMarks || 1;
                 const percentage = Math.round((totalScore / totalMarks) * 100);
-
                 attempt.answers = gradedAnswers;
-                attempt.score = totalScore;
+                attempt.score = Number(totalScore.toFixed(2));
                 attempt.percentage = percentage;
                 attempt.timeSpent = attempt.timeSpent || (Date.now() - new Date(attempt.startedAt).getTime());
                 attempt.status = 'completed';
@@ -517,6 +517,7 @@ export async function PUT(
                 isCorrect = false;
             }
 
+            marksAwarded = Number(marksAwarded.toFixed(2));
             totalScore += marksAwarded;
             gradedAnswers.push({
                 questionId: ans.questionId,
@@ -547,7 +548,7 @@ export async function PUT(
 
         // Update attempt
         attempt.answers = gradedAnswers;
-        attempt.score = totalScore;
+        attempt.score = Number(totalScore.toFixed(2));
         attempt.percentage = percentage;
         attempt.timeSpent = timeSpent || (Date.now() - new Date(attempt.startedAt).getTime());
         attempt.status = 'completed';

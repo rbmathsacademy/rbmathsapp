@@ -127,7 +127,7 @@ export async function POST(
                     }
                     marksAwarded = isCorrect ? (question.marks || 1) : -(question.negativeMarks || 0);
                 }
-
+                marksAwarded = Number(marksAwarded.toFixed(2));
                 totalScore += marksAwarded;
                 gradedAnswers.push({ questionId: ans.questionId, answer: ans.answer, isCorrect, marksAwarded });
             }
@@ -148,7 +148,7 @@ export async function POST(
 
             // Update attempt
             attempt.answers = gradedAnswers;
-            attempt.score = totalScore;
+            attempt.score = Number(totalScore.toFixed(2));
             attempt.percentage = percentage;
             attempt.status = 'completed';
             attempt.submittedAt = now;

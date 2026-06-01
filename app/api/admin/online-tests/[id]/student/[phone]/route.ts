@@ -115,7 +115,7 @@ export async function POST(
         }
         const tm = servedTotalMarks || test.totalMarks || 1;
 
-        attempt.score = Math.max(0, totalScore); // prevent negative total score
+        attempt.score = Number(Math.max(0, totalScore).toFixed(2)); // prevent negative total score
         attempt.percentage = Math.round((attempt.score / tm) * 100);
 
         // Tell mongoose that the answers array was modified since it contains mixed types

@@ -280,9 +280,9 @@ export async function PUT(request: NextRequest) {
                     }
 
                     ans.isCorrect = isCorrect;
-                    ans.marksAwarded = marksAwarded;
+                    ans.marksAwarded = Number(marksAwarded.toFixed(2));
                     // Preserve existing per-question adjustment marks
-                    newScore += marksAwarded + (ans.adjustmentMarks || 0);
+                    newScore += ans.marksAwarded + (ans.adjustmentMarks || 0);
 
                     return ans;
                 });
@@ -303,8 +303,8 @@ export async function PUT(request: NextRequest) {
 
                 if (currentTotalMarks === 0) currentTotalMarks = 1; // Prevent div/0
 
-                attempt.score = newScore;
-                attempt.percentage = Math.round((newScore / currentTotalMarks) * 100);
+                attempt.score = Number(newScore.toFixed(2));
+                attempt.percentage = Math.round((attempt.score / currentTotalMarks) * 100);
 
                 attempt.markModified('answers');
                 await attempt.save();
