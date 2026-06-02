@@ -47,6 +47,8 @@ export async function GET(
             },
             attempt: {
                 ...attempt,
+                score: Math.round((Number(attempt.score) + Number.EPSILON) * 100) / 100,
+                percentage: Math.round((Number(attempt.percentage) + Number.EPSILON) * 100) / 100,
                 // ensure questions from the test are available if attempt doesn't have a snapshot
                 questions: (attempt.questions && attempt.questions.length > 0) ? attempt.questions : test.questions
             }

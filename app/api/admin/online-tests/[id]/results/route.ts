@@ -163,8 +163,8 @@ export async function GET(
                     name: student.name,
                     phone,
                     batch: student.batch,
-                    score: attempt.score,
-                    percentage: attempt.percentage,
+                    score: Math.round((Number(attempt.score) + Number.EPSILON) * 100) / 100,
+                    percentage: Math.round((Number(attempt.percentage) + Number.EPSILON) * 100) / 100,
                     submittedAt: attempt.submittedAt,
                     timeSpent: attempt.timeSpent,
                     graceMarks: attempt.graceMarks || 0,
@@ -211,14 +211,14 @@ export async function GET(
 
             analytics = {
                 ...analytics,
-                averageScore: Math.round((scores.reduce((a: number, b: number) => a + b, 0) / scores.length) * 10) / 10,
-                highestScore: Math.max(...scores),
-                lowestScore: Math.min(...scores),
+                averageScore: Math.round((scores.reduce((a: number, b: number) => a + b, 0) / scores.length) * 100) / 100,
+                highestScore: Math.round((Math.max(...scores) + Number.EPSILON) * 100) / 100,
+                lowestScore: Math.round((Math.min(...scores) + Number.EPSILON) * 100) / 100,
                 averagePercentage: Math.round(percentages.reduce((a: number, b: number) => a + b, 0) / percentages.length),
                 passRate: Math.round((passedCount / completed.length) * 100),
                 passedCount,
                 failedCount: completed.length - passedCount,
-                medianScore: scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)]
+                medianScore: Math.round((scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] + Number.EPSILON) * 100) / 100
             };
 
             // Score distribution (10% buckets)
