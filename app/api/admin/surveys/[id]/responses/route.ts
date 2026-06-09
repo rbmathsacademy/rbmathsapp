@@ -127,8 +127,17 @@ export async function GET(
 
         // Batch-wise response breakdown
         const batchBreakdown: Record<string, { total: number; responded: number }> = {};
+        let availableStudents: any[] = [];
+        
         if (deployedBatches.length > 0) {
-            const allStudents = await BatchStudent.find({ courses: { $in: deployedBatches } }).select('phoneNumber courses').lean() as any[];
+            const allStudents = await BatchStudent.find({ courses: { $in: deployedBatches } }).select('phoneNumber name courses').lean() as any[];
+            
+            availableStudents = allStudents.map(s => ({
+                name: s.name || 'Unknown',
+                phone: s.phoneNumber,
+                courses: s.courses
+            }));
+
             const respondedPhones = new Set(responses.map(r => r.studentPhone));
 
             for (const batch of deployedBatches) {
@@ -144,6 +153,7 @@ export async function GET(
 
         return NextResponse.json({
             survey,
+            availableStudents,
             analytics: {
                 totalStudents,
                 totalResponses: responses.length,

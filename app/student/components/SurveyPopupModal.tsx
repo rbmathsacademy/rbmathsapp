@@ -135,12 +135,12 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                                             {q.options?.map((opt: string, oIdx: number) => {
                                                 const selected = answers[q.id] === oIdx;
                                                 return (
-                                                    <label key={oIdx} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-blue-500/10 border-blue-500/50' : 'bg-slate-900 border-white/5 hover:bg-white/5'}`}>
+                                                    <div key={oIdx} onClick={() => handleOptionSelect(q.id, oIdx, 'mcq')} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-blue-500/10 border-blue-500/50' : 'bg-slate-900 border-white/5 hover:bg-white/5'}`}>
                                                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? 'border-blue-500' : 'border-slate-500'}`}>
                                                             {selected && <div className="w-2 h-2 rounded-full bg-blue-500"/>}
                                                         </div>
                                                         <span className={`text-sm ${selected ? 'text-white font-bold' : 'text-slate-300'}`}>{opt}</span>
-                                                    </label>
+                                                    </div>
                                                 );
                                             })}
                                         </div>
@@ -151,12 +151,12 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                                             {q.options?.map((opt: string, oIdx: number) => {
                                                 const selected = Array.isArray(answers[q.id]) && answers[q.id].includes(oIdx);
                                                 return (
-                                                    <label key={oIdx} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-purple-500/10 border-purple-500/50' : 'bg-slate-900 border-white/5 hover:bg-white/5'}`}>
+                                                    <div key={oIdx} onClick={() => handleOptionSelect(q.id, oIdx, 'checkbox')} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-purple-500/10 border-purple-500/50' : 'bg-slate-900 border-white/5 hover:bg-white/5'}`}>
                                                         <div className={`w-4 h-4 rounded-[4px] border-2 flex items-center justify-center shrink-0 ${selected ? 'border-purple-500 bg-purple-500' : 'border-slate-500'}`}>
                                                             {selected && <CheckCircle2 className="w-3 h-3 text-white"/>}
                                                         </div>
                                                         <span className={`text-sm ${selected ? 'text-white font-bold' : 'text-slate-300'}`}>{opt}</span>
-                                                    </label>
+                                                    </div>
                                                 );
                                             })}
                                         </div>

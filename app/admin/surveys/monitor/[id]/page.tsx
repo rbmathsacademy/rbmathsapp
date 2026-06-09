@@ -13,7 +13,8 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [batchFilter, setBatchFilter] = useState('');
-    const [excludePhone, setExcludePhone] = useState('');
+    const [excludePhones, setExcludePhones] = useState<string[]>([]);
+    const [searchStudent, setSearchStudent] = useState('');
 
     const fetchData = async () => {
         try {
@@ -56,8 +57,8 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
     };
 
     const handleExclude = async () => {
-        if (!excludePhone.trim()) return;
-        const toastId = toast.loading('Excluding student...');
+        if (excludePhones.length === 0) return;
+        const toastId = toast.loading('Excluding students...');
         try {
             const res = await fetch(`/api/admin/surveys/${id}/exclude`, {
                 method: 'POST',
@@ -65,11 +66,11 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                     'Content-Type': 'application/json',
                     'X-User-Email': localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).email : '' 
                 },
-                body: JSON.stringify({ phone: excludePhone })
+                body: JSON.stringify({ phones: excludePhones })
             });
             if (!res.ok) throw new Error((await res.json()).error);
-            toast.success('Student excluded', { id: toastId });
-            setExcludePhone('');
+            toast.success('Students excluded', { id: toastId });
+            setExcludePhones([]);
             fetchData();
         } catch (error: any) {
             toast.error(error.message || 'Failed to exclude', { id: toastId });
@@ -141,7 +142,12 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
     if (loading && !data) return <div className="text-center py-20 text-slate-500">Loading monitor data...</div>;
     if (!data || !data.survey) return null;
 
-    const { survey, analytics, responses } = data;
+    const { survey, analytics, responses, availableStudents = [] } = data;
+
+    const filteredStudents = availableStudents.filter((s: any) => 
+        !survey.excludedStudents?.includes(s.phone) &&
+        (s.name.toLowerCase().includes(searchStudent.toLowerCase()) || s.phone.includes(searchStudent))
+    );
 
     return (
         <div className="space-y-6">
@@ -372,14 +378,43 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                 </h2>
                 <p className="text-sm text-slate-400 mb-4">These students will not see the survey popup even if their batch is deployed.</p>
                 
-                <div className="flex gap-2 mb-6 max-w-sm">
-                    <input
-                        type="text" placeholder="Student Phone (e.g. 9876543210)" value={excludePhone} onChange={e => setExcludePhone(e.target.value)}
-                        className="flex-1 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500"
-                    />
-                    <button onClick={handleExclude} disabled={!excludePhone.trim()} className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm disabled:opacity-50 transition-colors">
-                        Exclude
-                    </button>
+                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                            <input
+                                type="text" placeholder="Search student to exclude..." value={searchStudent} onChange={e => setSearchStudent(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500"
+                            />
+                        </div>
+                        <div className="bg-black/20 border border-white/5 rounded-xl h-[200px] overflow-y-auto p-2 custom-scrollbar space-y-1">
+                            {filteredStudents.length === 0 ? (
+                                <p className="text-xs text-slate-500 text-center py-4">No students found.</p>
+                            ) : filteredStudents.map((s: any) => {
+                                const isSelected = excludePhones.includes(s.phone);
+                                return (
+                                    <label key={s.phone} className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-red-500/10 border border-red-500/20' : 'hover:bg-white/5 border border-transparent'}`}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={isSelected}
+                                            onChange={(e) => {
+                                                if (e.target.checked) setExcludePhones(prev => [...prev, s.phone]);
+                                                else setExcludePhones(prev => prev.filter(p => p !== s.phone));
+                                            }}
+                                            className="rounded border-white/20 bg-slate-800 text-red-500 focus:ring-red-500/20"
+                                        />
+                                        <div>
+                                            <div className="text-sm font-bold text-slate-300">{s.name}</div>
+                                            <div className="text-[10px] text-slate-500">{s.phone} • {s.courses?.join(', ')}</div>
+                                        </div>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                        <button onClick={handleExclude} disabled={excludePhones.length === 0} className="w-full mt-3 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                            Exclude Selected ({excludePhones.length})
+                        </button>
+                    </div>
                 </div>
 
                 {survey.excludedStudents && survey.excludedStudents.length > 0 ? (
