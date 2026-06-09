@@ -402,11 +402,11 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                 if (q.type === 'mcq' || q.type === 'checkbox') {
                                     return q.options.map((opt: string, idx: number) => <option key={idx} value={idx}>{opt}</option>);
                                 } else {
-                                    const uniqueAns = Array.from(new Set(responses.map((r: any) => {
+                                    const uniqueAns = Array.from(new Set<string>(responses.map((r: any) => {
                                         const a = r.answers.find((ans: any) => ans.questionId === filterQuestionId);
                                         return a ? String(a.answer) : null;
-                                    }).filter(Boolean)));
-                                    return uniqueAns.map(ans => <option key={ans!} value={ans!}>{ans}</option>);
+                                    }).filter(Boolean) as string[]));
+                                    return uniqueAns.map(ans => <option key={ans} value={ans}>{ans}</option>);
                                 }
                             })()}
                         </select>
