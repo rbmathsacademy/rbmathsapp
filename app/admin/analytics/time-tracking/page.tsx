@@ -46,11 +46,14 @@ export default function TimeTrackingDashboard() {
     };
 
     const formatTime = (seconds: number) => {
-        if (!seconds) return '0 mins';
+        if (!seconds) return '0s';
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
-        if (h > 0) return `${h} hrs ${m} mins`;
-        return `${m} mins`;
+        const s = Math.floor(seconds % 60);
+        
+        if (h > 0) return `${h}h ${m}m`;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
     };
 
     const filteredData = data.filter(d => 
