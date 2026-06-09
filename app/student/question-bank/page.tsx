@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
 import { Folder, ChevronRight, FileText, ArrowLeft, LogOut, Bookmark } from 'lucide-react';
 import { useStudentProfile } from '../StudentProfileContext';
+import TimeTracker from '../components/TimeTracker';
 
 interface IFolder {
     _id: string;
@@ -145,6 +146,7 @@ export default function QuestionBank() {
 
     return (
         <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden selection:bg-blue-500/30 pb-20">
+            <TimeTracker pageName="question-bank" />
             <Toaster position="top-center" />
 
             {/* Ambient Background */}

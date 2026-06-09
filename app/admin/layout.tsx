@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, FileText, BookOpen, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, BookOpen, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, Clock } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -212,6 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const allNavigation = [
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: 'Time Tracking', href: '/admin/analytics/time-tracking', icon: Clock },
         { name: 'Students', href: '/admin/students', icon: Users },
         { name: 'Student Chat', href: '/admin/chat', icon: MessageSquare },
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },

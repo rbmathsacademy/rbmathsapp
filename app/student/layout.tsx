@@ -6,6 +6,7 @@ import { StudentProfileProvider, useStudentProfile } from './StudentProfileConte
 import SchoolBoardModal from './SchoolBoardModal';
 
 import SurveyPopupModal from './components/SurveyPopupModal';
+import TimeTrackerSync from './components/TimeTrackerSync';
 
 // Helper: check if student belongs to Class XI or Class XII batch
 function isClassXIorXII(courses: string[]): boolean {
@@ -104,6 +105,7 @@ export default function StudentLayout({
     return (
         <div className="min-h-screen flex flex-col bg-[#0a0f1a]">
             <StudentProfileProvider>
+                <TimeTrackerSync />
                 <div className="flex-1 w-full">
                     {isLoginPage ? children : (
                         <SchoolBoardGate>

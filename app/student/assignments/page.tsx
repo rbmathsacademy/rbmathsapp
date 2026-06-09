@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useStudentProfile } from '../StudentProfileContext';
 import SchoolBoardModal from '../SchoolBoardModal';
 import BatchTabSwitcher from '../../components/BatchTabSwitcher';
+import TimeTracker from '../components/TimeTracker';
 
 const FREE_BATCH_LOWER = 'class xi (free batch) 2026-27';
 
@@ -285,6 +286,7 @@ export default function StudentAssignmentsPage() {
 
     return (
         <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200 relative overflow-x-hidden">
+            <TimeTracker pageName="assignments" />
             <Toaster position="top-center" />
 
             {/* Board Setup Modal */}
