@@ -13,10 +13,16 @@ import {
     BarChart2,
     BookOpen,
     FileText,
-    Download
+    Download,
+    AlertTriangle,
+    TrendingDown,
+    Settings,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { generateBatchPDF } from './generateBatchPDF';
+import AnomalyDetectionPanel from './AnomalyDetectionPanel';
 
 interface StudentAnalytics {
     student: {
@@ -212,6 +218,9 @@ export default function AnalyticsPage() {
 
             {data && (
                 <div className="space-y-6">
+                    {/* Anomaly Detection Panel */}
+                    <AnomalyDetectionPanel batch={selectedBatch} />
+
                     {/* Student List */}
                     <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
                         <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">

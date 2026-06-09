@@ -218,6 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Answer Bank', href: '/admin/answers', icon: BookOpen },
         { name: 'Deploy Questions', href: '/admin/deploy', icon: Upload },
         { name: 'Online Tests', href: '/admin/online-tests', icon: ClipboardCheck },
+        { name: 'Surveys', href: '/admin/surveys', icon: ClipboardList },
         { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
         { name: 'Lesson Plan', href: '/admin/lesson-plan', icon: BookText },
         { name: 'Fees Management', href: '/admin/fees', icon: DollarSign },
@@ -235,7 +236,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         if (user.role === 'copy_checker') {
             // Copy Checker: Question Bank, Answer Bank, Online Tests, Assignments
-            return ['Question Bank', 'Answer Bank', 'Online Tests', 'Assignments'].includes(item.name);
+            return ['Question Bank', 'Answer Bank', 'Online Tests', 'Assignments', 'Surveys'].includes(item.name);
         }
 
         return false;

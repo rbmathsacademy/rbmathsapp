@@ -1,13 +1,57 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { StudentProfileProvider, useStudentProfile } from './StudentProfileContext';
 import SchoolBoardModal from './SchoolBoardModal';
 
+import SurveyPopupModal from './components/SurveyPopupModal';
+
 // Helper: check if student belongs to Class XI or Class XII batch
 function isClassXIorXII(courses: string[]): boolean {
     return courses.some(c => /class\s*x(i|ii)\b/i.test(c));
+}
+
+function SurveyGate({ children }: { children: React.ReactNode }) {
+    const { profile, loading } = useStudentProfile();
+    const [surveys, setSurveys] = useState<any[]>([]);
+    const [surveyLoading, setSurveyLoading] = useState(true);
+
+    const fetchSurveys = async () => {
+        try {
+            const res = await fetch('/api/student/surveys');
+            if (res.ok) {
+                const data = await res.json();
+                setSurveys(data.surveys || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch surveys:', error);
+        } finally {
+            setSurveyLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!loading && profile && profile._id !== 'GUEST') {
+            fetchSurveys();
+        } else if (!loading) {
+            setSurveyLoading(false);
+        }
+    }, [loading, profile]);
+
+    const activeSurvey = surveys.length > 0 ? surveys[0] : null;
+
+    return (
+        <>
+            {activeSurvey && !surveyLoading && (
+                <SurveyPopupModal 
+                    survey={activeSurvey} 
+                    onComplete={() => fetchSurveys()} 
+                />
+            )}
+            {children}
+        </>
+    );
 }
 
 function SchoolBoardGate({ children }: { children: React.ReactNode }) {
@@ -63,7 +107,9 @@ export default function StudentLayout({
                 <div className="flex-1 w-full">
                     {isLoginPage ? children : (
                         <SchoolBoardGate>
-                            {children}
+                            <SurveyGate>
+                                {children}
+                            </SurveyGate>
                         </SchoolBoardGate>
                     )}
                 </div>
