@@ -85,8 +85,11 @@ export default function CreateTestPage() {
     useEffect(() => {
         if (testId && userEmail) {
             loadTest();
+        } else if (!testId) {
+            const prefillTitle = searchParams?.get('title');
+            if (prefillTitle) setTitle(decodeURIComponent(prefillTitle));
         }
-    }, [testId, userEmail]);
+    }, [testId, userEmail, searchParams]);
 
     const loadTest = async () => {
         try {

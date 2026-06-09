@@ -171,6 +171,16 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
         setSelectedIds(newSet);
     };
 
+    const handleSelectAll = () => {
+        const newSet = new Set(selectedIds);
+        filteredQuestions.forEach(q => newSet.add(q.id));
+        setSelectedIds(newSet);
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedIds(new Set());
+    };
+
     const handleImport = () => {
         const selectedQuestions = questions.filter(q => selectedIds.has(q.id));
         const mappedQuestions = selectedQuestions.map(q => {
@@ -378,10 +388,14 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-white/10 flex items-center justify-between bg-slate-900/50 rounded-b-2xl">
-                    <p className="text-sm text-slate-400">
-                        <span className="text-emerald-400 font-bold">{selectedIds.size}</span> questions selected
-                    </p>
+                <div className="p-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between bg-slate-900/50 rounded-b-2xl gap-4">
+                    <div className="flex items-center gap-4">
+                        <p className="text-sm text-slate-400">
+                            <span className="text-emerald-400 font-bold">{selectedIds.size}</span> questions selected
+                        </p>
+                        <button onClick={handleSelectAll} disabled={filteredQuestions.length === 0} className="text-xs px-3 py-1.5 bg-emerald-500/20 text-emerald-300 rounded hover:bg-emerald-500/30 transition-colors disabled:opacity-50">Select All Filtered</button>
+                        <button onClick={handleDeselectAll} disabled={selectedIds.size === 0} className="text-xs px-3 py-1.5 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 transition-colors disabled:opacity-50">Deselect All</button>
+                    </div>
                     <div className="flex gap-3">
                         <button
                             onClick={onCancel}

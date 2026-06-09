@@ -44,6 +44,25 @@ export default function DeployTestPage() {
     }, [userEmail, testId]);
 
     useEffect(() => {
+        const storedStudents = sessionStorage.getItem('surveyDeployStudents');
+        if (storedStudents) {
+            try {
+                const parsed = JSON.parse(storedStudents);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setDeploymentMode('specific');
+                    setSelectedStudents(parsed);
+                    // Extract unique batches from these students
+                    const uniqueBatches = Array.from(new Set(parsed.map((s: any) => s.batchName)));
+                    setSelectedBatches(uniqueBatches);
+                }
+                sessionStorage.removeItem('surveyDeployStudents');
+            } catch (e) {
+                console.error("Error parsing surveyDeployStudents", e);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         if (selectedBatches.length > 0) {
             fetchStudents();
         } else {

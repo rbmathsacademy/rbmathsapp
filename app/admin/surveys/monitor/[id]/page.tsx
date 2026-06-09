@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, BarChart3, Users, Clock, Search, Trash2, Copy, Download, UserX, XCircle, FileJson } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, Clock, Search, Trash2, Copy, Download, UserX, XCircle, FileJson, Send, Plus, X } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function SurveyMonitorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,6 +15,10 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
     const [batchFilter, setBatchFilter] = useState('');
     const [excludePhones, setExcludePhones] = useState<string[]>([]);
     const [searchStudent, setSearchStudent] = useState('');
+    const [filterQuestionId, setFilterQuestionId] = useState('');
+    const [filterAnswer, setFilterAnswer] = useState('');
+    const [showDeployModal, setShowDeployModal] = useState(false);
+    const [availableTests, setAvailableTests] = useState<any[]>([]);
 
     const fetchData = async () => {
         try {
@@ -139,10 +143,66 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
         toast.success('Raw JSON copied to clipboard');
     };
 
+    const openDeployModal = async () => {
+        if (!filteredResponses || filteredResponses.length === 0) return toast.error('No students to deploy to');
+        
+        try {
+            const res = await fetch('/api/admin/online-tests', {
+                headers: { 'X-User-Email': localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).email : '' }
+            });
+            const tests = await res.json();
+            setAvailableTests(tests.filter((t: any) => t.status === 'draft'));
+            setShowDeployModal(true);
+        } catch (e) {
+            toast.error('Failed to fetch tests');
+        }
+    };
+
+    const handleDeployExisting = (testId: string) => {
+        const studentsToDeploy = filteredResponses.map((r: any) => ({
+            phoneNumber: r.studentPhone,
+            studentName: r.studentName,
+            batchName: r.batchName
+        }));
+        sessionStorage.setItem('surveyDeployStudents', JSON.stringify(studentsToDeploy));
+        router.push(`/admin/online-tests/deploy/${testId}`);
+    };
+
+    const handleCreateNewTest = () => {
+        const studentsToDeploy = filteredResponses.map((r: any) => ({
+            phoneNumber: r.studentPhone,
+            studentName: r.studentName,
+            batchName: r.batchName
+        }));
+        sessionStorage.setItem('surveyDeployStudents', JSON.stringify(studentsToDeploy));
+        
+        let optionText = filterAnswer;
+        if (filterQuestionId && filterAnswer !== '') {
+            const q = data.survey.questions.find((q: any) => q.id === filterQuestionId);
+            if (q && (q.type === 'mcq' || q.type === 'checkbox')) {
+                optionText = q.options[parseInt(filterAnswer)] || filterAnswer;
+            }
+        }
+        const title = encodeURIComponent(`${optionText ? optionText + ' || ' : ''}Exam Practice Test`);
+        router.push(`/admin/online-tests/create?title=${title}`);
+    };
+
     if (loading && !data) return <div className="text-center py-20 text-slate-500">Loading monitor data...</div>;
     if (!data || !data.survey) return null;
 
     const { survey, analytics, responses, availableStudents = [] } = data;
+
+    const filteredResponses = responses.filter((r: any) => {
+        if (!filterQuestionId || filterAnswer === '') return true;
+        const ansObj = r.answers.find((a: any) => a.questionId === filterQuestionId);
+        if (!ansObj) return false;
+        
+        const q = survey.questions.find((q: any) => q.id === filterQuestionId);
+        if (q.type === 'checkbox' && Array.isArray(ansObj.answer)) {
+            return ansObj.answer.map(String).includes(String(filterAnswer));
+        }
+        return String(ansObj.answer) === String(filterAnswer);
+    });
 
     const filteredStudents = availableStudents.filter((s: any) => 
         !survey.excludedStudents?.includes(s.phone) &&
@@ -292,6 +352,9 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                     </h2>
                     
                     <div className="flex flex-wrap gap-2">
+                        <button onClick={openDeployModal} className="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-bold border border-blue-500/20 transition-colors flex items-center gap-1.5">
+                            <Send className="h-3.5 w-3.5" /> Deploy Test ({filteredResponses.length})
+                        </button>
                         <button onClick={copyTSV} className="px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold border border-emerald-500/20 transition-colors flex items-center gap-1.5">
                             <Copy className="h-3.5 w-3.5" /> Copy Data (AI)
                         </button>
@@ -301,8 +364,8 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                     </div>
                 </div>
 
-                <div className="p-4 border-b border-white/10 bg-black/20 flex gap-3">
-                    <div className="relative flex-1 max-w-sm">
+                <div className="p-4 border-b border-white/10 bg-black/20 flex flex-wrap gap-3">
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
                             type="text" placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)}
@@ -316,6 +379,38 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                         <option value="">All Batches</option>
                         {Object.keys(analytics.batchBreakdown).map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
+                    
+                    <select
+                        value={filterQuestionId}
+                        onChange={e => { setFilterQuestionId(e.target.value); setFilterAnswer(''); }}
+                        className="px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500 max-w-xs truncate"
+                    >
+                        <option value="">All Questions</option>
+                        {survey.questions.map((q: any) => <option key={q.id} value={q.id}>{q.text}</option>)}
+                    </select>
+
+                    {filterQuestionId && (
+                        <select
+                            value={filterAnswer}
+                            onChange={e => setFilterAnswer(e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500 max-w-xs truncate"
+                        >
+                            <option value="">Any Answer</option>
+                            {(() => {
+                                const q = survey.questions.find((q: any) => q.id === filterQuestionId);
+                                if (!q) return null;
+                                if (q.type === 'mcq' || q.type === 'checkbox') {
+                                    return q.options.map((opt: string, idx: number) => <option key={idx} value={idx}>{opt}</option>);
+                                } else {
+                                    const uniqueAns = Array.from(new Set(responses.map((r: any) => {
+                                        const a = r.answers.find((ans: any) => ans.questionId === filterQuestionId);
+                                        return a ? String(a.answer) : null;
+                                    }).filter(Boolean)));
+                                    return uniqueAns.map(ans => <option key={ans!} value={ans!}>{ans}</option>);
+                                }
+                            })()}
+                        </select>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -332,9 +427,9 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                             </tr>
                         </thead>
                         <tbody>
-                            {responses.length === 0 ? (
+                            {filteredResponses.length === 0 ? (
                                 <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-500">No responses match your filters.</td></tr>
-                            ) : responses.map((r: any) => (
+                            ) : filteredResponses.map((r: any) => (
                                 <tr key={r._id} className="border-b border-white/5 hover:bg-white/[0.02]">
                                     <td className="px-4 py-3">
                                         <div className="font-bold text-white">{r.studentName}</div>
@@ -430,6 +525,53 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                     <p className="text-sm text-slate-500 italic">No students are excluded.</p>
                 )}
             </div>
+
+            {/* Deploy Modal */}
+            {showDeployModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-xl shadow-2xl flex flex-col">
+                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Send className="h-5 w-5 text-blue-400" /> Deploy Test to {filteredResponses.length} Students
+                            </h3>
+                            <button onClick={() => setShowDeployModal(false)} className="text-slate-400 hover:text-white transition-colors">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar max-h-[60vh]">
+                            <button
+                                onClick={handleCreateNewTest}
+                                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 transition-colors font-bold"
+                            >
+                                <Plus className="h-5 w-5" /> Create New Test
+                            </button>
+                            
+                            {availableTests.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Or choose existing draft</h4>
+                                    <div className="space-y-2">
+                                        {availableTests.map(t => (
+                                            <div key={t._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/20 transition-colors">
+                                                <div>
+                                                    <div className="font-bold text-slate-200">{t.title}</div>
+                                                    <div className="text-xs text-slate-500">{t.questions?.length || 0} questions • {t.totalMarks || 0} marks</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeployExisting(t._id)}
+                                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition-colors"
+                                                >
+                                                    Select
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

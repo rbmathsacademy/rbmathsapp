@@ -53,10 +53,18 @@ export async function GET(req: NextRequest) {
             .sort({ 'deployment.startTime': -1 })
             .lean();
 
-        // Filter out tests where this student is excluded
+        // Filter out tests where this student is excluded, and handle specific students deployment
         const tests = allTests.filter((t: any) => {
             const excluded: string[] = t.excludedStudents || [];
-            return !excluded.includes(student.phoneNumber);
+            if (excluded.includes(student.phoneNumber)) return false;
+
+            // If "specific students" are set, check if the student is in that list
+            if (t.deployment?.students && t.deployment.students.length > 0) {
+                const specificPhones = t.deployment.students.map((s: any) => s.phoneNumber);
+                if (!specificPhones.includes(student.phoneNumber)) return false;
+            }
+
+            return true;
         });
 
         // Get all student's attempts
