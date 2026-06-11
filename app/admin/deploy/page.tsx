@@ -59,6 +59,7 @@ export default function DeployPage() {
     const [selectedExamNames, setSelectedExamNames] = useState<string[]>([]);
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterData, setFilterData] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [] });
 
     // Current folder is the top of the stack (or null if at root folder level)
     const currentFolder = folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
@@ -179,6 +180,53 @@ export default function DeployPage() {
         }
     };
 
+    const fetchFilters = async () => {
+        setLoadingPicker(true);
+        try {
+            const res = await fetch('/api/admin/questions/filters', {
+                headers: { 'X-User-Email': userEmail! }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setFilterData(data);
+            }
+        } catch (error) {
+            console.error('Error fetching filters:', error);
+        } finally {
+            setLoadingPicker(false);
+        }
+    };
+
+    const fetchQuestionsByFilter = async (topicsList: string[]) => {
+        if (topicsList.length === 0) { setAllQuestions([]); return; }
+        setLoadingPicker(true);
+        try {
+            const params = new URLSearchParams();
+            params.set('topic', topicsList.join('|||'));
+            const res = await fetch(`/api/admin/questions?${params.toString()}`, {
+                headers: { 'X-User-Email': userEmail! }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAllQuestions(Array.isArray(data) ? data : (data.questions || []));
+            }
+        } catch (error) {
+            console.error('Error fetching questions:', error);
+        } finally {
+            setLoadingPicker(false);
+        }
+    };
+
+    useEffect(() => {
+        if (showQuestionPicker) {
+            if (selectedTopics.length > 0) {
+                fetchQuestionsByFilter(selectedTopics);
+            } else {
+                setAllQuestions([]);
+            }
+        }
+    }, [selectedTopics, showQuestionPicker]);
+
     const openQuestionPicker = async () => {
         if (!userEmail) {
             toast.error("User not found. Please login again.");
@@ -186,22 +234,9 @@ export default function DeployPage() {
         }
 
         setShowQuestionPicker(true);
-        setLoadingPicker(true);
-
-        try {
-            const res = await fetch('/api/admin/questions?lightweight=true', {
-                headers: { 'X-User-Email': userEmail }
-            });
-
-            const data = await res.json();
-            if (Array.isArray(data)) setAllQuestions(data);
-            else if (data.questions) setAllQuestions(data.questions);
-            else setAllQuestions([]);
-        } catch (e) {
-            toast.error('Failed to load question bank');
-        } finally {
-            setLoadingPicker(false);
-        }
+        setAllQuestions([]);
+        setSelectedQuestionIds([]);
+        fetchFilters();
     };
 
     const deployQuestions = async () => {
@@ -239,7 +274,7 @@ export default function DeployPage() {
     };
 
     // Filter logic
-    const topics = Array.from(new Set(allQuestions.map(q => q.topic))).filter(Boolean).sort();
+    const topics = filterData.topics.length > 0 ? filterData.topics : Array.from(new Set(allQuestions.map(q => q.topic))).filter(Boolean).sort();
 
     const subtopics = Array.from(new Set(
         allQuestions

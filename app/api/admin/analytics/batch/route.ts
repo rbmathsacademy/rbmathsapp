@@ -226,9 +226,9 @@ export async function GET(request: NextRequest) {
                     }
                 });
 
-                // True Batch Rank based purely on marks (Dense Rank)
+                // True Batch Rank based purely on marks (Standard Competition Rank)
                 const allPercentages = validResults.map(r => r.numericPct);
-                const sortedPercentages = [...new Set(allPercentages)].sort((a, b) => b - a);
+                const sortedPercentages = [...allPercentages].sort((a, b) => b - a);
                 
                 let rank: number | string = '-';
                 const studentPct = typeof result.percentage === 'number' ? result.percentage : parseFloat(result.percentage);

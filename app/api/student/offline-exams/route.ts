@@ -43,8 +43,8 @@ export async function GET(req: NextRequest) {
                 (allPercentages.reduce((sum: number, p: number) => sum + p, 0) / allPercentages.length).toFixed(2)
             );
 
-            // Calculate rank (dense ranking - tied marks get same rank)
-            const sortedPercentages = [...new Set(allPercentages as number[])].sort((a: number, b: number) => b - a);
+            // Calculate rank (standard competition ranking - tied marks get same rank, but skip next)
+            const sortedPercentages = [...allPercentages].sort((a: number, b: number) => b - a);
             const rank = sortedPercentages.indexOf(studentResult.percentage) + 1;
             const totalStudents = exam.results.length;
 
