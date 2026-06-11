@@ -36,17 +36,23 @@ export async function GET(req: NextRequest) {
 
             if (!studentResult) return null; // Student wasn't part of this exam
 
+            const validResults = exam.results.filter((r: any) => {
+                const pct = typeof r.percentage === 'number' ? r.percentage : parseFloat(r.percentage);
+                return !isNaN(pct) && r.marksObtained !== null && r.marksObtained !== undefined && r.marksObtained !== '';
+            });
+
             // Calculate batch highest and average percentage
-            const allPercentages = exam.results.map((r: any) => r.percentage);
-            const highestPercentage = Math.max(...allPercentages);
-            const averagePercentage = parseFloat(
+            const allPercentages = validResults.map((r: any) => typeof r.percentage === 'number' ? r.percentage : parseFloat(r.percentage));
+            const highestPercentage = allPercentages.length > 0 ? Math.max(...allPercentages) : 0;
+            const averagePercentage = allPercentages.length > 0 ? parseFloat(
                 (allPercentages.reduce((sum: number, p: number) => sum + p, 0) / allPercentages.length).toFixed(2)
-            );
+            ) : 0;
 
             // Calculate rank (standard competition ranking - tied marks get same rank, but skip next)
             const sortedPercentages = [...allPercentages].sort((a: number, b: number) => b - a);
-            const rank = sortedPercentages.indexOf(studentResult.percentage) + 1;
-            const totalStudents = exam.results.length;
+            const studentPct = typeof studentResult.percentage === 'number' ? studentResult.percentage : parseFloat(studentResult.percentage);
+            const rank = sortedPercentages.indexOf(studentPct) + 1;
+            const totalStudents = validResults.length;
 
             return {
                 examId: exam._id,
