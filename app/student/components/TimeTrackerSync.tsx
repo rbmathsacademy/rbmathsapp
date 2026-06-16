@@ -44,9 +44,8 @@ export default function TimeTrackerSync() {
             }
         };
 
-        // Small delay to not block initial render
-        const timer = setTimeout(flushLeftovers, 2000);
-        return () => clearTimeout(timer);
+        // Flush immediately on mount to recover any old data from localStorage
+        flushLeftovers();
     }, []);
 
     return null;

@@ -7,7 +7,7 @@ interface TimeTrackerProps {
 }
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-const SYNC_INTERVAL_MS = 30 * 1000; // Sync to server every 30 seconds
+const SYNC_INTERVAL_MS = 60 * 1000; // Sync to server every 60 seconds
 
 export default function TimeTracker({ pageName }: TimeTrackerProps) {
     const lastActiveRef = useRef<number>(Date.now());
