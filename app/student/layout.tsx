@@ -90,7 +90,7 @@ function NotificationGate({ children }: { children: React.ReactNode }) {
             {activeNotif && !notifLoading && (
                 <NotificationPopupModal 
                     notification={activeNotif} 
-                    onComplete={() => fetchNotifications()} 
+                    onComplete={() => setNotifications(prev => prev.slice(1))} 
                 />
             )}
             {children}
