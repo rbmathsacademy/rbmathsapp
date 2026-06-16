@@ -36,25 +36,35 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: 'No logs to process' });
         }
 
+        // Filter out invalid entries
+        const validLogs = logs.filter(log => 
+            log.pageName && log.date && typeof log.durationSeconds === 'number' && log.durationSeconds > 0
+        );
+
+        if (validLogs.length === 0) {
+            return NextResponse.json({ message: 'No valid logs to process' });
+        }
+
         await dbConnect();
 
-        // Get student's batches from MongoDB to ensure they are up to date
+        // Use cleaned phone number consistently
         const cleanPhone = student.phoneNumber.replace(/\D/g, '');
         const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
         const batchNames = (dbStudent as any)?.courses || student.courses || [];
+        const studentName = (dbStudent as any)?.name || student.studentName || 'Unknown';
 
         // Prepare bulk operations
-        const bulkOps = logs.map(log => ({
+        const bulkOps = validLogs.map(log => ({
             updateOne: {
                 filter: {
-                    studentPhone: student.phoneNumber,
+                    studentPhone: cleanPhone,
                     date: log.date,
                     pageName: log.pageName
                 },
                 update: {
                     $inc: { durationSeconds: log.durationSeconds },
-                    $setOnInsert: {
-                        studentName: student.studentName,
+                    $set: {
+                        studentName: studentName,
                         batchNames: batchNames
                     }
                 },
