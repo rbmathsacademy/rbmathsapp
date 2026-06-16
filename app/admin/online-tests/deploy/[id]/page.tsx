@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Send, Users, Calendar, Clock, CheckSquare, Square } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
@@ -23,6 +23,7 @@ export default function DeployTestPage() {
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
     const [deploymentMode, setDeploymentMode] = useState<'all' | 'specific'>('all');
+    const initializedFromSurveyRef = useRef(false);
 
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
@@ -49,6 +50,7 @@ export default function DeployTestPage() {
             try {
                 const parsed = JSON.parse(storedStudents);
                 if (Array.isArray(parsed) && parsed.length > 0) {
+                    initializedFromSurveyRef.current = true;
                     setDeploymentMode('specific');
                     setSelectedStudents(parsed);
                     // Extract unique batches from these students
@@ -150,7 +152,9 @@ export default function DeployTestPage() {
                 }
 
                 if (foundTest.deployment.batches && Array.isArray(foundTest.deployment.batches)) {
-                    setSelectedBatches(foundTest.deployment.batches);
+                    if (!initializedFromSurveyRef.current) {
+                        setSelectedBatches(foundTest.deployment.batches);
+                    }
                 }
             } else {
                 // Initialize defaults (IST based)

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, BarChart3, Users, Clock, Search, Trash2, Copy, Download, UserX, XCircle, FileJson, Send, Plus, X } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, Clock, Search, Trash2, Copy, Download, UserX, XCircle, FileJson, Send, Plus, X, Bell } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function SurveyMonitorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +18,50 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
     const [filterQuestionId, setFilterQuestionId] = useState('');
     const [filterAnswer, setFilterAnswer] = useState('');
     const [showDeployModal, setShowDeployModal] = useState(false);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
     const [availableTests, setAvailableTests] = useState<any[]>([]);
+
+    const [notifHeader, setNotifHeader] = useState('');
+    const [notifBody, setNotifBody] = useState('');
+    const [notifStartDate, setNotifStartDate] = useState('');
+    const [notifEndDate, setNotifEndDate] = useState('');
+    const [notifSending, setNotifSending] = useState(false);
+
+    const handleSendNotification = async () => {
+        if (!notifHeader || !notifBody || !notifEndDate) return toast.error('Header, body, and End Date are required');
+        setNotifSending(true);
+        try {
+            const res = await fetch('/api/admin/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).email : ''
+                },
+                body: JSON.stringify({
+                    title: notifHeader,
+                    message: notifBody,
+                    startDate: notifStartDate ? new Date(notifStartDate) : new Date(),
+                    endDate: new Date(notifEndDate),
+                    targetStudents: filteredResponses.map((r: any) => ({
+                        phoneNumber: r.studentPhone,
+                        studentName: r.studentName,
+                        batchName: r.batchName
+                    }))
+                })
+            });
+            if (!res.ok) throw new Error('Failed to send notification');
+            toast.success('Notification pushed successfully!');
+            setShowNotificationModal(false);
+            setNotifHeader('');
+            setNotifBody('');
+            setNotifStartDate('');
+            setNotifEndDate('');
+        } catch (e) {
+            toast.error('Failed to send notification');
+        } finally {
+            setNotifSending(false);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -352,6 +395,9 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                     </h2>
                     
                     <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setShowNotificationModal(true)} className="px-3 py-2 rounded-lg bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 text-xs font-bold border border-orange-500/20 transition-colors flex items-center gap-1.5">
+                            <Bell className="h-3.5 w-3.5" /> Push Notification
+                        </button>
                         <button onClick={openDeployModal} className="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-bold border border-blue-500/20 transition-colors flex items-center gap-1.5">
                             <Send className="h-3.5 w-3.5" /> Deploy Test ({filteredResponses.length})
                         </button>
@@ -573,6 +619,75 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                 </div>
             )}
 
+            {/* Notification Modal */}
+            {showNotificationModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Bell className="h-5 w-5 text-orange-400" /> Push Notification to {filteredResponses.length} Students
+                            </h3>
+                            <button onClick={() => setShowNotificationModal(false)} className="text-gray-400 hover:text-white">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-300 mb-1">Header Title <span className="text-red-400">*</span></label>
+                                <input
+                                    type="text"
+                                    value={notifHeader}
+                                    onChange={(e) => setNotifHeader(e.target.value)}
+                                    placeholder="e.g. Important Update for Tomorrow"
+                                    className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-orange-500 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-300 mb-1">Body Message <span className="text-red-400">*</span></label>
+                                <textarea
+                                    value={notifBody}
+                                    onChange={(e) => setNotifBody(e.target.value)}
+                                    placeholder="Enter the main message details here..."
+                                    rows={4}
+                                    className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-orange-500 focus:outline-none"
+                                />
+                            </div>
+
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-bold text-gray-300 mb-1">Start Date</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={notifStartDate}
+                                        onChange={(e) => setNotifStartDate(e.target.value)}
+                                        className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">Leave blank to show immediately</p>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-bold text-gray-300 mb-1">End Date <span className="text-red-400">*</span></label>
+                                    <input
+                                        type="datetime-local"
+                                        value={notifEndDate}
+                                        onChange={(e) => setNotifEndDate(e.target.value)}
+                                        className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSendNotification}
+                                disabled={notifSending || !notifHeader || !notifBody || !notifEndDate}
+                                className="w-full mt-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
+                            >
+                                {notifSending ? 'Pushing...' : 'Push Notification'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

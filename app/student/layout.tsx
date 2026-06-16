@@ -6,6 +6,7 @@ import { StudentProfileProvider, useStudentProfile } from './StudentProfileConte
 import SchoolBoardModal from './SchoolBoardModal';
 
 import SurveyPopupModal from './components/SurveyPopupModal';
+import NotificationPopupModal from './components/NotificationPopupModal';
 import TimeTrackerSync from './components/TimeTrackerSync';
 
 // Helper: check if student belongs to Class XI or Class XII batch
@@ -48,6 +49,48 @@ function SurveyGate({ children }: { children: React.ReactNode }) {
                 <SurveyPopupModal 
                     survey={activeSurvey} 
                     onComplete={() => fetchSurveys()} 
+                />
+            )}
+            {children}
+        </>
+    );
+}
+
+function NotificationGate({ children }: { children: React.ReactNode }) {
+    const { profile, loading } = useStudentProfile();
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifLoading, setNotifLoading] = useState(true);
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await fetch('/api/student/notifications');
+            if (res.ok) {
+                const data = await res.json();
+                setNotifications(data || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        } finally {
+            setNotifLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!loading && profile && profile._id !== 'GUEST') {
+            fetchNotifications();
+        } else if (!loading) {
+            setNotifLoading(false);
+        }
+    }, [loading, profile]);
+
+    const activeNotif = notifications.length > 0 ? notifications[0] : null;
+
+    return (
+        <>
+            {activeNotif && !notifLoading && (
+                <NotificationPopupModal 
+                    notification={activeNotif} 
+                    onComplete={() => fetchNotifications()} 
                 />
             )}
             {children}
@@ -110,7 +153,9 @@ export default function StudentLayout({
                     {isLoginPage ? children : (
                         <SchoolBoardGate>
                             <SurveyGate>
-                                {children}
+                                <NotificationGate>
+                                    {children}
+                                </NotificationGate>
                             </SurveyGate>
                         </SchoolBoardGate>
                     )}
