@@ -192,7 +192,7 @@ export default function SurveysList() {
     };
 
     const filteredSurveys = surveys.filter(s => s.title.toLowerCase().includes(search.toLowerCase()));
-    const filteredNotifications = notifications.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.message.toLowerCase().includes(search.toLowerCase()));
+    const filteredNotifications = notifications.filter(n => (n.title || '').toLowerCase().includes(search.toLowerCase()) || (n.message || '').toLowerCase().includes(search.toLowerCase()));
 
     return (
         <div className="space-y-6">

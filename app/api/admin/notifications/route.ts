@@ -18,7 +18,13 @@ export async function GET(req: NextRequest) {
 
     try {
         await dbConnect();
-        const notifications = await Notification.find({ type: 'popup' }).sort({ createdAt: -1 });
+        const notifications = await Notification.find({ 
+            $or: [
+                { type: 'popup' },
+                { targetBatches: { $exists: true, $ne: [] } },
+                { 'targetBatches.0': { $exists: true } }
+            ]
+        }).sort({ createdAt: -1 });
         return NextResponse.json(notifications);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
