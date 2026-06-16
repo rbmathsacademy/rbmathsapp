@@ -18,17 +18,20 @@ export async function GET(req: NextRequest) {
         
         await dbConnect();
         
-        const now = new Date();
+        // Add 5 minutes of clock skew buffer for newly created notifications
+        const now = new Date(Date.now() + 5 * 60 * 1000);
+        const actualNow = new Date();
         
         const query = {
             type: 'popup',
             $and: [
                 { $or: [{ startDate: null }, { startDate: { $exists: false } }, { startDate: { $lte: now } }] },
-                { $or: [{ endDate: null }, { endDate: { $exists: false } }, { endDate: { $gte: now } }] }
+                { $or: [{ endDate: null }, { endDate: { $exists: false } }, { endDate: { $gte: actualNow } }] }
             ],
             $or: [
-                { targetBatches: { $in: courses } },
-                { 'targetStudents.phoneNumber': { $in: [cleanPhone, phoneNumber] } } // Check both just in case
+                { targetBatches: { $in: courses.length > 0 ? courses : [null] } },
+                { targetStudents: { $elemMatch: { phoneNumber: { $in: [cleanPhone, phoneNumber] } } } },
+                { 'targetStudents.phoneNumber': { $in: [cleanPhone, phoneNumber] } } // keeping both for maximum compatibility
             ]
         };
 

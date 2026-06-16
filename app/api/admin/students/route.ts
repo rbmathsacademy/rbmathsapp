@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
         if (batch) {
             const escapedBatch = batch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            query.courses = { $elemMatch: { $regex: new RegExp(`^${escapedBatch}$`, 'i') } };
+            query.courses = { $regex: new RegExp(`^${escapedBatch}$`, 'i') };
         }
 
         if (search) {
