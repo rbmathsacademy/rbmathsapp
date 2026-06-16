@@ -23,6 +23,7 @@ interface NotificationItem {
     title: string;
     message: string;
     targetBatches: string[];
+    targetStudents?: { phoneNumber: string, studentName: string, batchName: string }[];
     startDate?: string;
     endDate?: string;
     createdAt: string;
@@ -46,13 +47,30 @@ export default function SurveysList() {
     const [notifStartDate, setNotifStartDate] = useState('');
     const [notifEndDate, setNotifEndDate] = useState('');
     const [notifSending, setNotifSending] = useState(false);
+    
+    const [targetMode, setTargetMode] = useState<'batch' | 'students'>('batch');
+    const [availableStudents, setAvailableStudents] = useState<any[]>([]);
+    const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+    const [loadingStudents, setLoadingStudents] = useState(false);
 
     const openEditNotification = (notif: NotificationItem) => {
         setNotifHeader(notif.title);
         setNotifBody(notif.message);
         setNotifStartDate(notif.startDate ? new Date(notif.startDate).toISOString().slice(0, 16) : '');
         setNotifEndDate(notif.endDate ? new Date(notif.endDate).toISOString().slice(0, 16) : '');
-        setSelectedBatches(notif.targetBatches || []);
+        
+        const hasStudents = notif.targetStudents && notif.targetStudents.length > 0;
+        setTargetMode(hasStudents ? 'students' : 'batch');
+        
+        if (hasStudents) {
+            const batchesFromStudents = Array.from(new Set(notif.targetStudents!.map((s: any) => s.batchName).filter(Boolean)));
+            setSelectedBatches(batchesFromStudents as string[]);
+            setSelectedStudents(notif.targetStudents || []);
+        } else {
+            setSelectedBatches(notif.targetBatches || []);
+            setSelectedStudents([]);
+        }
+        
         setEditNotificationId(notif._id);
         setShowNotificationModal(true);
     };
@@ -63,8 +81,50 @@ export default function SurveysList() {
         setNotifStartDate('');
         setNotifEndDate('');
         setSelectedBatches([]);
+        setSelectedStudents([]);
+        setTargetMode('batch');
+        setAvailableStudents([]);
         setEditNotificationId(null);
         setShowNotificationModal(true);
+    };
+
+    useEffect(() => {
+        if (targetMode === 'students' && selectedBatches.length > 0) {
+            fetchStudentsForBatches();
+        } else if (selectedBatches.length === 0) {
+            setAvailableStudents([]);
+            setSelectedStudents([]);
+        }
+    }, [selectedBatches, targetMode]);
+
+    const fetchStudentsForBatches = async () => {
+        setLoadingStudents(true);
+        try {
+            const promises = selectedBatches.map(b => 
+                fetch(`/api/admin/students?limit=1000&batch=${encodeURIComponent(b)}`, {
+                    headers: { 'X-User-Email': localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).email : '' }
+                }).then(res => res.json())
+            );
+            const results = await Promise.all(promises);
+            const allStudents: any[] = [];
+            results.forEach((data, i) => {
+                if (data.students) {
+                    data.students.forEach((s: any) => {
+                        if (!allStudents.find(existing => existing.phoneNumber === s.phoneNumber)) {
+                            allStudents.push({
+                                ...s,
+                                batchName: selectedBatches[i]
+                            });
+                        }
+                    });
+                }
+            });
+            setAvailableStudents(allStudents);
+        } catch (error) {
+            console.error('Failed to fetch students', error);
+        } finally {
+            setLoadingStudents(false);
+        }
     };
 
     const fetchBatches = async () => {
@@ -83,6 +143,8 @@ export default function SurveysList() {
 
     const handleSendNotification = async () => {
         if (!notifHeader || !notifBody || !notifEndDate || selectedBatches.length === 0) return toast.error('Header, body, batches, and End Date are required');
+        if (targetMode === 'students' && selectedStudents.length === 0) return toast.error('Please select at least one specific student');
+        
         setNotifSending(true);
         try {
             const method = editNotificationId ? 'PUT' : 'POST';
@@ -92,7 +154,8 @@ export default function SurveysList() {
                 message: notifBody,
                 startDate: notifStartDate ? new Date(notifStartDate) : new Date(),
                 endDate: new Date(notifEndDate),
-                targetBatches: selectedBatches
+                targetBatches: targetMode === 'batch' ? selectedBatches : [],
+                targetStudents: targetMode === 'students' ? selectedStudents : []
             };
 
             const res = await fetch('/api/admin/notifications', {
@@ -351,7 +414,7 @@ export default function SurveysList() {
                                             <h3 className="text-lg font-bold text-white mb-1 line-clamp-1">{notif.title}</h3>
                                             <p className="text-xs text-orange-200/60 mb-4 line-clamp-2">{notif.message}</p>
                                             
-                                            {notif.targetBatches && notif.targetBatches.length > 0 && (
+                                            {notif.targetBatches && notif.targetBatches.length > 0 ? (
                                                 <div className="mt-4">
                                                     <div className="text-[10px] text-orange-500/60 font-bold uppercase mb-1.5 tracking-wider">Targeted Batches:</div>
                                                     <div className="flex flex-wrap gap-1">
@@ -363,7 +426,19 @@ export default function SurveysList() {
                                                         )}
                                                     </div>
                                                 </div>
-                                            )}
+                                            ) : notif.targetStudents && notif.targetStudents.length > 0 ? (
+                                                <div className="mt-4">
+                                                    <div className="text-[10px] text-orange-500/60 font-bold uppercase mb-1.5 tracking-wider">Targeted Students:</div>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {notif.targetStudents.slice(0, 3).map((s: any) => (
+                                                            <span key={s.phoneNumber} className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 text-[10px] border border-orange-500/20 truncate max-w-[120px]">{s.studentName}</span>
+                                                        ))}
+                                                        {notif.targetStudents.length > 3 && (
+                                                            <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400/50 text-[10px] border border-orange-500/10">+{notif.targetStudents.length - 3}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : null}
                                         </div>
                                         <div className="p-3 border-t border-orange-500/20 bg-orange-500/5 flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-1">
@@ -429,6 +504,22 @@ export default function SurveysList() {
                                 />
                             </div>
 
+                            {/* Target Mode Toggle */}
+                            <div className="flex gap-2 p-1 bg-black/40 rounded-xl border border-white/5">
+                                <button
+                                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${targetMode === 'batch' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white'}`}
+                                    onClick={() => setTargetMode('batch')}
+                                >
+                                    Broadcast to Batch(es)
+                                </button>
+                                <button
+                                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${targetMode === 'students' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white'}`}
+                                    onClick={() => setTargetMode('students')}
+                                >
+                                    Select Specific Students
+                                </button>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-bold text-gray-300 mb-2">Target Batches <span className="text-red-400">*</span></label>
                                 <div className="max-h-40 overflow-y-auto bg-[#0a0f1a] border border-white/10 rounded-xl p-2 space-y-1">
@@ -451,6 +542,72 @@ export default function SurveysList() {
                                     )}
                                 </div>
                             </div>
+
+                            {targetMode === 'students' && selectedBatches.length > 0 && (
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Specific Students <span className="text-red-400">*</span></label>
+                                    <div className="max-h-60 overflow-y-auto bg-[#0a0f1a] border border-white/10 rounded-xl p-2 space-y-1 relative">
+                                        {loadingStudents ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">Loading students...</p>
+                                        ) : availableStudents.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">No students found in selected batches.</p>
+                                        ) : (
+                                            <>
+                                                <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer border-b border-white/10 mb-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedStudents.length === availableStudents.length && availableStudents.length > 0}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedStudents(availableStudents.map(s => ({
+                                                                    phoneNumber: s.phoneNumber,
+                                                                    studentName: s.name,
+                                                                    batchName: s.batchName
+                                                                })));
+                                                            } else {
+                                                                setSelectedStudents([]);
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 rounded border-white/20 bg-black/50 text-orange-500 focus:ring-orange-500 focus:ring-offset-gray-900"
+                                                    />
+                                                    <span className="text-sm font-bold text-white">Select All</span>
+                                                </label>
+                                                {availableStudents.map(s => {
+                                                    const isSelected = selectedStudents.some(sel => sel.phoneNumber === s.phoneNumber);
+                                                    return (
+                                                        <label key={s.phoneNumber} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedStudents(prev => [...prev, {
+                                                                            phoneNumber: s.phoneNumber,
+                                                                            studentName: s.name,
+                                                                            batchName: s.batchName
+                                                                        }]);
+                                                                    } else {
+                                                                        setSelectedStudents(prev => prev.filter(sel => sel.phoneNumber !== s.phoneNumber));
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 rounded border-white/20 bg-black/50 text-orange-500 focus:ring-orange-500 focus:ring-offset-gray-900"
+                                                            />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-medium text-gray-300">{s.name}</span>
+                                                                <span className="text-[10px] text-gray-500">{s.phoneNumber} • {s.batchName}</span>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {targetMode === 'students' && selectedBatches.length === 0 && (
+                                <p className="text-sm text-amber-500 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">Please select at least one Target Batch first to load the student list.</p>
+                            )}
 
                             <div className="flex gap-4">
                                 <div className="flex-1">
@@ -476,7 +633,7 @@ export default function SurveysList() {
 
                             <button
                                 onClick={handleSendNotification}
-                                disabled={notifSending || !notifHeader || !notifBody || !notifEndDate || selectedBatches.length === 0}
+                                disabled={notifSending || !notifHeader || !notifBody || !notifEndDate || selectedBatches.length === 0 || (targetMode === 'students' && selectedStudents.length === 0)}
                                 className="w-full mt-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
                             >
                                 {notifSending ? 'Saving...' : (editNotificationId ? 'Update Notification' : 'Push Notification')}
