@@ -29,8 +29,7 @@ export async function GET(req: NextRequest) {
             $or: [
                 { targetBatches: { $in: courses } },
                 { 'targetStudents.phoneNumber': { $in: [cleanPhone, phoneNumber] } } // Check both just in case
-            ],
-            readBy: { $ne: cleanPhone }
+            ]
         };
 
         const notifications = await Notification.find(query).sort({ createdAt: 1 }); // Oldest first
