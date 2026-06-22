@@ -37,11 +37,11 @@ function shuffleOptionsForQuestion(question: any): any {
     if (question.type !== 'mcq' && question.type !== 'msq') return question;
 
     // Create index mapping: originalIndex -> value
-    const indices = question.options.map((_: any, i: number) => i);
-    const shuffledIndices = shuffleArray(indices);
+    const indices: number[] = question.options.map((_: any, i: number) => i);
+    const shuffledIndices: number[] = shuffleArray(indices);
 
     // Reorder options according to shuffled indices
-    const newOptions = shuffledIndices.map((origIdx: number) => question.options[origIdx]);
+    const newOptions = shuffledIndices.map((origIdx) => question.options[origIdx]);
 
     // Remap correctIndices: find where each original correct index ended up
     const newCorrectIndices = (question.correctIndices || []).map((origCorrectIdx: number) => {
