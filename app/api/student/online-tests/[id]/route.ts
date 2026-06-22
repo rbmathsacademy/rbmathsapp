@@ -30,6 +30,31 @@ function shuffleArray<T>(array: T[]): T[] {
     return shuffled;
 }
 
+// Shuffle options for a question and remap correctIndices to match new positions
+function shuffleOptionsForQuestion(question: any): any {
+    if (!question.options || question.options.length === 0) return question;
+    if (!question.shuffleOptions) return question;
+    if (question.type !== 'mcq' && question.type !== 'msq') return question;
+
+    // Create index mapping: originalIndex -> value
+    const indices = question.options.map((_: any, i: number) => i);
+    const shuffledIndices = shuffleArray(indices);
+
+    // Reorder options according to shuffled indices
+    const newOptions = shuffledIndices.map((origIdx: number) => question.options[origIdx]);
+
+    // Remap correctIndices: find where each original correct index ended up
+    const newCorrectIndices = (question.correctIndices || []).map((origCorrectIdx: number) => {
+        return shuffledIndices.indexOf(origCorrectIdx);
+    });
+
+    return {
+        ...question,
+        options: newOptions,
+        correctIndices: newCorrectIndices
+    };
+}
+
 // GET - Fetch test for taking (strips answers)
 export async function GET(
     req: NextRequest,
@@ -318,10 +343,22 @@ export async function POST(
         }
 
         // Prepare questions for this attempt
-        let attemptQuestions = [...test.questions];
+        // Deep clone so we don't mutate the original test document
+        let attemptQuestions = test.questions.map((q: any) => {
+            const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
+            // Deep clone subQuestions if present
+            if (qObj.subQuestions) {
+                qObj.subQuestions = qObj.subQuestions.map((sq: any) =>
+                    sq.toObject ? sq.toObject() : { ...sq, options: sq.options ? [...sq.options] : [], correctIndices: sq.correctIndices ? [...sq.correctIndices] : [] }
+                );
+            }
+            // Deep clone options and correctIndices arrays
+            if (qObj.options) qObj.options = [...qObj.options];
+            if (qObj.correctIndices) qObj.correctIndices = [...qObj.correctIndices];
+            return qObj;
+        });
 
-        // 1. Shuffle if maxQuestionsToAttempt is set OR shuffleQuestions is true
-        // If max questions is set, we MUST shuffle to get a random subset
+        // 1. Shuffle question order if configured
         if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
             attemptQuestions = shuffleArray(attemptQuestions);
         }
@@ -330,6 +367,18 @@ export async function POST(
         if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
             attemptQuestions = attemptQuestions.slice(0, test.config.maxQuestionsToAttempt);
         }
+
+        // 3. Shuffle OPTIONS for each question that has shuffleOptions enabled
+        attemptQuestions = attemptQuestions.map((q: any) => {
+            let shuffledQ = shuffleOptionsForQuestion(q);
+            // Also handle comprehension sub-questions
+            if (shuffledQ.type === 'comprehension' && shuffledQ.subQuestions) {
+                shuffledQ.subQuestions = shuffledQ.subQuestions.map((sq: any) => {
+                    return shuffleOptionsForQuestion(sq);
+                });
+            }
+            return shuffledQ;
+        });
 
         // Create new attempt
         const batchName = studentCourses[0] || '';
