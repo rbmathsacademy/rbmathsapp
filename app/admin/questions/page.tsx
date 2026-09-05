@@ -422,8 +422,8 @@ export default function QuestionBank() {
 
     // Compute filtered questions based on selected topics and subtopics
     const filteredQuestions = useMemo(() => {
-        // If "No Topic" is selected and no search/batch, return empty
-        if (selectedTopics.includes("No Topic") && !searchQuery && !isGlobalSearching && selectedBatches.length === 0) {
+        // Questions are only shown once a topic is explicitly selected
+        if (selectedTopics.includes("No Topic") && !searchQuery && !isGlobalSearching) {
             return [];
         }
         // If global search results are loaded, show all
