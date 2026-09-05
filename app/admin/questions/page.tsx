@@ -393,11 +393,12 @@ export default function QuestionBank() {
         return Array.from(set).filter(Boolean).sort();
     }, [questions, selectedTopics, selectedSubtopics, selectedBatches, serverFilters]);
 
-    // Derived batch names from questions (what batches exist on questions), merged with all known batches from API
+    // Derived batch names from questions only — union of all batches stored on question documents
     const availableBatchNames = useMemo(() => {
         const set = new Set<string>();
-        // Always include all batches from the courses API so the dropdown is always populated
-        availableBatches.forEach(b => { if (b) set.add(b); });
+        // Seed with all batches from the questions filters API (covers all questions, not just loaded ones)
+        serverFilters.batches.forEach(b => { if (b) set.add(b); });
+        // Also add batches visible in the currently loaded + filtered questions
         let filtered = questions;
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
         if (actualTopics.length > 0) filtered = filtered.filter(q => actualTopics.includes(q.topic));
@@ -413,7 +414,7 @@ export default function QuestionBank() {
         });
         const batchNames = Array.from(set).filter(Boolean).sort();
         return ['Untagged', ...batchNames];
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, availableBatches]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, serverFilters.batches]);
 
 
 
@@ -469,11 +470,6 @@ export default function QuestionBank() {
             setUserName(parsed.name);
             fetchFilters(parsed.email);
         }
-        // Fetch available batches from courses API
-        fetch('/api/admin/courses')
-            .then(res => res.json())
-            .then(data => { if (Array.isArray(data)) setAvailableBatches(data); })
-            .catch(() => {});
     }, []);
 
     // Fetch lightweight filter metadata (instant)
