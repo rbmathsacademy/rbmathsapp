@@ -367,11 +367,13 @@ export default function QuestionBank() {
         return Array.from(new Set(filtered.map(q => q.subtopic))).filter(Boolean).sort();
     }, [questions, selectedTopics, selectedExams, selectedBatches]);
 
-    // Cascading Exam Names: use serverFilters when no topic selected (allows independent exam filtering)
+    // Cascading Exam Names: use serverFilters only when nothing else is narrowing the view
     const examNames = useMemo(() => {
-        // When no topic selected and no questions loaded, show ALL exam names from server
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
-        if (actualTopics.length === 0 && questions.length === 0 && serverFilters.examNames.length > 0) {
+        const hasNarrowing = actualTopics.length > 0 || selectedBatches.length > 0 || selectedSubtopics.length > 0;
+
+        // When no narrowing filters are active and no questions loaded, show ALL exam names from server
+        if (!hasNarrowing && questions.length === 0 && serverFilters.examNames.length > 0) {
             return serverFilters.examNames;
         }
         const set = new Set<string>();
@@ -386,8 +388,8 @@ export default function QuestionBank() {
             if (q.examNames && Array.isArray(q.examNames)) q.examNames.forEach((e: string) => set.add(e));
             else if (q.examName) set.add(q.examName);
         });
-        // Also merge serverFilters when no topic narrowing is active
-        if (actualTopics.length === 0 && serverFilters.examNames.length > 0) {
+        // Only merge all serverFilters when no narrowing is active (batch/topic/subtopic)
+        if (!hasNarrowing && serverFilters.examNames.length > 0) {
             serverFilters.examNames.forEach((e: string) => set.add(e));
         }
         return Array.from(set).filter(Boolean).sort();
