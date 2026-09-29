@@ -96,14 +96,24 @@ export default function AssignmentQuestionsPage() {
                                 )}
                                 {q.type === 'mcq' && q.options && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                                        {q.options.map((opt, idx) => (
-                                            <div key={idx} className="bg-black/20 p-3 rounded-lg border border-white/5 flex items-center gap-3">
-                                                <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-xs text-gray-500 font-mono">
-                                                    {String.fromCharCode(65 + idx)}
-                                                </span>
-                                                <Latex>{opt}</Latex>
-                                            </div>
-                                        ))}
+                                        {q.options.map((opt: any, idx: number) => {
+                                            const isObj = typeof opt === 'object' && opt !== null;
+                                            const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
+                                            const optImage: string = isObj ? (opt.image ?? '') : '';
+                                            return (
+                                                <div key={idx} className="bg-black/20 p-3 rounded-lg border border-white/5 flex flex-col gap-2">
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-xs text-gray-500 font-mono shrink-0">
+                                                            {String.fromCharCode(65 + idx)}
+                                                        </span>
+                                                        {optText && <Latex>{optText}</Latex>}
+                                                    </div>
+                                                    {optImage && (
+                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + idx)}`} className="max-h-24 object-contain rounded-lg border border-white/10 mx-auto" />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                                 {!!q.marks && (
