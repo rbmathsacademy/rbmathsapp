@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Trash2, AlertCircle, Image as ImageIcon, X, Plus } from 'lucide-react';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
@@ -13,6 +13,219 @@ interface QuestionRowProps {
     subtopics?: string[];
     onChange: (updated: any) => void;
     onDelete: () => void;
+}
+
+// ── Helper: compress image file/blob to base64 JPEG ─────────────────────────
+function compressImageToBase64(file: File | Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                let b64 = canvas.toDataURL('image/jpeg', 0.7);
+                if (b64.length > 500 * 1024) {
+                    b64 = canvas.toDataURL('image/jpeg', 0.5);
+                }
+                resolve(b64);
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+    });
+}
+
+// ── MCQ Option Editor ────────────────────────────────────────────────────────
+// Each option can be a plain string (LaTeX text) OR an object { text?, image? }
+interface McqOptionEditorProps {
+    optIndex: number;
+    option: any; // string | { text?: string; image?: string }
+    onChange: (updated: any) => void;
+    onDelete: () => void;
+}
+
+function McqOptionEditor({ optIndex, option, onChange, onDelete }: McqOptionEditorProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const letter = String.fromCharCode(65 + optIndex);
+
+    const isObj = typeof option === 'object' && option !== null;
+    const textVal: string = isObj ? (option.text ?? '') : (option ?? '');
+    const imageVal: string = isObj ? (option.image ?? '') : '';
+
+    const handleTextChange = (val: string) => {
+        if (isObj) {
+            onChange({ ...option, text: val });
+        } else {
+            onChange(val);
+        }
+    };
+
+    const handleImageUpload = async (file: File | Blob) => {
+        if ((file as File).size && (file as File).size > 5 * 1024 * 1024) {
+            alert('Image too large (max 5 MB)');
+            return;
+        }
+        try {
+            const b64 = await compressImageToBase64(file);
+            if (isObj) {
+                onChange({ ...option, image: b64 });
+            } else {
+                onChange({ text: textVal, image: b64 });
+            }
+        } catch {
+            alert('Failed to process image');
+        }
+    };
+
+    const handleRemoveImage = () => {
+        if (isObj) {
+            const updated = { ...option } as any;
+            delete updated.image;
+            // Collapse back to plain string if only text remains
+            if (!updated.image && typeof updated.text === 'string') {
+                onChange(updated.text);
+            } else {
+                onChange(updated);
+            }
+        }
+    };
+
+    // Paste image via Ctrl+V
+    const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLElement>) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+                e.preventDefault();
+                const blob = items[i].getAsFile();
+                if (blob) await handleImageUpload(blob);
+                return;
+            }
+        }
+    }, [option]);
+
+    return (
+        <div className="rounded border border-gray-700 bg-gray-900/60 p-2 flex flex-col gap-1.5">
+            {/* Header row */}
+            <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase w-5 flex-shrink-0">{letter}.</span>
+
+                {/* Image upload button */}
+                <label
+                    className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer border border-blue-500/30 bg-blue-900/10 hover:bg-blue-900/20 px-1.5 py-0.5 rounded transition-colors flex-shrink-0"
+                    title={`Upload or Ctrl+V paste image for option ${letter}`}
+                >
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(file);
+                            e.target.value = '';
+                        }}
+                    />
+                    <ImageIcon className="h-2.5 w-2.5" />
+                    Image
+                </label>
+
+                {/* Delete option button */}
+                <button
+                    onClick={onDelete}
+                    className="text-gray-600 hover:text-red-400 p-0.5 ml-auto transition-colors"
+                    title="Remove this option"
+                >
+                    <X className="h-3 w-3" />
+                </button>
+            </div>
+
+            {/* Image preview (if attached) */}
+            {imageVal && (
+                <div className="relative group/img flex justify-center bg-gray-950 rounded border border-gray-700 overflow-hidden" style={{ maxHeight: '7rem' }}>
+                    <img src={imageVal} alt={`Option ${letter}`} className="object-contain" style={{ maxHeight: '7rem' }} />
+                    <button
+                        onClick={handleRemoveImage}
+                        className="absolute top-1 right-1 bg-red-700 hover:bg-red-600 text-white p-0.5 rounded opacity-0 group-hover/img:opacity-100 transition-opacity"
+                        title="Remove image"
+                    >
+                        <X className="h-3 w-3" />
+                    </button>
+                </div>
+            )}
+
+            {/* Text input — also accepts Ctrl+V image paste */}
+            <input
+                type="text"
+                className="w-full bg-gray-950 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-600"
+                value={textVal}
+                onChange={(e) => handleTextChange(e.target.value)}
+                onPaste={handlePaste}
+                placeholder={`Option ${letter} text (LaTeX)… or Ctrl+V to paste image`}
+            />
+
+            {/* Live LaTeX preview */}
+            {textVal && (
+                <div className="text-gray-300 text-xs pl-1 leading-snug">
+                    <Latex>{textVal}</Latex>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── MCQ Options Section (used in image/latex modes) ──────────────────────────
+interface McqOptionsSectionProps {
+    options: any[];
+    onChange: (options: any[]) => void;
+}
+
+function McqOptionsSection({ options, onChange }: McqOptionsSectionProps) {
+    const handleOptionChange = (i: number, updated: any) => {
+        const newOpts = [...options];
+        newOpts[i] = updated;
+        onChange(newOpts);
+    };
+    const handleOptionDelete = (i: number) => {
+        const newOpts = options.filter((_, idx) => idx !== i);
+        onChange(newOpts);
+    };
+    const handleAddOption = () => {
+        onChange([...options, '']);
+    };
+
+    return (
+        <div className="flex flex-col gap-2 mt-2">
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">MCQ Options</span>
+                <button
+                    onClick={handleAddOption}
+                    className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 bg-emerald-900/10 hover:bg-emerald-900/20 px-1.5 py-0.5 rounded transition-colors"
+                >
+                    <Plus className="h-2.5 w-2.5" /> Add Option
+                </button>
+            </div>
+            {options.map((opt, i) => (
+                <McqOptionEditor
+                    key={i}
+                    optIndex={i}
+                    option={opt}
+                    onChange={(updated) => handleOptionChange(i, updated)}
+                    onDelete={() => handleOptionDelete(i)}
+                />
+            ))}
+            {options.length === 0 && (
+                <p className="text-[10px] text-gray-600 italic">No options yet. Click "Add Option" to add one.</p>
+            )}
+        </div>
+    );
 }
 
 export default function QuestionRow({ index, question, mode, topics = [], subtopics = [], onChange, onDelete }: QuestionRowProps) {
@@ -160,6 +373,16 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             />
                         </div>
                     </div>
+
+                    {/* MCQ Options — shown when type is mcq */}
+                    {localQuestion.type?.toLowerCase() === 'mcq' && (
+                        <div className="p-3 bg-white rounded border border-gray-200 shadow-sm">
+                            <McqOptionsSection
+                                options={Array.isArray(localQuestion.options) ? localQuestion.options : []}
+                                onChange={(opts) => handleFieldChange('options', opts)}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -345,6 +568,16 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             </select>
                         </div>
                     </div>
+
+                    {/* MCQ Options — shown when type is mcq */}
+                    {localQuestion.type?.toLowerCase() === 'mcq' && (
+                        <div className="p-3 bg-white rounded border border-gray-200 shadow-sm">
+                            <McqOptionsSection
+                                options={Array.isArray(localQuestion.options) ? localQuestion.options : []}
+                                onChange={(opts) => handleFieldChange('options', opts)}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -487,15 +720,25 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             {localQuestion.text ? <Latex>{localQuestion.text}</Latex> : <span className="text-gray-500 italic">(No text content)</span>}
                         </div>
 
-                        {/* Options for MCQ */}
+                        {/* Options for MCQ — supports plain strings and { text, image } objects */}
                         {localQuestion.type?.toLowerCase() === 'mcq' && localQuestion.options && localQuestion.options.length > 0 && (
                             <div className="flex flex-col gap-2 mb-4">
-                                {localQuestion.options.map((opt: string, i: number) => (
-                                    <div key={i} className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300">
-                                        <span className="font-bold text-gray-400 mr-2">{String.fromCharCode(65 + i)}.</span>
-                                        <Latex>{opt}</Latex>
-                                    </div>
-                                ))}
+                                {localQuestion.options.map((opt: any, i: number) => {
+                                    const isObj = typeof opt === 'object' && opt !== null;
+                                    const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
+                                    const optImage: string = isObj ? (opt.image ?? '') : '';
+                                    return (
+                                        <div key={i} className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300 flex flex-col gap-1">
+                                            <div className="flex items-start gap-2">
+                                                <span className="font-bold text-gray-400">{String.fromCharCode(65 + i)}.</span>
+                                                {optText && <span><Latex>{optText}</Latex></span>}
+                                            </div>
+                                            {optImage && (
+                                                <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-20 object-contain rounded border border-gray-600 mt-1" />
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
 

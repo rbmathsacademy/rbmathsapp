@@ -1440,26 +1440,38 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
         case 'mcq':
             return (
                 <div className="space-y-3">
-                    {question.options?.map((option, i) => (
-                        <label
-                            key={i}
-                            onClick={() => setAnswer(question.id, i)}
-                            className={`flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all border-2 relative overflow-hidden group active:scale-[0.99] touch-manipulation ${currentAnswer === i
-                                ? 'bg-emerald-900/10 border-emerald-500/50 shadow-sm'
-                                : 'bg-slate-800/40 border-transparent hover:bg-slate-800/60'
-                                }`}
-                        >
-                            <div className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${currentAnswer === i
-                                ? 'border-emerald-500 bg-emerald-500'
-                                : 'border-slate-500 group-hover:border-slate-400'
-                                }`}>
-                                {currentAnswer === i && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
-                            </div>
-                            <span className={`text-xs sm:text-sm flex-1 leading-relaxed ${currentAnswer === i ? 'text-white font-medium' : 'text-slate-300'}`}>
-                                <Latex>{option}</Latex>
-                            </span>
-                        </label>
-                    ))}
+                    {question.options?.map((option: any, i: number) => {
+                        const isObj = typeof option === 'object' && option !== null;
+                        const optText: string = isObj ? (option.text ?? '') : (option ?? '');
+                        const optImage: string = isObj ? (option.image ?? '') : '';
+                        return (
+                            <label
+                                key={i}
+                                onClick={() => setAnswer(question.id, i)}
+                                className={`flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all border-2 relative overflow-hidden group active:scale-[0.99] touch-manipulation ${currentAnswer === i
+                                    ? 'bg-emerald-900/10 border-emerald-500/50 shadow-sm'
+                                    : 'bg-slate-800/40 border-transparent hover:bg-slate-800/60'
+                                    }`}
+                            >
+                                <div className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${currentAnswer === i
+                                    ? 'border-emerald-500 bg-emerald-500'
+                                    : 'border-slate-500 group-hover:border-slate-400'
+                                    }`}>
+                                    {currentAnswer === i && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                                </div>
+                                <div className={`flex flex-col gap-2 flex-1 text-xs sm:text-sm leading-relaxed ${currentAnswer === i ? 'text-white font-medium' : 'text-slate-300'}`}>
+                                    {optText && <span><Latex>{optText}</Latex></span>}
+                                    {optImage && (
+                                        <img
+                                            src={optImage}
+                                            alt={`Option ${String.fromCharCode(65 + i)}`}
+                                            className="max-h-32 object-contain rounded-xl ring-1 ring-white/10"
+                                        />
+                                    )}
+                                </div>
+                            </label>
+                        );
+                    })}
                     {currentAnswer !== undefined && currentAnswer !== null && (
                         <button
                             onClick={() => setAnswer(question.id, null)}
@@ -1476,7 +1488,10 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
             return (
                 <div className="space-y-3">
                     <p className="text-[10px] text-slate-500 mb-2 font-medium uppercase tracking-wider">Select all correct answers</p>
-                    {question.options?.map((option, i) => {
+                    {question.options?.map((option: any, i: number) => {
+                        const isObj = typeof option === 'object' && option !== null;
+                        const optText: string = isObj ? (option.text ?? '') : (option ?? '');
+                        const optImage: string = isObj ? (option.image ?? '') : '';
                         const isSelected = selectedIndices.includes(i);
                         return (
                             <label
@@ -1492,10 +1507,17 @@ function renderAnswerInput(question: Question, answers: Map<string, any>, setAns
                                     }`}>
                                     {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
                                 </div>
-                                <span className={`text-xs sm:text-sm flex-1 leading-relaxed ${isSelected ? 'text-white font-medium' : 'text-slate-300'}`}>
-                                    <Latex>{option}</Latex>
-                                </span>
-                                {/* Hidden checkbox for logic, but UI depends on div above */}
+                                <div className={`flex flex-col gap-2 flex-1 text-xs sm:text-sm leading-relaxed ${isSelected ? 'text-white font-medium' : 'text-slate-300'}`}>
+                                    {optText && <span><Latex>{optText}</Latex></span>}
+                                    {optImage && (
+                                        <img
+                                            src={optImage}
+                                            alt={`Option ${String.fromCharCode(65 + i)}`}
+                                            className="max-h-32 object-contain rounded-xl ring-1 ring-white/10"
+                                        />
+                                    )}
+                                </div>
+                                {/* Hidden checkbox for logic */}
                                 <input
                                     type="checkbox"
                                     checked={isSelected}

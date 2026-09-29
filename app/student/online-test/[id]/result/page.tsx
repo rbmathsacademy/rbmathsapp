@@ -500,7 +500,10 @@ export default function TestResultPage() {
                                         {/* MCQ/MSQ Options */}
                                         {(q.type === 'mcq' || q.type === 'msq') && q.options && (
                                             <div className="grid gap-3 mb-5">
-                                                {q.options.map((opt, oi) => {
+                                                {q.options.map((opt: any, oi: number) => {
+                                                    const isObj = typeof opt === 'object' && opt !== null;
+                                                    const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                    const optImage: string = isObj ? (opt.image ?? '') : '';
                                                     const isCorrectOption = q.correctIndices?.includes(oi);
                                                     const isStudentChoice = q.type === 'mcq' ? q.studentAnswer === oi : Array.isArray(q.studentAnswer) && q.studentAnswer.includes(oi);
                                                     return (
@@ -514,8 +517,9 @@ export default function TestResultPage() {
                                                                     isStudentChoice ? <XCircle className="h-5 w-5 text-red-400" /> :
                                                                         <div className="w-5 h-5 rounded-full border border-slate-600/50" />}
                                                             </div>
-                                                            <div className={`!text-[11px] sm:!text-sm leading-relaxed overflow-x-auto flex-1 ${isCorrectOption ? 'text-white font-medium' : isStudentChoice ? 'text-red-200' : 'text-slate-400'}`}>
-                                                                {q.latexContent ? <Latex>{opt}</Latex> : opt}
+                                                            <div className={`!text-[11px] sm:!text-sm leading-relaxed overflow-x-auto flex-1 flex flex-col gap-2 ${isCorrectOption ? 'text-white font-medium' : isStudentChoice ? 'text-red-200' : 'text-slate-400'}`}>
+                                                                {optText && (q.latexContent ? <Latex>{optText}</Latex> : <span>{optText}</span>)}
+                                                                {optImage && <img src={optImage} alt={`Option ${String.fromCharCode(65 + oi)}`} className="max-h-28 object-contain rounded-lg ring-1 ring-white/10" />}
                                                             </div>
                                                         </div>
                                                     );

@@ -1666,12 +1666,22 @@ export default function QuestionBank() {
                                                 {/* MCQ Options Display */}
                                                 {q.type?.toLowerCase() === 'mcq' && q.options && q.options.length > 0 && (
                                                     <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                        {q.options.map((opt: string, i: number) => (
-                                                            <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
-                                                                <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
-                                                                <span className="text-gray-300"><Latex>{opt}</Latex></span>
-                                                            </div>
-                                                        ))}
+                                                        {q.options.map((opt: any, i: number) => {
+                                                            const isObj = typeof opt === 'object' && opt !== null;
+                                                            const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                            const optImage: string = isObj ? (opt.image ?? '') : '';
+                                                            return (
+                                                                <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex flex-col gap-1 ${q.answer && (optText.includes(q.answer) || q.answer.includes(optText)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                    <div className="flex items-start gap-2">
+                                                                        <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
+                                                                        {optText && <span className="text-gray-300"><Latex>{optText}</Latex></span>}
+                                                                    </div>
+                                                                    {optImage && (
+                                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-16 object-contain rounded border border-gray-700 mt-1" />
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
@@ -2068,12 +2078,22 @@ export default function QuestionBank() {
                                                 {/* MCQ Options Display */}
                                                 {q.type?.toLowerCase() === 'mcq' && q.options && q.options.length > 0 && (
                                                     <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                        {q.options.map((opt: string, i: number) => (
-                                                            <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
-                                                                <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
-                                                                <span className="text-gray-300"><Latex>{opt}</Latex></span>
-                                                            </div>
-                                                        ))}
+                                                        {q.options.map((opt: any, i: number) => {
+                                                            const isObj = typeof opt === 'object' && opt !== null;
+                                                            const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                            const optImage: string = isObj ? (opt.image ?? '') : '';
+                                                            return (
+                                                                <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex flex-col gap-1 ${q.answer && (optText.includes(q.answer) || q.answer.includes(optText)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                    <div className="flex items-start gap-2">
+                                                                        <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
+                                                                        {optText && <span className="text-gray-300"><Latex>{optText}</Latex></span>}
+                                                                    </div>
+                                                                    {optImage && (
+                                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-16 object-contain rounded border border-gray-700 mt-1" />
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>

@@ -343,19 +343,35 @@ export default function PracticeQuestionsPage() {
                             {/* MCQ Options Display */}
                             {currentQuestion.type === 'mcq' && currentQuestion.options && currentQuestion.options.length > 0 && (
                                 <div className="mt-6 grid grid-cols-2 gap-3">
-                                    {currentQuestion.options.map((opt: string, i: number) => (
-                                        <div
-                                            key={i}
-                                            className="px-4 py-3 rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-start gap-3 group cursor-default"
-                                        >
-                                            <span className="font-bold text-blue-400 text-lg uppercase min-w-[24px]">
-                                                {String.fromCharCode(65 + i)}.
-                                            </span>
-                                            <span className="text-gray-200 text-base leading-relaxed flex-1">
-                                                <Latex>{opt}</Latex>
-                                            </span>
-                                        </div>
-                                    ))}
+                                    {currentQuestion.options.map((opt: any, i: number) => {
+                                        const isObj = typeof opt === 'object' && opt !== null;
+                                        const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
+                                        const optImage: string = isObj ? (opt.image ?? '') : '';
+                                        return (
+                                            <div
+                                                key={i}
+                                                className="px-4 py-3 rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 flex flex-col gap-2 group cursor-default"
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <span className="font-bold text-blue-400 text-lg uppercase min-w-[24px]">
+                                                        {String.fromCharCode(65 + i)}.
+                                                    </span>
+                                                    {optText && (
+                                                        <span className="text-gray-200 text-base leading-relaxed flex-1">
+                                                            <Latex>{optText}</Latex>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {optImage && (
+                                                    <img
+                                                        src={optImage}
+                                                        alt={`Option ${String.fromCharCode(65 + i)}`}
+                                                        className="max-h-32 object-contain rounded-lg ring-1 ring-white/10 mx-auto"
+                                                    />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
 
