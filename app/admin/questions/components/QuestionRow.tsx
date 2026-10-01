@@ -99,17 +99,18 @@ function McqOptionEditor({ optIndex, option, onChange, onDelete }: McqOptionEdit
     };
 
     // Paste image via Ctrl+V
-    const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLElement>) => {
+    const handlePaste = async (e: React.ClipboardEvent<HTMLElement>) => {
         const items = e.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.startsWith('image/')) {
                 e.preventDefault();
+                e.stopPropagation(); // Prevents bubbling up to the JSON textarea if they are overlapping/focusing weirdly
                 const blob = items[i].getAsFile();
                 if (blob) await handleImageUpload(blob);
                 return;
             }
         }
-    }, [option]);
+    };
 
     return (
         <div className="rounded border border-gray-700 bg-gray-900/60 p-2 flex flex-col gap-1.5">
@@ -720,25 +721,13 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             {localQuestion.text ? <Latex>{localQuestion.text}</Latex> : <span className="text-gray-500 italic">(No text content)</span>}
                         </div>
 
-                        {/* Options for MCQ — supports plain strings and { text, image } objects */}
-                        {localQuestion.type?.toLowerCase() === 'mcq' && localQuestion.options && localQuestion.options.length > 0 && (
-                            <div className="flex flex-col gap-2 mb-4">
-                                {localQuestion.options.map((opt: any, i: number) => {
-                                    const isObj = typeof opt === 'object' && opt !== null;
-                                    const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
-                                    const optImage: string = isObj ? (opt.image ?? '') : '';
-                                    return (
-                                        <div key={i} className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300 flex flex-col gap-1">
-                                            <div className="flex items-start gap-2">
-                                                <span className="font-bold text-gray-400">{String.fromCharCode(65 + i)}.</span>
-                                                {optText && <span><Latex>{optText}</Latex></span>}
-                                            </div>
-                                            {optImage && (
-                                                <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-20 object-contain rounded border border-gray-600 mt-1" />
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                        {/* Options for MCQ - use interactive editor so users can upload images here too */}
+                        {localQuestion.type?.toLowerCase() === 'mcq' && (
+                            <div className="mb-4">
+                                <McqOptionsSection
+                                    options={Array.isArray(localQuestion.options) ? localQuestion.options : []}
+                                    onChange={(opts) => handleFieldChange('options', opts)}
+                                />
                             </div>
                         )}
 
