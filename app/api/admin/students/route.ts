@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
 
         const [students, total] = await Promise.all([
             BatchStudent.find(query)
-                .select('name phoneNumber alternativePhone courses guardianPhone guardianName email schoolName board guestClass collegeName modeOfClass createdAt')
+                .select('name phoneNumber alternativePhone courses guardianPhone guardianName email schoolName board guestClass collegeName modeOfClass noExpiry createdAt')
                 .lean()
                 .sort({ name: 1 })
                 .skip((page - 1) * limit)

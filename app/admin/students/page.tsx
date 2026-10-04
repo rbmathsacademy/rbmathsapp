@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw, Archive, RotateCcw, Clock, AlertTriangle } from 'lucide-react';
+import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw, Archive, RotateCcw, Clock, AlertTriangle, Infinity } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Student {
@@ -18,6 +18,7 @@ interface Student {
     modeOfClass?: string;
     board?: string;
     guestClass?: string;
+    noExpiry?: boolean;
     createdAt: string;
 }
 
@@ -222,6 +223,34 @@ export default function AdminStudents() {
             fetchStudents();
         } catch {
             toast.error('Failed to delete student');
+        }
+    };
+
+    const handleToggleNoExpiry = async (student: Student) => {
+        const action = student.noExpiry ? 'disable' : 'enable';
+        if (!confirm(`Are you sure you want to ${action} unlimited test access for ${student.name}?`)) return;
+        
+        const toastId = toast.loading(`${action === 'enable' ? 'Enabling' : 'Disabling'} unlimited access...`);
+        try {
+            const userStr = localStorage.getItem('user');
+            const email = userStr ? JSON.parse(userStr).email : '';
+            const headers: any = { 'Content-Type': 'application/json', 'X-User-Email': email };
+            if (localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
+            
+            const res = await fetch('/api/admin/students/toggle-no-expiry', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ studentId: student._id, noExpiry: !student.noExpiry })
+            });
+            
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            toast.success(data.message, { id: toastId });
+            fetchStudents();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to toggle access', { id: toastId });
         }
     };
 
@@ -908,7 +937,14 @@ export default function AdminStudents() {
                                                 {student.name?.[0]?.toUpperCase() || '?'}
                                             </div>
                                             <div className="max-w-[120px] sm:max-w-none truncate">
-                                                <p className="font-bold text-white truncate">{student.name}</p>
+                                                <p className="font-bold text-white truncate flex items-center gap-2">
+                                                    {student.name}
+                                                    {student.noExpiry && (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 text-[9px] font-bold border border-yellow-500/30" title="This student has unlimited lifetime access to all tests in their batches, ignoring deadlines.">
+                                                            <Infinity className="h-3 w-3" /> Unlimited Access
+                                                        </span>
+                                                    )}
+                                                </p>
                                                 <p className="text-[10px] text-slate-500 sm:hidden">{student.phoneNumber}</p>
                                                 {student.email && <p className="text-[10px] text-slate-500 truncate hidden sm:block">{student.email}</p>}
                                                 <div className="flex flex-wrap gap-1 mt-0.5">
@@ -968,6 +1004,11 @@ export default function AdminStudents() {
                                     </td>
                                     <td className="px-3 md:px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
+                                            <button onClick={() => handleToggleNoExpiry(student)}
+                                                className={`p-2 rounded-lg transition-all ${student.noExpiry ? 'hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300' : 'hover:bg-slate-500/20 text-slate-500 hover:text-slate-400'}`} 
+                                                title={student.noExpiry ? "Disable Unlimited Access" : "Enable Unlimited Access"}>
+                                                <Infinity className="h-4 w-4" />
+                                            </button>
                                             <button onClick={() => openEditModal(student)}
                                                 className="p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-all" title="Edit">
                                                 <Edit3 className="h-4 w-4" />

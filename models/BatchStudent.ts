@@ -28,7 +28,8 @@ const BatchStudentSchema = new mongoose.Schema({
         default: {}
     },
     collegeName: { type: String, trim: true },
-    modeOfClass: { type: String, enum: ['online', 'offline', ''], default: '' }
+    modeOfClass: { type: String, enum: ['online', 'offline', ''], default: '' },
+    noExpiry: { type: Boolean, default: false }  // If true, all online tests never expire for this student
 }, { timestamps: true });
 
 // Prevent overwrite

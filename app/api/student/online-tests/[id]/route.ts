@@ -201,7 +201,8 @@ export async function GET(
         }
 
         // If no attempt yet and test hasn't started, return test info only
-        if (!attempt && startTime && now < startTime) {
+        // Bypass time check if student has noExpiry flag
+        if (!attempt && startTime && now < startTime && !(dbStudent as any)?.noExpiry) {
             return NextResponse.json({
                 error: 'Test has not started yet',
                 startsAt: startTime

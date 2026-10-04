@@ -123,7 +123,9 @@ export async function GET(req: NextRequest) {
                 correctionStatus: submission?.status || 'PENDING',
                 quality: submission?.quality || null,
                 content: safeContent,
-                boardWise: isBoardWise
+                boardWise: isBoardWise,
+                score: submission?.score ?? null,
+                totalQuestions: submission?.totalQuestions ?? null,
             };
         });
 

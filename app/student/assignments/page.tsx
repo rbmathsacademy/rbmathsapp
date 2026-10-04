@@ -12,7 +12,7 @@ const FREE_BATCH_LOWER = 'class xi (free batch) 2026-27';
 interface Assignment {
     _id: string;
     title: string;
-    type: 'PDF' | 'QUESTIONS';
+    type: 'PDF' | 'QUESTIONS' | 'INTERACTIVE';
     batch: string;
     content: any;
     deadline: string;
@@ -24,6 +24,8 @@ interface Assignment {
     correctionStatus: 'PENDING' | 'CORRECTED';
     quality?: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
     boardWise?: boolean;
+    score?: number | null;
+    totalQuestions?: number | null;
 }
 
 type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
@@ -209,7 +211,9 @@ export default function StudentAssignmentsPage() {
     };
 
     const openAssignment = (assignment: Assignment) => {
-        if (assignment.type === 'QUESTIONS') {
+        if (assignment.type === 'INTERACTIVE') {
+            router.push(`/student/assignments/interactive/${assignment._id}`);
+        } else if (assignment.type === 'QUESTIONS') {
             router.push(`/student/assignments/${assignment._id}`);
         } else {
             // Check if content is a URL
@@ -470,14 +474,19 @@ function AssignmentCard({
                 {/* Top Row */}
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-lg ${assignment.type === 'PDF' ? 'bg-red-500/10' : 'bg-purple-500/10'
+                        <div className={`p-2 rounded-lg ${assignment.type === 'PDF' ? 'bg-red-500/10' : assignment.type === 'INTERACTIVE' ? 'bg-cyan-500/10' : 'bg-purple-500/10'
                             }`}>
-                            <FileText className={`w-5 h-5 ${assignment.type === 'PDF' ? 'text-red-400' : 'text-purple-400'
+                            <FileText className={`w-5 h-5 ${assignment.type === 'PDF' ? 'text-red-400' : assignment.type === 'INTERACTIVE' ? 'text-cyan-400' : 'text-purple-400'
                                 }`} />
                         </div>
                         <span className="text-xs px-2 py-0.5 rounded bg-white/5 text-gray-400">
                             {assignment.batch}
                         </span>
+                        {assignment.type === 'INTERACTIVE' && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                Interactive
+                            </span>
+                        )}
                     </div>
 
 
@@ -559,6 +568,12 @@ function AssignmentCard({
                     {/* Upload / View Submission / Missed */}
                     {isSubmitted ? (
                         <>
+                        {assignment.type === 'INTERACTIVE' ? (
+                            <div className="flex-1 py-2.5 bg-green-600/20 text-green-400 rounded-lg text-sm font-medium ring-1 ring-green-500/30 flex items-center justify-center gap-2">
+                                <CheckCircle className="w-4 h-4" />
+                                Score: {assignment.score ?? '?'}/{assignment.totalQuestions ?? '?'}
+                            </div>
+                        ) : (
                         <a
                             href={assignment.submissionLink}
                             target="_blank"
@@ -567,6 +582,8 @@ function AssignmentCard({
                         >
                             View Submission <ExternalLink className="w-3.5 h-3.5" />
                         </a>
+                        )}
+                        {assignment.type !== 'INTERACTIVE' && (
                         <button
                             onClick={onDelete}
                             disabled={new Date() > new Date(assignment.cooldownEndDate)}
@@ -580,10 +597,21 @@ function AssignmentCard({
                             <Trash2 className="w-3.5 h-3.5" />
                             Delete
                         </button>
+                        )}
                         </>
                     ) : isClosed ? (
                         <button disabled className="flex-1 py-2.5 bg-red-900/20 text-red-400/60 rounded-lg text-sm font-medium cursor-not-allowed ring-1 ring-red-500/10">
                             Missed
+                        </button>
+                    ) : assignment.type === 'INTERACTIVE' ? (
+                        <button
+                            onClick={onOpen}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors shadow-lg ${isLateAllowed
+                                ? 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-900/20'
+                                : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20'
+                                }`}
+                        >
+                            Start Interactive
                         </button>
                     ) : (
                         <label className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors shadow-lg ${isLateAllowed

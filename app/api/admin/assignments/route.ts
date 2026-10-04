@@ -13,8 +13,11 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         // Validation
-        if (!body.title || !body.type || !body.batch || !body.deadline || !body.content) {
+        if (!body.title || !body.type || !body.batch || !body.deadline) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+        if (body.type !== 'INTERACTIVE' && !body.content) {
+            return NextResponse.json({ error: 'Missing content for assignment' }, { status: 400 });
         }
 
         const assignment = await Assignment.create({

@@ -83,7 +83,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 isLate: dynamicIsLate,
                 correctionStatus,
                 quality: submission ? submission.quality : null,
-                overrideOnTime: submission ? (submission.overrideOnTime || false) : false
+                overrideOnTime: submission ? (submission.overrideOnTime || false) : false,
+                score: submission ? (submission.score ?? null) : null,
+                totalQuestions: submission ? (submission.totalQuestions ?? null) : null,
             };
         });
 
@@ -103,7 +105,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     isLate: isLateDynamically,
                     correctionStatus: sub.status || 'PENDING',
                     quality: sub.quality || null,
-                    overrideOnTime: sub.overrideOnTime || false
+                    overrideOnTime: sub.overrideOnTime || false,
+                    score: sub.score ?? null,
+                    totalQuestions: sub.totalQuestions ?? null,
                 });
             }
         });

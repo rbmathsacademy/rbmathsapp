@@ -2376,7 +2376,9 @@ export default function QuestionBank() {
             {/* ── Rename Modal ── */}
             {isRenameModalOpen && (() => {
                 // Compute unique current values for the selected field across selected questions
-                const selectedQs = filteredQuestions.filter(q => selectedQuestionIds.has(q.id));
+                // NOTE: Use all loaded `questions` (not just filteredQuestions) so that
+                // selections made before a filter change are still correctly resolved.
+                const selectedQs = questions.filter(q => selectedQuestionIds.has(q.id));
                 const currentValues = Array.from(new Set(
                     selectedQs.flatMap(q => {
                         if (renameField === 'topic') return [q.topic].filter(Boolean);
@@ -2428,7 +2430,7 @@ export default function QuestionBank() {
                                 </label>
                                 {currentValues.length === 0 ? (
                                     <p className="text-xs text-gray-500 italic">No value found in selected questions.</p>
-                                ) : currentValues.length === 1 && renameField !== 'examName' ? (
+                                ) : currentValues.length === 1 ? (
                                     <div className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">{currentValues[0]}</div>
                                 ) : (
                                     <div className="space-y-1 max-h-32 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg p-2">
@@ -2442,9 +2444,9 @@ export default function QuestionBank() {
                                         ))}
                                     </div>
                                 )}
-                                {/* Auto-set single value */}
-                                {currentValues.length === 1 && renameField !== 'examName' && renameOldValue !== currentValues[0] && (
-                                    <>{renameOldValue !== currentValues[0] ? (() => { setTimeout(() => setRenameOldValue(currentValues[0]), 0); return null; })() : null}</>
+                                {/* Auto-set single value for non-examName fields, AND for examName with exactly 1 value */}
+                                {currentValues.length === 1 && renameOldValue !== currentValues[0] && (
+                                    <>{(() => { setTimeout(() => setRenameOldValue(currentValues[0]), 0); return null; })()}</>
                                 )}
                             </div>
 
@@ -2463,7 +2465,7 @@ export default function QuestionBank() {
                             <div className="flex gap-3 justify-end">
                                 <button onClick={() => setIsRenameModalOpen(false)} className="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium">Cancel</button>
                                 <button
-                                    disabled={!renameNewValue.trim() || (currentValues.length > 1 && !renameOldValue) || renameLoading}
+                                    disabled={!renameNewValue.trim() || !renameOldValue || renameLoading}
                                     onClick={async () => {
                                         setRenameLoading(true);
                                         try {
@@ -2471,7 +2473,7 @@ export default function QuestionBank() {
                                             if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
                                                 headers['X-Global-Admin-Key'] = 'globaladmin_25';
                                             }
-                                            const oldVal = currentValues.length === 1 ? currentValues[0] : renameOldValue;
+                                            const oldVal = renameOldValue; // Always set (auto-set for single value, user-selected for multiple)
                                             const res = await fetch('/api/admin/questions/rename', {
                                                 method: 'POST',
                                                 headers,

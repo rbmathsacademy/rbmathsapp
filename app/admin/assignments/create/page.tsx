@@ -28,7 +28,7 @@ export default function CreateAssignmentPage() {
     const [deadline, setDeadline] = useState('');
     const [cooldown, setCooldown] = useState(60);
     const [cooldownEndTime, setCooldownEndTime] = useState('');
-    const [type, setType] = useState<'PDF' | 'QUESTIONS' | 'BOARD_PDF'>('PDF');
+    const [type, setType] = useState<'PDF' | 'QUESTIONS' | 'BOARD_PDF' | 'INTERACTIVE'>('PDF');
 
     // PDF Content
     const [pdfFile, setPdfFile] = useState<string | null>(null);
@@ -243,6 +243,35 @@ export default function CreateAssignmentPage() {
             let contentStringOrArray: string | string[] = '';
             let boardContentMap: Record<string, string> = {};
             let isBoardWise = false;
+
+            if (type === 'INTERACTIVE') {
+                // Interactive assignments don't need any file/question content
+                const res = await fetch('/api/admin/assignments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title.trim(),
+                        batch,
+                        deadline: new Date(deadline).toISOString(),
+                        cooldownDuration: Number(cooldown) || 0,
+                        type: 'INTERACTIVE',
+                        content: 'INTERACTIVE',
+                        interactiveHtmlId: 'straight-lines-v1',
+                        randomCount: 0,
+                        boardWise: false,
+                    })
+                });
+
+                if (res.ok) {
+                    toast.success('Interactive assignment published!');
+                    router.push('/admin/assignments');
+                } else {
+                    const data = await res.json();
+                    toast.error(data.error || 'Failed to create');
+                }
+                setLoading(false);
+                return;
+            }
 
             if (type === 'BOARD_PDF') {
                 isBoardWise = true;
@@ -471,7 +500,7 @@ export default function CreateAssignmentPage() {
 
                     <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6">
                         <h2 className="text-lg font-semibold text-blue-400 mb-4">Assignment Type</h2>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 flex-wrap">
                             <button
                                 onClick={() => setType('PDF')}
                                 className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'PDF'
@@ -501,6 +530,16 @@ export default function CreateAssignmentPage() {
                             >
                                 <List className="w-5 h-5" />
                                 <span className="text-xs font-medium">Question Bank</span>
+                            </button>
+                            <button
+                                onClick={() => setType('INTERACTIVE')}
+                                className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'INTERACTIVE'
+                                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
+                                    : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
+                                    }`}
+                            >
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                                <span className="text-xs font-medium">Interactive HTML</span>
                             </button>
                         </div>
                     </div>
@@ -587,6 +626,23 @@ export default function CreateAssignmentPage() {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        ) : type === 'INTERACTIVE' ? (
+                            <div className="flex flex-col items-center justify-center border-2 border-dashed border-cyan-500/30 rounded-xl p-12 bg-cyan-500/5">
+                                <div className="text-5xl mb-4">📐</div>
+                                <p className="text-cyan-300 font-bold text-lg mb-2">Straight Lines Interactive Assignment</p>
+                                <p className="text-gray-400 text-sm text-center mb-4">
+                                    This interactive assignment features 10 questions on Straight Lines with a live coordinate geometry visualizer.
+                                    Students complete it directly in the browser — no PDF upload needed.
+                                </p>
+                                <div className="bg-black/30 rounded-xl p-4 text-sm text-gray-300 space-y-2 w-full max-w-md">
+                                    <div className="flex items-center gap-2"><span className="text-cyan-400 font-bold">✓</span> Name auto-filled from student portal</div>
+                                    <div className="flex items-center gap-2"><span className="text-cyan-400 font-bold">✓</span> Skip button disabled — all questions required</div>
+                                    <div className="flex items-center gap-2"><span className="text-cyan-400 font-bold">✓</span> Score saved automatically to database</div>
+                                    <div className="flex items-center gap-2"><span className="text-cyan-400 font-bold">✓</span> 10 questions · 17 total steps</div>
+                                    <div className="flex items-center gap-2"><span className="text-cyan-400 font-bold">✓</span> Live coordinate geometry graph</div>
+                                </div>
+                                <p className="text-cyan-500/60 text-xs mt-4">HTML ID: straight-lines-v1</p>
                             </div>
                         ) : (
                             <div>

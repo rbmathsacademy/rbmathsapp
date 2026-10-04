@@ -26,12 +26,14 @@ interface StudentSubmission {
     isLate: boolean;
     quality?: 'GOOD' | 'SATISFACTORY' | 'POOR' | null;
     overrideOnTime?: boolean;
+    score?: number | null;
+    totalQuestions?: number | null;
 }
 
 interface Assignment {
     _id: string;
     title: string;
-    type: 'PDF' | 'QUESTIONS';
+    type: 'PDF' | 'QUESTIONS' | 'INTERACTIVE';
     batch: string;
     deadline: string;
     cooldownDuration?: number;

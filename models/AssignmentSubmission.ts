@@ -4,7 +4,9 @@ import mongoose from 'mongoose';
 const AssignmentSubmissionSchema = new mongoose.Schema({
     assignment: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', required: true },
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'BatchStudent', required: true },
-    link: { type: String, required: true }, // Drive File URL
+    link: { type: String, required: false, default: '' }, // Drive File URL (empty for INTERACTIVE type)
+    score: { type: Number, default: null }, // Score for INTERACTIVE assignments
+    totalQuestions: { type: Number, default: null }, // Total steps for INTERACTIVE assignments
     submittedAt: { type: Date, default: Date.now },
     isLate: { type: Boolean, default: false },
     overrideOnTime: { type: Boolean, default: false },

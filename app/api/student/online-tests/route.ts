@@ -117,6 +117,9 @@ export async function GET(req: NextRequest) {
 
             if (attempt?.status === 'completed') {
                 completed.push(testInfo);
+            } else if (dbStudent?.noExpiry) {
+                // For noExpiry students, uncompleted tests are ALWAYS available regardless of dates
+                available.push(testInfo);
             } else if (startTime && now < startTime) {
                 upcoming.push(testInfo);
             } else if (endTime && now > endTime && (!attempt || attempt.status === 'not_started')) {

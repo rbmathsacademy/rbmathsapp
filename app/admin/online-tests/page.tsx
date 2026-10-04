@@ -41,6 +41,7 @@ export default function OnlineTestsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [movingTest, setMovingTest] = useState<string | null>(null);
+    const [visibleCount, setVisibleCount] = useState(10);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -55,6 +56,7 @@ export default function OnlineTestsPage() {
             fetchFolders();
             // Only fetch tests if a folder is selected or 'View All' was clicked
             if (selectedFolder !== '__none__') {
+                setVisibleCount(10);
                 fetchTests();
             } else {
                 setTests([]);
@@ -357,10 +359,10 @@ export default function OnlineTestsPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredTests.map(test => (
+                            {filteredTests.slice(0, visibleCount).map(test => (
                                 <div
                                     key={test._id}
-                                    className="bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group"
+                                    className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group ${movingTest === test._id ? 'relative z-50 shadow-2xl' : ''}`}
                                 >
                                     {/* Status Badge */}
                                     <div className="flex items-center justify-between mb-4">
@@ -432,7 +434,7 @@ export default function OnlineTestsPage() {
                                                     <FolderInput className="h-4 w-4" />
                                                 </button>
                                                 {movingTest === test._id && (
-                                                    <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-10 p-2">
+                                                    <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-50 p-2">
                                                         <button
                                                             onClick={() => moveTestToFolder(test._id, null)}
                                                             className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded"
@@ -528,6 +530,18 @@ export default function OnlineTestsPage() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    )}
+
+                    {/* View More Button */}
+                    {!loading && filteredTests.length > visibleCount && (
+                        <div className="mt-8 flex justify-center">
+                            <button
+                                onClick={() => setVisibleCount(prev => prev + 20)}
+                                className="px-6 py-2.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold hover:bg-slate-700 transition-colors shadow-lg"
+                            >
+                                View More ({filteredTests.length - visibleCount} remaining)
+                            </button>
                         </div>
                     )}
                 </div>
