@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import User from '@/models/User';
-import { shuffleOptionsForQuestion } from '@/lib/seededRandom';
+import { shuffleOptionsForQuestion, seededShuffleArray, getSeededRandom } from '@/lib/seededRandom';
 
 // GET - List all tests
 export async function GET(request: NextRequest) {
@@ -288,7 +288,17 @@ export async function PUT(request: NextRequest) {
 
                 // Calculate Total Marks — properly handle comprehension sub-questions
                 let currentTotalMarks = 0;
-                const questionsSourceForMarks = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : sourceQuestions;
+                let questionsSourceForMarks = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : [...sourceQuestions];
+                
+                // If attempting to calculate total marks from source questions, we must respect slicing
+                if ((!attempt.questions || attempt.questions.length === 0) && (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions)) {
+                    const seedString = `${attempt.studentPhone}_${id}`;
+                    questionsSourceForMarks = seededShuffleArray(questionsSourceForMarks, getSeededRandom(seedString));
+                    if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
+                        questionsSourceForMarks = questionsSourceForMarks.slice(0, test.config.maxQuestionsToAttempt);
+                    }
+                }
+
                 for (const q of questionsSourceForMarks) {
                     if (q.type === 'comprehension' && q.subQuestions) {
                         for (const sq of q.subQuestions) currentTotalMarks += sq.marks || 1;

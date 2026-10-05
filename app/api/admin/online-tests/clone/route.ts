@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
         const newTest = new OnlineTest({
             title: `${originalTest.title} (Copy)`,
             description: originalTest.description,
-            questions: originalTest.questions, // Should be array of objects or IDs depending on schema
+            isBoardSpecific: originalTest.isBoardSpecific,
+            questions: originalTest.questions,
+            boardQuestionSets: originalTest.boardQuestionSets,
             totalMarks: originalTest.totalMarks,
             createdBy: userEmail,
             folderId: originalTest.folderId, // Keep in same folder? Yes.
