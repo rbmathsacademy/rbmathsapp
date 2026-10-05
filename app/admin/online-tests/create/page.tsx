@@ -356,13 +356,25 @@ export default function CreateTestPage() {
                                     <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" defaultChecked onClick={() => {
                                         setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['ISC'], questions: [] }, { boards: ['WBCHSE'], questions: [] }]);
                                     }} />
-                                    <span className="text-white font-medium">3 Sets: CBSE, ISC, WBCHSE separately</span>
+                                    <span className="text-white font-medium">3 Sets: CBSE, ISC, and WBCHSE separately</span>
                                 </label>
                                 <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
                                     <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
                                         setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['WBCHSE', 'ISC'], questions: [] }]);
                                     }} />
                                     <span className="text-white font-medium">2 Sets: CBSE separate, WBCHSE & ISC combined</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
+                                        setBoardQuestionSets([{ boards: ['ISC'], questions: [] }, { boards: ['CBSE', 'WBCHSE'], questions: [] }]);
+                                    }} />
+                                    <span className="text-white font-medium">2 Sets: ISC separate, CBSE & WBCHSE combined</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
+                                        setBoardQuestionSets([{ boards: ['WBCHSE'], questions: [] }, { boards: ['CBSE', 'ISC'], questions: [] }]);
+                                    }} />
+                                    <span className="text-white font-medium">2 Sets: WBCHSE separate, CBSE & ISC combined</span>
                                 </label>
                             </div>
                             <div className="mt-6 flex justify-end gap-3">
