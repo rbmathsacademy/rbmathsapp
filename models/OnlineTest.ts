@@ -1,65 +1,63 @@
 import mongoose from 'mongoose';
 
+const QuestionSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    text: { type: String, required: true },
+    image: { type: String },
+    latexContent: { type: Boolean, default: false },
+    type: { type: String, enum: ['mcq', 'msq', 'fillblank', 'comprehension', 'broad'], required: true },
+    topic: { type: String },
+    subtopic: { type: String },
+    marks: { type: Number, required: true, default: 1 },
+    negativeMarks: { type: Number, default: 0 },
+    timeLimit: { type: Number },
+    isGrace: { type: Boolean, default: false },
+    solutionText: { type: String },
+    solutionImage: { type: String },
+    options: [{ type: String }],
+    correctIndices: [{ type: Number }],
+    shuffleOptions: { type: Boolean, default: false },
+    fillBlankAnswer: { type: String },
+    caseSensitive: { type: Boolean, default: false },
+    isNumberRange: { type: Boolean, default: false },
+    numberRangeMin: { type: Number },
+    numberRangeMax: { type: Number },
+    comprehensionText: { type: String },
+    comprehensionImage: { type: String },
+    subQuestions: [{
+        id: { type: String },
+        text: { type: String },
+        latexContent: { type: Boolean, default: false },
+        type: { type: String, enum: ['mcq', 'msq', 'fillblank'] },
+        options: [{ type: String }],
+        correctIndices: [{ type: Number }],
+        shuffleOptions: { type: Boolean, default: false },
+        marks: { type: Number, default: 1 },
+        negativeMarks: { type: Number, default: 0 },
+        fillBlankAnswer: { type: String },
+        caseSensitive: { type: Boolean, default: false },
+        isNumberRange: { type: Boolean, default: false },
+        numberRangeMin: { type: Number },
+        numberRangeMax: { type: Number }
+    }]
+}, { _id: false });
+
 const OnlineTestSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String },
-    questions: [{
-        id: { type: String, required: true },
-        text: { type: String, required: true },
-        image: { type: String }, // Base64 for question image/screenshot
-        latexContent: { type: Boolean, default: false }, // Flag if text contains LaTeX
-        type: { type: String, enum: ['mcq', 'msq', 'fillblank', 'comprehension', 'broad'], required: true },
-        topic: { type: String },
-        subtopic: { type: String },
-        marks: { type: Number, required: true, default: 1 },
-        negativeMarks: { type: Number, default: 0 },
-        timeLimit: { type: Number }, // Optional override for specific question duration (seconds)
-        isGrace: { type: Boolean, default: false }, // Grace question flag
-
-        // Solution / Explanation
-        solutionText: { type: String }, // Latex enabled detailed solution
-        solutionImage: { type: String }, // Base64 image for solution
-
-        // MCQ/MSQ specific
-        options: [{ type: String }], // Options for MCQ/MSQ
-        correctIndices: [{ type: Number }], // Indices of correct options (0-based)
-        shuffleOptions: { type: Boolean, default: false }, // Per-question option shuffle
-
-        // Fill in the blank
-        fillBlankAnswer: { type: String }, // Correct answer for fill-blank type
-        caseSensitive: { type: Boolean, default: false }, // For fill-blank answer matching
-        isNumberRange: { type: Boolean, default: false }, // True if answer is a numeric range
-        numberRangeMin: { type: Number }, // Minimum value for number range
-        numberRangeMax: { type: Number }, // Maximum value for number range
-
-        // Comprehension specific
-        comprehensionText: { type: String }, // Passage/context for comprehension
-        comprehensionImage: { type: String }, // Base64 image for comprehension passage
-        subQuestions: [{
-            id: { type: String },
-            text: { type: String },
-            latexContent: { type: Boolean, default: false },
-            type: { type: String, enum: ['mcq', 'msq', 'fillblank'] },
-            options: [{ type: String }],
-            correctIndices: [{ type: Number }],
-            shuffleOptions: { type: Boolean, default: false },
-            marks: { type: Number, default: 1 },
-            negativeMarks: { type: Number, default: 0 },
-            // Fill in the blank specific
-            fillBlankAnswer: { type: String },
-            caseSensitive: { type: Boolean, default: false },
-            isNumberRange: { type: Boolean, default: false },
-            numberRangeMin: { type: Number },
-            numberRangeMax: { type: Number }
-        }]
+    isBoardSpecific: { type: Boolean, default: false },
+    questions: [QuestionSchema],
+    boardQuestionSets: [{
+        boards: [{ type: String }],
+        questions: [QuestionSchema]
     }],
     deployment: {
-        batches: [{ type: String }], // Batch names from Google Sheets
+        batches: [{ type: String }],
         students: [{
-            phoneNumber: { type: String }, // Student phone number (unique identifier)
+            phoneNumber: { type: String },
             studentName: { type: String },
             batchName: { type: String }
-        }], // Optional: specific students. If empty, deploys to all students in batches
+        }],
         startTime: { type: Date },
         endTime: { type: Date },
         durationMinutes: { type: Number }
@@ -68,29 +66,31 @@ const OnlineTestSchema = new mongoose.Schema({
         shuffleQuestions: { type: Boolean, default: false },
         showTimer: { type: Boolean, default: true },
         allowBackNavigation: { type: Boolean, default: true },
-        showResults: { type: Boolean, default: true }, // Show results after submission
-        showResultsImmediately: { type: Boolean, default: true }, // New: If false, hide results until exam end time
-        maxQuestionsToAttempt: { type: Number, default: null }, // New: If set, pick X random questions per student
+        showResults: { type: Boolean, default: true },
+        showResultsImmediately: { type: Boolean, default: true },
+        maxQuestionsToAttempt: { type: Number, default: null },
         passingPercentage: { type: Number, default: 40 },
-        enablePerQuestionTimer: { type: Boolean, default: false }, // Per-question timer toggle
-        perQuestionDuration: { type: Number, default: 60 } // Default duration in seconds per question
+        enablePerQuestionTimer: { type: Boolean, default: false },
+        perQuestionDuration: { type: Number, default: 60 }
     },
-    excludedStudents: [{ type: String }], // Phone numbers of students excluded from this test
+    excludedStudents: [{ type: String }],
     status: { type: String, enum: ['draft', 'deployed', 'completed'], default: 'draft' },
-    createdBy: { type: String, required: true }, // Admin/Faculty Email
-    folderId: { type: String, default: null }, // Optional folder organization
-    totalMarks: { type: Number }, // Auto-calculated from questions
+    createdBy: { type: String, required: true },
+    folderId: { type: String, default: null },
+    totalMarks: { type: Number },
 }, { timestamps: true });
 
-// Calculate total marks before saving
-// Calculate total marks before saving
 OnlineTestSchema.pre('save', function () {
     let total = 0;
+    
+    // For board specific tests, total marks might vary by board. We'll store the max or just 0, but for now we'll calculate based on the first set if available, else questions array.
+    let questionsToCount: any[] = this.questions || [];
+    if (this.isBoardSpecific && this.boardQuestionSets && this.boardQuestionSets.length > 0) {
+        questionsToCount = this.boardQuestionSets[0].questions || [];
+    }
 
-    // Determine questions to count
-    let questionsToCount: any[] = this.questions;
     if (this.config && this.config.maxQuestionsToAttempt && this.config.maxQuestionsToAttempt > 0) {
-        questionsToCount = this.questions.slice(0, this.config.maxQuestionsToAttempt);
+        questionsToCount = questionsToCount.slice(0, this.config.maxQuestionsToAttempt);
     }
 
     questionsToCount.forEach(q => {
@@ -103,7 +103,6 @@ OnlineTestSchema.pre('save', function () {
     this.totalMarks = total;
 });
 
-// Prevent model overwrite in dev
 if (process.env.NODE_ENV === 'development') {
     delete mongoose.models.OnlineTest;
 }

@@ -61,12 +61,25 @@ export async function GET(
         // Check for existing attempt
         let attempt = await StudentTestAttempt.findOne({ testId, studentPhone: student.phoneNumber });
 
+        let sourceQuestions: any[] = [];
+        const studentBoard = (dbStudent as any)?.board || '';
+        
+        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+            // Find the set that includes the student's board
+            const assignedSet = test.boardQuestionSets.find((set: any) => 
+                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
+            );
+            // Fallback to the first set if board doesn't match
+            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        } else {
+            sourceQuestions = [...(test.questions || [])];
+        }
+
         if (attempt && attempt.status === 'in_progress') {
             attempt.resumeCount = (attempt.resumeCount || 0) + 1;
 
             if (attempt.resumeCount > 1) { // They are resuming for the SECOND time
                 // Auto-grade their latest saved answers
-                let sourceQuestions = [...test.questions];
                 if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
                     const seedString = `${student.phoneNumber}_${testId}`;
                     const randomFunc = getSeededRandom(seedString);
@@ -210,7 +223,7 @@ export async function GET(
         }
 
         // Prepare questions (deterministic layout)
-        let attemptQuestions = test.questions.map((q: any) => {
+        let attemptQuestions = sourceQuestions.map((q: any) => {
             const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
             if (qObj.subQuestions) {
                 qObj.subQuestions = qObj.subQuestions.map((sq: any) =>
@@ -362,12 +375,19 @@ export async function POST(
             return NextResponse.json({ attempt, message: 'Resuming existing attempt' });
         }
 
-        // Prepare questions for this attempt
-        // Deep clone so we don't mutate the original test document
-        // We do NOT save attempt.questions anymore to save DB space and use deterministic logic.
-        // Instead, we just pass an empty array, or omit it.
-        // To be safe with schema, we leave it empty.
-        let attemptQuestions = test.questions.map((q: any) => {
+        let sourceQuestions: any[] = [];
+        const studentBoard = (dbStudent as any)?.board || '';
+        
+        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+            const assignedSet = test.boardQuestionSets.find((set: any) => 
+                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
+            );
+            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        } else {
+            sourceQuestions = [...(test.questions || [])];
+        }
+
+        let attemptQuestions = sourceQuestions.map((q: any) => {
             const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
             // Deep clone subQuestions if present
             if (qObj.subQuestions) {
@@ -517,8 +537,20 @@ export async function PUT(
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
-                // Reconstruct the student's exact shuffled test dynamically
-        let sourceQuestions = [...test.questions];
+        // Resolve board specific questions
+        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
+        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const studentBoard = (dbStudent as any)?.board || '';
+        
+        let sourceQuestions: any[] = [];
+        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+            const assignedSet = test.boardQuestionSets.find((set: any) => 
+                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
+            );
+            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        } else {
+            sourceQuestions = [...(test.questions || [])];
+        }
         if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
             const seedString = `${student.phoneNumber}_${testId}`;
             const randomFunc = getSeededRandom(seedString);

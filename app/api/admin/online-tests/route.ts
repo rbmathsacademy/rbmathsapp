@@ -62,60 +62,28 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { title, description, questions, config, deployment, folderId } = body;
+        const { title, description, questions, config, deployment, folderId, isBoardSpecific, boardQuestionSets } = body;
 
         // Validation
-        if (!title || !questions || questions.length === 0) {
-            return NextResponse.json({ error: 'Title and questions are required' }, { status: 400 });
+        if (!title) {
+            return NextResponse.json({ error: 'Title is required' }, { status: 400 });
         }
-
-        // Validate questions - STRICT VALIDATION SKIPPED FOR DRAFTS
-        // We allow saving incomplete questions as drafts to improve user experience (e.g., auto-save).
-        // Validation should be performed before DEPLOYMENT.
-
-        /*
-        for (const q of questions) {
-            if (!q.text || !q.type) {
-                return NextResponse.json({ error: 'Each question must have text and type' }, { status: 400 });
+        
+        if (isBoardSpecific) {
+            if (!boardQuestionSets || boardQuestionSets.length < 2) {
+                return NextResponse.json({ error: 'At least 2 board question sets are required for a board specific test' }, { status: 400 });
             }
-
-            // Validate MCQ/MSQ
-            if ((q.type === 'mcq' || q.type === 'msq') && (!q.options || q.options.length < 2)) {
-                return NextResponse.json({ error: 'MCQ/MSQ must have at least 2 options' }, { status: 400 });
-            }
-
-            // Validate correctIndices
-            if ((q.type === 'mcq' || q.type === 'msq') && (!q.correctIndices || q.correctIndices.length === 0)) {
-                return NextResponse.json({ error: 'MCQ/MSQ must have correct answer(s)' }, { status: 400 });
-            }
-
-            // Validate comprehension has sub-questions
-            if (q.type === 'comprehension' && (!q.subQuestions || q.subQuestions.length === 0)) {
-                return NextResponse.json({ error: 'Comprehension questions must have sub-questions' }, { status: 400 });
-            }
-
-            // Validate fill-blank has answer or number range
-            if (q.type === 'fillblank') {
-                if (q.isNumberRange) {
-                    if (q.numberRangeMin === undefined || q.numberRangeMin === null ||
-                        q.numberRangeMax === undefined || q.numberRangeMax === null) {
-                        return NextResponse.json({ error: 'Number range questions must have minimum and maximum values' }, { status: 400 });
-                    }
-                    if (Number(q.numberRangeMin) >= Number(q.numberRangeMax)) {
-                        return NextResponse.json({ error: 'Minimum value must be less than maximum value' }, { status: 400 });
-                    }
-                } else if (!q.fillBlankAnswer) {
-                    return NextResponse.json({ error: 'Fill-in-the-blank must have an answer' }, { status: 400 });
-                }
-            }
+        } else if (!questions || questions.length === 0) {
+            return NextResponse.json({ error: 'Questions are required' }, { status: 400 });
         }
-        */
 
         // Create test
         const test = new OnlineTest({
             title,
             description,
-            questions,
+            isBoardSpecific: isBoardSpecific || false,
+            questions: isBoardSpecific ? [] : questions,
+            boardQuestionSets: isBoardSpecific ? boardQuestionSets : [],
             config: config || {},
             deployment: deployment || {},
             createdBy: userEmail,
@@ -166,34 +134,45 @@ export async function PUT(request: NextRequest) {
 
         // If deployed test, handle grace marks OR question updates (re-grading)
         // We ALWAYS check for question updates if status is deployed, to support "Auto-update correct option"
-        if (test.status === 'deployed' && updates.questions) {
+        if (test.status === 'deployed' && (updates.questions || updates.boardQuestionSets)) {
             const StudentTestAttempt = (await import('@/models/StudentTestAttempt')).default;
-
-            // Check if global grace marks are being added via the dialog
-            // NOTE: Global Grace Marks are now handled inside the re-grading loop below 
-            // to ensure they are set/overwritten correctly rather than accumulated.
+            const BatchStudent = (await import('@/models/BatchStudent')).default;
 
             // AUTO-REGRADING LOGIC
             // If questions changed, we must re-evaluate ALL completed attempts.
-            // This handles:
-            // 1. Correct Option changed.
-            // 2. "Grace Question" enabled (isGrace=true).
-            // 3. Marks changed.
 
             console.log('🔄 Re-grading all completed attempts for test:', id);
             const attempts = await StudentTestAttempt.find({ testId: id, status: 'completed' });
 
-            // Map new questions for fast lookup (including comprehension sub-questions)
-            const newQuestionsMap = new Map();
-            updates.questions.forEach((q: any) => {
-                newQuestionsMap.set(q.id, q);
-                // Also map comprehension sub-questions so their answers can be re-graded
-                if (q.type === 'comprehension' && q.subQuestions) {
-                    q.subQuestions.forEach((sq: any) => newQuestionsMap.set(sq.id, sq));
-                }
-            });
+            const isBoardSpecific = updates.isBoardSpecific ?? test.isBoardSpecific;
 
             for (const attempt of attempts) {
+                // Find student's board
+                const cleanPhone = attempt.studentPhone.replace(/\D/g, '');
+                const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+                const studentBoard = (dbStudent as any)?.board || '';
+
+                // Resolve source questions for this attempt
+                let sourceQuestions = [];
+                if (isBoardSpecific && updates.boardQuestionSets && updates.boardQuestionSets.length > 0) {
+                    const assignedSet = updates.boardQuestionSets.find((set: any) => 
+                        set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
+                    );
+                    sourceQuestions = assignedSet ? [...assignedSet.questions] : [...updates.boardQuestionSets[0].questions];
+                } else {
+                    sourceQuestions = [...(updates.questions || [])];
+                }
+
+                // Map new questions for fast lookup (including comprehension sub-questions)
+                const newQuestionsMap = new Map();
+                sourceQuestions.forEach((q: any) => {
+                    newQuestionsMap.set(q.id, q);
+                    // Also map comprehension sub-questions so their answers can be re-graded
+                    if (q.type === 'comprehension' && q.subQuestions) {
+                        q.subQuestions.forEach((sq: any) => newQuestionsMap.set(sq.id, sq));
+                    }
+                });
+
                 let newScore = 0;
 
                 // Track whether any per-question isGrace flags are active
@@ -309,8 +288,8 @@ export async function PUT(request: NextRequest) {
 
                 // Calculate Total Marks — properly handle comprehension sub-questions
                 let currentTotalMarks = 0;
-                const questionsSource = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : updates.questions;
-                for (const q of questionsSource) {
+                const questionsSourceForMarks = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : sourceQuestions;
+                for (const q of questionsSourceForMarks) {
                     if (q.type === 'comprehension' && q.subQuestions) {
                         for (const sq of q.subQuestions) currentTotalMarks += sq.marks || 1;
                     } else {
@@ -344,6 +323,17 @@ export async function PUT(request: NextRequest) {
                 delete cleanQ.isGrace;
                 return cleanQ;
             });
+        }
+        
+        if (updates.boardQuestionSets) {
+            updates.boardQuestionSets = updates.boardQuestionSets.map((set: any) => ({
+                ...set,
+                questions: (set.questions || []).map((q: any) => {
+                    const cleanQ = { ...q };
+                    delete cleanQ.isGrace;
+                    return cleanQ;
+                })
+            }));
         }
 
         // Update test - allow remaining fields

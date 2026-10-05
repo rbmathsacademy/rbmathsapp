@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Edit, Trash2, GripVertical, Save, Send, AlertTriangle 
 import { toast, Toaster } from 'react-hot-toast';
 import QuestionEditor from '../components/QuestionEditor';
 import QuestionImportModal from '../components/QuestionImportModal';
+import BoardQuestionImportModal from '../components/BoardQuestionImportModal';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
@@ -67,6 +68,11 @@ export default function CreateTestPage() {
         maxQuestionsToAttempt: null
     });
 
+    const [isBoardSpecific, setIsBoardSpecific] = useState(false);
+    const [boardQuestionSets, setBoardQuestionSets] = useState<{ boards: string[], questions: Question[] }[]>([]);
+    const [showSetupModal, setShowSetupModal] = useState(false);
+    const [activeBoardSetIndex, setActiveBoardSetIndex] = useState(0);
+
     const [showQuestionEditor, setShowQuestionEditor] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
     const [loading, setLoading] = useState(false);
@@ -88,6 +94,7 @@ export default function CreateTestPage() {
         } else if (!testId) {
             const prefillTitle = searchParams?.get('title');
             if (prefillTitle) setTitle(decodeURIComponent(prefillTitle));
+            setShowSetupModal(true);
         }
     }, [testId, userEmail, searchParams]);
 
@@ -107,6 +114,8 @@ export default function CreateTestPage() {
                 setTitle(test.title);
                 setDescription(test.description || '');
                 setQuestions(test.questions || []);
+                setIsBoardSpecific(test.isBoardSpecific || false);
+                setBoardQuestionSets(test.boardQuestionSets || []);
                 setConfig({ ...(test.config || config), showResults: true });
                 setDurationMinutes(test.deployment?.durationMinutes || 90);
                 setTestStatus(test.status || 'draft');
@@ -117,37 +126,48 @@ export default function CreateTestPage() {
         }
     };
 
+    const updateCurrentQuestions = (newQuestions: Question[]) => {
+        if (isBoardSpecific) {
+            const newSets = [...boardQuestionSets];
+            newSets[activeBoardSetIndex].questions = newQuestions;
+            setBoardQuestionSets(newSets);
+            saveTest(false, true, undefined, newSets);
+        } else {
+            setQuestions(newQuestions);
+            saveTest(false, true, newQuestions);
+        }
+    };
+
     const addQuestion = (question: Question) => {
-        const newQuestions = [...questions, question];
-        setQuestions(newQuestions);
+        const currentQList = isBoardSpecific ? boardQuestionSets[activeBoardSetIndex].questions : questions;
+        updateCurrentQuestions([...currentQList, question]);
         setShowQuestionEditor(false);
-        // Auto-save
-        saveTest(false, true, newQuestions);
     };
 
     const handleImportQuestions = (newImportedQuestions: Question[]) => {
-        const mergedQuestions = [...questions, ...newImportedQuestions];
-        setQuestions(mergedQuestions);
+        const currentQList = isBoardSpecific ? boardQuestionSets[activeBoardSetIndex].questions : questions;
+        updateCurrentQuestions([...currentQList, ...newImportedQuestions]);
         setShowQuestionImport(false);
-        // Auto-save
-        saveTest(false, true, mergedQuestions);
+    };
+    
+    const handleBoardSetsImport = (newSets: any[]) => {
+        setBoardQuestionSets(newSets);
+        setShowQuestionImport(false);
+        saveTest(false, true, undefined, newSets);
     };
 
     const updateQuestion = (question: Question) => {
-        const newQuestions = questions.map(q => q.id === question.id ? question : q);
-        setQuestions(newQuestions);
+        const currentQList = isBoardSpecific ? boardQuestionSets[activeBoardSetIndex].questions : questions;
+        const newQuestions = currentQList.map(q => q.id === question.id ? question : q);
+        updateCurrentQuestions(newQuestions);
         setShowQuestionEditor(false);
         setEditingQuestion(undefined);
-        // Auto-save
-        saveTest(false, true, newQuestions);
     };
 
     const deleteQuestion = (id: string) => {
         if (confirm('Delete this question?')) {
-            const newQuestions = questions.filter(q => q.id !== id);
-            setQuestions(newQuestions);
-            // Auto-save
-            saveTest(false, true, newQuestions);
+            const currentQList = isBoardSpecific ? boardQuestionSets[activeBoardSetIndex].questions : questions;
+            updateCurrentQuestions(currentQList.filter(q => q.id !== id));
         }
     };
 
@@ -157,21 +177,23 @@ export default function CreateTestPage() {
     };
 
     const moveQuestion = (index: number, direction: 'up' | 'down') => {
-        const newQuestions = [...questions];
+        const currentQList = isBoardSpecific ? boardQuestionSets[activeBoardSetIndex].questions : questions;
+        const newQuestions = [...currentQList];
         const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= questions.length) return;
+        if (targetIndex < 0 || targetIndex >= currentQList.length) return;
 
         [newQuestions[index], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[index]];
-        setQuestions(newQuestions);
-        // Auto-save
-        saveTest(false, true, newQuestions);
+        updateCurrentQuestions(newQuestions);
     };
 
     const calculateTotalMarks = () => {
+        const qList = isBoardSpecific && boardQuestionSets.length > 0 
+            ? boardQuestionSets[activeBoardSetIndex].questions 
+            : questions;
         const maxQ = config.maxQuestionsToAttempt;
         const questionsToCount = (maxQ && maxQ > 0)
-            ? questions.slice(0, maxQ)
-            : questions;
+            ? qList.slice(0, maxQ)
+            : qList;
 
         return questionsToCount.reduce((total: number, q: Question) => {
             if (q.type === 'comprehension' && q.subQuestions) {
@@ -184,10 +206,13 @@ export default function CreateTestPage() {
     const calculateTotalDuration = () => {
         if (!config.enablePerQuestionTimer) return durationMinutes;
 
+        const qList = isBoardSpecific && boardQuestionSets.length > 0 
+            ? boardQuestionSets[activeBoardSetIndex].questions 
+            : questions;
         const maxQ = config.maxQuestionsToAttempt;
         const questionsToCount = (maxQ && maxQ > 0)
-            ? questions.slice(0, maxQ)
-            : questions;
+            ? qList.slice(0, maxQ)
+            : qList;
 
         const totalSeconds = questionsToCount.reduce((total: number, q: Question) => {
             if (q.type === 'comprehension' && q.subQuestions?.length) {
@@ -200,7 +225,7 @@ export default function CreateTestPage() {
         return Math.ceil(totalSeconds / 60);
     };
 
-    const saveTest = async (deploy: boolean = false, silent: boolean = false, questionsOverride?: Question[]) => {
+    const saveTest = async (deploy: boolean = false, silent: boolean = false, questionsOverride?: Question[], boardSetsOverride?: any[]) => {
         // Guard: never save without a valid userEmail to avoid creating orphaned tests
         if (!userEmail || userEmail === 'null') {
             if (!silent) toast.error('Session error - please refresh the page');
@@ -213,9 +238,15 @@ export default function CreateTestPage() {
         }
 
         const currentQuestions = questionsOverride || questions;
+        const currentBoardSets = boardSetsOverride || boardQuestionSets;
 
-        if (currentQuestions.length === 0) {
+        if (!isBoardSpecific && currentQuestions.length === 0) {
             if (!silent) toast.error('Please add at least one question');
+            return;
+        }
+        
+        if (isBoardSpecific && currentBoardSets.length === 0) {
+            if (!silent) toast.error('Please configure board specific question sets');
             return;
         }
 
@@ -230,6 +261,8 @@ export default function CreateTestPage() {
             const body: any = {
                 title,
                 description,
+                isBoardSpecific,
+                boardQuestionSets: currentBoardSets,
                 questions: currentQuestions,
                 config,
                 deployment: {
@@ -305,6 +338,62 @@ export default function CreateTestPage() {
         };
         return colors[type] || 'bg-slate-500/20 text-slate-300 border-slate-500/30';
     };
+
+    if (showSetupModal) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-purple-500"></div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Create New Online Test</h1>
+                    <p className="text-slate-400 mb-8">Choose how you want to structure this test.</p>
+
+                    <div className="grid md:grid-cols-2 gap-6 mb-8">
+                        <div 
+                            onClick={() => {
+                                setIsBoardSpecific(false);
+                                setShowSetupModal(false);
+                            }}
+                            className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
+                        >
+                            <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <span className="text-2xl font-bold">1</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Standard Test</h3>
+                            <p className="text-sm text-slate-400 leading-relaxed">
+                                A single set of questions that all students will receive, regardless of their board.
+                            </p>
+                        </div>
+
+                        <div 
+                            onClick={() => {
+                                setIsBoardSpecific(true);
+                                setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['WBCHSE', 'ISC'], questions: [] }]);
+                                setShowSetupModal(false);
+                            }}
+                            className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
+                        >
+                            <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <span className="text-2xl font-bold">N</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Board-Specific Test</h3>
+                            <p className="text-sm text-slate-400 leading-relaxed">
+                                Create 2 or 3 parallel question sets. Students will automatically receive the set assigned to their board.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                        <button 
+                            onClick={() => router.back()}
+                            className="px-6 py-2.5 rounded-xl font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 pb-20">
@@ -520,7 +609,9 @@ export default function CreateTestPage() {
             <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-white">Questions ({questions.length})</h2>
+                        <h2 className="text-xl font-bold text-white">
+                            Questions ({isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions.length || 0 : questions.length})
+                        </h2>
                         <p className="text-sm text-slate-400 mt-1">Total Marks: {calculateTotalMarks()}</p>
                     </div>
                     <div className="flex items-center gap-2 md:gap-3 flex-wrap">
@@ -544,7 +635,25 @@ export default function CreateTestPage() {
                     </div>
                 </div>
 
-                {questions.length === 0 ? (
+                {isBoardSpecific && boardQuestionSets.length > 0 && (
+                    <div className="flex overflow-x-auto gap-2 mb-6 pb-2 no-scrollbar">
+                        {boardQuestionSets.map((set, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setActiveBoardSetIndex(idx)}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${
+                                    activeBoardSetIndex === idx 
+                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
+                                        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
+                                }`}
+                            >
+                                {set.boards.join(', ') || `Set ${idx + 1}`} ({set.questions.length})
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {(isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions.length === 0 : questions.length === 0) ? (
                     <div className="text-center py-12 bg-slate-950/30 rounded-xl border border-dashed border-slate-700">
                         <p className="text-slate-400 mb-4">No questions added yet</p>
                         <button
@@ -556,7 +665,7 @@ export default function CreateTestPage() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {questions.map((q, index) => (
+                        {(isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions || [] : questions).map((q, index) => (
                             <div
                                 key={q.id}
                                 className="bg-slate-950/50 border border-white/5 hover:border-emerald-500/30 rounded-xl p-3 md:p-4 transition-all group relative"
@@ -577,7 +686,7 @@ export default function CreateTestPage() {
                                             </button>
                                             <button
                                                 onClick={() => moveQuestion(index, 'down')}
-                                                disabled={index === questions.length - 1}
+                                                disabled={index === (isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions.length : questions.length) - 1}
                                                 className="p-1 hover:bg-slate-800 rounded disabled:opacity-30"
                                             >
                                                 <GripVertical className="h-3 w-3 text-slate-500 rotate-90 sm:rotate-0" />
@@ -709,12 +818,18 @@ export default function CreateTestPage() {
             )}
 
             {/* Question Import Modal */}
-            {showQuestionImport && (
+            {showQuestionImport && isBoardSpecific ? (
+                <BoardQuestionImportModal
+                    sets={boardQuestionSets}
+                    onImport={handleBoardSetsImport}
+                    onCancel={() => setShowQuestionImport(false)}
+                />
+            ) : showQuestionImport ? (
                 <QuestionImportModal
                     onImport={handleImportQuestions}
                     onCancel={() => setShowQuestionImport(false)}
                 />
-            )}
+            ) : null}
         </div>
     );
 }
