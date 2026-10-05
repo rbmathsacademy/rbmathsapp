@@ -98,13 +98,27 @@ export async function GET(
             }, { status: 200 });
         }
 
-        // Build source questions dynamically
-        let sourceQuestions = test.questions;
-        if (test.config?.shuffleQuestions) {
-            sourceQuestions = seededShuffleArray([...test.questions], getSeededRandom(`${student.phoneNumber}_${testId}`));
+        // Resolve board specific questions
+        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
+        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const studentBoard = (dbStudent as any)?.board || '';
+        
+        let sourceQuestions: any[] = [];
+        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+            const assignedSet = test.boardQuestionSets.find((set: any) => 
+                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
+            );
+            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        } else {
+            sourceQuestions = test.questions ? [...test.questions] : [];
         }
-        if (test.config?.maxQuestionsToAttempt > 0 && test.config?.maxQuestionsToAttempt < sourceQuestions.length) {
-            sourceQuestions = sourceQuestions.slice(0, test.config.maxQuestionsToAttempt);
+
+        if (test.config?.shuffleQuestions || test.config?.maxQuestionsToAttempt) {
+            const seedString = `${student.phoneNumber}_${testId}`;
+            sourceQuestions = seededShuffleArray(sourceQuestions, getSeededRandom(seedString));
+            if (test.config?.maxQuestionsToAttempt > 0 && test.config?.maxQuestionsToAttempt < sourceQuestions.length) {
+                sourceQuestions = sourceQuestions.slice(0, test.config.maxQuestionsToAttempt);
+            }
         }
 
         // Apply option shuffling to the source questions
