@@ -593,6 +593,14 @@ export async function PUT(
 
         for (const ans of normalizedAnswers) {
             const question = questionMap.get(ans.questionId);
+            
+            // LOGGING TO DEBUG GRADING
+            console.log(`[Grade Debug] Question ID: ${ans.questionId}`);
+            console.log(`[Grade Debug] Found in Map: ${!!question}`);
+            if (question) {
+                console.log(`[Grade Debug] Type: ${question.type}, Correct: ${JSON.stringify(question.correctIndices || question.fillBlankAnswer)}, Submitted: ${JSON.stringify(ans.answer)}`);
+            }
+
             if (!question) {
                 gradedAnswers.push({ questionId: ans.questionId, answer: ans.answer, isCorrect: false, marksAwarded: 0 });
                 continue;

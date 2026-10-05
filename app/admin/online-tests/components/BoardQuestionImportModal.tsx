@@ -89,7 +89,15 @@ function BoardPane({
         const available = new Set(questions.filter(q => selectedTopics.includes(q.topic)).map(q => q.subtopic).filter(Boolean));
         return Array.from(available).sort() as string[];
     }, [questions, selectedTopics]);
-    const examNames = useMemo(() => filterData.examNames, [filterData]);
+    const examNames = useMemo(() => {
+        const set = new Set<string>();
+        questions.forEach(q => {
+            const exams = q.examNames?.length > 0 ? q.examNames : (q.examName ? [q.examName] : []);
+            exams.forEach((e: string) => set.add(e));
+        });
+        const names = Array.from(set).filter(Boolean).sort();
+        return ['Untagged', ...names];
+    }, [questions]);
 
     const filteredQuestions = useMemo(() => {
         if (selectedTopics.length === 0 && !searchQuery) return [];
@@ -238,6 +246,11 @@ function BoardPane({
                                         <div className="flex flex-wrap gap-2 text-[10px]">
                                             <span className="px-2 py-1 rounded bg-slate-800 text-slate-400 font-medium uppercase tracking-wider">{q.type}</span>
                                             {q.topic && <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">{q.topic}</span>}
+                                            {(q.examNames?.length > 0 || q.examName) && (
+                                                <span className="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                    {(q.examNames || [q.examName]).filter(Boolean).join(', ')}
+                                                </span>
+                                            )}
                                             <span className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">{q.marks} Marks</span>
                                         </div>
                                     </div>
@@ -280,6 +293,58 @@ export default function BoardQuestionImportModal({ sets, onImport, onCancel }: B
         setCurrentSets(newSets);
     };
 
+    const handleConfirm = () => {
+        const mappedSets = currentSets.map(set => {
+            const mappedQuestions = set.questions.map((q: any) => {
+                // If it already has correctIndices from a previous edit, keep it
+                if (q.correctIndices && q.correctIndices.length > 0) return q;
+                
+                let type = q.type;
+                if (type === 'blanks') type = 'fillblank';
+                if (type === 'short') type = 'broad';
+
+                const testQ: any = {
+                    id: `q_imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    text: q.text,
+                    image: q.image,
+                    latexContent: true,
+                    type: type as any,
+                    topic: q.topic,
+                    subtopic: q.subtopic,
+                    marks: q.marks || 1,
+                    negativeMarks: 0,
+                    options: q.options && q.options.length > 0 ? q.options : (type === 'mcq' ? ['', '', '', ''] : []),
+                    correctIndices: [],
+                    fillBlankAnswer: type === 'fillblank' ? q.answer : undefined,
+                    solutionText: q.explanation
+                };
+
+                if (type === 'mcq' && q.answer && q.options) {
+                    const index = q.options.indexOf(q.answer);
+                    if (index !== -1) {
+                        testQ.correctIndices = [index];
+                    } else {
+                        const idx = parseInt(q.answer);
+                        if (!isNaN(idx) && idx >= 0 && idx < q.options.length) {
+                            testQ.correctIndices = [idx];
+                        }
+                    }
+                } else if (type === 'msq' && q.answer && q.options) {
+                    try {
+                        const parsed = JSON.parse(q.answer);
+                        if (Array.isArray(parsed)) testQ.correctIndices = parsed;
+                    } catch {
+                        // fallback
+                    }
+                }
+                return testQ;
+            });
+            return { ...set, questions: mappedQuestions };
+        });
+        
+        onImport(mappedSets);
+    };
+
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex flex-col p-4 md:p-6">
             <div className="flex justify-between items-center mb-6 px-2">
@@ -295,7 +360,7 @@ export default function BoardQuestionImportModal({ sets, onImport, onCancel }: B
                         Cancel
                     </button>
                     <button
-                        onClick={() => onImport(currentSets)}
+                        onClick={handleConfirm}
                         className="px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
                     >
                         <Check className="h-5 w-5" />
@@ -304,7 +369,7 @@ export default function BoardQuestionImportModal({ sets, onImport, onCancel }: B
                 </div>
             </div>
 
-            <div className={`flex-1 grid gap-6 ${currentSets.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <div className={`flex-1 min-h-0 grid gap-6 ${currentSets.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {currentSets.map((set, idx) => (
                     <BoardPane 
                         key={idx} 

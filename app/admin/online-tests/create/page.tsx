@@ -71,6 +71,7 @@ export default function CreateTestPage() {
     const [isBoardSpecific, setIsBoardSpecific] = useState(false);
     const [boardQuestionSets, setBoardQuestionSets] = useState<{ boards: string[], questions: Question[] }[]>([]);
     const [showSetupModal, setShowSetupModal] = useState(false);
+    const [boardConfigStep, setBoardConfigStep] = useState(false);
     const [activeBoardSetIndex, setActiveBoardSetIndex] = useState(0);
 
     const [showQuestionEditor, setShowQuestionEditor] = useState(false);
@@ -347,40 +348,68 @@ export default function CreateTestPage() {
                     <h1 className="text-3xl font-bold text-white mb-2">Create New Online Test</h1>
                     <p className="text-slate-400 mb-8">Choose how you want to structure this test.</p>
 
-                    <div className="grid md:grid-cols-2 gap-6 mb-8">
-                        <div 
-                            onClick={() => {
-                                setIsBoardSpecific(false);
-                                setShowSetupModal(false);
-                            }}
-                            className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
-                        >
-                            <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <span className="text-2xl font-bold">1</span>
+                    {boardConfigStep ? (
+                        <div className="mb-8 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                            <h3 className="text-lg font-bold text-white mb-4">Choose Board Grouping</h3>
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" defaultChecked onClick={() => {
+                                        setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['ISC'], questions: [] }, { boards: ['WBCHSE'], questions: [] }]);
+                                    }} />
+                                    <span className="text-white font-medium">3 Sets: CBSE, ISC, WBCHSE separately</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
+                                        setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['WBCHSE', 'ISC'], questions: [] }]);
+                                    }} />
+                                    <span className="text-white font-medium">2 Sets: CBSE separate, WBCHSE & ISC combined</span>
+                                </label>
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Standard Test</h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">
-                                A single set of questions that all students will receive, regardless of their board.
-                            </p>
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button onClick={() => setBoardConfigStep(false)} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700">Back</button>
+                                <button onClick={() => {
+                                    if (boardQuestionSets.length === 0) {
+                                        setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['ISC'], questions: [] }, { boards: ['WBCHSE'], questions: [] }]);
+                                    }
+                                    setIsBoardSpecific(true);
+                                    setShowSetupModal(false);
+                                }} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-500">Confirm</button>
+                            </div>
                         </div>
+                    ) : (
+                        <div className="grid md:grid-cols-2 gap-6 mb-8">
+                            <div 
+                                onClick={() => {
+                                    setIsBoardSpecific(false);
+                                    setShowSetupModal(false);
+                                }}
+                                className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span className="text-2xl font-bold">1</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Standard Test</h3>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    A single set of questions that all students will receive, regardless of their board.
+                                </p>
+                            </div>
 
-                        <div 
-                            onClick={() => {
-                                setIsBoardSpecific(true);
-                                setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['WBCHSE', 'ISC'], questions: [] }]);
-                                setShowSetupModal(false);
-                            }}
-                            className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
-                        >
-                            <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <span className="text-2xl font-bold">N</span>
+                            <div 
+                                onClick={() => {
+                                    setBoardConfigStep(true);
+                                }}
+                                className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span className="text-2xl font-bold">N</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Board-Specific Test</h3>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    Create 2 or 3 parallel question sets. Students will automatically receive the set assigned to their board.
+                                </p>
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Board-Specific Test</h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">
-                                Create 2 or 3 parallel question sets. Students will automatically receive the set assigned to their board.
-                            </p>
                         </div>
-                    </div>
+                    )}
                     
                     <div className="flex justify-end">
                         <button 
