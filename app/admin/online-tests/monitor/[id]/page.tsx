@@ -659,13 +659,7 @@ export default function MonitorTestPage() {
             <div className="bg-slate-900/60 backdrop-blur-sm border-b border-white/10 p-3 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     <button
-                        onClick={() => {
-                            if (window.history.length > 1) {
-                                router.back();
-                            } else {
-                                router.push('/admin/online-tests');
-                            }
-                        }}
+                        onClick={() => router.push('/admin/online-tests')}
                         className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-3 sm:mb-4 transition-colors text-sm bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20"
                     >
                         <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" /> Back

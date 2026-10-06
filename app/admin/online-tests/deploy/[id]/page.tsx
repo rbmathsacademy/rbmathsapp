@@ -378,13 +378,7 @@ export default function DeployTestPage() {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button
-                    onClick={() => {
-                        if (window.history.length > 1) {
-                            router.back();
-                        } else {
-                            router.push('/admin/online-tests');
-                        }
-                    }}
+                    onClick={() => router.push('/admin/online-tests')}
                     className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20"
                 >
                     <ArrowLeft className="h-5 w-5 text-slate-400" />
