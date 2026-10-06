@@ -269,6 +269,7 @@ export default function QuestionBank() {
     const [selectedExams, setSelectedExams] = useState<string[]>([]);
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
     const [selectedUploadedBy, setSelectedUploadedBy] = useState<string[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [availableBatches, setAvailableBatches] = useState<string[]>([]);
     // Singular Selection for Modal
     const [selectedTopic, setSelectedTopic] = useState('');
@@ -278,7 +279,7 @@ export default function QuestionBank() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Server-loaded filter metadata (for instant filter loading)
-    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[]; uploadedBys: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [], uploadedBys: [] });
+    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[]; uploadedBys: string[]; types: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [], uploadedBys: [], types: [] });
     const [filtersLoading, setFiltersLoading] = useState(true);
     const [globalSearchQuery, setGlobalSearchQuery] = useState('');
     const [isGlobalSearching, setIsGlobalSearching] = useState(false);
@@ -304,7 +305,7 @@ export default function QuestionBank() {
 
     // Bulk Rename Modal State
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-    const [renameField, setRenameField] = useState<'topic' | 'subtopic' | 'examName'>('topic');
+    const [renameField, setRenameField] = useState<'topic' | 'subtopic' | 'examName' | 'type'>('topic');
     const [renameOldValue, setRenameOldValue] = useState('');
     const [renameNewValue, setRenameNewValue] = useState('');
     const [renameLoading, setRenameLoading] = useState(false);
@@ -350,6 +351,40 @@ export default function QuestionBank() {
         const actualTopics = Array.from(set).filter(Boolean).sort();
         return ["No Topic", ...actualTopics];
     }, [questions, selectedSubtopics, selectedExams, selectedBatches, serverFilters]);
+
+    // Cascading Types: use serverFilters unless narrowed
+    const types = useMemo(() => {
+        const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+        const hasNarrowing = actualTopics.length > 0 || selectedBatches.length > 0 || selectedSubtopics.length > 0 || selectedExams.length > 0;
+
+        // When no narrowing filters are active and no questions loaded, show ALL types from server
+        if (!hasNarrowing && questions.length === 0 && serverFilters.types.length > 0) {
+            return serverFilters.types;
+        }
+        const set = new Set<string>();
+        let filtered = filterByBatches(questions);
+        if (actualTopics.length > 0) {
+            filtered = filtered.filter(q => actualTopics.includes(q.topic));
+        }
+        if (selectedSubtopics.length > 0) {
+            filtered = filtered.filter(q => selectedSubtopics.includes(q.subtopic));
+        }
+        if (selectedExams.length > 0) {
+            filtered = filtered.filter(q => {
+                const qExams = q.examNames || (q.examName ? [q.examName] : []);
+                return qExams.some((e: string) => selectedExams.includes(e));
+            });
+        }
+        filtered.forEach(q => {
+            if (q.type) set.add(q.type);
+        });
+        
+        // Only merge all serverFilters when no narrowing is active
+        if (!hasNarrowing && serverFilters.types.length > 0) {
+            serverFilters.types.forEach((t: string) => set.add(t));
+        }
+        return Array.from(set).filter(Boolean).sort();
+    }, [questions, selectedTopics, selectedSubtopics, selectedBatches, selectedExams, serverFilters]);
 
     // Cascading Subtopics: Filter based on selected topics and exams
     const subtopics = useMemo(() => {
@@ -459,10 +494,11 @@ export default function QuestionBank() {
                 (q.id || '').toLowerCase().includes(searchLower);
 
             const uploadedByMatch = selectedUploadedBy.length === 0 || (q.uploadedBy ? selectedUploadedBy.includes(q.uploadedBy) : false);
+            const typeMatch = selectedTypes.length === 0 || (q.type ? selectedTypes.includes(q.type) : false);
 
-            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch && uploadedByMatch;
+            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch && uploadedByMatch && typeMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedUploadedBy, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedUploadedBy, selectedTypes, searchQuery]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -495,7 +531,7 @@ export default function QuestionBank() {
     };
 
     // Fetch questions with server-side filters (on-demand)
-    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; uploadedBys?: string[]; search?: string }) => {
+    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; uploadedBys?: string[]; types?: string[]; search?: string }) => {
         setLoading(true);
         try {
             const headers: any = { 'X-User-Email': email };
@@ -518,6 +554,9 @@ export default function QuestionBank() {
             }
             if (filters?.uploadedBys && filters.uploadedBys.length > 0) {
                 params.set('uploadedBy', filters.uploadedBys.join('|||'));
+            }
+            if (filters?.types && filters.types.length > 0) {
+                params.set('type', filters.types.join('|||'));
             }
             if (filters?.search) {
                 params.set('search', filters.search);
@@ -1459,6 +1498,10 @@ export default function QuestionBank() {
                             <MultiSelect options={availableBatchNames} selected={selectedBatches} onChange={setSelectedBatches} placeholder="All Batches" />
                         </div>
                         <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 ml-1">Type</label>
+                            <MultiSelect options={types} selected={selectedTypes} onChange={setSelectedTypes} placeholder="All Types" />
+                        </div>
+                        <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Created By</label>
                             <MultiSelect options={serverFilters.uploadedBys || []} selected={selectedUploadedBy} onChange={setSelectedUploadedBy} placeholder="All Creators" />
                         </div>
@@ -2383,6 +2426,7 @@ export default function QuestionBank() {
                     selectedQs.flatMap(q => {
                         if (renameField === 'topic') return [q.topic].filter(Boolean);
                         if (renameField === 'subtopic') return [q.subtopic].filter(Boolean);
+                        if (renameField === 'type') return [q.type].filter(Boolean);
                         if (renameField === 'examName') {
                             return (q.examNames || (q.examName ? [q.examName] : []));
                         }
@@ -2408,7 +2452,7 @@ export default function QuestionBank() {
 
                             {/* Field selector */}
                             <div className="flex gap-2 mb-4">
-                                {(['topic', 'subtopic', 'examName'] as const).map(f => (
+                                {(['topic', 'subtopic', 'examName', 'type'] as const).map(f => (
                                     <button
                                         key={f}
                                         onClick={() => { setRenameField(f); setRenameOldValue(''); setRenameNewValue(''); }}
@@ -2418,7 +2462,7 @@ export default function QuestionBank() {
                                                 : 'bg-gray-900 border-gray-700 text-slate-500 hover:text-slate-300'
                                         }`}
                                     >
-                                        {f === 'topic' ? 'Topic' : f === 'subtopic' ? 'Subtopic' : 'Exam Name'}
+                                        {f === 'topic' ? 'Topic' : f === 'subtopic' ? 'Subtopic' : f === 'examName' ? 'Exam Name' : 'Type'}
                                     </button>
                                 ))}
                             </div>
@@ -2708,3 +2752,4 @@ export default function QuestionBank() {
         </div >
     );
 }
+

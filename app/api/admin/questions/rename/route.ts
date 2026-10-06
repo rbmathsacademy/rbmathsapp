@@ -18,8 +18,8 @@ export async function POST(req: Request) {
         if (!Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
         }
-        if (!['topic', 'subtopic', 'examName'].includes(field)) {
-            return NextResponse.json({ error: 'field must be topic, subtopic, or examName' }, { status: 400 });
+        if (!['topic', 'subtopic', 'examName', 'type'].includes(field)) {
+            return NextResponse.json({ error: 'field must be topic, subtopic, examName, or type' }, { status: 400 });
         }
         if (!newValue || !newValue.trim()) {
             return NextResponse.json({ error: 'newValue is required' }, { status: 400 });
@@ -37,6 +37,11 @@ export async function POST(req: Request) {
             result = await Question.updateMany(
                 { id: { $in: ids } },
                 { $set: { subtopic: trimmedNew } }
+            );
+        } else if (field === 'type') {
+            result = await Question.updateMany(
+                { id: { $in: ids } },
+                { $set: { type: trimmedNew } }
             );
         } else if (field === 'examName') {
             // Replace oldValue with newValue inside the examNames array
@@ -70,3 +75,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+
+

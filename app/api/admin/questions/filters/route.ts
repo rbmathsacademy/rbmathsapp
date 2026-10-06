@@ -31,7 +31,8 @@ export async function GET(req: Request) {
                     subtopics: { $addToSet: '$subtopic' },
                     examNames: { $push: '$examNames' },
                     batches: { $push: '$batches' },
-                    uploadedBys: { $addToSet: '$uploadedBy' }
+                    uploadedBys: { $addToSet: '$uploadedBy' },
+                    types: { $addToSet: '$type' }
                 }
             }
         ]);
@@ -43,6 +44,7 @@ export async function GET(req: Request) {
                 examNames: [],
                 batches: [],
                 uploadedBys: [],
+                types: [],
             });
         }
 
@@ -63,6 +65,7 @@ export async function GET(req: Request) {
             examNames: flatExamNames,
             batches: flatBatches,
             uploadedBys: (data.uploadedBys || []).filter(Boolean).sort(),
+            types: (data.types || []).filter(Boolean).sort(),
         });
     } catch (error: any) {
         console.error('[FILTERS API] Error:', error);

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const QuestionSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
     text: { type: String, required: true },
-    type: { type: String, enum: ['broad', 'mcq', 'blanks', 'short'], required: true },
+    type: { type: String, required: true },
     topic: { type: String, required: true },
     subtopic: { type: String, required: true },
     image: { type: String }, // Base64 string for Image Questions
