@@ -48,19 +48,8 @@ export async function POST(req: Request) {
             // Update questions that have oldValue in examNames array
             const arrResult = await Question.updateMany(
                 { id: { $in: ids }, examNames: oldValue },
-                [
-                    {
-                        $set: {
-                            examNames: {
-                                $map: {
-                                    input: '$examNames',
-                                    as: 'e',
-                                    in: { $cond: [{ $eq: ['$$e', oldValue] }, trimmedNew, '$$e'] }
-                                }
-                            }
-                        }
-                    }
-                ]
+                { $set: { "examNames.$[elem]": trimmedNew } },
+                { arrayFilters: [{ elem: oldValue }] }
             );
             // Also handle legacy examName field
             const legacyResult = await Question.updateMany(
