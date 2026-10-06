@@ -89,7 +89,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
                         <div
                             className="flex-1 px-3 py-2 hover:bg-blue-900/30 cursor-pointer flex items-center justify-center gap-1.5 text-xs text-blue-400 border-r border-gray-700"
                             onClick={() => {
-                                const allReal = options.filter((o) => o !== "No Topic" && o !== "Untagged");
+                                const allReal = options.filter((o: string) => o !== "No Topic" && o !== "Untagged");
                                 onChange(allReal);
                             }}
                         >
@@ -104,10 +104,6 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
                             </div>
                         )}
                     </div>
-                        >
-                            <X className="h-3 w-3" /> Clear Selection
-                        </div>
-                    )}
 
                     {/* Options List */}
                     <div className="overflow-y-auto max-h-80">
