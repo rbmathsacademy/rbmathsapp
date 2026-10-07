@@ -10,7 +10,7 @@ interface SubQuestion {
     text: string;
     latexContent: boolean;
     type: 'mcq' | 'msq' | 'fillblank' | 'short';
-    options: string[];
+    options: any[];
     correctIndices: number[];
     shuffleOptions: boolean;
     marks: number;
@@ -33,7 +33,7 @@ interface Question {
     marks: number;
     negativeMarks: number;
     timeLimit?: number;
-    options?: string[];
+    options?: any[];
     correctIndices?: number[];
     shuffleOptions?: boolean;
     fillBlankAnswer?: string;
@@ -855,3 +855,6 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
         </div >
     );
 }
+
+
+

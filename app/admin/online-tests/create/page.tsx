@@ -21,7 +21,7 @@ interface Question {
     marks: number;
     negativeMarks: number;
     timeLimit?: number;
-    options?: string[];
+    options?: any[];
     correctIndices?: number[];
     shuffleOptions?: boolean;
     fillBlankAnswer?: string;
@@ -874,3 +874,4 @@ export default function CreateTestPage() {
         </div>
     );
 }
+

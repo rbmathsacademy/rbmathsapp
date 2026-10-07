@@ -16,7 +16,7 @@ interface Question {
     subtopic?: string;
     marks: number;
     negativeMarks: number;
-    options?: string[];
+    options?: any[];
     correctIndices?: number[];
     fillBlankAnswer?: string;
     explanation?: string;
@@ -382,3 +382,4 @@ export default function BoardQuestionImportModal({ sets, onImport, onCancel }: B
         </div>
     );
 }
+
