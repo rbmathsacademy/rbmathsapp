@@ -65,20 +65,10 @@ body {
   scrollbar-width: none;
 }
 /* Color invert all question-related images to match the dark theme */
-img[alt="Q"],
-img[alt="Question"],
-img[alt="Question Image"],
-img[alt="Question Diagram"],
-img[alt="Question Illustration"],
-img[alt="Preview"],
-img[alt="Passage"],
-img[alt="Solution"],
-img[alt="Solution info"],
-img[alt="Sub-question"],
-img[alt="Embedded image"],
-img[alt^="Option "] {
+img[alt="Q"], img[alt^="Question"], img[alt="Preview"], img[alt="Passage"], img[alt^="Solution"], img[alt="Sub-question"], img[alt^="Embedded"], img[alt^="Option"] {
   filter: invert(1) hue-rotate(180deg);
   background-color: transparent;
   border-radius: 4px;
 }
+
 
