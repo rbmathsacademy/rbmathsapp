@@ -933,12 +933,25 @@ export default function AnswerBank() {
                                                 {/* MCQ Options Display */}
                                                 {q.type === 'mcq' && q.options && q.options.length > 0 && (
                                                     <div className="mt-2 grid grid-cols-1 gap-1.5">
-                                                        {q.options.map((opt: string, i: number) => (
-                                                            <div key={i} className={`text-xs px-2 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex items-start gap-2 ${q.answer && (opt.includes(q.answer) || q.answer.includes(opt)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
-                                                                <span className="font-bold text-gray-500 uppercase flex-shrink-0">{String.fromCharCode(65 + i)}.</span>
-                                                                <span className="text-gray-300 break-words w-full"><Latex>{opt}</Latex></span>
+                                                        {q.options.map((opt: any, i: number) => {
+                                                            const isObj = typeof opt === 'object' && opt !== null;
+                                                            const optText = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                            const optImage = isObj ? (opt.image ?? '') : '';
+                                                            
+                                                            let isAns = false;
+                                                            if (q.answer) {
+                                                                const ansStr = String(q.answer);
+                                                                isAns = (optText && (optText.includes(ansStr) || ansStr.includes(optText))) || String(i) === ansStr || String(String.fromCharCode(65 + i)) === ansStr;
+                                                            }
+                                                            return (
+                                                            <div key={i} className={`text-xs px-2 py-1.5 rounded border flex flex-col gap-2 ${isAns ? 'border-green-500/30 bg-green-900/10' : 'border-gray-700 bg-gray-900/50'}`}>
+                                                                <div className="flex items-start gap-2">
+                                                                    <span className="font-bold text-gray-500 uppercase flex-shrink-0">{String.fromCharCode(65 + i)}.</span>
+                                                                    {optText && <span className="text-gray-300 break-words w-full"><Latex>{optText}</Latex></span>}
+                                                                </div>
+                                                                {optImage && <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-24 object-contain rounded ring-1 ring-white/10 ml-5" />}
                                                             </div>
-                                                        ))}
+                                                        )})}
                                                     </div>
                                                 )}
                                             </div>
@@ -978,3 +991,6 @@ export default function AnswerBank() {
         </div>
     );
 }
+
+
+
