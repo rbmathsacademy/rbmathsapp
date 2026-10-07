@@ -35,7 +35,7 @@ const SurveyQuestionSchema = new Schema({
     id: { type: String, required: true },
     text: { type: String, required: true },
     type: { type: String, enum: ['mcq', 'checkbox', 'text', 'rating'], required: true },
-    options: [String],
+    options: { type: [mongoose.Schema.Types.Mixed] },
     ratingMax: { type: Number, default: 5 },
     ratingLabels: {
         low: { type: String, default: 'Poor' },
