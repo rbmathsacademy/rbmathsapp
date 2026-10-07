@@ -418,7 +418,12 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                             Shuffle Options
                                         </button>
                                     </div>
-                                    {question.options?.map((option, index) => (
+                                    {question.options?.map((option, index) => {
+                                        const isObj = typeof option === 'object' && option !== null;
+                                        const optText = isObj ? (option.text ?? '') : (option ?? '');
+                                        const optImage = isObj ? (option.image ?? '') : '';
+                                        
+                                        return (
                                         <div key={index} className="flex flex-col gap-2">
                                             <div className="flex items-center gap-3">
                                                 <button
@@ -434,22 +439,31 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                                         </svg>
                                                     )}
                                                 </button>
-                                                <input
-                                                    type="text"
-                                                    value={option}
-                                                    onChange={(e) => updateOption(index, e.target.value)}
-                                                    placeholder={`Option ${index + 1}`}
-                                                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                                />
+                                                <div className="flex-1 flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={optText}
+                                                        onChange={(e) => {
+                                                            if (isObj) {
+                                                                updateOption(index, { ...option, text: e.target.value } as any);
+                                                            } else {
+                                                                updateOption(index, e.target.value);
+                                                            }
+                                                        }}
+                                                        placeholder={`Option ${index + 1}`}
+                                                        className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                    />
+                                                    {optImage && <img src={optImage} alt={`Option`} className="h-8 rounded" />}
+                                                </div>
                                             </div>
-                                            {option && (option.includes('$') || option.includes('\\')) && (
+                                            {optText && (optText.includes('$') || optText.includes('\\')) && (
                                                 <div className="pl-9 text-sm text-emerald-400 bg-slate-900/50 p-2 rounded-lg border border-slate-800">
                                                     <span className="text-xs text-slate-500 block mb-1">Preview:</span>
-                                                    <Latex>{option}</Latex>
+                                                    <Latex>{optText}</Latex>
                                                 </div>
                                             )}
                                         </div>
-                                    ))}
+                                    )})}
                                     <button
                                         onClick={addOption}
                                         className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-sm font-medium transition-colors"
@@ -613,7 +627,12 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
 
                                             {(subQ.type === 'mcq' || subQ.type === 'msq') && (
                                                 <div className="space-y-2">
-                                                    {subQ.options.map((opt, optIdx) => (
+                                                    {subQ.options.map((opt, optIdx) => {
+                                                        const isObj = typeof opt === 'object' && opt !== null;
+                                                        const optText = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                        const optImage = isObj ? (opt.image ?? '') : '';
+                                                        
+                                                        return (
                                                         <div key={optIdx} className="flex items-center gap-2">
                                                             <input
                                                                 type={subQ.type === 'mcq' ? 'radio' : 'checkbox'}
@@ -628,19 +647,28 @@ export default function QuestionEditor({ onSave, onCancel, initialQuestion }: Qu
                                                                 }}
                                                                 className="w-4 h-4"
                                                             />
-                                                            <input
-                                                                type="text"
-                                                                value={opt}
-                                                                onChange={(e) => {
-                                                                    const newOpts = [...subQ.options];
-                                                                    newOpts[optIdx] = e.target.value;
-                                                                    updateSubQuestion(index, { options: newOpts });
-                                                                }}
-                                                                placeholder={`Option ${optIdx + 1}`}
-                                                                className="flex-1 bg-slate-900 border border-purple-500/30 rounded px-3 py-1 text-white text-sm"
-                                                            />
+                                                            <div className="flex-1 flex gap-2 items-center">
+                                                                <input
+                                                                    type="text"
+                                                                    value={optText}
+                                                                    onChange={(e) => {
+                                                                        const newOpts = [...subQ.options];
+                                                                        if (isObj) {
+                                                                            newOpts[optIdx] = { ...opt, text: e.target.value } as any;
+                                                                        } else {
+                                                                            newOpts[optIdx] = e.target.value as any;
+                                                                        }
+                                                                        updateSubQuestion(index, { options: newOpts });
+                                                                    }}
+                                                                    placeholder={`Option ${optIdx + 1}`}
+                                                                    className="flex-1 bg-slate-900 border border-purple-500/30 rounded px-3 py-1 text-white text-sm"
+                                                                />
+                                                                {optImage && (
+                                                                    <img src={optImage} alt={`Option ${String.fromCharCode(65 + optIdx)}`} className="h-6 w-auto rounded border border-white/10" />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    ))}
+                                                    )})}
                                                     <button
                                                         onClick={() => updateSubQuestion(index, { options: [...subQ.options, ''] })}
                                                         className="text-xs text-purple-400 hover:text-purple-300"
