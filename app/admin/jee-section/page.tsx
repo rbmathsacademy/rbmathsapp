@@ -701,7 +701,11 @@ export default function JEESection() {
                                     <div className="w-2/3">
                                         {(currentQuestion.type === 'mcq' || !currentQuestion.type) ? (
                                             <div className="space-y-3">
-                                                {currentQuestion.options?.map((opt, idx) => (
+                                                {currentQuestion.options?.map((opt: any, idx: number) => {
+                                                    const isObj = typeof opt === 'object' && opt !== null;
+                                                    const optText = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                    const optImage = isObj ? (opt.image ?? '') : '';
+                                                    return (
                                                     <button
                                                         key={idx}
                                                         onClick={() => handleOptionClick(idx)}
@@ -725,11 +729,14 @@ export default function JEESection() {
                                                                 optionLabels[idx]
                                                             )}
                                                         </span>
-                                                        <span className="text-lg leading-relaxed pt-1.5 flex-1 break-words overflow-hidden">
-                                                            <LatexWithImages>{opt}</LatexWithImages>
-                                                        </span>
+                                                        <div className="flex flex-col gap-2 flex-1 overflow-hidden">
+                                                            {optText && <span className="text-lg leading-relaxed pt-1.5 break-words">
+                                                                <LatexWithImages>{optText}</LatexWithImages>
+                                                            </span>}
+                                                            {optImage && <img src={optImage} alt={`Option ${optionLabels[idx]}`} className="max-h-32 object-contain rounded-lg ring-1 ring-white/10" />}
+                                                        </div>
                                                     </button>
-                                                ))}
+                                                )})}
                                             </div>
                                         ) : (
                                             <div className="h-full flex flex-col items-center justify-center gap-4">

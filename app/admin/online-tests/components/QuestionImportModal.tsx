@@ -364,15 +364,20 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
 
                                             {q.type === 'mcq' && q.options && q.options.length > 0 && (
                                                 <div className="mt-3 space-y-2">
-                                                    {q.options.map((opt: string, idx: number) => {
-                                                        const isCorrect = String(q.answer) === String(opt) || String(q.answer) === String(idx);
+                                                    {q.options.map((opt: any, idx: number) => {
+                                                        const isObj = typeof opt === 'object' && opt !== null;
+                                                        const optText = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                        const optImage = isObj ? (opt.image ?? '') : '';
+                                                        
+                                                        const isCorrect = String(q.answer) === String(optText) || String(q.answer) === String(idx);
                                                         return (
                                                             <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-900/50 border-white/5'}`}>
                                                                 <span className={`text-[10px] font-bold mt-0.5 px-1.5 py-0.5 rounded flex-shrink-0 ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
                                                                     {String.fromCharCode(65 + idx)}
                                                                 </span>
-                                                                <div className="text-sm text-slate-300 prose prose-invert prose-sm max-w-none break-words overflow-hidden">
-                                                                    <Latex>{opt || ''}</Latex>
+                                                                <div className="text-sm text-slate-300 prose prose-invert prose-sm max-w-none break-words overflow-hidden flex flex-col gap-2">
+                                                                    {optText && <Latex>{optText}</Latex>}
+                                                                    {optImage && <img src={optImage} alt={`Option ${String.fromCharCode(65 + idx)}`} className="max-h-24 object-contain rounded ring-1 ring-white/10" />}
                                                                 </div>
                                                             </div>
                                                         );

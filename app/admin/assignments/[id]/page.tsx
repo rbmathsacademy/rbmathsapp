@@ -1387,12 +1387,20 @@ export default function AssignmentDetailsPage() {
                                                 </div>
                                                 {q.type === 'mcq' && q.options && q.options.length > 0 && (
                                                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                        {q.options.map((opt: string, j: number) => (
-                                                            <div key={j} className="text-xs sm:text-sm px-3 py-2 rounded-lg border border-white/5 bg-black/20 flex items-start gap-2">
-                                                                <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
-                                                                <span className="text-gray-300 overflow-x-auto"><Latex>{opt}</Latex></span>
-                                                            </div>
-                                                        ))}
+                                                        {q.options.map((opt: any, j: number) => {
+                                                            const isObj = typeof opt === 'object' && opt !== null;
+                                                            const optText = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                            const optImage = isObj ? (opt.image ?? '') : '';
+                                                            return (
+                                                                <div key={j} className="text-xs sm:text-sm px-3 py-2 rounded-lg border border-white/5 bg-black/20 flex flex-col gap-2">
+                                                                    <div className="flex items-start gap-2">
+                                                                        <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
+                                                                        {optText && <span className="text-gray-300 overflow-x-auto"><Latex>{optText}</Latex></span>}
+                                                                    </div>
+                                                                    {optImage && <img src={optImage} alt={`Option ${String.fromCharCode(65 + j)}`} className="max-h-24 object-contain rounded ring-1 ring-white/10 ml-6" />}
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
@@ -1440,12 +1448,20 @@ export default function AssignmentDetailsPage() {
                                                 </div>
                                                 {q.type === 'mcq' && q.options && q.options.length > 0 && (
                                                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                        {q.options.map((opt: string, j: number) => (
-                                                            <div key={j} className="text-xs sm:text-sm px-3 py-2 rounded-lg border border-white/5 bg-black/20 flex items-start gap-2">
-                                                                <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
-                                                                <span className="text-gray-300 overflow-x-auto"><Latex>{opt}</Latex></span>
-                                                            </div>
-                                                        ))}
+                                                        {q.options.map((opt: any, j: number) => {
+                                                            const isObj = typeof opt === 'object' && opt !== null;
+                                                            const optText = isObj ? (opt.text ?? '') : (opt ?? '');
+                                                            const optImage = isObj ? (opt.image ?? '') : '';
+                                                            return (
+                                                                <div key={j} className="text-xs sm:text-sm px-3 py-2 rounded-lg border border-white/5 bg-black/20 flex flex-col gap-2">
+                                                                    <div className="flex items-start gap-2">
+                                                                        <span className="font-bold text-gray-500">{String.fromCharCode(65 + j)}.</span>
+                                                                        {optText && <span className="text-gray-300 overflow-x-auto"><Latex>{optText}</Latex></span>}
+                                                                    </div>
+                                                                    {optImage && <img src={optImage} alt={`Option ${String.fromCharCode(65 + j)}`} className="max-h-24 object-contain rounded ring-1 ring-white/10 ml-6" />}
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>

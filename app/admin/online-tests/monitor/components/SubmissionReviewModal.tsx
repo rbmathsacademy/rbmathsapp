@@ -190,10 +190,17 @@ export default function SubmissionReviewModal({
                                     {(q.type === 'mcq' || q.type === 'msq') && q.options ? (
                                         // Render MCQ/MSQ option text through LaTeX
                                         Array.isArray(ans.answer)
-                                            ? ans.answer.map((idx: number, i: number) => (
-                                                <span key={i}>{i > 0 && ', '}<LatexRender content={q.options[idx] || `Option ${idx}`} /></span>
-                                            ))
-                                            : <LatexRender content={q.options[parseInt(ans.answer)] || String(ans.answer)} />
+                                            ? ans.answer.map((idx: number, i: number) => {
+                                                const opt = q.options[idx];
+                                                const optText = typeof opt === 'object' && opt !== null ? (opt.text ?? '') : (opt || `Option ${idx}`);
+                                                return <span key={i}>{i > 0 && ', '}<LatexRender content={optText} /></span>;
+                                            })
+                                            : (() => {
+                                                const idx = parseInt(ans.answer);
+                                                const opt = !isNaN(idx) ? q.options[idx] : undefined;
+                                                const optText = typeof opt === 'object' && opt !== null ? (opt.text ?? '') : (opt || String(ans.answer));
+                                                return <LatexRender content={optText} />;
+                                            })()
                                     ) : (
                                         Array.isArray(ans.answer) ? ans.answer.join(', ') : String(ans.answer)
                                     )}
@@ -207,12 +214,16 @@ export default function SubmissionReviewModal({
                         <div className="text-sm text-emerald-400">
                             {(q.type === 'mcq' || q.type === 'msq') && q.options ? (
                                 // Show actual option text through LaTeX
-                                (q.correctIndices || []).map((idx: number, i: number) => (
-                                    <span key={i} className="block">
-                                        <span className="text-slate-500 text-[10px] mr-1">({String.fromCharCode(65 + idx)})</span>
-                                        <LatexRender content={q.options[idx] || `Option ${idx}`} />
-                                    </span>
-                                ))
+                                (q.correctIndices || []).map((idx: number, i: number) => {
+                                    const opt = q.options[idx];
+                                    const optText = typeof opt === 'object' && opt !== null ? (opt.text ?? '') : (opt || `Option ${idx}`);
+                                    return (
+                                        <span key={i} className="block">
+                                            <span className="text-slate-500 text-[10px] mr-1">({String.fromCharCode(65 + idx)})</span>
+                                            <LatexRender content={optText} />
+                                        </span>
+                                    );
+                                })
                             ) : q.type === 'fillblank' ? (
                                 q.isNumberRange
                                     ? `Range: ${q.numberRangeMin} – ${q.numberRangeMax}`
