@@ -14,7 +14,7 @@ const QuestionSchema = new mongoose.Schema({
     batches: { type: [String], default: [] }, // Batch tags for filtering
     marks: { type: mongoose.Schema.Types.Mixed }, // Marks (can be Number or String like "1+1")
     answer: { type: String },   // Correct Answer
-    options: { type: [String] }, // MCQ Options
+    options: { type: [mongoose.Schema.Types.Mixed] }, // MCQ Options
     hint: { type: String },     // Hint
     explanation: { type: String }, // Explanation
     order: { type: Number, default: 0 },
@@ -29,3 +29,4 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 export default mongoose.models.Question || mongoose.model('Question', QuestionSchema);
+
