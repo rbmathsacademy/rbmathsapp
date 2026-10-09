@@ -747,7 +747,7 @@ export default function StudentChat() {
                                         ) : (
                                             <img src={getPreviewUrl(msg.content)} alt="Sent" className="rounded-2xl max-h-80 w-auto object-contain bg-white/5 cursor-pointer" onClick={() => window.open(msg.content, '_blank')} />
                                         )}
-                                        {msg.doubtMetadata?.targetStudentId === myRoll && msg.doubtMetadata?.status === 'pending' && (
+                                        {msg.isAiResponse && msg.doubtMetadata?.targetStudentId === myRoll && msg.doubtMetadata?.status === 'pending' && (
                                             <div className="flex flex-col gap-2 mt-4 pt-3 border-t border-slate-600/50">
                                                 <button onClick={() => handleResolveDoubt(msg._id, 'resolved')} className="w-full py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold rounded-xl transition-colors border border-green-500/30">
                                                     I have understood
