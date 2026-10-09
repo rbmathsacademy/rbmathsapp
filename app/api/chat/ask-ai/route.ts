@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import ChatMessage from '@/models/ChatMessage';
 import mongoose from 'mongoose';
 import * as jose from 'jose';
+import dbConnect from '@/lib/db';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -14,6 +15,7 @@ FORMATTING: Do NOT use ANY Markdown formatting like **bold** stars or ### header
 
 export async function POST(req: NextRequest) {
     try {
+        await dbConnect();
         const token = req.cookies.get('auth_token')?.value;
         if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

@@ -519,6 +519,11 @@ export default function StudentChat() {
                 });
                 
                 const aiData = await aiRes.json();
+                
+                if (!aiRes.ok) {
+                    toast.error(`AI Error: ${aiData.error || 'Unknown'}`);
+                }
+                
                 if (aiData.doubtSessionId) {
                     setActiveDoubtSessionId(aiData.doubtSessionId);
                     currentSessionId = aiData.doubtSessionId;
@@ -563,6 +568,11 @@ export default function StudentChat() {
             });
             
             const aiData = await aiRes.json();
+            
+            if (!aiRes.ok) {
+                toast.error(`AI Error: ${aiData.error || 'Unknown'}`);
+            }
+            
             if (aiData.doubtSessionId) {
                 setActiveDoubtSessionId(aiData.doubtSessionId);
             }
