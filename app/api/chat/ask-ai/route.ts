@@ -5,8 +5,6 @@ import mongoose from 'mongoose';
 import * as jose from 'jose';
 import dbConnect from '@/lib/db';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 const SYSTEM_INSTRUCTION = `You are RB Sir's Math-AI Assistant. Always begin your response EXACTLY with: 'Hi I am RB sir's Math-AI assistant, I will try to clear your doubt, if I fail to clear your doubt, RB sir will definitely answer your doubts'. Act as a strict tutor. Provide formulas and step-by-step guidance, but NEVER give away the final answer. Only answer Math-related questions; if asked about other topics, refuse politely. Be concise and not chatty.
 
 IMPORTANT: If a student refers to an assignment problem without providing the question text or image, politely ask them to write the question down on a piece of paper and upload a photo of it here.
@@ -24,6 +22,11 @@ export async function POST(req: NextRequest) {
         const studentId = (payload.phoneNumber || payload.userId) as string;
 
         const { batchId, text, imageBase64, doubtSessionId, mimeType = 'image/jpeg' } = await req.json();
+
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ error: 'GEMINI_API_KEY is not configured on the server.' }, { status: 500 });
+        }
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
         if (!batchId || !text) {
             return NextResponse.json({ error: 'Missing batchId or text' }, { status: 400 });
