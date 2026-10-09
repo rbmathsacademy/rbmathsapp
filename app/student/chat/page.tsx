@@ -1,9 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+
+class LatexErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+    constructor(props: any) { super(props); this.state = { hasError: false }; }
+    static getDerivedStateFromError() { return { hasError: true }; }
+    render() {
+        if (this.state.hasError) return <div className="text-red-400 border border-red-500/20 p-2 rounded bg-red-500/10">Failed to render Math expression.</div>;
+        return this.props.children;
+    }
+}
 import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
@@ -42,6 +51,12 @@ interface Message {
     isEdited?: boolean;
     createdAt: string;
     replyTo?: ReplyTo;
+    isAiResponse?: boolean;
+    doubtMetadata?: {
+        targetStudentId?: string;
+        status?: 'pending' | 'resolved' | 'unresolved';
+        doubtSessionId?: string;
+    };
 }
 
 export default function StudentChat() {
@@ -59,6 +74,13 @@ export default function StudentChat() {
     const [showMathTools, setShowMathTools] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
+    
+    // AI Doubt feature states
+    const [doubtText, setDoubtText] = useState('');
+    const [isAiThinking, setIsAiThinking] = useState(false);
+    const [aiTimer, setAiTimer] = useState(30);
+    const [activeDoubtSessionId, setActiveDoubtSessionId] = useState<string | null>(null);
+    const [pendingChatText, setPendingChatText] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const lastBatchIdScrolled = useRef<string | null>(null);
     
@@ -128,6 +150,14 @@ export default function StudentChat() {
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [router]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isAiThinking && aiTimer > 0) {
+            interval = setInterval(() => setAiTimer(t => t - 1), 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isAiThinking, aiTimer]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -243,16 +273,34 @@ export default function StudentChat() {
         if (e) e.preventDefault();
         if (!newMessage.trim() || !selectedBatch) return;
 
-        const content = newMessage;
+        // If it's an active AI session, just send it directly to AI
+        if (activeDoubtSessionId) {
+            sendTextAndAskAi(newMessage);
+            return;
+        }
+
+        // Otherwise, intercept and ask what type of message this is
+        setPendingChatText(newMessage);
+    };
+
+    const confirmSendText = async (isDoubt: boolean) => {
+        if (!pendingChatText || !selectedBatch) return;
+        const content = pendingChatText;
+        setPendingChatText(null);
+        setNewMessage('');
+        setReplyingTo(null);
+
+        if (isDoubt) {
+            await sendTextAndAskAi(content);
+            return;
+        }
+
         const replyData = replyingTo ? {
             messageId: replyingTo._id,
             senderName: replyingTo.senderRole === 'admin' ? 'Admin' : (replyingTo.senderId === myRoll ? replyingTo.senderName : 'Anonymous'),
             content: replyingTo.content,
             senderRole: replyingTo.senderRole
         } : undefined;
-        
-        setNewMessage('');
-        setReplyingTo(null);
 
         try {
             const res = await fetch('/api/chat/messages', {
@@ -267,6 +315,26 @@ export default function StudentChat() {
             }
         } catch (error) {
             toast.error('Error sending message');
+        }
+    };
+
+    const handleResolveDoubt = async (messageId: string, status: string) => {
+        const toastId = toast.loading('Updating...');
+        try {
+            const res = await fetch('/api/chat/resolve-doubt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId, status, batchId: selectedBatch })
+            });
+            if (res.ok) {
+                toast.success('Done', { id: toastId });
+                setActiveDoubtSessionId(null);
+                fetchMessages(selectedBatch!, true);
+            } else {
+                toast.error('Failed', { id: toastId });
+            }
+        } catch (e) {
+            toast.error('Error', { id: toastId });
         }
     };
 
@@ -367,6 +435,12 @@ export default function StudentChat() {
                         } else {
                             setImagePreview(result);
                         }
+                        
+                        // Transfer any text already typed into the popup's doubt text
+                        if (newMessage.trim()) {
+                            setDoubtText(newMessage);
+                            setNewMessage('');
+                        }
                     } catch (err) {
                         setImagePreview(result);
                     } finally {
@@ -383,10 +457,11 @@ export default function StudentChat() {
         if (!imagePreview || !selectedBatch) return;
         const b64 = imagePreview;
         setImagePreview(null);
-        await sendImageMessage(b64);
+        await sendImageMessageAndAskAi(b64, doubtText);
+        setDoubtText('');
     };
 
-    const sendImageMessage = async (base64: string) => {
+    const sendImageMessageAndAskAi = async (base64: string, textQuery: string) => {
         const toastId = toast.loading('Sending image...');
         try {
             const uploadRes = await fetch('/api/student/assignments/upload-to-drive', {
@@ -408,21 +483,96 @@ export default function StudentChat() {
             const imageUrl = uploadData.fileUrl || uploadData.downloadUrl;
             if (!imageUrl) throw new Error('No image URL returned');
 
+            // 1. Save Image to Chat
             const res = await fetch('/api/chat/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ batchId: selectedBatch!, content: imageUrl, type: 'image' })
             });
-
-            if (res.ok) {
-                toast.success('Image sent', { id: toastId });
-                fetchMessages(selectedBatch!, true);
-            } else {
-                throw new Error('Failed to save message');
+            
+            let currentSessionId = activeDoubtSessionId;
+            
+            // 2. Save Text to Chat if text is provided or default
+            const actualTextQuery = textQuery.trim() || 'Please help me solve this doubt related to the image.';
+            
+            const txtRes = await fetch('/api/chat/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ batchId: selectedBatch!, content: actualTextQuery, type: 'text' })
+            });
+            
+            // 3. Call AI
+            toast.dismiss(toastId);
+            setIsAiThinking(true);
+            setAiTimer(30);
+            
+            try {
+                const aiRes = await fetch('/api/chat/ask-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        batchId: selectedBatch!,
+                        text: actualTextQuery,
+                        imageBase64: base64,
+                        doubtSessionId: currentSessionId
+                    })
+                });
+                
+                const aiData = await aiRes.json();
+                if (aiData.doubtSessionId) {
+                    setActiveDoubtSessionId(aiData.doubtSessionId);
+                    currentSessionId = aiData.doubtSessionId;
+                }
+            } catch (e) {
+                toast.error('AI failed to respond');
+            } finally {
+                setIsAiThinking(false);
             }
+            
+            fetchMessages(selectedBatch!, true);
         } catch (error: any) {
             toast.error(error.message || 'Error sending image', { id: toastId });
+            setIsAiThinking(false);
         }
+    };
+
+    const sendTextAndAskAi = async (textQuery: string) => {
+        if (!textQuery.trim() || !selectedBatch) return;
+        setNewMessage('');
+        
+        // 1. Save Text to Chat
+        const txtRes = await fetch('/api/chat/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ batchId: selectedBatch, content: textQuery, type: 'text' })
+        });
+        
+        // 2. Call AI
+        setIsAiThinking(true);
+        setAiTimer(30);
+        
+        try {
+            const aiRes = await fetch('/api/chat/ask-ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    batchId: selectedBatch,
+                    text: textQuery,
+                    doubtSessionId: activeDoubtSessionId
+                })
+            });
+            
+            const aiData = await aiRes.json();
+            if (aiData.doubtSessionId) {
+                setActiveDoubtSessionId(aiData.doubtSessionId);
+            }
+        } catch (e) {
+            toast.error('AI failed to respond');
+        } finally {
+            setIsAiThinking(false);
+        }
+        
+        fetchMessages(selectedBatch, true);
     };
 
     const handleReplyClick = (msg: Message) => {
@@ -544,10 +694,26 @@ export default function StudentChat() {
                                     </div>
                                 )}
                                 <div className="max-w-[85%] sm:max-w-[70%]">
-                                    <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ml-2 ${isAdmin ? 'text-blue-400' : isMe ? 'text-indigo-400 text-right mr-2' : 'text-slate-500'}`}>
-                                        {isAdmin ? 'Admin' : isMe ? 'Me' : 'Anonymous'}
-                                    </p>
-                                    <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${isMe ? 'bg-indigo-600 text-white rounded-tr-none' : isAdmin ? 'bg-[#1e293b] text-slate-200 border border-slate-700 rounded-tl-none shadow-md' : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'}`}>
+                                    {msg.isAiResponse ? (
+                                        <p className="text-[11px] uppercase tracking-wider mb-1 ml-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 animate-pulse font-black drop-shadow-md">
+                                            RB Sir's Math-AI Assistant
+                                        </p>
+                                    ) : (
+                                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ml-2 ${isAdmin ? 'text-blue-400' : isMe ? 'text-indigo-400 text-right mr-2' : 'text-slate-500'}`}>
+                                            {isAdmin ? 'Admin' : isMe ? 'Me' : 'Anonymous'}
+                                        </p>
+                                    )}
+                                    <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${
+                                        msg.doubtMetadata?.status === 'unresolved' && !msg.isAiResponse && !isAdmin
+                                            ? (isMe ? 'bg-red-900/80 text-white border border-red-500/50 rounded-tr-none' : 'bg-red-900/40 text-red-100 rounded-tl-none border border-red-500/50')
+                                            : isMe 
+                                                ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                                : msg.isAiResponse 
+                                                    ? 'bg-yellow-900/40 text-amber-50 border border-yellow-700/50 rounded-tl-none shadow-md shadow-yellow-900/20' 
+                                                    : isAdmin 
+                                                        ? 'bg-[#1e293b] text-slate-200 border border-slate-700 rounded-tl-none shadow-md' 
+                                                        : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'
+                                    }`}>
                                         {/* Reply preview inside message - clickable to scroll */}
                                         {msg.replyTo && (
                                             <div 
@@ -564,11 +730,35 @@ export default function StudentChat() {
                                         )}
                                         {msg.type === 'text' ? (
                                             <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar whitespace-pre-wrap">
-                                                <Latex>{msg.content}</Latex>
+                                                <LatexErrorBoundary>
+                                                    {(() => {
+                                                        let text = msg.content.replace(/^###\s+(.*)$/gm, '**$1**');
+                                                        const parts = text.split(/(\*\*.*?\*\*)/g);
+                                                        return parts.map((part, idx) => {
+                                                            if (part.startsWith('**') && part.endsWith('**')) {
+                                                                return <strong key={idx} className="font-bold text-amber-200"><Latex>{part.slice(2, -2)}</Latex></strong>;
+                                                            }
+                                                            return <Latex key={idx}>{part}</Latex>;
+                                                        });
+                                                    })()}
+                                                </LatexErrorBoundary>
                                                 {msg.isEdited && <span className="text-[9px] opacity-40 ml-2">(edited)</span>}
                                             </div>
                                         ) : (
                                             <img src={getPreviewUrl(msg.content)} alt="Sent" className="rounded-2xl max-h-80 w-auto object-contain bg-white/5 cursor-pointer" onClick={() => window.open(msg.content, '_blank')} />
+                                        )}
+                                        {msg.doubtMetadata?.targetStudentId === myRoll && msg.doubtMetadata?.status === 'pending' && (
+                                            <div className="flex flex-col gap-2 mt-4 pt-3 border-t border-slate-600/50">
+                                                <button onClick={() => handleResolveDoubt(msg._id, 'resolved')} className="w-full py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold rounded-xl transition-colors border border-green-500/30">
+                                                    I have understood
+                                                </button>
+                                                <button onClick={() => { setActiveDoubtSessionId(msg.doubtMetadata!.doubtSessionId!); inputRef.current?.focus(); }} className="w-full py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-xl transition-colors border border-blue-500/30">
+                                                    I have a follow up question
+                                                </button>
+                                                <button onClick={() => handleResolveDoubt(msg._id, 'unresolved')} className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-xl transition-colors border border-red-500/30">
+                                                    I am still unable to do this, I will wait for RB sir to answer
+                                                </button>
+                                            </div>
                                         )}
                                         <div className="flex items-center justify-between gap-4 mt-2 opacity-50 text-[10px]">
                                             <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -603,6 +793,23 @@ export default function StudentChat() {
                         );
                     })
                 )}
+                
+                {isAiThinking && (
+                    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
+                        <div className="bg-slate-800/80 border border-blue-500/30 p-4 rounded-3xl rounded-tl-none shadow-lg max-w-[85%] sm:max-w-[70%]">
+                            <div className="flex flex-col items-center gap-3">
+                                <Loader2 className="h-6 w-6 text-blue-400 animate-spin" />
+                                <p className="text-xs sm:text-sm text-center text-blue-200 font-medium">
+                                    RB Sir's Math-AI Assistant is trying to solve your doubt, please wait...
+                                </p>
+                                <div className="text-xl font-black text-blue-500 font-mono bg-black/30 px-4 py-1 rounded-full border border-blue-500/20">
+                                    {aiTimer}s
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
                 <div ref={messagesEndRef} />
             </div>
 
@@ -622,20 +829,54 @@ export default function StudentChat() {
                 </div>
             )}
 
+            {/* Chat Type Intercept Popup */}
+            {pendingChatText && (
+                <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+                    <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl max-w-md w-full relative">
+                        <button onClick={() => setPendingChatText(null)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X className="h-5 w-5" /></button>
+                        <div className="h-12 w-12 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                            <MessageSquare className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-xl font-black text-white text-center mb-2">What kind of message is this?</h3>
+                        <p className="text-sm text-slate-400 text-center mb-6">Is this a doubt about a Math problem or just a general chat/query?</p>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={() => confirmSendText(true)} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                                <Calculator className="h-5 w-5" /> This is a Math doubt
+                            </button>
+                            <button onClick={() => confirmSendText(false)} className="w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold active:scale-[0.98] transition-transform">
+                                Just a general chat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Input */}
             <div className="p-4 sm:p-6 bg-[#0a0f1a] border-t border-white/10 shrink-0 z-40 relative">
                 {imagePreview && (
                     <div className="absolute bottom-full left-0 right-0 p-4 bg-slate-900 border-t border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2">
-                        <div className="relative group">
-                            <img src={imagePreview} alt="Preview" className="max-h-60 rounded-xl border border-white/10 shadow-2xl" />
+                        <div className="relative group w-full max-w-md">
+                            <img src={imagePreview} alt="Preview" className="max-h-60 rounded-xl border border-white/10 shadow-2xl mx-auto" />
                             <button onClick={() => setImagePreview(null)} className="absolute -top-3 -right-3 p-1.5 bg-red-600 rounded-full text-white shadow-lg"><X className="h-4 w-4" /></button>
+                        </div>
+                        <div className="mt-4 w-full max-w-md">
+                            <textarea 
+                                value={doubtText} 
+                                onChange={(e) => setDoubtText(e.target.value)}
+                                placeholder="Type your doubt related to this uploaded image..." 
+                                rows={2}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none"
+                            />
                         </div>
                         <div className="flex gap-4 mt-4 w-full max-w-md">
                             <button onClick={() => setImagePreview(null)} className="flex-1 py-3 rounded-2xl border border-white/10 text-slate-400 font-bold hover:bg-white/5">Cancel</button>
-                            <button onClick={handleSendImage} className="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl">Send Photo</button>
+                            <button onClick={handleSendImage} disabled={isAiThinking} className="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                                {isAiThinking ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Upload & wait a few seconds'}
+                            </button>
                         </div>
                     </div>
                 )}
+
                         
                         {/* Math Tools Palette */}
                         {showMathTools && (
@@ -703,7 +944,7 @@ export default function StudentChat() {
                                 style={{ maxHeight: '120px' }}
                             />
                             
-                            <button type="submit" disabled={!newMessage.trim()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-[1.2rem] w-[1.2rem]" /></button>
+                            <button type="submit" disabled={!newMessage.trim()} className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0" title="Send message"><Send className="h-[1.2rem] w-[1.2rem]" /></button>
                         </form>
                         <p className="text-[9px] text-slate-700 mt-2 text-center uppercase tracking-[0.2em] font-black italic">Encrypted & Anonymous Community</p>
 

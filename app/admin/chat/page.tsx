@@ -37,6 +37,12 @@ interface Message {
     isEdited?: boolean;
     createdAt: string;
     replyTo?: ReplyTo;
+    isAiResponse?: boolean;
+    doubtMetadata?: {
+        targetStudentId: string;
+        status: 'pending' | 'resolved' | 'unresolved';
+        doubtSessionId?: string;
+    };
 }
 
 interface Batch {
@@ -576,11 +582,25 @@ export default function AdminChat() {
                                         )}
                                         <div className="max-w-[85%] sm:max-w-[70%]">
                                             {!isMe && (
-                                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 ml-2">
-                                                    {msg.senderName}
-                                                </p>
+                                                msg.isAiResponse ? (
+                                                    <p className="text-[11px] uppercase tracking-wider mb-1 ml-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 animate-pulse font-black drop-shadow-md">
+                                                        RB Sir's Math-AI Assistant
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 ml-2">
+                                                        {msg.senderName}
+                                                    </p>
+                                                )
                                             )}
-                                            <div className={`relative group p-3 sm:p-4 rounded-3xl shadow-xl ${isMe ? 'bg-[#1e293b] text-slate-200 rounded-tr-none border border-slate-700 shadow-md' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5'}`}>
+                                            <div className={`relative group p-3 sm:p-4 rounded-3xl shadow-xl ${
+                                                msg.doubtMetadata?.status === 'unresolved' && !msg.isAiResponse && !isMe
+                                                    ? 'bg-red-900/40 text-red-100 rounded-tl-none border border-red-500/50'
+                                                    : isMe 
+                                                        ? 'bg-[#1e293b] text-slate-200 rounded-tr-none border border-slate-700 shadow-md' 
+                                                        : msg.isAiResponse 
+                                                            ? 'bg-yellow-900/40 text-amber-50 border border-yellow-700/50 rounded-tl-none shadow-md shadow-yellow-900/20' 
+                                                            : 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5'
+                                            }`}>
                                                 {/* Reply preview inside message - clickable to scroll */}
                                                 {msg.replyTo && (
                                                     <div 
@@ -595,7 +615,16 @@ export default function AdminChat() {
                                                 )}
                                                 {msg.type === 'text' ? (
                                                     <div className="text-sm sm:text-base leading-relaxed break-words latex-container overflow-x-auto overflow-y-hidden no-scrollbar whitespace-pre-wrap">
-                                                        <Latex>{msg.content}</Latex>
+                                                        {(() => {
+                                                            let text = msg.content.replace(/^###\s+(.*)$/gm, '**$1**');
+                                                            const parts = text.split(/(\*\*.*?\*\*)/g);
+                                                            return parts.map((part, idx) => {
+                                                                if (part.startsWith('**') && part.endsWith('**')) {
+                                                                    return <strong key={idx} className="font-bold text-amber-200"><Latex>{part.slice(2, -2)}</Latex></strong>;
+                                                                }
+                                                                return <Latex key={idx}>{part}</Latex>;
+                                                            });
+                                                        })()}
                                                         {msg.isEdited && <span className="text-[9px] opacity-40 ml-2">(edited)</span>}
                                                     </div>
                                                 ) : (

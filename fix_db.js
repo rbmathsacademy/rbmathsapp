@@ -1,0 +1,1 @@
+const { MongoClient } = require('mongodb'); require('dotenv').config({path: '.env.local'}); MongoClient.connect(process.env.MONGODB_URI).then(async (client) => { const db = client.db(); const res = await db.collection('chatmessages').updateMany({ 'doubtMetadata.doubtSessionId': { $exists: false } }, { $unset: { doubtMetadata: '' } }); console.log(res); process.exit(0); })

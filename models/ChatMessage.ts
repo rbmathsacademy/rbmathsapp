@@ -40,6 +40,15 @@ const ChatMessageSchema = new mongoose.Schema({
         senderName: { type: String },
         content: { type: String },
         senderRole: { type: String }
+    },
+    isAiResponse: {
+        type: Boolean,
+        default: false
+    },
+    doubtMetadata: {
+        targetStudentId: { type: String },
+        status: { type: String, enum: ['pending', 'resolved', 'unresolved'] },
+        doubtSessionId: { type: String }
     }
 }, { timestamps: true });
 
