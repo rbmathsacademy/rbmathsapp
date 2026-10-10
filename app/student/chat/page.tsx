@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2 } from 'lucide-react';
+import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2, Crop } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import Cropper, { Point, Area } from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 
 class LatexErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
     constructor(props: any) { super(props); this.state = { hasError: false }; }
@@ -31,6 +33,51 @@ const getPreviewUrl = (url: string) => {
         return url.replace('export=download', 'export=view');
     }
     return url;
+};
+
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area | null): Promise<string> => {
+    if (!pixelCrop) return imageSrc;
+    const image = new Image();
+    image.src = imageSrc;
+    await new Promise(resolve => { image.onload = resolve; });
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return imageSrc;
+    
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+    
+    ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+    );
+    
+    const MAX_SIZE = 1200;
+    if (canvas.width > canvas.height && canvas.width > MAX_SIZE) {
+        const height = Math.round((canvas.height * MAX_SIZE) / canvas.width);
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = MAX_SIZE;
+        tempCanvas.height = height;
+        tempCanvas.getContext('2d')?.drawImage(canvas, 0, 0, MAX_SIZE, height);
+        return tempCanvas.toDataURL('image/jpeg', 0.8);
+    } else if (canvas.height > MAX_SIZE) {
+        const width = Math.round((canvas.width * MAX_SIZE) / canvas.height);
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width;
+        tempCanvas.height = MAX_SIZE;
+        tempCanvas.getContext('2d')?.drawImage(canvas, 0, 0, width, MAX_SIZE);
+        return tempCanvas.toDataURL('image/jpeg', 0.8);
+    }
+    
+    return canvas.toDataURL('image/jpeg', 0.8);
 };
 
 interface ReplyTo {
@@ -80,6 +127,16 @@ export default function StudentChat() {
     const [isAiThinking, setIsAiThinking] = useState(false);
     const [aiTimer, setAiTimer] = useState(30);
     const [activeDoubtSessionId, setActiveDoubtSessionId] = useState<string | null>(null);
+    const [followUpModalSessionId, setFollowUpModalSessionId] = useState<string | null>(null);
+    const [followUpText, setFollowUpText] = useState('');
+    
+    // Cropper states
+    const [unCroppedImage, setUnCroppedImage] = useState<string | null>(null);
+    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [isCropping, setIsCropping] = useState(false);
+    
     const [pendingChatText, setPendingChatText] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const lastBatchIdScrolled = useRef<string | null>(null);
@@ -407,53 +464,17 @@ export default function StudentChat() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const toastId = toast.loading('Preparing image...', { id: 'compressing' });
         const reader = new FileReader();
         reader.onload = (event) => {
             const result = event.target?.result as string;
-            // Create an image object to get original dimensions
-            const img = new Image();
-            img.onload = () => {
-                // Short timeout to let the toast render before synchronous drawing blocks the UI
-                setTimeout(() => {
-                    try {
-                        const canvas = document.createElement('canvas');
-                        let { width, height } = img;
-                        const MAX_SIZE = 1200;
-
-                        if (width > height && width > MAX_SIZE) {
-                            height = Math.round((height * MAX_SIZE) / width);
-                            width = MAX_SIZE;
-                        } else if (height >= width && height > MAX_SIZE) {
-                            width = Math.round((width * MAX_SIZE) / height);
-                            height = MAX_SIZE;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        if (ctx) {
-                            ctx.drawImage(img, 0, 0, width, height);
-                            // Compress to JPEG with 0.8 quality
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                            setImagePreview(dataUrl);
-                        } else {
-                            setImagePreview(result);
-                        }
-                        
-                        // Transfer any text already typed into the popup's doubt text
-                        if (newMessage.trim()) {
-                            setDoubtText(newMessage);
-                            setNewMessage('');
-                        }
-                    } catch (err) {
-                        setImagePreview(result);
-                    } finally {
-                        toast.dismiss(toastId);
-                    }
-                }, 50);
-            };
-            img.src = result;
+            setUnCroppedImage(result);
+            setIsCropping(true);
+            
+            // Transfer any text already typed into the popup's doubt text
+            if (newMessage.trim()) {
+                setDoubtText(newMessage);
+                setNewMessage('');
+            }
         };
         reader.readAsDataURL(file);
     };
@@ -791,7 +812,7 @@ export default function StudentChat() {
                                                 <button onClick={() => handleResolveDoubt(msg._id, 'resolved')} className="w-full py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold rounded-xl transition-colors border border-green-500/30">
                                                     I have understood
                                                 </button>
-                                                <button onClick={() => { setActiveDoubtSessionId(msg.doubtMetadata!.doubtSessionId!); inputRef.current?.focus(); }} className="w-full py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-xl transition-colors border border-blue-500/30">
+                                                <button onClick={() => setFollowUpModalSessionId(msg.doubtMetadata!.doubtSessionId!)} className="w-full py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-xl transition-colors border border-blue-500/30">
                                                     I have a follow up question
                                                 </button>
                                                 <button onClick={() => handleResolveDoubt(msg._id, 'unresolved')} className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-xl transition-colors border border-red-500/30">
@@ -988,6 +1009,82 @@ export default function StudentChat() {
                         <p className="text-[9px] text-slate-700 mt-2 text-center uppercase tracking-[0.2em] font-black italic">Encrypted & Anonymous Community</p>
 
             </div>
+
+            {/* Follow Up Modal */}
+            {followUpModalSessionId && (
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl max-w-md w-full relative">
+                        <button onClick={() => setFollowUpModalSessionId(null)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X className="h-5 w-5" /></button>
+                        <h3 className="text-white font-bold text-lg mb-4">Follow-up Question</h3>
+                        <textarea 
+                            value={followUpText}
+                            onChange={e => setFollowUpText(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none mb-4"
+                            rows={3}
+                            placeholder="Type your follow-up here..."
+                        />
+                        <div className="flex gap-4">
+                            <label className="flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
+                                <ImageIcon className="h-4 w-4" /> Add Image
+                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                    setActiveDoubtSessionId(followUpModalSessionId);
+                                    if (followUpText.trim()) {
+                                        setNewMessage(followUpText);
+                                    }
+                                    setFollowUpModalSessionId(null);
+                                    setFollowUpText('');
+                                    handleImageUpload(e);
+                                }} onClick={(e) => { (e.target as HTMLInputElement).value = '' }} />
+                            </label>
+                            <button onClick={() => {
+                                setActiveDoubtSessionId(followUpModalSessionId);
+                                if (followUpText.trim()) {
+                                    sendTextAndAskAi(followUpText);
+                                }
+                                setFollowUpModalSessionId(null);
+                                setFollowUpText('');
+                            }} disabled={!followUpText.trim()} className="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                                <Send className="h-4 w-4" /> Post
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cropper Modal */}
+            {isCropping && unCroppedImage && (
+                <div className="fixed inset-0 z-[1000] bg-black flex flex-col">
+                    <div className="flex-1 relative">
+                        <Cropper
+                            image={unCroppedImage}
+                            crop={crop}
+                            zoom={zoom}
+                            onCropChange={setCrop}
+                            onZoomChange={setZoom}
+                            onCropComplete={(croppedArea, croppedAreaPixels) => setCroppedAreaPixels(croppedAreaPixels)}
+                        />
+                    </div>
+                    <div className="p-4 bg-slate-900 flex justify-between gap-4 shrink-0 pb-safe">
+                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); }} className="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
+                        <button onClick={async () => {
+                            const toastId = toast.loading('Cropping image...');
+                            try {
+                                const cropped = await getCroppedImg(unCroppedImage, croppedAreaPixels);
+                                setImagePreview(cropped);
+                                setIsCropping(false);
+                                setUnCroppedImage(null);
+                            } catch (error) {
+                                toast.error('Error cropping image');
+                            } finally {
+                                toast.dismiss(toastId);
+                            }
+                        }} className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center gap-2">
+                            <Crop className="h-4 w-4" /> Crop & Continue
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <Toaster 
                 position="top-center" 
                 containerStyle={{ zIndex: 100000 }} 
