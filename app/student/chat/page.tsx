@@ -775,7 +775,7 @@ export default function StudentChat() {
                                                         const parts = text.split(/(\*\*.*?\*\*)/g);
                                                         return parts.map((part, idx) => {
                                                             if (part.startsWith('**') && part.endsWith('**')) {
-                                                                return <strong key={idx} className="font-bold text-amber-200"><Latex>{part.slice(2, -2)}</Latex></strong>;
+                                                                return <strong key={idx} className="font-bold text-amber-200 inline-block break-words whitespace-pre-wrap max-w-[100%]"><Latex>{part.slice(2, -2)}</Latex></strong>;
                                                             }
                                                             return <Latex key={idx}>{part}</Latex>;
                                                         });
@@ -1113,7 +1113,6 @@ export default function StudentChat() {
                         </ReactCrop>
                     </div>
                     <div className="p-4 bg-slate-900 flex justify-between gap-4 shrink-0 pb-safe">
-                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); setCrop(undefined); setCompletedCrop(null); }} className="w-24 shrink-0 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
                         <button onClick={() => {
                             const toastId = toast.loading('Cropping image...');
                             try {
@@ -1134,6 +1133,7 @@ export default function StudentChat() {
                         }} className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center gap-2">
                             <Crop className="h-4 w-4" /> Crop & Continue
                         </button>
+                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); setCrop(undefined); setCompletedCrop(null); }} className="w-24 shrink-0 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
                     </div>
                 </div>
             )}

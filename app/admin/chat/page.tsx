@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Scissors, Camera, X, Edit2, Check, RefreshCcw, Calculator, Reply, Trash2 } from 'lucide-react';
+import { Search, Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Scissors, Camera, X, Edit2, Check, RefreshCcw, Calculator, Reply, Trash2, Bot } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
@@ -261,6 +261,36 @@ export default function AdminChat() {
             console.error('Failed to fetch messages', error);
         } finally {
             if (!silent) setLoadingMessages(false);
+        }
+    };
+
+    const handleForceAskAi = async (msg: any, index: number) => {
+        if (!selectedBatch) return;
+        const toastId = toast.loading('Sending to AI on behalf of student...');
+        try {
+            const precedingMessages = messages.slice(0, index).reverse();
+            const imgMsg = precedingMessages.find((m: any) => m.senderId === msg.senderId && m.type === 'image');
+            
+            const aiRes = await fetch('/api/chat/ask-ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    batchId: selectedBatch,
+                    text: msg.content,
+                    targetStudentId: msg.senderId,
+                    imageUrl: imgMsg ? imgMsg.content : undefined
+                })
+            });
+            
+            const data = await aiRes.json();
+            if (aiRes.ok) {
+                toast.success('AI responded!', { id: toastId });
+                fetchMessages(selectedBatch);
+            } else {
+                toast.error(data.error || 'AI failed', { id: toastId });
+            }
+        } catch (err) {
+            toast.error('Error contacting AI', { id: toastId });
         }
     };
 
@@ -630,7 +660,7 @@ export default function AdminChat() {
                                                             const parts = text.split(/(\*\*.*?\*\*)/g);
                                                             return parts.map((part, idx) => {
                                                                 if (part.startsWith('**') && part.endsWith('**')) {
-                                                                    return <strong key={idx} className="font-bold text-amber-200"><Latex>{part.slice(2, -2)}</Latex></strong>;
+                                                                    return <strong key={idx} className="font-bold text-amber-200 inline-block break-words whitespace-pre-wrap max-w-[100%]"><Latex>{part.slice(2, -2)}</Latex></strong>;
                                                                 }
                                                                 return <Latex key={idx}>{part}</Latex>;
                                                             });
@@ -681,6 +711,15 @@ export default function AdminChat() {
                                                                 title="Delete"
                                                             >
                                                                 <Trash2 className="h-2.5 w-2.5" />
+                                                            </button>
+                                                        )}
+                                                        {!isMe && msg.type === 'text' && !msg.isAiResponse && (
+                                                            <button 
+                                                                onClick={() => handleForceAskAi(msg, i)}
+                                                                className="hover:text-amber-400 transition-colors p-1 flex items-center gap-1 ml-2 bg-white/5 rounded px-2"
+                                                                title="Send to AI on behalf of student"
+                                                            >
+                                                                <Bot className="h-3 w-3" /> Retry AI
                                                             </button>
                                                         )}
                                                     </div>

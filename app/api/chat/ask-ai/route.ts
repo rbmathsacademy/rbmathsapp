@@ -26,9 +26,15 @@ export async function POST(req: NextRequest) {
 
         const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod');
         const { payload } = await jose.jwtVerify(token, secret);
-        const studentId = (payload.phoneNumber || payload.userId) as string;
+        let studentId = (payload.phoneNumber || payload.userId) as string;
 
-        const { batchId, text, imageBase64, doubtSessionId, mimeType = 'image/jpeg' } = await req.json();
+        const { batchId, text, imageBase64, imageUrl, doubtSessionId, mimeType = 'image/jpeg', targetStudentId } = await req.json();
+
+        // Allow admin to act on behalf of a student
+        const adminRoles = ['admin', 'superadmin', 'manager', 'copy_checker'];
+        if (adminRoles.includes(payload.role as string) && targetStudentId) {
+            studentId = targetStudentId;
+        }
 
         if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json({ error: 'GEMINI_API_KEY is not configured on the server.' }, { status: 500 });
@@ -42,7 +48,7 @@ export async function POST(req: NextRequest) {
         const contents: any[] = [];
         const sessionToUse = doubtSessionId || new mongoose.Types.ObjectId().toString();
 
-        // If there's an existing doubt session, fetch previous messages (both from student and AI)
+        // If there's an existing doubt session, fetch previous messages
         if (doubtSessionId) {
             const historyMessages = await ChatMessage.find({ 
                 batchId, 
@@ -50,7 +56,6 @@ export async function POST(req: NextRequest) {
             }).sort({ createdAt: 1 });
 
             for (const msg of historyMessages) {
-                // Ignore empty text messages or pure image URLs that aren't base64 sent to Gemini
                 if (msg.type === 'text' && msg.content) {
                     contents.push({
                         role: msg.senderId === studentId ? 'user' : 'model',
@@ -63,10 +68,23 @@ export async function POST(req: NextRequest) {
         // Current user message payload for Gemini
         const currentMessageParts: any[] = [{ text }];
 
-        if (imageBase64) {
+        let finalBase64 = imageBase64;
+        
+        // Fetch image from URL if base64 is missing but URL is provided
+        if (!finalBase64 && imageUrl) {
+            try {
+                const imgRes = await fetch(imageUrl);
+                const arrayBuffer = await imgRes.arrayBuffer();
+                finalBase64 = Buffer.from(arrayBuffer).toString('base64');
+            } catch (err) {
+                console.error('Failed to fetch image from URL for AI:', err);
+            }
+        }
+
+        if (finalBase64) {
             currentMessageParts.push({
                 inlineData: {
-                    data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+                    data: finalBase64.replace(/^data:image\/\w+;base64,/, ''),
                     mimeType
                 }
             });
