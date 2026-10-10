@@ -279,13 +279,13 @@ export default function Home() {
 
         {/* Footer */}
         <footer
-          className="rise d6 shrink-0 pt-4 flex flex-col items-center gap-1 text-center"
+          className="rise d6 shrink-0 pt-6 flex flex-col items-center gap-1.5 text-center"
           style={{ paddingBottom: 'max(18px, env(safe-area-inset-bottom))' }}
         >
-          <p className="text-[12px] leading-[16px] text-[#7683AB]">
-            Coded and developed by <span className="text-[#B4C0E6] font-medium">Dr. Ritwick Banerjee</span>
+          <p className="text-[13px] min-[390px]:text-[14px] leading-[20px] text-[#9AA8D0] font-medium select-none">
+            Coded and developed by <span className="grad-text font-bold text-[15px] min-[390px]:text-[16px] drop-shadow-[0_2px_10px_rgba(34,211,238,0.3)]">Dr. Ritwick Banerjee</span>
           </p>
-          <p className="text-[11px] leading-[16px] text-[#56608299]">&copy; {new Date().getFullYear()} RB Maths Academy</p>
+          <p className="text-[11px] leading-[16px] text-[#56608299] select-none">&copy; {new Date().getFullYear()} RB Maths Academy</p>
         </footer>
       </div>
     </div>
