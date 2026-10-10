@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2, Crop } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
+import ReactCrop, { type Crop as CropType, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
 class LatexErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
@@ -132,7 +132,7 @@ export default function StudentChat() {
     
     // Cropper states
     const [unCroppedImage, setUnCroppedImage] = useState<string | null>(null);
-    const [crop, setCrop] = useState<Crop>();
+    const [crop, setCrop] = useState<CropType>();
     const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
     const [isCropping, setIsCropping] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
