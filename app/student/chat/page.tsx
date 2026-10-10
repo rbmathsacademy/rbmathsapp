@@ -716,13 +716,15 @@ export default function StudentChat() {
                                     <div className={`p-3 sm:p-4 rounded-3xl shadow-lg relative group ${
                                         msg.doubtMetadata?.status === 'unresolved' && !msg.isAiResponse && !isAdmin
                                             ? (isMe ? 'bg-red-900/80 text-white border border-red-500/50 rounded-tr-none' : 'bg-red-900/40 text-red-100 rounded-tl-none border border-red-500/50')
-                                            : isMe 
-                                                ? 'bg-indigo-600 text-white rounded-tr-none' 
-                                                : msg.isAiResponse 
-                                                    ? 'bg-yellow-900/40 text-amber-50 border border-yellow-700/50 rounded-tl-none shadow-md shadow-yellow-900/20' 
-                                                    : isAdmin 
-                                                        ? 'bg-[#1e293b] text-slate-200 border border-slate-700 rounded-tl-none shadow-md' 
-                                                        : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'
+                                            : msg.doubtMetadata?.status === 'resolved' && !msg.isAiResponse && !isAdmin
+                                                ? (isMe ? 'bg-green-900/80 text-white border border-green-500/50 rounded-tr-none' : 'bg-green-900/40 text-green-100 rounded-tl-none border border-green-500/50')
+                                                : isMe 
+                                                    ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                                    : msg.isAiResponse 
+                                                        ? 'bg-yellow-900/40 text-amber-50 border border-yellow-700/50 rounded-tl-none shadow-md shadow-yellow-900/20' 
+                                                        : isAdmin 
+                                                            ? 'bg-[#1e293b] text-slate-200 border border-slate-700 rounded-tl-none shadow-md' 
+                                                            : 'bg-slate-800 text-slate-300 rounded-tl-none border border-white/5'
                                     }`}>
                                         {/* Reply preview inside message - clickable to scroll */}
                                         {msg.replyTo && (
@@ -753,9 +755,31 @@ export default function StudentChat() {
                                                     })()}
                                                 </LatexErrorBoundary>
                                                 {msg.isEdited && <span className="text-[9px] opacity-40 ml-2">(edited)</span>}
+                                                {msg.doubtMetadata?.status === 'resolved' && !msg.isAiResponse && !isAdmin && (
+                                                    <span className="text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full ml-2 shadow-sm inline-block translate-y-[-2px]">
+                                                        Resolved
+                                                    </span>
+                                                )}
+                                                {msg.doubtMetadata?.status === 'unresolved' && !msg.isAiResponse && !isAdmin && (
+                                                    <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full ml-2 shadow-sm inline-block translate-y-[-2px]">
+                                                        Unresolved
+                                                    </span>
+                                                )}
                                             </div>
                                         ) : (
-                                            <img src={getPreviewUrl(msg.content)} alt="Sent" className="rounded-2xl max-h-80 w-auto object-contain bg-white/5 cursor-pointer" onClick={() => window.open(msg.content, '_blank')} />
+                                            <div className="relative">
+                                                <img src={getPreviewUrl(msg.content)} alt="Sent" className="rounded-2xl max-h-80 w-auto object-contain bg-white/5 cursor-pointer" onClick={() => window.open(msg.content, '_blank')} />
+                                                {msg.doubtMetadata?.status === 'resolved' && !msg.isAiResponse && !isAdmin && (
+                                                    <div className="absolute top-2 right-2 text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-md backdrop-blur-md">
+                                                        Resolved
+                                                    </div>
+                                                )}
+                                                {msg.doubtMetadata?.status === 'unresolved' && !msg.isAiResponse && !isAdmin && (
+                                                    <div className="absolute top-2 right-2 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shadow-md backdrop-blur-md">
+                                                        Unresolved
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                         {msg.isAiResponse && msg.doubtMetadata?.targetStudentId === myRoll && msg.doubtMetadata?.status === 'pending' && (
                                             <div className="flex flex-col gap-2 mt-4 pt-3 border-t border-slate-600/50">

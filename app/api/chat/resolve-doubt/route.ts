@@ -37,10 +37,12 @@ export async function POST(req: NextRequest) {
             { $set: { 'doubtMetadata.status': status } }
         );
 
-        // Send follow-up system message
-        const responseText = status === 'resolved' 
-            ? "Great work!" 
-            : "As you marked that you didn't understand pls wait a few hours for RB sir to come online & answer your doubt in more details";
+        if (status === 'resolved') {
+            return NextResponse.json({ success: true });
+        }
+
+        // Send follow-up system message only for unresolved
+        const responseText = "As you marked that you didn't understand pls wait a few hours for RB sir to come online & answer your doubt in more details";
 
         const followUpMessage = await ChatMessage.create({
             batchId,
