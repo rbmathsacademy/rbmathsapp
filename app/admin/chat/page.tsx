@@ -275,7 +275,7 @@ export default function AdminChat() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    batchId: selectedBatch,
+                    batchId: selectedBatch.id,
                     text: msg.content,
                     targetStudentId: msg.senderId,
                     imageUrl: imgMsg ? imgMsg.content : undefined
@@ -285,7 +285,7 @@ export default function AdminChat() {
             const data = await aiRes.json();
             if (aiRes.ok) {
                 toast.success('AI responded!', { id: toastId });
-                fetchMessages(selectedBatch);
+                fetchMessages(selectedBatch.id, true);
             } else {
                 toast.error(data.error || 'AI failed', { id: toastId });
             }
