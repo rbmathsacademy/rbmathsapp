@@ -1221,17 +1221,22 @@ export default function TakeTestPage() {
                                             const isFlagged = flagged.has(q.id);
                                             const isCurrent = i === currentIndex;
 
+                                            const isNavigationDisabled = (test.config?.allowBackNavigation === false || test.config?.enablePerQuestionTimer === true) && i !== currentIndex;
+
                                             return (
                                                 <button
                                                     key={q.id}
                                                     onClick={() => { setCurrentIndex(i); setShowPalette(false); }}
+                                                    disabled={isNavigationDisabled}
                                                     className={`
                                                         relative aspect-square rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center
                                                         ${isCurrent ? 'ring-2 ring-white scale-110 z-10' : ''} 
                                                         ${status === 'answered' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' :
                                                             status === 'partial' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                                                                'bg-slate-800 text-slate-400 border border-white/5 hover:bg-slate-700'
+                                                                'bg-slate-800 text-slate-400 border border-white/5'
                                                         }
+                                                        ${!isNavigationDisabled && status !== 'answered' && status !== 'partial' ? 'hover:bg-slate-700' : ''}
+                                                        ${isNavigationDisabled ? 'opacity-40 cursor-not-allowed' : ''}
                                                     `}
                                                 >
                                                     {i + 1}
