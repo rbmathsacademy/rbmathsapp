@@ -982,7 +982,18 @@ export default function StudentChat() {
                             <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-[1.2rem] w-[1.2rem]" />
                             </button>
-                            <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden">
+                            <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Take Photo">
+                                <Camera className="h-[1.2rem] w-[1.2rem]" />
+                                <input 
+                                    type="file" 
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                    accept="image/*" 
+                                    capture="environment"
+                                    onChange={handleImageUpload}
+                                    onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
+                                />
+                            </label>
+                            <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Upload from Gallery">
                                 <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
                                 <input 
                                     type="file" 
@@ -1023,19 +1034,33 @@ export default function StudentChat() {
                             rows={3}
                             placeholder="Type your follow-up here..."
                         />
-                        <div className="flex gap-4">
-                            <label className="flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
-                                <ImageIcon className="h-4 w-4" /> Add Image
-                                <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-                                    setActiveDoubtSessionId(followUpModalSessionId);
-                                    if (followUpText.trim()) {
-                                        setNewMessage(followUpText);
-                                    }
-                                    setFollowUpModalSessionId(null);
-                                    setFollowUpText('');
-                                    handleImageUpload(e);
-                                }} onClick={(e) => { (e.target as HTMLInputElement).value = '' }} />
-                            </label>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex gap-3">
+                                <label className="flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
+                                    <Camera className="h-4 w-4" /> Camera
+                                    <input type="file" className="hidden" accept="image/*" capture="environment" onChange={(e) => {
+                                        setActiveDoubtSessionId(followUpModalSessionId);
+                                        if (followUpText.trim()) {
+                                            setNewMessage(followUpText);
+                                        }
+                                        setFollowUpModalSessionId(null);
+                                        setFollowUpText('');
+                                        handleImageUpload(e);
+                                    }} onClick={(e) => { (e.target as HTMLInputElement).value = '' }} />
+                                </label>
+                                <label className="flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
+                                    <ImageIcon className="h-4 w-4" /> Gallery
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                        setActiveDoubtSessionId(followUpModalSessionId);
+                                        if (followUpText.trim()) {
+                                            setNewMessage(followUpText);
+                                        }
+                                        setFollowUpModalSessionId(null);
+                                        setFollowUpText('');
+                                        handleImageUpload(e);
+                                    }} onClick={(e) => { (e.target as HTMLInputElement).value = '' }} />
+                                </label>
+                            </div>
                             <button onClick={() => {
                                 setActiveDoubtSessionId(followUpModalSessionId);
                                 if (followUpText.trim()) {
@@ -1043,7 +1068,7 @@ export default function StudentChat() {
                                 }
                                 setFollowUpModalSessionId(null);
                                 setFollowUpText('');
-                            }} disabled={!followUpText.trim()} className="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                            }} disabled={!followUpText.trim()} className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl flex items-center justify-center gap-2 disabled:opacity-50">
                                 <Send className="h-4 w-4" /> Post
                             </button>
                         </div>
@@ -1066,6 +1091,17 @@ export default function StudentChat() {
                                 src={unCroppedImage} 
                                 alt="Crop me" 
                                 className="max-h-[70vh] object-contain"
+                                onLoad={(e) => {
+                                    const { width, height } = e.currentTarget;
+                                    setCrop({ unit: '%', x: 5, y: 5, width: 90, height: 90 });
+                                    setCompletedCrop({
+                                        unit: 'px',
+                                        x: width * 0.05,
+                                        y: height * 0.05,
+                                        width: width * 0.9,
+                                        height: height * 0.9
+                                    });
+                                }}
                             />
                         </ReactCrop>
                     </div>
