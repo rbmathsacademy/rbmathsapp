@@ -69,6 +69,7 @@ export default function Home() {
         .d3 { animation-delay: 280ms; }
         .d4 { animation-delay: 380ms; }
         .d5 { animation-delay: 480ms; }
+        .d6 { animation-delay: 580ms; }
 
         @keyframes rise {
           0% { opacity: 0; transform: translateY(18px); }
@@ -224,10 +225,16 @@ export default function Home() {
           <h1
             className={`rise d2 text-center ${jakarta.className} text-[30px] leading-[36px] min-[400px]:text-[34px] min-[400px]:leading-[40px] tracking-[-0.02em]`}
           >
-            Question Bank <span className="grad-text">Portal</span>
+            RB Maths <span className="grad-text">Portal</span>
           </h1>
+
+          {/* Subtitle */}
+          <p className="rise d3 text-center mt-3 text-[14px] min-[400px]:text-[15px] font-medium text-[#CFE8FF] tracking-wide max-w-[280px] opacity-90 italic">
+            "If you are smart, the portal is smarter!"
+          </p>
+
           <div
-            className="rise d3 mt-4 mb-[clamp(24px,5vh,40px)] h-[2px] w-10 rounded-full"
+            className="rise d4 mt-5 mb-[clamp(24px,5vh,40px)] h-[2px] w-10 rounded-full"
             style={{ background: 'var(--brand)' }}
             aria-hidden="true"
           />
@@ -236,7 +243,7 @@ export default function Home() {
           <Link
             href="/student/login"
             onClick={handleNavigation}
-            className="rise d4 hairline group block w-full rounded-[26px] p-[20px] backdrop-blur-xl transition-transform duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-[3px] focus-visible:ring-offset-[#05070F]"
+            className="rise d5 hairline group block w-full rounded-[26px] p-[20px] backdrop-blur-xl transition-transform duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-[3px] focus-visible:ring-offset-[#05070F]"
             style={{
               background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.025) 100%)',
               boxShadow: '0 40px 90px -30px rgba(0,0,0,0.8), 0 12px 40px -12px rgba(59,130,246,0.18)',
@@ -272,7 +279,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer
-          className="rise d5 shrink-0 pt-4 flex flex-col items-center gap-1 text-center"
+          className="rise d6 shrink-0 pt-4 flex flex-col items-center gap-1 text-center"
           style={{ paddingBottom: 'max(18px, env(safe-area-inset-bottom))' }}
         >
           <p className="text-[12px] leading-[16px] text-[#7683AB]">
