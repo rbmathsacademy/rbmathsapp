@@ -604,10 +604,6 @@ export default function StudentDashboard() {
                             </div>
                         </div>
                     </div>
-
-                    <div className="pt-8 text-center">
-                        <p className="text-[9px] text-slate-600 font-black uppercase tracking-[0.2em]">Designed & Developed by Dr. Ritwick Banerjee</p>
-                    </div>
                 </div>
             </main>
         </div>
