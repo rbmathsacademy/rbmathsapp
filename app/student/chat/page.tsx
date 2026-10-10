@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2, Crop } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import Cropper, { Point, Area } from 'react-easy-crop';
-import 'react-easy-crop/react-easy-crop.css';
+import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 class LatexErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
     constructor(props: any) { super(props); this.state = { hasError: false }; }
@@ -35,29 +35,29 @@ const getPreviewUrl = (url: string) => {
     return url;
 };
 
-const getCroppedImg = async (imageSrc: string, pixelCrop: Area | null): Promise<string> => {
-    if (!pixelCrop) return imageSrc;
-    const image = new Image();
-    image.src = imageSrc;
-    await new Promise(resolve => { image.onload = resolve; });
+const getCroppedImg = (image: HTMLImageElement, pixelCrop: PixelCrop): string => {
+    if (!pixelCrop || pixelCrop.width === 0 || pixelCrop.height === 0) return image.src;
     
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    if (!ctx) return imageSrc;
+    if (!ctx) return image.src;
     
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    canvas.width = pixelCrop.width * scaleX;
+    canvas.height = pixelCrop.height * scaleY;
     
     ctx.drawImage(
         image,
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height,
+        pixelCrop.x * scaleX,
+        pixelCrop.y * scaleY,
+        pixelCrop.width * scaleX,
+        pixelCrop.height * scaleY,
         0,
         0,
-        pixelCrop.width,
-        pixelCrop.height
+        canvas.width,
+        canvas.height
     );
     
     const MAX_SIZE = 1200;
@@ -132,10 +132,10 @@ export default function StudentChat() {
     
     // Cropper states
     const [unCroppedImage, setUnCroppedImage] = useState<string | null>(null);
-    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [crop, setCrop] = useState<Crop>();
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
     const [isCropping, setIsCropping] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
     
     const [pendingChatText, setPendingChatText] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -1054,25 +1054,35 @@ export default function StudentChat() {
             {/* Cropper Modal */}
             {isCropping && unCroppedImage && (
                 <div className="fixed inset-0 z-[1000] bg-black flex flex-col">
-                    <div className="flex-1 relative">
-                        <Cropper
-                            image={unCroppedImage}
-                            crop={crop}
-                            zoom={zoom}
-                            onCropChange={setCrop}
-                            onZoomChange={setZoom}
-                            onCropComplete={(croppedArea, croppedAreaPixels) => setCroppedAreaPixels(croppedAreaPixels)}
-                        />
+                    <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+                        <ReactCrop 
+                            crop={crop} 
+                            onChange={c => setCrop(c)} 
+                            onComplete={c => setCompletedCrop(c)}
+                            className="max-h-full max-w-full"
+                        >
+                            <img 
+                                ref={imgRef} 
+                                src={unCroppedImage} 
+                                alt="Crop me" 
+                                className="max-h-[70vh] object-contain"
+                            />
+                        </ReactCrop>
                     </div>
                     <div className="p-4 bg-slate-900 flex justify-between gap-4 shrink-0 pb-safe">
-                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); }} className="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
-                        <button onClick={async () => {
+                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); setCrop(undefined); setCompletedCrop(null); }} className="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
+                        <button onClick={() => {
                             const toastId = toast.loading('Cropping image...');
                             try {
-                                const cropped = await getCroppedImg(unCroppedImage, croppedAreaPixels);
+                                let cropped = unCroppedImage;
+                                if (imgRef.current && completedCrop && completedCrop.width > 0 && completedCrop.height > 0) {
+                                    cropped = getCroppedImg(imgRef.current, completedCrop);
+                                }
                                 setImagePreview(cropped);
                                 setIsCropping(false);
                                 setUnCroppedImage(null);
+                                setCrop(undefined);
+                                setCompletedCrop(null);
                             } catch (error) {
                                 toast.error('Error cropping image');
                             } finally {
