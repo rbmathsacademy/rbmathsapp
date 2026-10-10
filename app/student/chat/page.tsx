@@ -633,20 +633,20 @@ export default function StudentChat() {
 
             
             {/* Header */}
-            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-2 sm:p-3 shrink-0 z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-2 shrink-0 z-20 flex flex-row items-center justify-between gap-2">
                 <button 
                     onClick={() => { lastBatchIdScrolled.current = null; router.push('/student'); }} 
-                    className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-bold transition-colors shrink-0"
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold transition-colors shrink-0"
                 >
-                    <ChevronLeft className="h-5 w-5" /> Back
+                    <ChevronLeft className="h-4 w-4" /> Back
                 </button>
                 
                 {selectedBatch && (
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-2 w-full sm:w-auto shadow-sm">
-                        <ul className="text-[10px] sm:text-xs text-blue-300 space-y-0.5 list-none m-0 p-0 text-left">
-                            <li>* Student names are shown as Anonymous to all, but admin can see student names.</li>
-                            <li>* Messages auto-delete after 7 days.</li>
-                        </ul>
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-1.5 flex-1 shadow-sm overflow-hidden">
+                        <p className="text-[9px] sm:text-[10px] text-blue-300 leading-[1.2]">
+                            • Anonymous to all. Auto-deleted in 7 days.<br/>
+                            • AI answers first. If unresolved, RB Sir will clear it.
+                        </p>
                     </div>
                 )}
             </div>
