@@ -92,10 +92,10 @@ export default function StudentLogin() {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1.5">Enter Password</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1.5">Enter password Or Your Registered WhatsApp no.</label>
                         <input
                             type="text"
-                            placeholder="Enter your password"
+                            placeholder="Enter password Or Your Registered WhatsApp no."
                             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}

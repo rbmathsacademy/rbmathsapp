@@ -223,13 +223,13 @@ export default function Home() {
 
           {/* Title */}
           <h1
-            className={`rise d2 text-center ${jakarta.className} text-[30px] leading-[36px] min-[400px]:text-[34px] min-[400px]:leading-[40px] tracking-[-0.02em]`}
+            className={`rise d2 text-center ${jakarta.className} text-[30px] leading-[36px] min-[400px]:text-[34px] min-[400px]:leading-[40px] tracking-[-0.02em] select-none`}
           >
             RB Maths <span className="grad-text">Portal</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="rise d3 text-center mt-3 text-[14px] min-[400px]:text-[15px] font-medium text-[#CFE8FF] tracking-wide max-w-[280px] opacity-90 italic">
+          <p className="rise d3 text-center mt-3 text-[13px] min-[390px]:text-[14px] font-medium text-[#CFE8FF] tracking-wide w-full px-2 opacity-90 italic whitespace-nowrap select-none overflow-visible">
             "If you are smart, the portal is smarter!"
           </p>
 
