@@ -1,3 +1,5 @@
+export const maxDuration = 60; // Wait up to 60 seconds on Vercel
+
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import ChatMessage from '@/models/ChatMessage';
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
         // Loop through models with fallbacks
         let aiResponseText = '';
         let success = false;
-        const fallbackModels = ['gemini-3.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+        const fallbackModels = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro'];
         
         for (const modelName of fallbackModels) {
             try {
