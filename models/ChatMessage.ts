@@ -55,6 +55,10 @@ const ChatMessageSchema = new mongoose.Schema({
 // TTL index: auto-delete messages after 1 week (604800 seconds)
 ChatMessageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
 
+// Performance indexes to prevent slow queries that eat Vercel CPU wait time
+ChatMessageSchema.index({ batchId: 1, createdAt: 1 });
+ChatMessageSchema.index({ 'doubtMetadata.doubtSessionId': 1 });
+
 const ChatMessage = mongoose.models.ChatMessage || mongoose.model('ChatMessage', ChatMessageSchema);
 export default ChatMessage;
 
