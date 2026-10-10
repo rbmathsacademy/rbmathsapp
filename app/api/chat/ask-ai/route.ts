@@ -73,7 +73,17 @@ export async function POST(req: NextRequest) {
         // Fetch image from URL if base64 is missing but URL is provided
         if (!finalBase64 && imageUrl) {
             try {
-                const imgRes = await fetch(imageUrl);
+                let downloadUrl = imageUrl;
+                if (imageUrl.includes('drive.google.com/file/d/')) {
+                    const id = imageUrl.split('/d/')[1]?.split('/')[0];
+                    if (id) downloadUrl = `https://drive.google.com/uc?export=download&id=${id}`;
+                } else if (imageUrl.includes('export=view')) {
+                    downloadUrl = imageUrl.replace('export=view', 'export=download');
+                }
+
+                const imgRes = await fetch(downloadUrl);
+                if (!imgRes.ok) throw new Error(`HTTP ${imgRes.status}`);
+                
                 const arrayBuffer = await imgRes.arrayBuffer();
                 finalBase64 = Buffer.from(arrayBuffer).toString('base64');
             } catch (err) {

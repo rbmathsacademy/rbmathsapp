@@ -278,7 +278,8 @@ export default function AdminChat() {
                     batchId: selectedBatch.id,
                     text: msg.content,
                     targetStudentId: msg.senderId,
-                    imageUrl: imgMsg ? imgMsg.content : undefined
+                    imageUrl: imgMsg ? imgMsg.content : undefined,
+                    doubtSessionId: msg.doubtMetadata?.doubtSessionId
                 })
             });
             
