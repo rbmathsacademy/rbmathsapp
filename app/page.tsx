@@ -183,7 +183,7 @@ export default function Home() {
           {mounted && (
             <button
               onClick={toggleFullscreen}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-[#9AA8D0] hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-[#9AA8D0] hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-all opacity-20 hover:opacity-100"
               title="Toggle Fullscreen"
               aria-label="Toggle Fullscreen"
             >
@@ -192,7 +192,7 @@ export default function Home() {
           )}
           <Link
             href="/admin/login"
-            className="w-11 h-11 rounded-full flex items-center justify-center text-[#9AA8D0] hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors"
+            className="w-11 h-11 rounded-full flex items-center justify-center text-[#9AA8D0] hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-all opacity-20 hover:opacity-100"
             title="Admin Login"
             aria-label="Admin Login"
           >
