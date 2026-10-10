@@ -112,6 +112,7 @@ export default function StudentChat() {
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [isInputFocused, setIsInputFocused] = useState(false);
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -979,36 +980,42 @@ export default function StudentChat() {
                         )}
 
                         <form onSubmit={handleSendMessage} className="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
-                            <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
-                                <Calculator className="h-[1.2rem] w-[1.2rem]" />
-                            </button>
-                            <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Take Photo">
-                                <Camera className="h-[1.2rem] w-[1.2rem]" />
-                                <input 
-                                    type="file" 
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                                    accept="image/*" 
-                                    capture="environment"
-                                    onChange={handleImageUpload}
-                                    onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
-                                />
-                            </label>
-                            <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Upload from Gallery">
-                                <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                                    accept="image/*" 
-                                    onChange={handleImageUpload}
-                                    onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
-                                />
-                            </label>
+                            {!(isInputFocused || newMessage.length > 0) && (
+                                <>
+                                    <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
+                                        <Calculator className="h-[1.2rem] w-[1.2rem]" />
+                                    </button>
+                                    <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Take Photo">
+                                        <Camera className="h-[1.2rem] w-[1.2rem]" />
+                                        <input 
+                                            type="file" 
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                            accept="image/*" 
+                                            capture="environment"
+                                            onChange={handleImageUpload}
+                                            onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
+                                        />
+                                    </label>
+                                    <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Upload from Gallery">
+                                        <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                            accept="image/*" 
+                                            onChange={handleImageUpload}
+                                            onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
+                                        />
+                                    </label>
+                                </>
+                            )}
                             
                             <textarea 
                                 ref={inputRef}
                                 value={newMessage} 
                                 onChange={(e) => setNewMessage(e.target.value)}
+                                onFocus={() => setIsInputFocused(true)}
+                                onBlur={() => setIsInputFocused(false)}
                                 placeholder="Ask a doubt..." 
                                 rows={1}
                                 className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
@@ -1106,7 +1113,7 @@ export default function StudentChat() {
                         </ReactCrop>
                     </div>
                     <div className="p-4 bg-slate-900 flex justify-between gap-4 shrink-0 pb-safe">
-                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); setCrop(undefined); setCompletedCrop(null); }} className="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
+                        <button onClick={() => { setIsCropping(false); setUnCroppedImage(null); setCrop(undefined); setCompletedCrop(null); }} className="w-24 shrink-0 py-3 rounded-xl bg-slate-800 text-white font-bold">Cancel</button>
                         <button onClick={() => {
                             const toastId = toast.loading('Cropping image...');
                             try {
