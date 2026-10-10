@@ -135,7 +135,12 @@ export default function StudentChat() {
     useEffect(() => {
         if (selectedBatch) {
             fetchMessages(selectedBatch);
-            const interval = setInterval(() => fetchMessages(selectedBatch, true), 15000);
+            // Save Vercel CPU: Only poll if the tab is currently visible, and poll every 30s instead of 15s
+            const interval = setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    fetchMessages(selectedBatch, true);
+                }
+            }, 30000);
             return () => clearInterval(interval);
         }
     }, [selectedBatch]);
