@@ -146,24 +146,27 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // Link the student's triggering messages (sent in the last 15 seconds) to this session
-        // so that they can be highlighted in red/green if marked unresolved/resolved.
-        const fifteenSecondsAgo = new Date(Date.now() - 15000);
-        await ChatMessage.updateMany(
-            { 
-                batchId, 
-                senderId: studentId, 
-                createdAt: { $gte: fifteenSecondsAgo },
-                'doubtMetadata.doubtSessionId': { $exists: false }
-            },
-            { 
-                $set: { 
-                    'doubtMetadata.targetStudentId': studentId,
-                    'doubtMetadata.status': 'pending',
-                    'doubtMetadata.doubtSessionId': sessionToUse
-                } 
-            }
-        );
+        // Link the student's triggering messages to this session.
+        // We find the 2 most recent unlinked messages from this student (typically the text and the image)
+        const recentUnlinked = await ChatMessage.find({
+            batchId,
+            senderId: studentId,
+            'doubtMetadata.doubtSessionId': { $exists: false }
+        }).sort({ createdAt: -1 }).limit(2);
+
+        if (recentUnlinked.length > 0) {
+            const unlinkedIds = recentUnlinked.map(m => m._id);
+            await ChatMessage.updateMany(
+                { _id: { $in: unlinkedIds } },
+                { 
+                    $set: { 
+                        'doubtMetadata.targetStudentId': studentId,
+                        'doubtMetadata.status': 'pending',
+                        'doubtMetadata.doubtSessionId': sessionToUse
+                    } 
+                }
+            );
+        }
 
         return NextResponse.json({ success: true, message: aiMessage, doubtSessionId: sessionToUse });
     } catch (error: any) {
