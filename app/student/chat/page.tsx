@@ -1043,9 +1043,9 @@ export default function StudentChat() {
                         />
                         <div className="flex flex-col gap-3">
                             <div className="flex gap-3">
-                                <label className="flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
+                                <label className="relative overflow-hidden flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
                                     <Camera className="h-4 w-4" /> Camera
-                                    <input type="file" className="hidden" accept="image/*" capture="environment" onChange={(e) => {
+                                    <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" capture="environment" onChange={(e) => {
                                         setActiveDoubtSessionId(followUpModalSessionId);
                                         if (followUpText.trim()) {
                                             setNewMessage(followUpText);
@@ -1055,9 +1055,9 @@ export default function StudentChat() {
                                         handleImageUpload(e);
                                     }} onClick={(e) => { (e.target as HTMLInputElement).value = '' }} />
                                 </label>
-                                <label className="flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
+                                <label className="relative overflow-hidden flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
                                     <ImageIcon className="h-4 w-4" /> Gallery
-                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                    <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => {
                                         setActiveDoubtSessionId(followUpModalSessionId);
                                         if (followUpText.trim()) {
                                             setNewMessage(followUpText);
