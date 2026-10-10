@@ -521,7 +521,7 @@ export default function StudentChat() {
                 const aiData = await aiRes.json();
                 
                 if (!aiRes.ok) {
-                    toast.error(`AI Error: ${aiData.error || 'Unknown'}`);
+                    toast.error(aiData.error || 'AI failed to respond');
                 }
                 
                 if (aiData.doubtSessionId) {
@@ -570,7 +570,7 @@ export default function StudentChat() {
             const aiData = await aiRes.json();
             
             if (!aiRes.ok) {
-                toast.error(`AI Error: ${aiData.error || 'Unknown'}`);
+                toast.error(aiData.error || 'AI failed to respond');
             }
             
             if (aiData.doubtSessionId) {

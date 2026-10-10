@@ -35,12 +35,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing batchId or text' }, { status: 400 });
         }
 
-        // Initialize Gemini model
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-3.5-flash',
-            systemInstruction: SYSTEM_INSTRUCTION
-        });
-
         const contents: any[] = [];
         const sessionToUse = doubtSessionId || new mongoose.Types.ObjectId().toString();
 
@@ -79,9 +73,34 @@ export async function POST(req: NextRequest) {
             parts: currentMessageParts
         });
 
-        // Call Gemini API
-        const result = await model.generateContent({ contents });
-        const aiResponseText = result.response.text();
+        // Loop through models with fallbacks
+        let aiResponseText = '';
+        let success = false;
+        const fallbackModels = ['gemini-3.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+        
+        for (const modelName of fallbackModels) {
+            try {
+                const model = genAI.getGenerativeModel({
+                    model: modelName,
+                    systemInstruction: SYSTEM_INSTRUCTION
+                });
+                
+                const result = await model.generateContent({ contents });
+                aiResponseText = result.response.text();
+                success = true;
+                break; // Stop if successful
+            } catch (err: any) {
+                console.error(`Gemini Model ${modelName} failed:`, err.message);
+                // Continue to the next model in the fallback array
+            }
+        }
+
+        if (!success) {
+            return NextResponse.json({ 
+                error: 'AI assistant is busy due to high demand. Please try after sometime again',
+                isBusy: true
+            }, { status: 503 });
+        }
 
         // Save AI response to DB
         const aiMessage = await ChatMessage.create({
