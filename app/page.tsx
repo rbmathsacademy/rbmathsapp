@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Lock, Maximize2, Minimize2, User, ArrowRight, BookOpen, Clock, Smartphone } from 'lucide-react';
+import { Lock, Maximize2, Minimize2, User, ArrowRight } from 'lucide-react';
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: '800', display: 'swap' });
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500'], display: 'swap' });
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['700', '800'], display: 'swap' });
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'], display: 'swap' });
 
 export default function Home() {
   const router = useRouter();
@@ -18,8 +18,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    
-    // Sync initial fullscreen state if possible
+
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
@@ -35,7 +34,7 @@ export default function Home() {
         await document.exitFullscreen();
       }
     } catch (err) {
-      console.error("Fullscreen error:", err);
+      console.error('Fullscreen error:', err);
     }
   };
 
@@ -48,232 +47,239 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-[100dvh] bg-[#0A0F24] text-[#F8FAFF] relative overflow-hidden flex flex-col items-center selection:bg-[#8B5CF6]/30 ${inter.className} ${isNavigating ? 'page-fade-out' : ''}`}>
-      <style dangerouslySetInnerHTML={{ __html: `
+    <div
+      className={`min-h-[100dvh] bg-[#05070F] text-[#F4F6FF] relative overflow-hidden flex flex-col items-center selection:bg-[#8B5CF6]/30 ${inter.className} ${isNavigating ? 'page-fade-out' : ''}`}
+    >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         :root {
-          --brand-gradient: linear-gradient(120deg, #22D3EE 0%, #3B82F6 35%, #8B5CF6 70%, #EC4899 100%);
+          --brand: linear-gradient(120deg, #22D3EE 0%, #3B82F6 35%, #8B5CF6 70%, #EC4899 100%);
+          /* Mirrored so the animated, 200%-wide gradient never shows a hard seam */
+          --brand-loop: linear-gradient(90deg, #22D3EE 0%, #3B82F6 17%, #8B5CF6 35%, #EC4899 50%, #8B5CF6 65%, #3B82F6 83%, #22D3EE 100%);
         }
-        
-        .fade-up {
-          opacity: 0;
-          animation: fadeUp 450ms forwards ease-out;
-        }
-        .delay-1 { animation-delay: 70ms; }
-        .delay-2 { animation-delay: 140ms; }
-        .delay-3 { animation-delay: 210ms; }
-        .delay-4 { animation-delay: 280ms; }
-        .delay-5 { animation-delay: 350ms; }
-        .delay-6 { animation-delay: 420ms; }
 
-        @keyframes fadeUp {
-          0% { opacity: 0; transform: translateY(16px); }
+        /* Entrance. Never put another animation on the same element as .rise */
+        .rise {
+          opacity: 0;
+          animation: rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+        .d1 { animation-delay: 80ms; }
+        .d2 { animation-delay: 180ms; }
+        .d3 { animation-delay: 280ms; }
+        .d4 { animation-delay: 380ms; }
+        .d5 { animation-delay: 480ms; }
+
+        @keyframes rise {
+          0% { opacity: 0; transform: translateY(18px); }
           100% { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes float {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
+          50% { transform: translateY(-5px); }
         }
-        .animate-float { animation: float 6s ease-in-out infinite; }
+        .float { animation: float 7s ease-in-out infinite; }
 
-        @keyframes drift {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(20px, -20px) scale(1.05); }
-          66% { transform: translate(-20px, 20px) scale(0.95); }
+        @keyframes breathe {
+          0%, 100% { opacity: 0.75; transform: translateX(-50%) scale(1); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.06); }
         }
-        .animate-drift { animation: drift 20s ease-in-out infinite; }
+        .spotlight { animation: breathe 9s ease-in-out infinite; }
 
-        @keyframes shine {
-          0% { background-position: 200% center; }
-          100% { background-position: -200% center; }
-        }
-        .btn-shine::after {
-          content: '';
-          position: absolute;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          background-size: 200% 100%;
-          animation: shine 5s linear infinite;
-          pointer-events: none;
-        }
-
-        @keyframes gradSlide {
+        @keyframes slide {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
         .grad-text {
-          background: var(--brand-gradient);
+          background: var(--brand-loop);
           background-size: 200% auto;
           color: transparent;
           -webkit-background-clip: text;
           background-clip: text;
-          animation: gradSlide 6s ease infinite;
+          animation: slide 10s ease-in-out infinite;
         }
-        
+
+        /* 1px gradient hairline border that follows the element's radius */
+        .hairline { position: relative; }
+        .hairline::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1px;
+          background: linear-gradient(145deg, rgba(255,255,255,0.28), rgba(139,92,246,0.35) 40%, rgba(34,211,238,0.12) 70%, rgba(255,255,255,0.08));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+
+        /* Soft light sweep across the button, with a long pause between sweeps */
+        @keyframes sweep {
+          0%, 55% { transform: translateX(-130%) skewX(-18deg); }
+          100% { transform: translateX(260%) skewX(-18deg); }
+        }
+        .sweep::after {
+          content: '';
+          position: absolute;
+          top: 0; bottom: 0; left: 0;
+          width: 40%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+          animation: sweep 6.5s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        .grid-bg {
+          background-image:
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 48px 48px;
+          -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000 0%, transparent 75%);
+          mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000 0%, transparent 75%);
+        }
+
         .page-fade-out {
           opacity: 0;
           transition: opacity 200ms ease-out;
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .fade-up, .animate-float, .animate-drift, .btn-shine::after, .grad-text {
+          .rise, .float, .spotlight, .grad-text, .sweep::after {
             animation: none !important;
             transform: none !important;
             opacity: 1 !important;
           }
-          .page-fade-out {
-            transition: opacity 150ms ease-out;
-          }
+          .sweep::after { display: none; }
+          .page-fade-out { transition: opacity 150ms ease-out; }
         }
-        
-        .math-bg {
-          font-family: serif;
-          position: absolute;
-          color: #F8FAFF;
-          opacity: 0.08;
-          user-select: none;
-          pointer-events: none;
-        }
-        
-        .dot-grid {
-          background-image: radial-gradient(rgba(248, 250, 255, 0.04) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}} />
+      `,
+        }}
+      />
 
-      {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden dot-grid">
-        <div className="absolute top-[-10%] left-[-20%] w-[70vw] h-[70vw] max-w-[400px] max-h-[400px] rounded-full bg-[#8B5CF6] blur-[80px] opacity-[0.35] animate-drift" />
-        <div className="absolute bottom-[-10%] right-[-20%] w-[70vw] h-[70vw] max-w-[400px] max-h-[400px] rounded-full bg-[#22D3EE] blur-[80px] opacity-[0.35] animate-drift" style={{ animationDelay: '-10s' }} />
-        
-        {/* Math Symbols */}
-        <div className="math-bg text-6xl top-[15%] left-[10%] rotate-12" aria-hidden="true">∑</div>
-        <div className="math-bg text-8xl top-[40%] right-[5%] -rotate-12" aria-hidden="true">∫</div>
-        <div className="math-bg text-7xl bottom-[25%] left-[8%] rotate-45" aria-hidden="true">√</div>
-        <div className="math-bg text-5xl top-[60%] left-[20%] -rotate-6" aria-hidden="true">π</div>
-        <div className="math-bg text-6xl bottom-[15%] right-[15%] rotate-12" aria-hidden="true">∞</div>
+      {/* Background: restrained, light-based, no clutter */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 grid-bg" />
+        <div
+          className="spotlight absolute left-1/2 top-[2%] h-[560px] w-[560px] max-w-[140vw] rounded-full"
+          style={{ background: 'radial-gradient(closest-side, rgba(99,102,241,0.30), rgba(99,102,241,0) 100%)' }}
+        />
+        <div
+          className="absolute bottom-[-18%] right-[-25%] h-[460px] w-[460px] rounded-full"
+          style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,0.12), rgba(34,211,238,0) 100%)' }}
+        />
+        <div
+          className="absolute bottom-[-20%] left-[-25%] h-[420px] w-[420px] rounded-full"
+          style={{ background: 'radial-gradient(closest-side, rgba(236,72,153,0.10), rgba(236,72,153,0) 100%)' }}
+        />
       </div>
 
       <div className="w-full max-w-[420px] flex flex-col min-h-[100dvh] relative z-10 px-[20px]">
-        
-        {/* Top Strip */}
-        <header className="h-[48px] shrink-0 flex items-center justify-end">
-          <div className="flex items-center">
-            {mounted && (
-              <button 
-                onClick={toggleFullscreen}
-                className="w-[44px] h-[44px] flex items-center justify-center text-[#A9B6DC] hover:text-[#F8FAFF] transition-colors"
-                title="Toggle Fullscreen"
-                aria-label="Toggle Fullscreen"
-              >
-                {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-              </button>
-            )}
-            <Link 
-              href="/admin/login" 
-              className="w-[44px] h-[44px] flex items-center justify-center text-[#A9B6DC] hover:text-[#F8FAFF] transition-colors"
-              title="Admin Login"
-              aria-label="Admin Login"
+        {/* Top strip */}
+        <header className="h-[56px] shrink-0 flex items-center justify-end gap-2 pt-2">
+          {mounted && (
+            <button
+              onClick={toggleFullscreen}
+              className="w-11 h-11 rounded-full flex items-center justify-center text-[#9AA8D0] hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors"
+              title="Toggle Fullscreen"
+              aria-label="Toggle Fullscreen"
             >
-              <Lock className="h-5 w-5" />
-            </Link>
-          </div>
+              {isFullscreen ? <Minimize2 className="h-[18px] w-[18px]" /> : <Maximize2 className="h-[18px] w-[18px]" />}
+            </button>
+          )}
+          <Link
+            href="/admin/login"
+            className="w-11 h-11 rounded-full flex items-center justify-center text-[#9AA8D0] hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors"
+            title="Admin Login"
+            aria-label="Admin Login"
+          >
+            <Lock className="h-[18px] w-[18px]" />
+          </Link>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center w-full py-4">
-          
+        {/* Main */}
+        <main className="flex-1 flex flex-col items-center justify-center w-full py-2">
           {/* Logo */}
-          <div className="fade-up delay-1 mb-6 animate-float">
-            <Image 
-              src="/rb-logo.png" 
-              alt="RB Maths Academy Logo" 
-              width={112} 
-              height={112}
-              className="w-auto h-[112px] object-contain rounded-[20px]"
-              style={{ boxShadow: '0 0 48px rgba(139,92,246,0.45)' }}
-              priority
-            />
-          </div>
-
-          {/* Badge */}
-          <div className="fade-up delay-2 flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(148,163,255,0.18)] bg-[#111A3A]/50 mb-5 text-center mx-4">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] shadow-[0_0_8px_rgba(251,191,36,0.8)] shrink-0" />
-            <span className="text-[11px] min-[390px]:text-[12px] leading-[16px] font-medium text-[#A9B6DC] uppercase tracking-wide">RB Maths Portal - where Practice makes you perfect!</span>
+          <div className="rise d1 mb-[clamp(20px,4vh,32px)]">
+            <div className="float">
+              <div
+                className="hairline rounded-[22px]"
+                style={{ boxShadow: '0 28px 80px -16px rgba(99,102,241,0.55), 0 0 0 1px rgba(255,255,255,0.04)' }}
+              >
+                <Image
+                  src="/rb-logo.png"
+                  alt="RB Maths Academy logo"
+                  width={112}
+                  height={112}
+                  className="w-auto h-[clamp(84px,14vh,124px)] object-contain rounded-[22px] block"
+                  priority
+                />
+              </div>
+            </div>
           </div>
 
           {/* Title */}
-          <h1 className={`fade-up delay-3 text-center ${jakarta.className} text-[30px] leading-[36px] min-[400px]:text-[32px] min-[400px]:leading-[38px] mb-4`}>
-            Practice smarter.<br />
-            <span className="grad-text">Score higher.</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="fade-up delay-4 text-center text-[16px] leading-[24px] text-[#A9B6DC] mb-8 max-w-[320px]">
-            Your RB Maths Academy question bank, ready whenever you are. Log in and start practising.
-          </p>
-
-          {/* Student Login Card */}
-          <Link 
-            href="/student/login" 
-            onClick={handleNavigation}
-            className="fade-up delay-5 group block w-full bg-[#111A3A] rounded-[24px] p-[24px] border border-[rgba(148,163,255,0.18)] relative overflow-hidden transition-all duration-200 active:scale-[0.97] hover:brightness-[1.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-[3px] focus-visible:ring-offset-[#0A0F24]"
-            style={{ boxShadow: '0 20px 60px rgba(59,130,246,0.18)' }}
+          <h1
+            className={`rise d2 text-center ${jakarta.className} text-[30px] leading-[36px] min-[400px]:text-[34px] min-[400px]:leading-[40px] tracking-[-0.02em]`}
           >
-            {/* Top 1px gradient edge simulation */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-[rgba(148,163,255,0.1)] via-[rgba(148,163,255,0.4)] to-[rgba(148,163,255,0.1)]" />
-            
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-[56px] h-[56px] rounded-[16px] bg-[#18224A] border border-[rgba(148,163,255,0.18)] flex items-center justify-center shrink-0">
-                <User className="h-7 w-7 text-[#22D3EE]" />
+            Question Bank <span className="grad-text">Portal</span>
+          </h1>
+          <div
+            className="rise d3 mt-4 mb-[clamp(24px,5vh,40px)] h-[2px] w-10 rounded-full"
+            style={{ background: 'var(--brand)' }}
+            aria-hidden="true"
+          />
+
+          {/* Login card */}
+          <Link
+            href="/student/login"
+            onClick={handleNavigation}
+            className="rise d4 hairline group block w-full rounded-[26px] p-[20px] backdrop-blur-xl transition-transform duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-[3px] focus-visible:ring-offset-[#05070F]"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.025) 100%)',
+              boxShadow: '0 40px 90px -30px rgba(0,0,0,0.8), 0 12px 40px -12px rgba(59,130,246,0.18)',
+            }}
+          >
+            <div className="flex items-center gap-4 mb-5">
+              <div
+                className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center shrink-0 border border-white/10"
+                style={{ background: 'linear-gradient(145deg, rgba(139,92,246,0.22), rgba(34,211,238,0.10))' }}
+              >
+                <User className="h-6 w-6 text-[#CFE8FF]" />
               </div>
-              <div>
-                <h2 className={`text-[20px] leading-[26px] font-bold ${jakarta.className} text-[#F8FAFF]`}>Student Login</h2>
-                <p className="text-[12px] leading-[16px] text-[#A9B6DC] mt-0.5">Access your learning dashboard</p>
+              <div className="min-w-0">
+                <h2 className={`text-[19px] leading-[24px] ${jakarta.className} font-bold text-white`}>Student Login</h2>
+                <p className="text-[13px] leading-[18px] text-[#8E9BC4] mt-0.5">Access your learning dashboard</p>
               </div>
             </div>
 
-            <div 
-              className="w-full h-[56px] rounded-[16px] flex items-center justify-center gap-2 relative overflow-hidden btn-shine"
-              style={{ 
-                background: 'var(--brand-gradient)', 
-                boxShadow: '0 8px 24px rgba(99,102,241,0.45)'
+            <div
+              className="sweep relative overflow-hidden w-full h-[54px] rounded-[16px] flex items-center justify-center gap-2"
+              style={{
+                background: 'linear-gradient(135deg, #5B7CFF 0%, #8B5CF6 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 12px 32px -8px rgba(99,102,241,0.65)',
               }}
             >
-              <span className="text-[17px] leading-[24px] font-bold text-white relative z-10">Enter Portal</span>
-              <ArrowRight className="h-5 w-5 text-white relative z-10 transition-transform duration-300 group-hover:translate-x-[4px]" />
+              <span className="relative z-10 text-[16px] leading-[24px] font-semibold text-white tracking-[0.01em]">
+                Enter Portal
+              </span>
+              <ArrowRight className="relative z-10 h-[18px] w-[18px] text-white transition-transform duration-300 group-hover:translate-x-[4px]" />
             </div>
           </Link>
-
-          {/* Optional Chips */}
-          <div className="fade-up delay-6 flex flex-wrap justify-center gap-2 mt-8">
-            <div className="h-[32px] px-3 rounded-full bg-[#111A3A] border border-[rgba(148,163,255,0.18)] flex items-center gap-1.5">
-              <BookOpen className="h-3.5 w-3.5 text-[#A9B6DC]" />
-              <span className="text-[13px] font-medium text-[#A9B6DC]">Chapter-wise practice</span>
-            </div>
-            <div className="h-[32px] px-3 rounded-full bg-[#111A3A] border border-[rgba(148,163,255,0.18)] flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-[#A9B6DC]" />
-              <span className="text-[13px] font-medium text-[#A9B6DC]">Previous-year papers</span>
-            </div>
-            <div className="h-[32px] px-3 rounded-full bg-[#111A3A] border border-[rgba(148,163,255,0.18)] flex items-center gap-1.5">
-              <Smartphone className="h-3.5 w-3.5 text-[#A9B6DC]" />
-              <span className="text-[13px] font-medium text-[#A9B6DC]">Mobile friendly</span>
-            </div>
-          </div>
-          
         </main>
 
         {/* Footer */}
-        <footer className="shrink-0 py-5 flex flex-col items-center gap-1">
-          <p className="text-[12px] font-semibold grad-text">
-            Coded and developed by Dr. Ritwick Banerjee
+        <footer
+          className="rise d5 shrink-0 pt-4 flex flex-col items-center gap-1 text-center"
+          style={{ paddingBottom: 'max(18px, env(safe-area-inset-bottom))' }}
+        >
+          <p className="text-[12px] leading-[16px] text-[#7683AB]">
+            Coded and developed by <span className="text-[#B4C0E6] font-medium">Dr. Ritwick Banerjee</span>
           </p>
-          <p className="text-[12px] text-[#A9B6DC] opacity-70">
-            &copy; {new Date().getFullYear()} RB Maths Academy
-          </p>
+          <p className="text-[11px] leading-[16px] text-[#56608299]">&copy; {new Date().getFullYear()} RB Maths Academy</p>
         </footer>
-
       </div>
     </div>
   );
