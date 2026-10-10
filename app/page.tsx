@@ -198,9 +198,9 @@ export default function Home() {
           </div>
 
           {/* Badge */}
-          <div className="fade-up delay-2 flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(148,163,255,0.18)] bg-[#111A3A]/50 mb-5">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
-            <span className="text-[12px] leading-[16px] font-medium text-[#A9B6DC] uppercase tracking-wide">Question Bank Portal</span>
+          <div className="fade-up delay-2 flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(148,163,255,0.18)] bg-[#111A3A]/50 mb-5 text-center mx-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] shadow-[0_0_8px_rgba(251,191,36,0.8)] shrink-0" />
+            <span className="text-[11px] min-[390px]:text-[12px] leading-[16px] font-medium text-[#A9B6DC] uppercase tracking-wide">RB Maths Portal - where Practice makes you perfect!</span>
           </div>
 
           {/* Title */}
