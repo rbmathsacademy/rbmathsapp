@@ -32,7 +32,7 @@ export async function GET(
         const deployedBatches = test.deployment?.batches || [];
 
         // Get all students from MongoDB for the deployed batches
-        const dbStudents = await BatchStudent.find({ courses: { $in: deployedBatches } }).select('phoneNumber alternativePhone guardianPhone name courses').lean() as any[];
+        const dbStudents = await BatchStudent.find({ courses: { $in: deployedBatches } }).select('phoneNumber alternativePhone guardianPhone name courses board').lean() as any[];
 
         // Create student map
         const excludedPhones: string[] = test.excludedStudents || [];
@@ -47,7 +47,8 @@ export async function GET(
                 phone: s.phoneNumber,
                 alternativePhone: s.alternativePhone,
                 guardianPhone: s.guardianPhone,
-                batch: matchingBatch
+                batch: matchingBatch,
+                board: s.board || ''
             };
             if (excludedSet.has(s.phoneNumber)) {
                 excludedStudentsList.push(info);
@@ -89,8 +90,21 @@ export async function GET(
             if (!isExpiredByDuration) continue;
 
             // Auto-grade with whatever answers exist
-            const sourceQuestions = (attempt.questions && attempt.questions.length > 0)
-                ? attempt.questions : test.questions;
+            let sourceQuestions = (attempt.questions && attempt.questions.length > 0)
+                ? attempt.questions : null;
+
+            if (!sourceQuestions) {
+                if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+                    const studentData = studentMap.get(attempt.studentPhone);
+                    const studentBoard = ((studentData as any)?.board || '').trim().toLowerCase();
+                    const assignedSet = test.boardQuestionSets.find((set: any) =>
+                        set.boards.some((b: string) => b.trim().toLowerCase() === studentBoard)
+                    );
+                    sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+                } else {
+                    sourceQuestions = test.questions ? [...test.questions] : [];
+                }
+            }
 
             const qMap = new Map<string, any>();
             for (const q of sourceQuestions) {
@@ -292,14 +306,22 @@ export async function GET(
             }));
 
             // Question-wise analysis
+            const allTestQuestions = (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0)
+                ? test.boardQuestionSets.flatMap((s: any) => s.questions || [])
+                : (test.questions || []);
+
             const questionStats = new Map<string, { correct: number, total: number, text: string, type: string }>();
-            test.questions.forEach((q: any) => {
+            allTestQuestions.forEach((q: any) => {
                 if (q.type === 'comprehension' && q.subQuestions) {
                     q.subQuestions.forEach((sq: any) => {
-                        questionStats.set(sq.id, { correct: 0, total: 0, text: sq.text, type: sq.type });
+                        if (!questionStats.has(sq.id)) {
+                            questionStats.set(sq.id, { correct: 0, total: 0, text: sq.text, type: sq.type });
+                        }
                     });
                 } else {
-                    questionStats.set(q.id, { correct: 0, total: 0, text: q.text, type: q.type });
+                    if (!questionStats.has(q.id)) {
+                        questionStats.set(q.id, { correct: 0, total: 0, text: q.text, type: q.type });
+                    }
                 }
             });
 

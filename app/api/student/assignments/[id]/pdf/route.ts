@@ -24,6 +24,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
         }
 
+        // Check if assignment is scheduled for future
+        const now = new Date();
+        if (assignment.scheduledFor && now < new Date(assignment.scheduledFor)) {
+            return NextResponse.json({
+                error: 'This assignment is scheduled and has not opened yet.',
+                scheduledFor: assignment.scheduledFor
+            }, { status: 403 });
+        }
+
         if (assignment.type !== 'PDF') {
             return NextResponse.json({ error: 'Not a PDF assignment' }, { status: 400 });
         }

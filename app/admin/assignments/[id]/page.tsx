@@ -44,6 +44,22 @@ interface Assignment {
     boardContent?: Record<string, string>;
 }
 
+// Timezone helpers: interpret/format datetime-local strings as Indian Standard Time (IST)
+const toISTString = (dateStr: string | Date | null | undefined) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(date.getTime() + istOffset);
+    return istDate.toISOString().slice(0, 16);
+};
+
+const fromISTString = (dateStr: string) => {
+    if (!dateStr) return null;
+    if (dateStr.endsWith('Z')) return dateStr;
+    const istDateStr = `${dateStr}+05:30`;
+    return new Date(istDateStr).toISOString();
+};
+
 export default function AssignmentDetailsPage() {
     const params = useParams();
     const router = useRouter();
@@ -131,27 +147,24 @@ export default function AssignmentDetailsPage() {
                     setAssignmentQuestions(data.assignmentQuestions);
                 }
 
-                // Init edit state
+                // Init edit state in IST
                 setEditTitle(data.assignment.title);
                 setEditCooldown(data.assignment.cooldownDuration || 0);
                 
-                // Convert UTC date to local datetime-local string format
-                const d = new Date(data.assignment.deadline);
-                const deadlineLocal = d.toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16);
-                setEditDeadline(deadlineLocal);
+                // Convert UTC date to IST datetime-local string format
+                setEditDeadline(toISTString(data.assignment.deadline));
 
-                // Init scheduledFor
+                // Init scheduledFor in IST
                 if (data.assignment.scheduledFor) {
-                    const sf = new Date(data.assignment.scheduledFor);
-                    setEditScheduledFor(sf.toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16));
+                    setEditScheduledFor(toISTString(data.assignment.scheduledFor));
                 } else {
                     setEditScheduledFor('');
                 }
 
-                // Calculate initial cooldown end time
+                // Calculate initial cooldown end time in IST
                 const c = data.assignment.cooldownDuration || 0;
-                const end = new Date(d.getTime() + c * 60000);
-                setEditCooldownEndTime(end.toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16));
+                const end = new Date(new Date(data.assignment.deadline).getTime() + c * 60000);
+                setEditCooldownEndTime(toISTString(end));
             } else {
                 toast.error('Assignment not found');
             }
@@ -243,8 +256,8 @@ export default function AssignmentDetailsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: editTitle,
-                    deadline: new Date(editDeadline).toISOString(),
-                    scheduledFor: editScheduledFor ? new Date(editScheduledFor).toISOString() : null,
+                    deadline: fromISTString(editDeadline),
+                    scheduledFor: editScheduledFor ? fromISTString(editScheduledFor) : null,
                     cooldownDuration: editCooldown
                 })
             });
@@ -1212,7 +1225,7 @@ export default function AssignmentDetailsPage() {
                                 </div>
                                 {editScheduledFor ? (
                                     <p className="text-xs text-amber-400 mt-1">
-                                        Students will see but cannot open until {new Date(editScheduledFor).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        Students will see but cannot open until {new Date(fromISTString(editScheduledFor)!).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 ) : (
                                     <p className="text-xs text-gray-500 mt-1">Leave blank to make visible immediately</p>

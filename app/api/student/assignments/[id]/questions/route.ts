@@ -35,6 +35,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         if (!assignment) return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
         if (assignment.type !== 'QUESTIONS') return NextResponse.json({ error: 'Not a question assignment' }, { status: 400 });
 
+        // Check if assignment is scheduled for future
+        const now = new Date();
+        if (assignment.scheduledFor && now < new Date(assignment.scheduledFor)) {
+            return NextResponse.json({
+                error: 'This assignment is scheduled and has not opened yet.',
+                scheduledFor: assignment.scheduledFor
+            }, { status: 403 });
+        }
+
         const pool: string[] = Array.isArray(assignment.content) ? assignment.content : [];
         const randomCount = assignment.randomCount || 0;
 

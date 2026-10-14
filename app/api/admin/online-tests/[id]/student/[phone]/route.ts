@@ -4,6 +4,78 @@ import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
+import { seededShuffleArray, getSeededRandom, shuffleOptionsForQuestion } from '@/lib/seededRandom';
+
+async function findBatchStudent(phone: string) {
+    const rawClean = (phone || '').replace(/\D/g, '');
+    const normalizedPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
+    return await BatchStudent.findOne({
+        $or: [
+            { phoneNumber: phone },
+            { phoneNumber: rawClean },
+            { phoneNumber: normalizedPhone },
+            { phoneNumber: `+91${normalizedPhone}` },
+            { phoneNumber: `91${normalizedPhone}` },
+            { alternativePhone: rawClean },
+            { alternativePhone: normalizedPhone },
+            { loginId: phone }
+        ]
+    }).lean();
+}
+
+async function resolveAttemptQuestions(test: any, attempt: any, student: any, phone: string): Promise<any[]> {
+    if (attempt.questions && attempt.questions.length > 0) {
+        return attempt.questions;
+    }
+
+    let board = (student as any)?.board || '';
+    if (!board) {
+        const combined = [...((student as any)?.courses || []), attempt.batchName || ''].join(' ').toUpperCase();
+        if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
+            board = 'WBCHSE';
+        } else if (combined.includes('ISC') || combined.includes('ICSE')) {
+            board = 'ISC';
+        } else if (combined.includes('CBSE')) {
+            board = 'CBSE';
+        }
+    }
+
+    let rawQuestions: any[] = [];
+    if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+        const cleanBoard = board.trim().toLowerCase();
+        const assignedSet = test.boardQuestionSets.find((set: any) =>
+            set.boards.some((b: string) => b.trim().toLowerCase() === cleanBoard)
+        );
+        rawQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+    } else {
+        rawQuestions = test.questions ? [...test.questions] : [];
+    }
+
+    if (test.config?.shuffleQuestions || test.config?.maxQuestionsToAttempt) {
+        const seedString = `${phone}_${test._id.toString()}`;
+        rawQuestions = seededShuffleArray(rawQuestions, getSeededRandom(seedString));
+        if (test.config?.maxQuestionsToAttempt > 0 && test.config?.maxQuestionsToAttempt < rawQuestions.length) {
+            rawQuestions = rawQuestions.slice(0, test.config.maxQuestionsToAttempt);
+        }
+    }
+
+    const processed = rawQuestions.map((q: any) => {
+        const qObj = typeof q.toObject === 'function' ? q.toObject() : JSON.parse(JSON.stringify(q));
+        let shuffled = shuffleOptionsForQuestion(qObj, phone);
+        if (shuffled.type === 'comprehension' && shuffled.subQuestions) {
+            shuffled.subQuestions = shuffled.subQuestions.map((sq: any) => shuffleOptionsForQuestion(sq, phone));
+        }
+        return shuffled;
+    });
+
+    // Save back to DB so subsequent lookups are instant
+    await StudentTestAttempt.updateOne(
+        { testId: test._id, studentPhone: phone },
+        { $set: { questions: processed } }
+    );
+
+    return processed;
+}
 
 export async function GET(
     request: NextRequest,
@@ -30,7 +102,7 @@ export async function GET(
         }
 
         // Get student details
-        const student = await BatchStudent.findOne({ phoneNumber: phone }).lean();
+        const student = await findBatchStudent(phone);
 
         // Get attempt
         const attempt = await StudentTestAttempt.findOne({ testId, studentPhone: phone }).lean();
@@ -39,9 +111,11 @@ export async function GET(
             return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
         }
 
+        const questions = await resolveAttemptQuestions(test, attempt, student, phone);
+
         return NextResponse.json({
             student: {
-                name: student?.name || attempt.studentName || 'Unknown',
+                name: (student as any)?.name || attempt.studentName || 'Unknown',
                 phone: attempt.studentPhone,
                 batch: attempt.batchName
             },
@@ -49,8 +123,7 @@ export async function GET(
                 ...attempt,
                 score: Math.round((Number(attempt.score) + Number.EPSILON) * 100) / 100,
                 percentage: Math.round((Number(attempt.percentage) + Number.EPSILON) * 100) / 100,
-                // ensure questions from the test are available if attempt doesn't have a snapshot
-                questions: (attempt.questions && attempt.questions.length > 0) ? attempt.questions : test.questions
+                questions
             }
         });
 
@@ -85,6 +158,9 @@ export async function POST(
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
+        // Get student details
+        const student = await findBatchStudent(phone);
+
         // Get attempt
         const attempt = await StudentTestAttempt.findOne({ testId, studentPhone: phone });
         if (!attempt) {
@@ -98,7 +174,6 @@ export async function POST(
         for (const ans of attempt.answers) {
             // Check if there is a new adjustment for this question
             if (adjMap.has(ans.questionId)) {
-                // We use any because adjustmentMarks might not be in the strict TypeScript schema type yet
                 (ans as any).adjustmentMarks = Number(adjMap.get(ans.questionId)) || 0;
             }
 
@@ -108,7 +183,7 @@ export async function POST(
         }
 
         // Calculate total marks served to this student (for percentage calculation)
-        const sourceQuestions = (attempt.questions && attempt.questions.length > 0) ? attempt.questions : test.questions;
+        const sourceQuestions = await resolveAttemptQuestions(test, attempt, student, phone);
         let servedTotalMarks = 0;
         for (const q of sourceQuestions) {
             if (q.type === 'comprehension' && q.subQuestions) {

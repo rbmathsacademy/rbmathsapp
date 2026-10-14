@@ -20,12 +20,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing content for assignment' }, { status: 400 });
         }
 
-        const assignment = await Assignment.create({
+        const createData: any = {
             ...body,
-            ...body,
+            deadline: new Date(body.deadline),
+            scheduledFor: body.scheduledFor ? new Date(body.scheduledFor) : null,
             folderId: body.folderId || null,
             createdAt: new Date()
-        });
+        };
+
+        const assignment = await Assignment.create(createData);
 
         return NextResponse.json({ success: true, assignment });
     } catch (error: any) {

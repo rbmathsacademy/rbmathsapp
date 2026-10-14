@@ -95,21 +95,24 @@ export async function GET(req: NextRequest) {
             }
 
             // Handle content based on boardWise flag
-            let safeContent: any;
+            let safeContent: any = null;
             const isBoardWise = a.boardWise === true;
             if (isBoardWise) {
                 hasBoardWiseAssignment = true;
-                if (studentBoard) {
-                    // Get the board-specific URL from boardContent Map
-                    const bc = a.boardContent;
-                    safeContent = bc?.get?.(studentBoard) || bc?.[studentBoard] || null;
+            }
+
+            if (status !== 'SCHEDULED') {
+                if (isBoardWise) {
+                    if (studentBoard) {
+                        // Get the board-specific URL from boardContent Map
+                        const bc = a.boardContent;
+                        safeContent = bc?.get?.(studentBoard) || bc?.[studentBoard] || null;
+                    } else {
+                        safeContent = null; // Student has no board set
+                    }
                 } else {
-                    safeContent = null; // Student has no board set
+                    safeContent = a.content;
                 }
-            } else if (a.type === 'PDF') {
-                safeContent = a.content;
-            } else {
-                safeContent = a.content;
             }
 
             return {

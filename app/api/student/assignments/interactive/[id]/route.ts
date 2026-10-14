@@ -49,6 +49,15 @@ export async function GET(
             return NextResponse.json({ error: 'Not an interactive assignment' }, { status: 400 });
         }
 
+        // Check if assignment is scheduled for future
+        const now = new Date();
+        if (assignment.scheduledFor && now < new Date(assignment.scheduledFor)) {
+            return NextResponse.json({ 
+                error: 'This assignment is scheduled and has not opened yet.',
+                scheduledFor: assignment.scheduledFor 
+            }, { status: 403 });
+        }
+
         // 3. Check batch access
         const studentBatches: string[] = student.courses || [];
         if (!studentBatches.includes(assignment.batch)) {

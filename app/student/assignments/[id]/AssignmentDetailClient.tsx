@@ -230,7 +230,7 @@ export default function AssignmentDetailClient({ assignmentId }: AssignmentDetai
     const { assignment, questions, attendance, access, submission, scriptUrl } = data;
     const now = new Date();
 
-    const startTime = assignment.startTime ? new Date(assignment.startTime) : null;
+    const startTime = (assignment.scheduledFor || assignment.startTime) ? new Date(assignment.scheduledFor || assignment.startTime) : null;
     const hasStarted = !startTime || startTime <= now;
 
     const deadline = assignment.deadline ? new Date(assignment.deadline) : null;

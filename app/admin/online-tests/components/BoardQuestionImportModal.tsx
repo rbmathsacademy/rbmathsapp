@@ -98,6 +98,14 @@ function BoardPane({
         const names = Array.from(set).filter(Boolean).sort();
         return ['Untagged', ...names];
     }, [questions]);
+    const batchNames = useMemo(() => {
+        const set = new Set<string>();
+        questions.forEach(q => {
+            if (q.batches && Array.isArray(q.batches)) q.batches.forEach((b: string) => set.add(b));
+        });
+        const names = Array.from(set).filter(Boolean).sort();
+        return ['Untagged', ...names];
+    }, [questions]);
 
     const filteredQuestions = useMemo(() => {
         if (selectedTopics.length === 0 && !searchQuery) return [];
@@ -106,7 +114,15 @@ function BoardPane({
             if (selectedTopics.length > 0 && !selectedTopics.includes(q.topic)) return false;
             if (selectedSubtopics.length > 0 && !selectedSubtopics.includes(q.subtopic)) return false;
             if (selectedTypes.length > 0 && !selectedTypes.includes(q.type)) return false;
-            if (selectedBatches.length > 0 && (!q.batches || !selectedBatches.some(b => q.batches.includes(b)))) return false;
+            
+            if (selectedBatches.length > 0) {
+                const qBatches = q.batches || [];
+                const wantUntagged = selectedBatches.includes('Untagged');
+                const realBatches = selectedBatches.filter((b: string) => b !== 'Untagged');
+                const match = (wantUntagged && qBatches.length === 0) ||
+                    (realBatches.length > 0 && realBatches.some((b: string) => qBatches.includes(b)));
+                if (!match) return false;
+            }
             
             // Exam Name matching (handles both legacy string and new array)
             if (selectedExams.length > 0) {
@@ -185,13 +201,16 @@ function BoardPane({
                 <div className="grid grid-cols-2 gap-2">
                     <MultiSelect placeholder="Topics" options={topics} selected={selectedTopics} onChange={setSelectedTopics} />
                     <MultiSelect placeholder="Subtopics" options={subtopics} selected={selectedSubtopics} onChange={setSelectedSubtopics} />
+                    <MultiSelect placeholder="Batches" options={batchNames} selected={selectedBatches} onChange={setSelectedBatches} />
                     <MultiSelect placeholder="Exam Names" options={examNames} selected={selectedExams} onChange={setSelectedExams} />
-                    <MultiSelect 
-                        placeholder="Types" 
-                        options={['mcq', 'msq', 'fillblank', 'comprehension', 'broad']} 
-                        selected={selectedTypes} 
-                        onChange={setSelectedTypes} 
-                    />
+                    <div className="col-span-2">
+                        <MultiSelect 
+                            placeholder="Types" 
+                            options={['mcq', 'msq', 'fillblank', 'comprehension', 'broad']} 
+                            selected={selectedTypes} 
+                            onChange={setSelectedTypes} 
+                        />
+                    </div>
                 </div>
             </div>
 

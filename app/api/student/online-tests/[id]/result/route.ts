@@ -21,6 +21,49 @@ async function getStudentFromToken(req: NextRequest) {
     }
 }
 
+function resolveStudentBoard(dbStudent: any, batchName: string = ''): string {
+    let board = (dbStudent as any)?.board || '';
+    if (!board) {
+        const combined = [...((dbStudent as any)?.courses || []), batchName].join(' ').toUpperCase();
+        if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
+            board = 'WBCHSE';
+        } else if (combined.includes('ISC') || combined.includes('ICSE')) {
+            board = 'ISC';
+        } else if (combined.includes('CBSE')) {
+            board = 'CBSE';
+        }
+    }
+    return board;
+}
+
+function resolveBoardQuestions(test: any, studentBoard: string): any[] {
+    if (!test.isBoardSpecific || !test.boardQuestionSets || test.boardQuestionSets.length === 0) {
+        return test.questions ? [...test.questions] : [];
+    }
+    const cleanBoard = (studentBoard || '').trim().toLowerCase();
+    const assignedSet = test.boardQuestionSets.find((set: any) =>
+        set.boards.some((b: string) => b.trim().toLowerCase() === cleanBoard)
+    );
+    return assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+}
+
+async function findBatchStudent(phoneNumber: string) {
+    const rawClean = (phoneNumber || '').replace(/\D/g, '');
+    const normalizedPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
+    return await BatchStudent.findOne({
+        $or: [
+            { phoneNumber },
+            { phoneNumber: rawClean },
+            { phoneNumber: normalizedPhone },
+            { phoneNumber: `+91${normalizedPhone}` },
+            { phoneNumber: `91${normalizedPhone}` },
+            { alternativePhone: rawClean },
+            { alternativePhone: normalizedPhone },
+            { loginId: phoneNumber }
+        ]
+    }).lean();
+}
+
 // GET - Fetch student's own result + detailed analysis
 export async function GET(
     req: NextRequest,
@@ -98,34 +141,38 @@ export async function GET(
             }, { status: 200 });
         }
 
-        // Resolve board specific questions
-        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
-        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
-        const studentBoard = (dbStudent as any)?.board || '';
-        
+        // Resolve questions: use attempt snapshot if available, otherwise reconstruct
         let sourceQuestions: any[] = [];
-        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
-            const assignedSet = test.boardQuestionSets.find((set: any) => 
-                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
-            );
-            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        if (attempt.questions && attempt.questions.length > 0) {
+            sourceQuestions = attempt.questions;
         } else {
-            sourceQuestions = test.questions ? [...test.questions] : [];
-        }
+            const dbStudent = await findBatchStudent(student.phoneNumber);
+            const studentBoard = resolveStudentBoard(dbStudent, attempt.batchName);
+            let rawSetQuestions = resolveBoardQuestions(test, studentBoard);
 
-        if (test.config?.shuffleQuestions || test.config?.maxQuestionsToAttempt) {
-            const seedString = `${student.phoneNumber}_${testId}`;
-            sourceQuestions = seededShuffleArray(sourceQuestions, getSeededRandom(seedString));
-            if (test.config?.maxQuestionsToAttempt > 0 && test.config?.maxQuestionsToAttempt < sourceQuestions.length) {
-                sourceQuestions = sourceQuestions.slice(0, test.config.maxQuestionsToAttempt);
+            if (test.config?.shuffleQuestions || test.config?.maxQuestionsToAttempt) {
+                const seedString = `${student.phoneNumber}_${testId}`;
+                rawSetQuestions = seededShuffleArray(rawSetQuestions, getSeededRandom(seedString));
+                if (test.config?.maxQuestionsToAttempt > 0 && test.config?.maxQuestionsToAttempt < rawSetQuestions.length) {
+                    rawSetQuestions = rawSetQuestions.slice(0, test.config.maxQuestionsToAttempt);
+                }
             }
-        }
 
-        // Apply option shuffling to the source questions
-        sourceQuestions = sourceQuestions.map((q: any) => {
-            q = typeof q.toObject === 'function' ? q.toObject() : JSON.parse(JSON.stringify(q));
-            return shuffleOptionsForQuestion(q, student.phoneNumber);
-        });
+            sourceQuestions = rawSetQuestions.map((q: any) => {
+                const qObj = typeof q.toObject === 'function' ? q.toObject() : JSON.parse(JSON.stringify(q));
+                let processed = shuffleOptionsForQuestion(qObj, student.phoneNumber);
+                if (processed.type === 'comprehension' && processed.subQuestions) {
+                    processed.subQuestions = processed.subQuestions.map((sq: any) => shuffleOptionsForQuestion(sq, student.phoneNumber));
+                }
+                return processed;
+            });
+
+            // Backfill snapshot on attempt
+            await StudentTestAttempt.updateOne(
+                { _id: attempt._id },
+                { $set: { questions: sourceQuestions } }
+            );
+        }
 
         // Create a map of the student's answers for quick lookup
         const answerMap = new Map<string, any>();

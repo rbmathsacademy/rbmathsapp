@@ -72,9 +72,27 @@ export async function POST(
             if (!isExpiredByDuration) continue;
 
             // Use the attempt's own question snapshot for grading if available
-            const sourceQuestions = (attempt.questions && attempt.questions.length > 0)
+            let sourceQuestions = (attempt.questions && attempt.questions.length > 0)
                 ? attempt.questions
-                : test.questions;
+                : null;
+
+            if (!sourceQuestions) {
+                if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+                    const rawClean = attempt.studentPhone.replace(/\D/g, '');
+                    const cleanPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
+                    const BatchStudent = (await import('@/models/BatchStudent')).default;
+                    const dbStudent = await BatchStudent.findOne({
+                        $or: [{ phoneNumber: attempt.studentPhone }, { phoneNumber: cleanPhone }, { phoneNumber: rawClean }]
+                    }).lean();
+                    const studentBoard = ((dbStudent as any)?.board || '').trim().toLowerCase();
+                    const assignedSet = test.boardQuestionSets.find((set: any) =>
+                        set.boards.some((b: string) => b.trim().toLowerCase() === studentBoard)
+                    );
+                    sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+                } else {
+                    sourceQuestions = test.questions ? [...test.questions] : [];
+                }
+            }
 
             const attemptQuestionMap = new Map<string, any>();
             for (const q of sourceQuestions) {

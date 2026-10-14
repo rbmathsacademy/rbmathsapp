@@ -215,6 +215,14 @@ export default function CreateAssignmentPage() {
         reader.readAsDataURL(file);
     };
 
+    // Convert datetime-local IST input string to UTC ISO string
+    const fromISTString = (dateStr: string) => {
+        if (!dateStr) return null;
+        if (dateStr.endsWith('Z')) return dateStr;
+        const istDateStr = `${dateStr}+05:30`;
+        return new Date(istDateStr).toISOString();
+    };
+
     const handleCreate = async () => {
         if (!title.trim()) { toast.error('Please enter a title'); return; }
         if (!batch) { toast.error('Please select a batch'); return; }
@@ -239,7 +247,6 @@ export default function CreateAssignmentPage() {
         }
 
         setLoading(true);
-        setLoading(true);
         try {
             let contentStringOrArray: string | string[] = '';
             let boardContentMap: Record<string, string> = {};
@@ -253,8 +260,8 @@ export default function CreateAssignmentPage() {
                     body: JSON.stringify({
                         title: title.trim(),
                         batch,
-                        deadline: new Date(deadline).toISOString(),
-                        scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
+                        deadline: fromISTString(deadline),
+                        scheduledFor: scheduledFor ? fromISTString(scheduledFor) : null,
                         cooldownDuration: Number(cooldown) || 0,
                         type: 'INTERACTIVE',
                         content: 'INTERACTIVE',
@@ -352,8 +359,8 @@ export default function CreateAssignmentPage() {
                 body: JSON.stringify({
                     title: title.trim(),
                     batch,
-                    deadline: new Date(deadline).toISOString(),
-                    scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
+                    deadline: fromISTString(deadline),
+                    scheduledFor: scheduledFor ? fromISTString(scheduledFor) : null,
                     cooldownDuration: Number(cooldown) || 0,
                     type: isBoardWise ? 'PDF' : type,
                     content: contentStringOrArray,
@@ -466,7 +473,7 @@ export default function CreateAssignmentPage() {
                                 <div className="mt-1.5 flex items-start gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
                                     <svg className="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                                     <p className="text-xs text-amber-300">
-                                        Students will see this assignment scheduled for <b>{new Date(scheduledFor).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</b> but cannot open it until then.
+                                        Students will see this assignment scheduled for <b>{new Date(fromISTString(scheduledFor)!).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</b> but cannot open it until then.
                                     </p>
                                 </div>
                             ) : (

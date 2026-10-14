@@ -66,7 +66,12 @@ export interface QuestionPaperTestInfo {
 }
 
 export interface QuestionPaperFullTest {
-    questions: Array<{
+    isBoardSpecific?: boolean;
+    boardQuestionSets?: Array<{
+        boards: string[];
+        questions: any[];
+    }>;
+    questions?: Array<{
         id: string;
         text: string;
         type: 'mcq' | 'msq' | 'fillblank' | 'broad' | 'comprehension';
@@ -113,7 +118,11 @@ export function openQuestionPaperPrint(
     }
 
     const topicSet = new Set<string>();
-    fullTest.questions.forEach(q => {
+    const allQuestionsForTopics = (fullTest.isBoardSpecific && fullTest.boardQuestionSets && fullTest.boardQuestionSets.length > 0)
+        ? fullTest.boardQuestionSets.flatMap(s => s.questions || [])
+        : (fullTest.questions || []);
+
+    allQuestionsForTopics.forEach((q: any) => {
         if (q.topic && q.topic.trim()) topicSet.add(q.topic.trim());
     });
     const topicsStr = topicSet.size > 0 ? Array.from(topicSet).join(', ') : '—';
@@ -128,35 +137,47 @@ export function openQuestionPaperPrint(
     timeStr = timeStr.trim();
 
     // ── Build question HTML ──────────────────────────────────
-    let questionsHtml = '';
-    let qNum = 0;
+    const renderQuestionList = (qList: any[]) => {
+        let outHtml = '';
+        let qNum = 0;
+        for (const question of qList) {
+            if (question.type === 'comprehension') {
+                outHtml += `<div class="comprehension-block">`;
+                outHtml += `<div class="comprehension-label">[Read the following passage and answer the questions below]</div>`;
+                if (question.comprehensionText) {
+                    outHtml += `<div class="comprehension-text">${renderLatex(question.comprehensionText)}</div>`;
+                }
+                if (question.comprehensionImage) {
+                    outHtml += `<img src="${question.comprehensionImage}" class="question-image" alt="Passage image"/>`;
+                }
 
-    for (const question of fullTest.questions) {
-        if (question.type === 'comprehension') {
-            // Comprehension passage block
-            questionsHtml += `<div class="comprehension-block">`;
-            questionsHtml += `<div class="comprehension-label">[Read the following passage and answer the questions below]</div>`;
-            if (question.comprehensionText) {
-                questionsHtml += `<div class="comprehension-text">${renderLatex(question.comprehensionText)}</div>`;
-            }
-            if (question.comprehensionImage) {
-                questionsHtml += `<img src="${question.comprehensionImage}" class="question-image" alt="Passage image"/>`;
-            }
-
-            // Sub-questions
-            const subQs = question.subQuestions || [];
-            for (const sq of subQs) {
+                const subQs = question.subQuestions || [];
+                for (const sq of subQs) {
+                    qNum++;
+                    outHtml += buildQuestionHtml(qNum, sq.text, sq.type, sq.marks, sq.negativeMarks, sq.options);
+                }
+                outHtml += `</div>`;
+            } else {
                 qNum++;
-                questionsHtml += buildQuestionHtml(qNum, sq.text, sq.type, sq.marks, sq.negativeMarks, sq.options);
+                outHtml += buildQuestionHtml(
+                    qNum, question.text, question.type, question.marks, question.negativeMarks,
+                    question.options, question.image
+                );
             }
-            questionsHtml += `</div>`;
-        } else {
-            qNum++;
-            questionsHtml += buildQuestionHtml(
-                qNum, question.text, question.type, question.marks, question.negativeMarks,
-                question.options, question.image
-            );
         }
+        return outHtml;
+    };
+
+    let questionsHtml = '';
+    if (fullTest.isBoardSpecific && fullTest.boardQuestionSets && fullTest.boardQuestionSets.length > 0) {
+        for (const set of fullTest.boardQuestionSets) {
+            questionsHtml += `<div style="margin: 20px 0 10px 0; padding: 6px 12px; background: #eee; font-weight: bold; font-size: 12pt; border-left: 4px solid #333;">
+                Section: Board (${set.boards.join(', ')})
+            </div>`;
+            questionsHtml += renderQuestionList(set.questions || []);
+        }
+    } else {
+        questionsHtml = renderQuestionList(fullTest.questions || []);
     }
 
     // ── Get KaTeX CSS from the current page's loaded stylesheets ──

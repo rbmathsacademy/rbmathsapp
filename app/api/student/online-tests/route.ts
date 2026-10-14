@@ -31,8 +31,17 @@ export async function GET(req: NextRequest) {
         await dbConnect();
 
         // Get student's batches from MongoDB for most up-to-date data
-        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
-        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const rawClean = student.phoneNumber.replace(/\D/g, '');
+        const cleanPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
+        const dbStudent = await BatchStudent.findOne({
+            $or: [
+                { phoneNumber: student.phoneNumber },
+                { phoneNumber: cleanPhone },
+                { phoneNumber: rawClean },
+                { alternativePhone: cleanPhone },
+                { alternativePhone: rawClean }
+            ]
+        }).lean();
         const studentCourses = (dbStudent as any)?.courses || student.courses || [];
 
         if (studentCourses.length === 0) {
@@ -49,7 +58,7 @@ export async function GET(req: NextRequest) {
         const allTests = await OnlineTest.find({
             status: 'deployed',
             'deployment.batches': { $in: batchFilter }
-        }).select('title description totalMarks deployment config questions.type excludedStudents')
+        }).select('title description totalMarks deployment config questions.type excludedStudents isBoardSpecific boardQuestionSets')
             .sort({ 'deployment.startTime': -1 })
             .lean();
 
@@ -96,14 +105,24 @@ export async function GET(req: NextRequest) {
             const isDeferred = !showResultsImmediately && (!endTime || now < endTime);
             const resultsPending = !showResults || isDeferred;
 
-            const testInfo = {
-                _id: test._id,
-                title: test.title,
-                description: test.description,
-                totalMarks: test.totalMarks,
-                questionCount: (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0)
+                let fallbackCount = test.questions?.length || 0;
+                if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
+                    const studentBoard = ((dbStudent as any)?.board || '').trim().toLowerCase();
+                    const assignedSet = test.boardQuestionSets.find((s: any) =>
+                        s.boards.some((b: string) => b.trim().toLowerCase() === studentBoard)
+                    );
+                    fallbackCount = assignedSet ? assignedSet.questions.length : test.boardQuestionSets[0].questions.length;
+                }
+                const questionCount = (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0)
                     ? test.config.maxQuestionsToAttempt
-                    : (test.questions?.length || 0),
+                    : fallbackCount;
+
+                const testInfo = {
+                    _id: test._id,
+                    title: test.title,
+                    description: test.description,
+                    totalMarks: test.totalMarks,
+                    questionCount,
                 durationMinutes: test.deployment?.durationMinutes,
                 startTime: test.deployment?.startTime,
                 endTime: test.deployment?.endTime,

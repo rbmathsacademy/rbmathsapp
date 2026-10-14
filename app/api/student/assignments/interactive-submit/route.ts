@@ -53,8 +53,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Not an interactive assignment' }, { status: 400 });
         }
 
-        // 3. Check deadline
+        // 3. Check deadline & schedule
         const now = new Date();
+        if (assignment.scheduledFor && now < new Date(assignment.scheduledFor)) {
+            return NextResponse.json({ error: 'This assignment is scheduled and has not opened yet. Submissions are not accepted yet.' }, { status: 403 });
+        }
+
         const deadline = new Date(assignment.deadline);
         const cooldownEndDate = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
 

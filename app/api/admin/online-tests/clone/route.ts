@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
             questions: originalTest.questions,
             boardQuestionSets: originalTest.boardQuestionSets,
             totalMarks: originalTest.totalMarks,
+            config: originalTest.config,
             createdBy: userEmail,
             folderId: originalTest.folderId, // Keep in same folder? Yes.
             status: 'draft',

@@ -148,19 +148,75 @@ export async function PUT(request: NextRequest) {
 
             for (const attempt of attempts) {
                 // Find student's board
-                const cleanPhone = attempt.studentPhone.replace(/\D/g, '');
-                const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
-                const studentBoard = (dbStudent as any)?.board || '';
+                const rawClean = attempt.studentPhone.replace(/\D/g, '');
+                const cleanPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
+                const dbStudent = await BatchStudent.findOne({
+                    $or: [
+                        { phoneNumber: attempt.studentPhone },
+                        { phoneNumber: cleanPhone },
+                        { phoneNumber: rawClean },
+                        { alternativePhone: cleanPhone },
+                        { alternativePhone: rawClean }
+                    ]
+                }).lean();
+                let studentBoard = (dbStudent as any)?.board || '';
+                if (!studentBoard) {
+                    const combined = [...((dbStudent as any)?.courses || []), attempt.batchName || ''].join(' ').toUpperCase();
+                    if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
+                        studentBoard = 'WBCHSE';
+                    } else if (combined.includes('ISC') || combined.includes('ICSE')) {
+                        studentBoard = 'ISC';
+                    } else if (combined.includes('CBSE')) {
+                        studentBoard = 'CBSE';
+                    }
+                }
 
                 // Resolve source questions for this attempt
-                let sourceQuestions = [];
-                if (isBoardSpecific && updates.boardQuestionSets && updates.boardQuestionSets.length > 0) {
-                    const assignedSet = updates.boardQuestionSets.find((set: any) => 
-                        set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
-                    );
-                    sourceQuestions = assignedSet ? [...assignedSet.questions] : [...updates.boardQuestionSets[0].questions];
+                let sourceQuestions: any[] = [];
+                if (attempt.questions && attempt.questions.length > 0) {
+                    const allUpdatedQuestions = isBoardSpecific
+                        ? (updates.boardQuestionSets || test.boardQuestionSets || []).flatMap((s: any) => s.questions || [])
+                        : (updates.questions || test.questions || []);
+                    const updatedMap = new Map(allUpdatedQuestions.map((q: any) => [q.id, q]));
+
+                    sourceQuestions = attempt.questions.map((q: any) => {
+                        const updated: any = updatedMap.get(q.id);
+                        if (!updated) return q;
+                        return {
+                            ...q,
+                            marks: updated.marks ?? q.marks,
+                            negativeMarks: updated.negativeMarks ?? q.negativeMarks,
+                            isGrace: updated.isGrace ?? q.isGrace,
+                            explanation: updated.explanation ?? q.explanation,
+                            fillBlankAnswer: updated.fillBlankAnswer ?? q.fillBlankAnswer,
+                            caseSensitive: updated.caseSensitive ?? q.caseSensitive,
+                            isNumberRange: updated.isNumberRange ?? q.isNumberRange,
+                            numberRangeMin: updated.numberRangeMin ?? q.numberRangeMin,
+                            numberRangeMax: updated.numberRangeMax ?? q.numberRangeMax,
+                            correctIndices: updated.correctIndices ?? q.correctIndices
+                        };
+                    });
+                    attempt.questions = sourceQuestions;
                 } else {
-                    sourceQuestions = [...(updates.questions || [])];
+                    const boardSets = updates.boardQuestionSets || test.boardQuestionSets || [];
+                    if (isBoardSpecific && boardSets.length > 0) {
+                        const cleanB = studentBoard.trim().toLowerCase();
+                        const assignedSet = boardSets.find((set: any) => 
+                            set.boards.some((b: string) => b.trim().toLowerCase() === cleanB)
+                        );
+                        sourceQuestions = assignedSet ? [...assignedSet.questions] : [...boardSets[0].questions];
+                    } else {
+                        sourceQuestions = [...(updates.questions || test.questions || [])];
+                    }
+
+                    if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
+                        const seedString = `${attempt.studentPhone}_${id}`;
+                        sourceQuestions = seededShuffleArray(sourceQuestions, getSeededRandom(seedString));
+                        if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
+                            sourceQuestions = sourceQuestions.slice(0, test.config.maxQuestionsToAttempt);
+                        }
+                    }
+                    attempt.questions = sourceQuestions;
                 }
 
                 // Map new questions for fast lookup (including comprehension sub-questions)

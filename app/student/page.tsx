@@ -582,6 +582,10 @@ export default function StudentDashboard() {
                                                         </span>
                                                     )}
                                                 </div>
+                                            ) : assign.status === 'SCHEDULED' ? (
+                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black uppercase tracking-widest text-[10px]">
+                                                    <Clock className="w-3.5 h-3.5" /> Scheduled
+                                                </div>
                                             ) : assign.status === 'MISSED' ? (
                                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 font-black uppercase tracking-widest text-[10px]">
                                                     <XCircle className="w-3.5 h-3.5" /> Missed

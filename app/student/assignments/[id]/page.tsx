@@ -24,6 +24,7 @@ export default function AssignmentQuestionsPage() {
     const [deadline, setDeadline] = useState('');
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);
+    const [scheduledInfo, setScheduledInfo] = useState<string | null>(null);
 
     useEffect(() => {
         if (params.id) fetchQuestions();
@@ -38,6 +39,10 @@ export default function AssignmentQuestionsPage() {
                     return;
                 }
                 const err = await res.json();
+                if (res.status === 403 && err.scheduledFor) {
+                    setScheduledInfo(new Date(err.scheduledFor).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+                    return;
+                }
                 toast.error(err.error || 'Failed to load');
                 return;
             }
@@ -54,6 +59,27 @@ export default function AssignmentQuestionsPage() {
     };
 
     if (loading) return <div className="p-12 text-center text-gray-400">Loading questions...</div>;
+
+    if (scheduledInfo) {
+        return (
+            <div className="p-4 md:p-6 max-w-xl mx-auto text-gray-200 min-h-screen flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+                    <Clock className="w-8 h-8 text-amber-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">Assignment Not Yet Open</h2>
+                <p className="text-sm text-gray-400 mb-6">
+                    This assignment is scheduled to open on <span className="text-amber-300 font-semibold">{scheduledInfo}</span> (IST).
+                </p>
+                <button
+                    onClick={() => router.push('/student/assignments')}
+                    className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all flex items-center gap-2"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Assignments
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto text-gray-200 min-h-screen">

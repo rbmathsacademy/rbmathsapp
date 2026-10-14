@@ -81,6 +81,12 @@ export default function StudentAssignmentsPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        if (assignment.status === 'SCHEDULED' || (assignment.scheduledFor && new Date() < new Date(assignment.scheduledFor))) {
+            toast.error('This assignment is scheduled and has not opened yet.');
+            e.target.value = '';
+            return;
+        }
+
         if (file.type !== 'application/pdf') {
             toast.error('Only PDF files are allowed');
             e.target.value = '';
@@ -212,6 +218,11 @@ export default function StudentAssignmentsPage() {
     };
 
     const openAssignment = (assignment: Assignment) => {
+        if (assignment.status === 'SCHEDULED' || (assignment.scheduledFor && new Date() < new Date(assignment.scheduledFor))) {
+            toast.error('This assignment is scheduled and has not opened yet.');
+            return;
+        }
+
         if (assignment.type === 'INTERACTIVE') {
             router.push(`/student/assignments/interactive/${assignment._id}`);
         } else if (assignment.type === 'QUESTIONS') {
@@ -261,12 +272,16 @@ export default function StudentAssignmentsPage() {
         : assignments;
 
     // Tab Filters:
-    // Pending = PENDING + LATE_ALLOWED (can still submit)
+    // Pending = PENDING + LATE_ALLOWED (can still submit, and not scheduled)
     // Completed = SUBMITTED + LATE_SUBMITTED (has submitted)
     // Missed = CLOSED (deadline + cooldown expired, never submitted)
-    // Scheduled assignments (SCHEDULED status) appear in the Pending tab as a separate section
-    const pendingAssignments = batchFilteredAssignments.filter(a => ['PENDING', 'LATE_ALLOWED'].includes(a.status));
-    const scheduledAssignments = batchFilteredAssignments.filter(a => a.status === 'SCHEDULED');
+    // Scheduled assignments (SCHEDULED status or future scheduledFor) appear in the Pending tab as a separate section
+    const isAssignmentScheduled = (a: Assignment) => {
+        return a.status === 'SCHEDULED' || (!!a.scheduledFor && new Date() < new Date(a.scheduledFor));
+    };
+
+    const scheduledAssignments = batchFilteredAssignments.filter(a => isAssignmentScheduled(a));
+    const pendingAssignments = batchFilteredAssignments.filter(a => ['PENDING', 'LATE_ALLOWED'].includes(a.status) && !isAssignmentScheduled(a));
     const completedAssignments = batchFilteredAssignments.filter(a => ['SUBMITTED', 'LATE_SUBMITTED'].includes(a.status));
     const missedAssignments = batchFilteredAssignments.filter(a => a.status === 'CLOSED');
 
@@ -401,7 +416,7 @@ export default function StudentAssignmentsPage() {
                     </div>
                     <div className="space-y-3">
                         {scheduledAssignments.map(assignment => (
-                            <ScheduledAssignmentCard key={assignment._id} assignment={assignment} />
+                            <ScheduledAssignmentCard key={assignment._id} assignment={assignment} onOpenNow={fetchAssignments} />
                         ))}
                     </div>
                 </div>
@@ -657,7 +672,7 @@ function AssignmentCard({
     );
 }
 
-function ScheduledAssignmentCard({ assignment }: { assignment: Assignment }) {
+function ScheduledAssignmentCard({ assignment, onOpenNow }: { assignment: Assignment; onOpenNow?: () => void }) {
     const scheduledDate = new Date(assignment.scheduledFor!);
     const deadlineDate = new Date(assignment.deadline);
     const [timeUntilOpen, setTimeUntilOpen] = useState('');
@@ -668,8 +683,9 @@ function ScheduledAssignmentCard({ assignment }: { assignment: Assignment }) {
             const now = new Date();
             const diff = scheduledDate.getTime() - now.getTime();
             if (diff <= 0) {
-                setTimeUntilOpen('Opening soon...');
+                setTimeUntilOpen('Opening now...');
                 clearInterval(timerId);
+                if (onOpenNow) onOpenNow();
             } else {
                 const d = Math.floor(diff / 86400000);
                 const h = Math.floor((diff % 86400000) / 3600000);

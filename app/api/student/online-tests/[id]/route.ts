@@ -22,7 +22,48 @@ async function getStudentFromToken(req: NextRequest) {
     }
 }
 
+function resolveStudentBoard(dbStudent: any, studentCourses: string[] = []): string {
+    let board = (dbStudent as any)?.board || '';
+    if (!board) {
+        const combined = [...((dbStudent as any)?.courses || []), ...studentCourses].join(' ').toUpperCase();
+        if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
+            board = 'WBCHSE';
+        } else if (combined.includes('ISC') || combined.includes('ICSE')) {
+            board = 'ISC';
+        } else if (combined.includes('CBSE')) {
+            board = 'CBSE';
+        }
+    }
+    return board;
+}
 
+function resolveBoardQuestions(test: any, studentBoard: string): any[] {
+    if (!test.isBoardSpecific || !test.boardQuestionSets || test.boardQuestionSets.length === 0) {
+        return test.questions ? [...test.questions] : [];
+    }
+    const cleanBoard = (studentBoard || '').trim().toLowerCase();
+    const assignedSet = test.boardQuestionSets.find((set: any) =>
+        set.boards.some((b: string) => b.trim().toLowerCase() === cleanBoard)
+    );
+    return assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+}
+
+async function findBatchStudent(phoneNumber: string) {
+    const rawClean = (phoneNumber || '').replace(/\D/g, '');
+    const normalizedPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
+    return await BatchStudent.findOne({
+        $or: [
+            { phoneNumber },
+            { phoneNumber: rawClean },
+            { phoneNumber: normalizedPhone },
+            { phoneNumber: `+91${normalizedPhone}` },
+            { phoneNumber: `91${normalizedPhone}` },
+            { alternativePhone: rawClean },
+            { alternativePhone: normalizedPhone },
+            { loginId: phoneNumber }
+        ]
+    }).lean();
+}
 
 // GET - Fetch test for taking (strips answers)
 export async function GET(
@@ -44,8 +85,7 @@ export async function GET(
         }
 
         // Check student is in a deployed batch
-        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
-        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const dbStudent = await findBatchStudent(student.phoneNumber);
         const studentCourses = (dbStudent as any)?.courses || student.courses || [];
         const deployedBatches = test.deployment?.batches || [];
         const hasAccess = studentCourses.some((c: string) => deployedBatches.includes(c));
@@ -61,41 +101,32 @@ export async function GET(
         // Check for existing attempt
         let attempt = await StudentTestAttempt.findOne({ testId, studentPhone: student.phoneNumber });
 
-        let sourceQuestions: any[] = [];
-        const studentBoard = (dbStudent as any)?.board || '';
-        
-        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
-            // Find the set that includes the student's board
-            const assignedSet = test.boardQuestionSets.find((set: any) => 
-                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
-            );
-            // Fallback to the first set if board doesn't match
-            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
-        } else {
-            sourceQuestions = [...(test.questions || [])];
-        }
+        const studentBoard = resolveStudentBoard(dbStudent, studentCourses);
+        let sourceQuestions: any[] = resolveBoardQuestions(test, studentBoard);
 
         if (attempt && attempt.status === 'in_progress') {
             attempt.resumeCount = (attempt.resumeCount || 0) + 1;
 
             if (attempt.resumeCount > 1) { // They are resuming for the SECOND time
                 // Auto-grade their latest saved answers
-                if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
+                if (attempt.questions && attempt.questions.length > 0) {
+                    sourceQuestions = attempt.questions;
+                } else if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
                     const seedString = `${student.phoneNumber}_${testId}`;
                     const randomFunc = getSeededRandom(seedString);
                     sourceQuestions = seededShuffleArray(sourceQuestions, randomFunc);
                     if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
                         sourceQuestions = sourceQuestions.slice(0, test.config.maxQuestionsToAttempt);
                     }
+                    sourceQuestions = sourceQuestions.map((q: any) => {
+                        const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
+                        let processed = shuffleOptionsForQuestion(qObj, student.phoneNumber);
+                        if (processed.type === 'comprehension' && processed.subQuestions) {
+                            processed.subQuestions = processed.subQuestions.map((sq: any) => shuffleOptionsForQuestion(sq, student.phoneNumber));
+                        }
+                        return processed;
+                    });
                 }
-                sourceQuestions = sourceQuestions.map((q: any) => {
-                    const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
-                    let processed = shuffleOptionsForQuestion(qObj, student.phoneNumber);
-                    if (processed.type === 'comprehension' && processed.subQuestions) {
-                        processed.subQuestions = processed.subQuestions.map((sq: any) => shuffleOptionsForQuestion(sq, student.phoneNumber));
-                    }
-                    return processed;
-                });
                 const questionMap = new Map<string, any>();
                 for (const q of sourceQuestions) {
                     questionMap.set(q.id, q);
@@ -223,37 +254,47 @@ export async function GET(
         }
 
         // Prepare questions (deterministic layout)
-        let attemptQuestions = sourceQuestions.map((q: any) => {
-            const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
-            if (qObj.subQuestions) {
-                qObj.subQuestions = qObj.subQuestions.map((sq: any) =>
-                    sq.toObject ? sq.toObject() : { ...sq, options: sq.options ? [...sq.options] : [], correctIndices: sq.correctIndices ? [...sq.correctIndices] : [] }
-                );
+        let attemptQuestions: any[] = [];
+        if (attempt?.questions && attempt.questions.length > 0) {
+            attemptQuestions = attempt.questions;
+        } else {
+            attemptQuestions = sourceQuestions.map((q: any) => {
+                const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
+                if (qObj.subQuestions) {
+                    qObj.subQuestions = qObj.subQuestions.map((sq: any) =>
+                        sq.toObject ? sq.toObject() : { ...sq, options: sq.options ? [...sq.options] : [], correctIndices: sq.correctIndices ? [...sq.correctIndices] : [] }
+                    );
+                }
+                if (qObj.options) qObj.options = [...qObj.options];
+                if (qObj.correctIndices) qObj.correctIndices = [...qObj.correctIndices];
+                return qObj;
+            });
+
+            if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
+                const seedString = `${student.phoneNumber}_${testId}`;
+                const randomFunc = getSeededRandom(seedString);
+                attemptQuestions = seededShuffleArray(attemptQuestions, randomFunc);
             }
-            if (qObj.options) qObj.options = [...qObj.options];
-            if (qObj.correctIndices) qObj.correctIndices = [...qObj.correctIndices];
-            return qObj;
-        });
 
-        if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
-            const seedString = `${student.phoneNumber}_${testId}`;
-            const randomFunc = getSeededRandom(seedString);
-            attemptQuestions = seededShuffleArray(attemptQuestions, randomFunc);
-        }
-
-        if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
-            attemptQuestions = attemptQuestions.slice(0, test.config.maxQuestionsToAttempt);
-        }
-
-        attemptQuestions = attemptQuestions.map((q: any) => {
-            let shuffledQ = shuffleOptionsForQuestion(q, student.phoneNumber);
-            if (shuffledQ.type === 'comprehension' && shuffledQ.subQuestions) {
-                shuffledQ.subQuestions = shuffledQ.subQuestions.map((sq: any) => {
-                    return shuffleOptionsForQuestion(sq, student.phoneNumber);
-                });
+            if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
+                attemptQuestions = attemptQuestions.slice(0, test.config.maxQuestionsToAttempt);
             }
-            return shuffledQ;
-        });
+
+            attemptQuestions = attemptQuestions.map((q: any) => {
+                let shuffledQ = shuffleOptionsForQuestion(q, student.phoneNumber);
+                if (shuffledQ.type === 'comprehension' && shuffledQ.subQuestions) {
+                    shuffledQ.subQuestions = shuffledQ.subQuestions.map((sq: any) => {
+                        return shuffleOptionsForQuestion(sq, student.phoneNumber);
+                    });
+                }
+                return shuffledQ;
+            });
+
+            if (attempt && attempt.status === 'in_progress') {
+                attempt.questions = attemptQuestions;
+                await attempt.save();
+            }
+        }
 
         // Strip answers from questions
         let questions = attemptQuestions.map((q: any) => {
@@ -356,8 +397,7 @@ export async function POST(
         }
 
         // Check access
-        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
-        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
+        const dbStudent = await findBatchStudent(student.phoneNumber);
         const studentCourses = (dbStudent as any)?.courses || student.courses || [];
         const deployedBatches = test.deployment?.batches || [];
         const hasAccess = studentCourses.some((c: string) => deployedBatches.includes(c));
@@ -375,17 +415,8 @@ export async function POST(
             return NextResponse.json({ attempt, message: 'Resuming existing attempt' });
         }
 
-        let sourceQuestions: any[] = [];
-        const studentBoard = (dbStudent as any)?.board || '';
-        
-        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
-            const assignedSet = test.boardQuestionSets.find((set: any) => 
-                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
-            );
-            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
-        } else {
-            sourceQuestions = [...(test.questions || [])];
-        }
+        const studentBoard = resolveStudentBoard(dbStudent, studentCourses);
+        const sourceQuestions = resolveBoardQuestions(test, studentBoard);
 
         let attemptQuestions = sourceQuestions.map((q: any) => {
             const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
@@ -401,7 +432,7 @@ export async function POST(
             return qObj;
         });
 
-                // 1. Shuffle question order if configured
+        // 1. Shuffle question order if configured
         if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
             const seedString = `${student.phoneNumber}_${testId}`;
             const randomFunc = getSeededRandom(seedString);
@@ -436,7 +467,7 @@ export async function POST(
             status: 'in_progress',
             startedAt: new Date(),
             answers: [],
-            questions: [], // We no longer save question snapshots
+            questions: attemptQuestions, // Persist question snapshot
             score: 0,
             percentage: 0,
             timeSpent: 0,
@@ -537,39 +568,39 @@ export async function PUT(
             return NextResponse.json({ error: 'Test not found' }, { status: 404 });
         }
 
-        // Resolve board specific questions
-        const cleanPhone = student.phoneNumber.replace(/\D/g, '');
-        const dbStudent = await BatchStudent.findOne({ phoneNumber: cleanPhone }).lean();
-        const studentBoard = (dbStudent as any)?.board || '';
-        
+        // Resolve questions for grading
         let sourceQuestions: any[] = [];
-        if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
-            const assignedSet = test.boardQuestionSets.find((set: any) => 
-                set.boards.some((b: string) => b.toLowerCase() === studentBoard.toLowerCase())
-            );
-            sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        if (attempt.questions && attempt.questions.length > 0) {
+            sourceQuestions = attempt.questions;
         } else {
-            sourceQuestions = [...(test.questions || [])];
-        }
-        if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
-            const seedString = `${student.phoneNumber}_${testId}`;
-            const randomFunc = getSeededRandom(seedString);
-            sourceQuestions = seededShuffleArray(sourceQuestions, randomFunc);
-            if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
-                sourceQuestions = sourceQuestions.slice(0, test.config.maxQuestionsToAttempt);
+            const dbStudent = await findBatchStudent(student.phoneNumber);
+            const studentBoard = resolveStudentBoard(dbStudent, (attempt.batchName ? [attempt.batchName] : []));
+            let rawSetQuestions = resolveBoardQuestions(test, studentBoard);
+            if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
+                const seedString = `${student.phoneNumber}_${testId}`;
+                const randomFunc = getSeededRandom(seedString);
+                rawSetQuestions = seededShuffleArray(rawSetQuestions, randomFunc);
+                if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
+                    rawSetQuestions = rawSetQuestions.slice(0, test.config.maxQuestionsToAttempt);
+                }
             }
+            sourceQuestions = rawSetQuestions.map((q: any) => {
+                const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
+                let processed = shuffleOptionsForQuestion(qObj, student.phoneNumber);
+                if (processed.type === 'comprehension' && processed.subQuestions) {
+                    processed.subQuestions = processed.subQuestions.map((sq: any) => shuffleOptionsForQuestion(sq, student.phoneNumber));
+                }
+                return processed;
+            });
+            attempt.questions = sourceQuestions;
         }
-        
+
         const questionMap = new Map<string, any>();
-        for (let q of sourceQuestions) {
-            q = typeof q.toObject === 'function' ? q.toObject() : JSON.parse(JSON.stringify(q));
-            const processedQ = shuffleOptionsForQuestion(q, student.phoneNumber);
-            questionMap.set(processedQ.id, processedQ);
-            if (processedQ.type === 'comprehension' && processedQ.subQuestions) {
-                for (let sq of processedQ.subQuestions) {
-                    sq = typeof sq.toObject === 'function' ? sq.toObject() : JSON.parse(JSON.stringify(sq));
-                    const processedSQ = shuffleOptionsForQuestion(sq, student.phoneNumber);
-                    questionMap.set(processedSQ.id, processedSQ);
+        for (const q of sourceQuestions) {
+            questionMap.set(q.id, q);
+            if (q.type === 'comprehension' && q.subQuestions) {
+                for (const sq of q.subQuestions) {
+                    questionMap.set(sq.id, sq);
                 }
             }
         }

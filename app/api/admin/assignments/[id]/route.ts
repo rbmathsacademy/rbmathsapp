@@ -160,7 +160,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         const updateData: any = {};
         if (body.title) updateData.title = body.title;
-        if (body.deadline) updateData.deadline = body.deadline;
+        if (body.deadline) updateData.deadline = new Date(body.deadline);
         if (body.folderId !== undefined) updateData.folderId = body.folderId; // Allow null to remove from folder
         if (body.cooldownDuration !== undefined) updateData.cooldownDuration = Number(body.cooldownDuration);
         if (body.content !== undefined) updateData.content = body.content;

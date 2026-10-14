@@ -60,6 +60,12 @@ export async function POST(req: NextRequest) {
         }
 
         const now = new Date();
+
+        // Check if assignment is scheduled for future
+        if (assignment.scheduledFor && now < new Date(assignment.scheduledFor)) {
+            return NextResponse.json({ error: 'This assignment is scheduled and has not opened yet. Submissions are not accepted yet.' }, { status: 403 });
+        }
+
         const deadline = new Date(assignment.deadline);
         const cooldownEndDate = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
 
