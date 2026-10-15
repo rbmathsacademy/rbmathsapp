@@ -81,18 +81,20 @@ export default function DeployTestPage() {
 
     const loadData = async () => {
         try {
-            // Fetch test
-            const testsRes = await fetch('/api/admin/online-tests', {
+            // Fetch test directly by id — fetching the whole list here would miss
+            // any test sitting inside a folder, since the list endpoint defaults to
+            // root-only tests unless a folder/all filter is explicitly passed.
+            const testRes = await fetch(`/api/admin/online-tests/${testId}`, {
                 headers: { 'X-User-Email': userEmail! }
             });
-            const tests = await testsRes.json();
-            const foundTest = tests.find((t: any) => t._id === testId);
 
-            if (!foundTest) {
+            if (!testRes.ok) {
                 toast.error('Test not found');
                 router.push('/admin/online-tests');
                 return;
             }
+
+            const foundTest = await testRes.json();
 
             setTest(foundTest);
 

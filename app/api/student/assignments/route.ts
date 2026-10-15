@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
+import { resolveStudentJoinedAt } from '@/lib/studentJoinDate';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -68,6 +69,7 @@ export async function GET(req: NextRequest) {
         // 5. Enhance Assignment Data with Status
         const now = new Date();
         const studentBoard = student.board || null;
+        const studentJoinedAt = resolveStudentJoinedAt(student);
         let hasBoardWiseAssignment = false;
 
         const enhancedAssignments = assignments.map((a: any) => {
@@ -84,6 +86,10 @@ export async function GET(req: NextRequest) {
             } else if (scheduledFor && now < scheduledFor) {
                 // Assignment is scheduled for a future time — not yet open
                 status = 'SCHEDULED';
+            } else if (studentJoinedAt > deadline) {
+                // The deadline had already passed before this student even joined —
+                // never mark it as something they personally missed.
+                status = 'NOT_ENROLLED';
             } else {
                 if (now < deadline) {
                     status = 'PENDING';

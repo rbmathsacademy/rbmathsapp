@@ -219,7 +219,9 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
         if (!filteredResponses || filteredResponses.length === 0) return toast.error('No students to deploy to');
         
         try {
-            const res = await fetch('/api/admin/online-tests', {
+            // all=1: this picker needs every draft test regardless of which folder
+            // (if any) it's sitting in, not just root/uncategorized ones.
+            const res = await fetch('/api/admin/online-tests?all=1', {
                 headers: { 'X-User-Email': localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).email : '' }
             });
             const tests = await res.json();

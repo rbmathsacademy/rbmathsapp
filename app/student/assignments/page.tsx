@@ -19,7 +19,7 @@ interface Assignment {
     scheduledFor: string | null;
     cooldownDuration: number;
     cooldownEndDate: string;
-    status: 'PENDING' | 'LATE_ALLOWED' | 'SUBMITTED' | 'LATE_SUBMITTED' | 'CLOSED' | 'SCHEDULED';
+    status: 'PENDING' | 'LATE_ALLOWED' | 'SUBMITTED' | 'LATE_SUBMITTED' | 'CLOSED' | 'SCHEDULED' | 'NOT_ENROLLED';
     submissionId?: string;
     submissionLink?: string;
     correctionStatus: 'PENDING' | 'CORRECTED';
@@ -284,6 +284,9 @@ export default function StudentAssignmentsPage() {
     const pendingAssignments = batchFilteredAssignments.filter(a => ['PENDING', 'LATE_ALLOWED'].includes(a.status) && !isAssignmentScheduled(a));
     const completedAssignments = batchFilteredAssignments.filter(a => ['SUBMITTED', 'LATE_SUBMITTED'].includes(a.status));
     const missedAssignments = batchFilteredAssignments.filter(a => a.status === 'CLOSED');
+    // Deadline fell before this student joined — never counted as missed, shown
+    // separately so it's clear why it doesn't appear in the Missed tab/count.
+    const preJoinAssignments = batchFilteredAssignments.filter(a => a.status === 'NOT_ENROLLED');
 
     const getDisplayed = () => {
         if (activeTab === 'PENDING') return pendingAssignments;
@@ -446,6 +449,30 @@ export default function StudentAssignmentsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Before You Joined — deadlines that passed before this student enrolled.
+                Never counted as missed; shown separately so it's clear why. */}
+            {activeTab === 'MISSED' && preJoinAssignments.length > 0 && (
+                <div className="mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Clock className="w-4 h-4 text-slate-500" />
+                        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Before You Joined (not counted)</h2>
+                    </div>
+                    <div className="space-y-2">
+                        {preJoinAssignments.map(assignment => (
+                            <div key={assignment._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[#1a1f2e]/60 ring-1 ring-white/5">
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium text-slate-400 truncate">{assignment.title}</p>
+                                    <p className="text-[11px] text-slate-600 mt-0.5">
+                                        Due {new Date(assignment.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
+                                    </p>
+                                </div>
+                                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-white/5 px-2 py-1 rounded-lg">Before Joining</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -5,6 +5,7 @@ import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
 import { resolveStudentBoard, findBoardSet } from '@/lib/boardAccess';
+import { resolveStudentJoinedAt } from '@/lib/studentJoinDate';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -46,8 +47,10 @@ export async function GET(req: NextRequest) {
         const studentCourses = (dbStudent as any)?.courses || student.courses || [];
 
         if (studentCourses.length === 0) {
-            return NextResponse.json({ available: [], upcoming: [], completed: [], expired: [] });
+            return NextResponse.json({ available: [], upcoming: [], completed: [], expired: [], preJoin: [] });
         }
+
+        const studentJoinedAt = dbStudent ? resolveStudentJoinedAt(dbStudent as any) : null;
 
         // Determine selected batch (default to ALL available batches if not specified)
         const requestedBatch = req.nextUrl.searchParams.get('batch');
@@ -92,6 +95,7 @@ export async function GET(req: NextRequest) {
         const upcoming: any[] = [];
         const completed: any[] = [];
         const expired: any[] = [];
+        const preJoin: any[] = [];
 
         for (const test of tests) {
             const startTime = test.deployment?.startTime ? new Date(test.deployment.startTime) : null;
@@ -140,6 +144,12 @@ export async function GET(req: NextRequest) {
 
             if (attempt?.status === 'completed') {
                 completed.push(testInfo);
+            } else if (studentJoinedAt && startTime && studentJoinedAt > startTime) {
+                // This test's window was already open — or over — before the student
+                // even joined. Never surface it as "available"/"missed"; noExpiry is
+                // for staying caught up during enrollment, not resurrecting tests
+                // that predate it.
+                preJoin.push(testInfo);
             } else if (dbStudent?.noExpiry) {
                 // For noExpiry students, uncompleted tests are ALWAYS available regardless of dates
                 available.push(testInfo);
@@ -159,7 +169,7 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        return NextResponse.json({ available, upcoming, completed, expired });
+        return NextResponse.json({ available, upcoming, completed, expired, preJoin });
     } catch (error: any) {
         console.error('Error fetching student tests:', error);
         return NextResponse.json({ error: 'Failed to fetch tests' }, { status: 500 });

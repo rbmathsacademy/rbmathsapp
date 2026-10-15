@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
+import { resolveStudentJoinedAt } from '@/lib/studentJoinDate';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
         let totalScore = 0;
         let highestScore = 0;
         const now = new Date();
+        const studentJoinedAt = dbStudent ? resolveStudentJoinedAt(dbStudent) : null;
         let missed = 0;
         let pending = 0;
 
@@ -102,7 +104,12 @@ export async function GET(req: NextRequest) {
                     if ((attempt.percentage || 0) > highestScore) highestScore = Math.round(attempt.percentage || 0);
                 }
             } else {
-                if (endTime && now > endTime) {
+                // A test whose window closed before the student even joined was
+                // never theirs to miss — leave it out of the count entirely.
+                const isPreJoin = !!(studentJoinedAt && startTime && studentJoinedAt > startTime);
+                if (isPreJoin) {
+                    // not counted
+                } else if (endTime && now > endTime) {
                     missed++;
                 } else if (
                     (!endTime || now <= endTime) &&

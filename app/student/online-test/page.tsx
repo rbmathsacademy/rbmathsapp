@@ -62,6 +62,9 @@ export default function OnlineTestPage() {
     const [upcoming, setUpcoming] = useState<TestInfo[]>([]);
     const [completed, setCompleted] = useState<TestInfo[]>([]);
     const [expired, setExpired] = useState<TestInfo[]>([]);
+    // Tests whose window was already over before this student joined — never
+    // counted as missed, shown separately instead.
+    const [preJoin, setPreJoin] = useState<TestInfo[]>([]);
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
@@ -95,6 +98,7 @@ export default function OnlineTestPage() {
             setUpcoming(data.upcoming || []);
             setCompleted(data.completed || []);
             setExpired(data.expired || []);
+            setPreJoin(data.preJoin || []);
         } catch (error) {
             console.error('Error fetching tests:', error);
         } finally {
@@ -537,7 +541,7 @@ export default function OnlineTestPage() {
                             </h2>
                         </div>
 
-                        {completed.length === 0 && expired.length === 0 && (
+                        {completed.length === 0 && expired.length === 0 && preJoin.length === 0 && (
                             <div className="p-8 rounded-2xl bg-white/5 ring-1 ring-white/5 text-center text-slate-500">
                                 <p>No test history yet.</p>
                             </div>
@@ -627,6 +631,26 @@ export default function OnlineTestPage() {
                                 </div>
                             </div>
                         ))}
+
+                        {preJoin.length > 0 && (
+                            <div className="pt-2">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Clock className="h-3.5 w-3.5 text-slate-500" />
+                                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Before You Joined (not counted)</h3>
+                                </div>
+                                <div className="space-y-2">
+                                    {preJoin.map(test => (
+                                        <div key={test._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/20 ring-1 ring-white/5">
+                                            <div className="min-w-0 flex-1">
+                                                <h3 className="font-bold text-slate-400 text-sm truncate">{test.title}</h3>
+                                                <div className="text-[10px] text-slate-600 mt-0.5">Ended {formatDate(test.endTime || '')}</div>
+                                            </div>
+                                            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-white/5 px-2 py-1 rounded-lg">Before Joining</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>

@@ -30,15 +30,6 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useStudentProfile } from './StudentProfileContext';
 import BatchTabSwitcher from '../components/BatchTabSwitcher';
 
-function getGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 5) return 'Burning the midnight oil';
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    if (hour < 21) return 'Good evening';
-    return 'Good night';
-}
-
 const FREE_BATCH = 'Class XI (Free batch) 2026-27';
 const FREE_BATCH_LOWER = FREE_BATCH.trim().toLowerCase();
 
@@ -183,9 +174,20 @@ export default function StudentDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute top-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse"></div>
-                <div className="text-blue-400 animate-pulse text-xl font-medium relative z-10 font-sans">Loading your portal...</div>
+            <div className="min-h-screen bg-[#060912] flex items-center justify-center relative overflow-hidden">
+                <div className="absolute top-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-indigo-600/15 blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[20%] right-[20%] w-[40%] h-[40%] rounded-full bg-blue-500/10 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="relative z-10 flex flex-col items-center gap-4">
+                    <div className="relative h-14 w-28">
+                        <Image src="/rb-logo.png" alt="" fill className="object-contain" priority />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="h-2 w-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="h-2 w-2 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <div className="text-slate-400 text-sm font-medium tracking-wide font-sans">Loading your portal...</div>
+                </div>
             </div>
         );
     }
@@ -213,13 +215,17 @@ export default function StudentDashboard() {
             : allNavItems;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#060912] font-sans text-slate-200 relative overflow-x-hidden selection:bg-blue-500/30">
             <Toaster position="top-center" />
 
-            {/* Background Accents (matching premium feel without heavy blur to prevent banding) */}
+            {/* Premium layered mesh background: deep base + soft colour blobs + faint grain */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle,rgba(79,70,229,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s' }}></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#060912_0%,#0a0f1e_45%,#070b16_100%)]" />
+                <div className="absolute top-[-25%] left-[-15%] w-[75%] h-[75%] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.14)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '6s' }}></div>
+                <div className="absolute bottom-[-25%] right-[-15%] w-[75%] h-[75%] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.12)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }}></div>
+                <div className="absolute top-[30%] right-[5%] w-[40%] h-[40%] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.08)_0%,transparent_70%)] animate-pulse" style={{ animationDuration: '7s', animationDelay: '1s' }}></div>
+                {/* Faint grain for a textured, non-flat finish */}
+                <div className="absolute inset-0 opacity-[0.025] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
             </div>
 
             {/* Mobile Sidebar Overlay */}
@@ -231,12 +237,12 @@ export default function StudentDashboard() {
             )}
 
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 h-full w-64 bg-[#0a0f1a]/95 backdrop-blur-xl border-r border-white/10 z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+            <aside className={`fixed inset-y-0 left-0 h-full w-64 bg-[#0a0f1a]/90 backdrop-blur-2xl border-r border-white/10 shadow-[inset_-1px_0_0_0_rgba(255,255,255,0.03)] z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
                 <div className="flex flex-col h-full font-sans">
                     <div className="p-4 sm:p-6 border-b border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
                         <div className="flex items-center gap-3">
-                            <div className="relative h-11 w-11 rounded-xl overflow-hidden ring-1 ring-white/15 shadow-lg shadow-blue-500/20 shrink-0 bg-[#0e1420]">
-                                <Image src="/rb-logo.png" alt="RB Maths Academy" fill className="object-cover" priority />
+                            <div className="relative h-10 shrink-0 rounded-lg ring-1 ring-white/15 shadow-lg shadow-blue-500/20 bg-[#0e1420] px-1.5 flex items-center">
+                                <Image src="/rb-logo.png" alt="RB Maths Academy" width={720} height={350} className="h-8 w-auto object-contain" priority />
                             </div>
                             <div>
                                 <h1 className="text-[13px] font-bold text-white tracking-tight">Student<span className="text-blue-400">Portal</span></h1>
@@ -289,15 +295,15 @@ export default function StudentDashboard() {
             {/* Main Content */}
             <main className="lg:ml-64 min-h-screen relative z-10 flex flex-col font-sans">
                 {/* Top Header (Mobile) */}
-                <header className="sticky top-0 z-30 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/80 px-4 py-3 lg:hidden flex items-center justify-between">
+                <header className="sticky top-0 z-30 backdrop-blur-2xl border-b border-white/5 bg-[#060912]/85 px-4 py-3 lg:hidden flex items-center justify-between">
                     <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition-all">
                         <Menu className="h-5 w-5" />
                     </button>
                     <div className="flex items-center gap-2">
-                        <div className="relative h-6 w-6 rounded-md overflow-hidden ring-1 ring-white/15 shrink-0">
-                            <Image src="/rb-logo.png" alt="" fill className="object-cover" />
+                        <div className="relative h-6 shrink-0">
+                            <Image src="/rb-logo.png" alt="" width={720} height={350} className="h-6 w-auto object-contain" />
                         </div>
-                        <h1 className="text-sm font-bold text-white tracking-tight">Dashboard</h1>
+                        <h1 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 tracking-tight">Dashboard</h1>
                     </div>
                     <div className="w-9 h-9"></div>
                 </header>
@@ -305,7 +311,7 @@ export default function StudentDashboard() {
                 <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
 
                     {/* Header Card */}
-                    <div className="bg-[#1a1f2e] ring-1 ring-white/5 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 relative z-10 shadow-lg shadow-black/20 overflow-hidden">
+                    <div className="bg-white/[0.035] backdrop-blur-xl ring-1 ring-white/[0.08] rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 relative z-10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] overflow-hidden">
                         {/* Premium top accent + soft glow */}
                         <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-indigo-400 to-transparent" />
                         <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-blue-500/10 blur-[80px] pointer-events-none" />
@@ -318,9 +324,8 @@ export default function StudentDashboard() {
                                 </div>
                             </div>
                             <div className="text-center sm:text-left">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-400/80 mb-0.5">{getGreeting()}{userRole !== 'guardian' ? ',' : ''}</p>
                                 <div className="flex flex-col sm:flex-row items-center gap-2">
-                                    <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{data.student.name}</h1>
+                                    <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-blue-200 tracking-tight">{data.student.name}</h1>
                                     {userRole === 'guardian' && (
                                         <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest">
                                             Guardian View
@@ -435,13 +440,13 @@ export default function StudentDashboard() {
                             } as StatCard] : []),
                         ];
 
-                        const accentMap: Record<string, { ring: string; iconBg: string; iconText: string; valueText: string; glow: string }> = {
-                            blue: { ring: 'hover:ring-blue-500/40', iconBg: 'bg-blue-500/10', iconText: 'text-blue-400', valueText: 'text-blue-400', glow: 'from-blue-500/10' },
-                            emerald: { ring: 'hover:ring-emerald-500/40', iconBg: 'bg-emerald-500/10', iconText: 'text-emerald-400', valueText: 'text-emerald-400', glow: 'from-emerald-500/10' },
-                            rose: { ring: 'hover:ring-rose-500/40', iconBg: 'bg-rose-500/10', iconText: 'text-rose-400', valueText: 'text-rose-400', glow: 'from-rose-500/10' },
-                            purple: { ring: 'hover:ring-purple-500/40', iconBg: 'bg-purple-500/10', iconText: 'text-purple-400', valueText: 'text-purple-400', glow: 'from-purple-500/10' },
-                            amber: { ring: 'hover:ring-amber-500/40', iconBg: 'bg-amber-500/10', iconText: 'text-amber-400', valueText: 'text-amber-400', glow: 'from-amber-500/10' },
-                            cyan: { ring: 'hover:ring-cyan-400/40', iconBg: 'bg-cyan-400/10', iconText: 'text-cyan-400', valueText: 'text-cyan-400', glow: 'from-cyan-400/10' },
+                        const accentMap: Record<string, { ring: string; iconBg: string; iconText: string; valueText: string; glow: string; bar: string }> = {
+                            blue: { ring: 'hover:ring-blue-500/40', iconBg: 'bg-blue-500/10', iconText: 'text-blue-400', valueText: 'text-blue-400', glow: 'from-blue-500/10', bar: 'from-blue-500 to-cyan-400' },
+                            emerald: { ring: 'hover:ring-emerald-500/40', iconBg: 'bg-emerald-500/10', iconText: 'text-emerald-400', valueText: 'text-emerald-400', glow: 'from-emerald-500/10', bar: 'from-emerald-500 to-teal-400' },
+                            rose: { ring: 'hover:ring-rose-500/40', iconBg: 'bg-rose-500/10', iconText: 'text-rose-400', valueText: 'text-rose-400', glow: 'from-rose-500/10', bar: 'from-rose-500 to-pink-400' },
+                            purple: { ring: 'hover:ring-purple-500/40', iconBg: 'bg-purple-500/10', iconText: 'text-purple-400', valueText: 'text-purple-400', glow: 'from-purple-500/10', bar: 'from-purple-500 to-violet-400' },
+                            amber: { ring: 'hover:ring-amber-500/40', iconBg: 'bg-amber-500/10', iconText: 'text-amber-400', valueText: 'text-amber-400', glow: 'from-amber-500/10', bar: 'from-amber-500 to-orange-400' },
+                            cyan: { ring: 'hover:ring-cyan-400/40', iconBg: 'bg-cyan-400/10', iconText: 'text-cyan-400', valueText: 'text-cyan-400', glow: 'from-cyan-400/10', bar: 'from-cyan-400 to-blue-400' },
                         };
 
                         const isOddCount = cards.length % 2 === 1;
@@ -455,10 +460,12 @@ export default function StudentDashboard() {
                                         <button
                                             key={card.id}
                                             onClick={card.onClick}
-                                            className={`text-left bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group ${a.ring} transition-all duration-300 shadow-lg shadow-black/20 hover:-translate-y-0.5 active:scale-[0.97] relative overflow-hidden ${isLastOdd ? 'col-span-2' : ''}`}
+                                            className={`text-left bg-white/[0.035] backdrop-blur-xl ring-1 ring-white/[0.08] p-4 sm:p-5 rounded-3xl group ${a.ring} transition-all duration-300 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 active:scale-[0.97] relative overflow-hidden ${isLastOdd ? 'col-span-2' : ''}`}
                                         >
                                             {/* Soft directional glow wash, unique per accent */}
                                             <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br ${a.glow} to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
+                                            {/* Accent hairline */}
+                                            <div className={`absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r ${a.bar} opacity-70`} />
 
                                             {!!card.badge && card.badge > 0 && (
                                                 <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg shadow-lg animate-pulse">
@@ -468,7 +475,7 @@ export default function StudentDashboard() {
 
                                             <div className="flex justify-between items-start mb-2 sm:mb-3 relative z-10">
                                                 <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">{card.label}</p>
-                                                <div className={`p-1.5 sm:p-2 rounded-lg ${a.iconBg} ${a.iconText} shrink-0`}>
+                                                <div className={`p-1.5 sm:p-2 rounded-xl ${a.iconBg} ${a.iconText} ring-1 ring-white/10 shrink-0 group-hover:scale-110 transition-transform duration-300`}>
                                                     <card.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                 </div>
                                             </div>
@@ -497,7 +504,7 @@ export default function StudentDashboard() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {data.offlineExams.map((exam) => (
-                                    <div key={exam.examId} className="bg-[#1a1f2e] border border-red-500/20 rounded-2xl overflow-hidden shadow-xl hover:translate-y-[-2px] transition-all duration-300 hover:border-red-500/40">
+                                    <div key={exam.examId} className="bg-white/[0.035] backdrop-blur-xl border border-red-500/20 rounded-3xl overflow-hidden shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 transition-all duration-300 hover:border-red-500/40">
                                         {/* Header */}
                                         <div className="bg-gradient-to-r from-red-500/15 to-orange-500/10 px-4 sm:px-5 py-2.5 sm:py-3 flex justify-between items-center border-b border-red-500/20">
                                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-200 min-w-0 flex-1 mr-2">
@@ -552,16 +559,16 @@ export default function StudentDashboard() {
                     {/* Progress Reports (Chronological List - exact copy from Admin Analytics Modal) */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                         <div>
-                            <h3 className="text-lg font-black text-white mb-6 tracking-wide flex items-center gap-3 uppercase">
-                                <div className="h-8 w-1 bg-blue-500 rounded-full"></div>
+                            <h3 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 mb-6 tracking-wide flex items-center gap-3 uppercase">
+                                <div className="h-8 w-1 bg-gradient-to-b from-blue-400 to-indigo-600 rounded-full shadow-[0_0_12px_rgba(59,130,246,0.5)]"></div>
                                 <BarChart2 className="w-5 h-5 text-blue-400" />
                                 Test Progress Report
                             </h3>
 
                             <div className="space-y-4">
                                 {data.tests.filter(t => t.status !== 'not_enrolled').map((test) => (
-                                    <div key={test.testId} className="bg-[#1a1f2e] border border-white/5 rounded-2xl overflow-hidden shadow-xl hover:translate-y-[-2px] transition-all duration-300">
-                                        <div className="bg-white/5 px-4 sm:px-5 py-2.5 sm:py-3.5 flex justify-between items-center border-b border-white/5">
+                                    <div key={test.testId} className="bg-white/[0.035] backdrop-blur-xl border border-white/[0.06] rounded-3xl overflow-hidden shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 transition-all duration-300">
+                                        <div className="bg-white/[0.04] px-4 sm:px-5 py-2.5 sm:py-3.5 flex justify-between items-center border-b border-white/5">
                                             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-200 min-w-0 flex-1 mr-2">
                                                 <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                                 <span className="font-bold tracking-tight line-clamp-1">{test.title}</span>
@@ -607,11 +614,22 @@ export default function StudentDashboard() {
                                                 <span className="text-[8px] sm:text-[10px] font-bold text-slate-600 tracking-tight mt-0.5">Avg</span>
                                             </div>
                                         </div>
+
+                                        {test.score !== null && (
+                                            <div className="px-4 sm:px-6 pb-4 sm:pb-5 -mt-1">
+                                                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full bg-gradient-to-r ${(test.percentage || 0) >= 75 ? 'from-emerald-500 to-teal-400' : (test.percentage || 0) >= 40 ? 'from-amber-500 to-orange-400' : 'from-rose-500 to-pink-400'} transition-all duration-700`}
+                                                        style={{ width: `${Math.max(test.percentage || 0, 2)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
 
                                 {data.tests.length === 0 && (
-                                    <div className="bg-[#1a1f2e] border border-white/5 rounded-2xl p-12 text-center">
+                                    <div className="bg-white/[0.035] backdrop-blur-xl border border-white/[0.06] rounded-3xl p-12 text-center">
                                         <BarChart2 className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                                         <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No test records discovered</p>
                                     </div>
@@ -620,15 +638,15 @@ export default function StudentDashboard() {
                         </div>
 
                         <div>
-                            <h3 className="text-lg font-black text-white mb-6 tracking-wide flex items-center gap-3 uppercase">
-                                <div className="h-8 w-1 bg-purple-500 rounded-full"></div>
+                            <h3 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 mb-6 tracking-wide flex items-center gap-3 uppercase">
+                                <div className="h-8 w-1 bg-gradient-to-b from-purple-400 to-violet-600 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.5)]"></div>
                                 <FileText className="w-5 h-5 text-purple-400" />
                                 Assignment Log
                             </h3>
 
                             <div className="space-y-2 sm:space-y-3">
                                 {data.assignments.filter(a => a.status !== 'NOT_ENROLLED').map((assign) => (
-                                    <div key={assign.assignmentId} className="bg-[#1a1f2e] border border-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex justify-between items-center group hover:bg-[#252a3b] transition-all duration-300">
+                                    <div key={assign.assignmentId} className="bg-white/[0.035] backdrop-blur-xl border border-white/[0.06] rounded-xl sm:rounded-2xl p-3 sm:p-5 flex justify-between items-center group hover:bg-white/[0.06] hover:border-white/10 transition-all duration-300">
                                         <div className="min-w-0 flex-1 pr-2">
                                             <p className="text-xs sm:text-[13px] font-bold text-slate-200 group-hover:text-blue-400 transition-colors uppercase tracking-tight truncate">{assign.title}</p>
                                             <div className="flex items-center gap-3 mt-1.5">
@@ -675,7 +693,7 @@ export default function StudentDashboard() {
                                 ))}
 
                                 {data.assignments.length === 0 && (
-                                    <div className="bg-[#1a1f2e] border border-white/5 rounded-2xl p-12 text-center">
+                                    <div className="bg-white/[0.035] backdrop-blur-xl border border-white/[0.06] rounded-3xl p-12 text-center">
                                         <FileText className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                                         <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No assignments found</p>
                                     </div>
