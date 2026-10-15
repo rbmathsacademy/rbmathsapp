@@ -144,15 +144,15 @@ export async function GET(req: NextRequest) {
 
             if (attempt?.status === 'completed') {
                 completed.push(testInfo);
+            } else if (dbStudent?.noExpiry) {
+                // noExpiry students see every uncompleted test in the batch,
+                // regardless of dates OR join date — this is a deliberate,
+                // unconditional override, not subject to the pre-join check below.
+                available.push(testInfo);
             } else if (studentJoinedAt && startTime && studentJoinedAt > startTime) {
                 // This test's window was already open — or over — before the student
-                // even joined. Never surface it as "available"/"missed"; noExpiry is
-                // for staying caught up during enrollment, not resurrecting tests
-                // that predate it.
+                // even joined. Never surface it as "available"/"missed".
                 preJoin.push(testInfo);
-            } else if (dbStudent?.noExpiry) {
-                // For noExpiry students, uncompleted tests are ALWAYS available regardless of dates
-                available.push(testInfo);
             } else if (startTime && now < startTime) {
                 upcoming.push(testInfo);
             } else if (endTime && now > endTime && (!attempt || attempt.status === 'not_started')) {

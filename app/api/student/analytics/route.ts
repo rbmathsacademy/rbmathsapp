@@ -106,7 +106,10 @@ export async function GET(req: NextRequest) {
             } else {
                 // A test whose window closed before the student even joined was
                 // never theirs to miss — leave it out of the count entirely.
-                const isPreJoin = !!(studentJoinedAt && startTime && studentJoinedAt > startTime);
+                // noExpiry students are exempt: every test in the batch is treated
+                // as theirs regardless of join date, so fall through to normal
+                // missed/pending counting instead.
+                const isPreJoin = !dbStudent?.noExpiry && !!(studentJoinedAt && startTime && studentJoinedAt > startTime);
                 if (isPreJoin) {
                     // not counted
                 } else if (endTime && now > endTime) {
