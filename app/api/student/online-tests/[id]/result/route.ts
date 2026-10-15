@@ -4,7 +4,8 @@ import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
-import { seededShuffleArray, getSeededRandom, shuffleOptionsForQuestion } from '@/lib/seededRandom';
+import { shuffleOptionsForQuestion } from '@/lib/seededRandom';
+import { unionBoardQuestions } from '@/lib/boardAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -19,49 +20,6 @@ async function getStudentFromToken(req: NextRequest) {
     } catch {
         return null;
     }
-}
-
-function resolveStudentBoard(dbStudent: any, batchName: string = ''): string {
-    let board = (dbStudent as any)?.board || '';
-    if (!board) {
-        const combined = [...((dbStudent as any)?.courses || []), batchName].join(' ').toUpperCase();
-        if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
-            board = 'WBCHSE';
-        } else if (combined.includes('ISC') || combined.includes('ICSE')) {
-            board = 'ISC';
-        } else if (combined.includes('CBSE')) {
-            board = 'CBSE';
-        }
-    }
-    return board;
-}
-
-function resolveBoardQuestions(test: any, studentBoard: string): any[] {
-    if (!test.isBoardSpecific || !test.boardQuestionSets || test.boardQuestionSets.length === 0) {
-        return test.questions ? [...test.questions] : [];
-    }
-    const cleanBoard = (studentBoard || '').trim().toLowerCase();
-    const assignedSet = test.boardQuestionSets.find((set: any) =>
-        set.boards.some((b: string) => b.trim().toLowerCase() === cleanBoard)
-    );
-    return assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
-}
-
-async function findBatchStudent(phoneNumber: string) {
-    const rawClean = (phoneNumber || '').replace(/\D/g, '');
-    const normalizedPhone = rawClean.length > 10 ? rawClean.slice(-10) : rawClean;
-    return await BatchStudent.findOne({
-        $or: [
-            { phoneNumber },
-            { phoneNumber: rawClean },
-            { phoneNumber: normalizedPhone },
-            { phoneNumber: `+91${normalizedPhone}` },
-            { phoneNumber: `91${normalizedPhone}` },
-            { alternativePhone: rawClean },
-            { alternativePhone: normalizedPhone },
-            { loginId: phoneNumber }
-        ]
-    }).lean();
 }
 
 // GET - Fetch student's own result + detailed analysis
@@ -146,17 +104,12 @@ export async function GET(
         if (attempt.questions && attempt.questions.length > 0) {
             sourceQuestions = attempt.questions;
         } else {
-            const dbStudent = await findBatchStudent(student.phoneNumber);
-            const studentBoard = resolveStudentBoard(dbStudent, attempt.batchName);
-            let rawSetQuestions = resolveBoardQuestions(test, studentBoard);
-
-            if (test.config?.shuffleQuestions || test.config?.maxQuestionsToAttempt) {
-                const seedString = `${student.phoneNumber}_${testId}`;
-                rawSetQuestions = seededShuffleArray(rawSetQuestions, getSeededRandom(seedString));
-                if (test.config?.maxQuestionsToAttempt > 0 && test.config?.maxQuestionsToAttempt < rawSetQuestions.length) {
-                    rawSetQuestions = rawSetQuestions.slice(0, test.config.maxQuestionsToAttempt);
-                }
-            }
+            // No question snapshot on this attempt (shouldn't normally happen). Grade
+            // by id against the union of every board's questions instead of guessing a
+            // single board: ids are unique across sets, so this is correct regardless
+            // of which split the student actually saw, without risking the wrong
+            // board's answer key (previously defaulted to boardQuestionSets[0]).
+            const rawSetQuestions = unionBoardQuestions(test);
 
             sourceQuestions = rawSetQuestions.map((q: any) => {
                 const qObj = typeof q.toObject === 'function' ? q.toObject() : JSON.parse(JSON.stringify(q));

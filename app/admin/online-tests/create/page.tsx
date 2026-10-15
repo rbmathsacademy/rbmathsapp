@@ -306,11 +306,14 @@ export default function CreateTestPage() {
                 }
             } else {
                 const data = await res.json();
-                if (!silent) toast.error(data.error || 'Failed to save test');
-                else console.error('Auto-save failed:', data.error);
+                // Always surface save failures, even for "silent" auto-saves — staying
+                // quiet here is how admins ended up thinking all board splits saved
+                // when one actually failed and was silently dropped.
+                toast.error(data.error || 'Failed to save test');
+                console.error('Auto-save failed:', data.error);
             }
         } catch (error) {
-            if (!silent) toast.error('Error saving test');
+            toast.error('Error saving test');
             console.error('Save error:', error);
         } finally {
             setLoading(false);

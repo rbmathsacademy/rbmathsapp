@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import User from '@/models/User';
 import { shuffleOptionsForQuestion, seededShuffleArray, getSeededRandom } from '@/lib/seededRandom';
+import { resolveStudentBoard, findBoardSet, unionBoardQuestions } from '@/lib/boardAccess';
 
 // GET - List all tests
 export async function GET(request: NextRequest) {
@@ -159,17 +160,7 @@ export async function PUT(request: NextRequest) {
                         { alternativePhone: rawClean }
                     ]
                 }).lean();
-                let studentBoard = (dbStudent as any)?.board || '';
-                if (!studentBoard) {
-                    const combined = [...((dbStudent as any)?.courses || []), attempt.batchName || ''].join(' ').toUpperCase();
-                    if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
-                        studentBoard = 'WBCHSE';
-                    } else if (combined.includes('ISC') || combined.includes('ICSE')) {
-                        studentBoard = 'ISC';
-                    } else if (combined.includes('CBSE')) {
-                        studentBoard = 'CBSE';
-                    }
-                }
+                const studentBoard = resolveStudentBoard(dbStudent, attempt.batchName ? [attempt.batchName] : []);
 
                 // Resolve source questions for this attempt
                 let sourceQuestions: any[] = [];
@@ -200,11 +191,11 @@ export async function PUT(request: NextRequest) {
                 } else {
                     const boardSets = updates.boardQuestionSets || test.boardQuestionSets || [];
                     if (isBoardSpecific && boardSets.length > 0) {
-                        const cleanB = studentBoard.trim().toLowerCase();
-                        const assignedSet = boardSets.find((set: any) => 
-                            set.boards.some((b: string) => b.trim().toLowerCase() === cleanB)
-                        );
-                        sourceQuestions = assignedSet ? [...assignedSet.questions] : [...boardSets[0].questions];
+                        const assignedSet = findBoardSet(boardSets, studentBoard);
+                        // No snapshot AND no resolvable board: grade by id against the
+                        // union of every split rather than guessing board[0] — ids are
+                        // unique across sets, so this still grades correctly.
+                        sourceQuestions = assignedSet ? [...assignedSet.questions] : unionBoardQuestions({ isBoardSpecific: true, boardQuestionSets: boardSets });
                     } else {
                         sourceQuestions = [...(updates.questions || test.questions || [])];
                     }

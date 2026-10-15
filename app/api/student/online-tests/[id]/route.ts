@@ -5,6 +5,7 @@ import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import { getSeededRandom, seededShuffleArray, shuffleOptionsForQuestion } from '@/lib/seededRandom';
+import { resolveStudentBoard, resolveBoardQuestions, unionBoardQuestions } from '@/lib/boardAccess';
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
@@ -20,32 +21,6 @@ async function getStudentFromToken(req: NextRequest) {
     } catch {
         return null;
     }
-}
-
-function resolveStudentBoard(dbStudent: any, studentCourses: string[] = []): string {
-    let board = (dbStudent as any)?.board || '';
-    if (!board) {
-        const combined = [...((dbStudent as any)?.courses || []), ...studentCourses].join(' ').toUpperCase();
-        if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
-            board = 'WBCHSE';
-        } else if (combined.includes('ISC') || combined.includes('ICSE')) {
-            board = 'ISC';
-        } else if (combined.includes('CBSE')) {
-            board = 'CBSE';
-        }
-    }
-    return board;
-}
-
-function resolveBoardQuestions(test: any, studentBoard: string): any[] {
-    if (!test.isBoardSpecific || !test.boardQuestionSets || test.boardQuestionSets.length === 0) {
-        return test.questions ? [...test.questions] : [];
-    }
-    const cleanBoard = (studentBoard || '').trim().toLowerCase();
-    const assignedSet = test.boardQuestionSets.find((set: any) =>
-        set.boards.some((b: string) => b.trim().toLowerCase() === cleanBoard)
-    );
-    return assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
 }
 
 async function findBatchStudent(phoneNumber: string) {
@@ -102,7 +77,19 @@ export async function GET(
         let attempt = await StudentTestAttempt.findOne({ testId, studentPhone: student.phoneNumber });
 
         const studentBoard = resolveStudentBoard(dbStudent, studentCourses);
-        let sourceQuestions: any[] = resolveBoardQuestions(test, studentBoard);
+        const resolvedBoardQuestions = resolveBoardQuestions(test, studentBoard);
+
+        // Board-specific test but we can't tell which split this student belongs to —
+        // never guess (that's how ISC students previously got served CBSE questions).
+        // An existing question snapshot on the attempt takes precedence below, so only
+        // block when there's truly nothing to serve yet.
+        if (test.isBoardSpecific && resolvedBoardQuestions === null && !(attempt?.questions && attempt.questions.length > 0)) {
+            return NextResponse.json({
+                error: 'Your board is not set on your profile, so we cannot determine which question set to show you for this test. Please contact your admin to set your board.'
+            }, { status: 403 });
+        }
+
+        let sourceQuestions: any[] = resolvedBoardQuestions || [];
 
         if (attempt && attempt.status === 'in_progress') {
             attempt.resumeCount = (attempt.resumeCount || 0) + 1;
@@ -418,6 +405,14 @@ export async function POST(
         const studentBoard = resolveStudentBoard(dbStudent, studentCourses);
         const sourceQuestions = resolveBoardQuestions(test, studentBoard);
 
+        // Never guess which board's set to serve — that's how ISC students previously
+        // got served CBSE questions. Block and surface a clear, actionable error instead.
+        if (sourceQuestions === null) {
+            return NextResponse.json({
+                error: 'Your board is not set on your profile, so we cannot determine which question set to show you for this test. Please contact your admin to set your board.'
+            }, { status: 403 });
+        }
+
         let attemptQuestions = sourceQuestions.map((q: any) => {
             const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
             // Deep clone subQuestions if present
@@ -573,17 +568,12 @@ export async function PUT(
         if (attempt.questions && attempt.questions.length > 0) {
             sourceQuestions = attempt.questions;
         } else {
-            const dbStudent = await findBatchStudent(student.phoneNumber);
-            const studentBoard = resolveStudentBoard(dbStudent, (attempt.batchName ? [attempt.batchName] : []));
-            let rawSetQuestions = resolveBoardQuestions(test, studentBoard);
-            if (test.config?.maxQuestionsToAttempt || test.config?.shuffleQuestions) {
-                const seedString = `${student.phoneNumber}_${testId}`;
-                const randomFunc = getSeededRandom(seedString);
-                rawSetQuestions = seededShuffleArray(rawSetQuestions, randomFunc);
-                if (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0) {
-                    rawSetQuestions = rawSetQuestions.slice(0, test.config.maxQuestionsToAttempt);
-                }
-            }
+            // No question snapshot on this attempt (shouldn't normally happen — the
+            // start-attempt call always stores one). Grade by id against the union of
+            // every board's questions instead of guessing a single board: ids are
+            // unique across sets, so this grades correctly no matter which split the
+            // student actually saw, without risking the wrong board's answer key.
+            const rawSetQuestions = unionBoardQuestions(test);
             sourceQuestions = rawSetQuestions.map((q: any) => {
                 const qObj = q.toObject ? q.toObject() : JSON.parse(JSON.stringify(q));
                 let processed = shuffleOptionsForQuestion(qObj, student.phoneNumber);

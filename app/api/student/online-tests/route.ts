@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
+import { resolveStudentBoard, findBoardSet } from '@/lib/boardAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -107,11 +108,14 @@ export async function GET(req: NextRequest) {
 
                 let fallbackCount = test.questions?.length || 0;
                 if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
-                    const studentBoard = ((dbStudent as any)?.board || '').trim().toLowerCase();
-                    const assignedSet = test.boardQuestionSets.find((s: any) =>
-                        s.boards.some((b: string) => b.trim().toLowerCase() === studentBoard)
-                    );
-                    fallbackCount = assignedSet ? assignedSet.questions.length : test.boardQuestionSets[0].questions.length;
+                    const studentBoard = resolveStudentBoard(dbStudent, studentCourses);
+                    const assignedSet = findBoardSet(test.boardQuestionSets, studentBoard);
+                    // Unknown board: don't guess a specific split's count (that's the
+                    // same mistake as serving the wrong split's questions) — show the
+                    // largest split's size as a safe upper-bound estimate instead.
+                    fallbackCount = assignedSet
+                        ? assignedSet.questions.length
+                        : Math.max(...test.boardQuestionSets.map((s: any) => s.questions.length));
                 }
                 const questionCount = (test.config?.maxQuestionsToAttempt && test.config.maxQuestionsToAttempt > 0)
                     ? test.config.maxQuestionsToAttempt

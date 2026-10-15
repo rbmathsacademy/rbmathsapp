@@ -260,7 +260,7 @@ function BoardPane({
                                     </div>
                                     <div className="flex-1">
                                         <div className="text-sm text-slate-200 mb-2">
-                                            {q.latexContent ? <Latex>{q.text}</Latex> : q.text}
+                                            <Latex>{q.text || ''}</Latex>
                                         </div>
                                         <div className="flex flex-wrap gap-2 text-[10px]">
                                             <span className="px-2 py-1 rounded bg-slate-800 text-slate-400 font-medium uppercase tracking-wider">{q.type}</span>
@@ -307,9 +307,14 @@ export default function BoardQuestionImportModal({ sets, onImport, onCancel }: B
     }, []);
 
     const updatePaneQuestions = (index: number, newQuestions: Question[]) => {
-        const newSets = [...currentSets];
-        newSets[index].questions = newQuestions;
-        setCurrentSets(newSets);
+        // Functional update + immutable copy: reading/writing through the latest
+        // `currentSets` closure (rather than a value captured at render time) and
+        // never mutating a shared set object in place. Without this, quick updates
+        // across different board panes could race and silently drop one pane's
+        // selections when all three were filled in before a single "Confirm Import".
+        setCurrentSets(prevSets => prevSets.map((set, i) => (
+            i === index ? { ...set, questions: newQuestions } : set
+        )));
     };
 
     const handleConfirm = () => {

@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import User from '@/models/User';
+import { resolveStudentBoard, findBoardSet, unionBoardQuestions } from '@/lib/boardAccess';
 
 /**
  * POST /api/admin/online-tests/[id]/auto-complete
@@ -84,11 +85,12 @@ export async function POST(
                     const dbStudent = await BatchStudent.findOne({
                         $or: [{ phoneNumber: attempt.studentPhone }, { phoneNumber: cleanPhone }, { phoneNumber: rawClean }]
                     }).lean();
-                    const studentBoard = ((dbStudent as any)?.board || '').trim().toLowerCase();
-                    const assignedSet = test.boardQuestionSets.find((set: any) =>
-                        set.boards.some((b: string) => b.trim().toLowerCase() === studentBoard)
-                    );
-                    sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+                    const studentBoard = resolveStudentBoard(dbStudent, attempt.batchName ? [attempt.batchName] : []);
+                    const assignedSet = findBoardSet(test.boardQuestionSets, studentBoard);
+                    // No snapshot AND no resolvable board: grade by id against the union
+                    // of every split rather than guessing board[0] — ids are unique
+                    // across sets, so this still grades correctly.
+                    sourceQuestions = assignedSet ? [...assignedSet.questions] : unionBoardQuestions(test);
                 } else {
                     sourceQuestions = test.questions ? [...test.questions] : [];
                 }

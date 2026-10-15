@@ -5,6 +5,7 @@ import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 import { seededShuffleArray, getSeededRandom, shuffleOptionsForQuestion } from '@/lib/seededRandom';
+import { resolveStudentBoard, findBoardSet, unionBoardQuestions } from '@/lib/boardAccess';
 
 async function findBatchStudent(phone: string) {
     const rawClean = (phone || '').replace(/\D/g, '');
@@ -28,25 +29,15 @@ async function resolveAttemptQuestions(test: any, attempt: any, student: any, ph
         return attempt.questions;
     }
 
-    let board = (student as any)?.board || '';
-    if (!board) {
-        const combined = [...((student as any)?.courses || []), attempt.batchName || ''].join(' ').toUpperCase();
-        if (combined.includes('WBCHSE') || combined.includes('WB BOARD') || combined.includes('WEST BENGAL')) {
-            board = 'WBCHSE';
-        } else if (combined.includes('ISC') || combined.includes('ICSE')) {
-            board = 'ISC';
-        } else if (combined.includes('CBSE')) {
-            board = 'CBSE';
-        }
-    }
+    const board = resolveStudentBoard(student, attempt.batchName ? [attempt.batchName] : []);
 
     let rawQuestions: any[] = [];
     if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
-        const cleanBoard = board.trim().toLowerCase();
-        const assignedSet = test.boardQuestionSets.find((set: any) =>
-            set.boards.some((b: string) => b.trim().toLowerCase() === cleanBoard)
-        );
-        rawQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+        const assignedSet = findBoardSet(test.boardQuestionSets, board);
+        // No snapshot AND no resolvable board: grade by id against the union of every
+        // split rather than guessing board[0] — ids are unique across sets, so this
+        // still grades correctly.
+        rawQuestions = assignedSet ? [...assignedSet.questions] : unionBoardQuestions(test);
     } else {
         rawQuestions = test.questions ? [...test.questions] : [];
     }

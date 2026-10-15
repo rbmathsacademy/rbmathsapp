@@ -4,6 +4,7 @@ import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
+import { resolveStudentBoard, findBoardSet, unionBoardQuestions } from '@/lib/boardAccess';
 
 export async function GET(
     request: NextRequest,
@@ -96,11 +97,12 @@ export async function GET(
             if (!sourceQuestions) {
                 if (test.isBoardSpecific && test.boardQuestionSets && test.boardQuestionSets.length > 0) {
                     const studentData = studentMap.get(attempt.studentPhone);
-                    const studentBoard = ((studentData as any)?.board || '').trim().toLowerCase();
-                    const assignedSet = test.boardQuestionSets.find((set: any) =>
-                        set.boards.some((b: string) => b.trim().toLowerCase() === studentBoard)
-                    );
-                    sourceQuestions = assignedSet ? [...assignedSet.questions] : [...test.boardQuestionSets[0].questions];
+                    const studentBoard = resolveStudentBoard(studentData, attempt.batchName ? [attempt.batchName] : []);
+                    const assignedSet = findBoardSet(test.boardQuestionSets, studentBoard);
+                    // No snapshot AND no resolvable board: grade by id against the union
+                    // of every split rather than guessing board[0] — ids are unique
+                    // across sets, so this still grades correctly.
+                    sourceQuestions = assignedSet ? [...assignedSet.questions] : unionBoardQuestions(test);
                 } else {
                     sourceQuestions = test.questions ? [...test.questions] : [];
                 }
