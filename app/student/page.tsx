@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     BarChart2,
     FileText,
@@ -21,11 +22,22 @@ import {
     Trophy,
     Users,
     MessageSquare,
-    Medal
+    Medal,
+    ChevronRight,
+    ListChecks
 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useStudentProfile } from './StudentProfileContext';
 import BatchTabSwitcher from '../components/BatchTabSwitcher';
+
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 5) return 'Burning the midnight oil';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    if (hour < 21) return 'Good evening';
+    return 'Good night';
+}
 
 const FREE_BATCH = 'Class XI (Free batch) 2026-27';
 const FREE_BATCH_LOWER = FREE_BATCH.trim().toLowerCase();
@@ -221,14 +233,14 @@ export default function StudentDashboard() {
             {/* Sidebar */}
             <aside className={`fixed inset-y-0 left-0 h-full w-64 bg-[#0a0f1a]/95 backdrop-blur-xl border-r border-white/10 z-50 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
                 <div className="flex flex-col h-full font-sans">
-                    <div className="p-4 sm:p-6 border-b border-white/10">
+                    <div className="p-4 sm:p-6 border-b border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
-                                {data.student.name?.[0] || 'S'}
+                            <div className="relative h-11 w-11 rounded-xl overflow-hidden ring-1 ring-white/15 shadow-lg shadow-blue-500/20 shrink-0 bg-[#0e1420]">
+                                <Image src="/rb-logo.png" alt="RB Maths Academy" fill className="object-cover" priority />
                             </div>
                             <div>
-                                <h1 className="text-[13px] font-bold text-white">Student<span className="text-blue-400">Portal</span></h1>
-                                <p className="text-[9px] text-slate-500 font-medium">RB Maths Academy</p>
+                                <h1 className="text-[13px] font-bold text-white tracking-tight">Student<span className="text-blue-400">Portal</span></h1>
+                                <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">RB Maths Academy</p>
                             </div>
                         </div>
                     </div>
@@ -241,8 +253,11 @@ export default function StudentDashboard() {
                                     router.push(item.href);
                                     setSidebarOpen(false);
                                 }}
-                                className={`w-full group relative overflow-hidden rounded-xl p-3.5 transition-all duration-300 border border-transparent hover:border-white/10 active:scale-[0.98] text-left ${item.id === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'hover:bg-white/5 text-slate-400'}`}
+                                className={`w-full group relative overflow-hidden rounded-xl p-3.5 transition-all duration-300 border active:scale-[0.98] text-left ${item.id === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 border-white/10' : 'border-transparent hover:border-white/10 hover:bg-white/5 text-slate-400'}`}
                             >
+                                {item.id === 'dashboard' && (
+                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-white/70" />
+                                )}
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-lg bg-gradient-to-br transition-all duration-300 shadow-md ${item.id === 'dashboard' ? item.gradient + ' ring-1 ring-white/20 shadow-blue-500/30' : item.gradient + ' opacity-75 group-hover:opacity-100 group-hover:scale-110 group-hover:shadow-white/10 group-hover:ring-1 group-hover:ring-white/20'}`}>
                                         <item.icon className="h-4 w-4 text-white drop-shadow-sm" />
@@ -274,23 +289,36 @@ export default function StudentDashboard() {
             {/* Main Content */}
             <main className="lg:ml-64 min-h-screen relative z-10 flex flex-col font-sans">
                 {/* Top Header (Mobile) */}
-                <header className="sticky top-0 z-30 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/70 px-4 py-3 lg:hidden flex items-center justify-between">
-                    <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <header className="sticky top-0 z-30 backdrop-blur-xl border-b border-white/5 bg-[#050b14]/80 px-4 py-3 lg:hidden flex items-center justify-between">
+                    <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition-all">
                         <Menu className="h-5 w-5" />
                     </button>
-                    <h1 className="text-sm font-bold text-white">Dashboard</h1>
+                    <div className="flex items-center gap-2">
+                        <div className="relative h-6 w-6 rounded-md overflow-hidden ring-1 ring-white/15 shrink-0">
+                            <Image src="/rb-logo.png" alt="" fill className="object-cover" />
+                        </div>
+                        <h1 className="text-sm font-bold text-white tracking-tight">Dashboard</h1>
+                    </div>
                     <div className="w-9 h-9"></div>
                 </header>
 
                 <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
 
-                    {/* Header Card (Matching Admin Analytics Detail Header) */}
-                    <div className="bg-[#1a1f2e] ring-1 ring-white/5 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 relative z-10 shadow-lg shadow-black/20">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-500/30">
-                                {data.student.name?.[0]}
+                    {/* Header Card */}
+                    <div className="bg-[#1a1f2e] ring-1 ring-white/5 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4 relative z-10 shadow-lg shadow-black/20 overflow-hidden">
+                        {/* Premium top accent + soft glow */}
+                        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-indigo-400 to-transparent" />
+                        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-blue-500/10 blur-[80px] pointer-events-none" />
+
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
+                            <div className="relative h-20 w-20 rounded-2xl shrink-0">
+                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-indigo-500 to-violet-600" />
+                                <div className="absolute inset-[2.5px] rounded-[13px] bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-500/30">
+                                    {data.student.name?.[0]}
+                                </div>
                             </div>
                             <div className="text-center sm:text-left">
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-400/80 mb-0.5">{getGreeting()}{userRole !== 'guardian' ? ',' : ''}</p>
                                 <div className="flex flex-col sm:flex-row items-center gap-2">
                                     <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{data.student.name}</h1>
                                     {userRole === 'guardian' && (
@@ -336,86 +364,133 @@ export default function StudentDashboard() {
                         </div>
                     )}
 
-                    {/* Stats Summary Grid (Matching Admin Overview) */}
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4 relative z-10">
-                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-blue-500/40 transition-all duration-300 shadow-lg shadow-black/20">
-                            <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Test Average</p>
-                                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                                    <TrendingUp className="h-3.5 w-3.5 sm:h-4 w-4" />
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-3xl font-black text-blue-400">{formatScore(data.stats.avgTestPercentage)}%</p>
-                                <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Overall</p>
-                            </div>
-                        </div>
+                    {/* Stats Summary Grid — every tile is a tappable shortcut to its section */}
+                    {(() => {
+                        type StatCard = {
+                            id: string;
+                            label: string;
+                            value: React.ReactNode;
+                            sub: string;
+                            icon: typeof TrendingUp;
+                            accent: string; // tailwind color token, e.g. 'blue'
+                            onClick: () => void;
+                            badge?: number;
+                        };
 
-                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-emerald-500/40 transition-all duration-300 shadow-lg shadow-black/20">
-                            <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Tests Attempted</p>
-                                <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                                    <Award className="h-3.5 w-3.5 sm:h-4 w-4" />
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-3xl font-black text-emerald-400">{data.stats.testsAttempted}</p>
-                                <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Appearances</p>
-                            </div>
-                        </div>
+                        const cards: StatCard[] = [
+                            {
+                                id: 'test-avg',
+                                label: 'Test Average',
+                                value: `${formatScore(data.stats.avgTestPercentage)}%`,
+                                sub: 'Overall',
+                                icon: TrendingUp,
+                                accent: 'blue',
+                                onClick: () => router.push('/student/online-test'),
+                            },
+                            {
+                                id: 'tests-attempted',
+                                label: 'Tests Attempted',
+                                value: data.stats.testsAttempted,
+                                sub: 'Appearances',
+                                icon: Award,
+                                accent: 'emerald',
+                                onClick: () => router.push('/student/online-test'),
+                            },
+                            {
+                                id: 'tests-missed',
+                                label: 'Tests Missed',
+                                value: data.stats.testsMissed,
+                                sub: 'Catch up now',
+                                icon: XCircle,
+                                accent: 'rose',
+                                onClick: () => router.push('/student/online-test'),
+                            },
+                            {
+                                id: 'assignments-submitted',
+                                label: 'Assignments Sub',
+                                value: data.stats.assignmentsSubmitted,
+                                sub: 'Solved',
+                                icon: ListChecks,
+                                accent: 'purple',
+                                onClick: () => router.push('/student/assignments'),
+                            },
+                            {
+                                id: 'assignments-missed',
+                                label: 'Assignments Missed',
+                                value: data.stats.assignmentsMissed,
+                                sub: 'Catch up now',
+                                icon: FileText,
+                                accent: 'amber',
+                                onClick: () => router.push('/student/assignments'),
+                            },
+                            ...(!finalIsFreeBatchOnly ? [{
+                                id: 'chat',
+                                label: 'Doubts / Chat',
+                                value: 'Chat Now',
+                                sub: 'Ask a doubt',
+                                icon: MessageSquare,
+                                accent: 'cyan',
+                                onClick: () => router.push('/student/chat'),
+                                badge: unreadChatCount,
+                            } as StatCard] : []),
+                        ];
 
-                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-rose-500/40 transition-all duration-300 shadow-lg shadow-black/20">
-                            <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Tests Missed</p>
-                                <div className="p-1.5 sm:p-2 rounded-lg bg-rose-500/10 text-rose-400">
-                                    <XCircle className="h-3.5 w-3.5 sm:h-4 w-4" />
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-3xl font-black text-rose-400">{data.stats.testsMissed}</p>
-                                <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Missed</p>
-                            </div>
-                        </div>
+                        const accentMap: Record<string, { ring: string; iconBg: string; iconText: string; valueText: string; glow: string }> = {
+                            blue: { ring: 'hover:ring-blue-500/40', iconBg: 'bg-blue-500/10', iconText: 'text-blue-400', valueText: 'text-blue-400', glow: 'from-blue-500/10' },
+                            emerald: { ring: 'hover:ring-emerald-500/40', iconBg: 'bg-emerald-500/10', iconText: 'text-emerald-400', valueText: 'text-emerald-400', glow: 'from-emerald-500/10' },
+                            rose: { ring: 'hover:ring-rose-500/40', iconBg: 'bg-rose-500/10', iconText: 'text-rose-400', valueText: 'text-rose-400', glow: 'from-rose-500/10' },
+                            purple: { ring: 'hover:ring-purple-500/40', iconBg: 'bg-purple-500/10', iconText: 'text-purple-400', valueText: 'text-purple-400', glow: 'from-purple-500/10' },
+                            amber: { ring: 'hover:ring-amber-500/40', iconBg: 'bg-amber-500/10', iconText: 'text-amber-400', valueText: 'text-amber-400', glow: 'from-amber-500/10' },
+                            cyan: { ring: 'hover:ring-cyan-400/40', iconBg: 'bg-cyan-400/10', iconText: 'text-cyan-400', valueText: 'text-cyan-400', glow: 'from-cyan-400/10' },
+                        };
 
-                        {!finalIsFreeBatchOnly && (
-                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-blue-400/40 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-lg shadow-black/20" onClick={() => router.push('/student/chat')}>
-                            {unreadChatCount > 0 && (
-                                <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg shadow-lg animate-pulse">
-                                    {unreadChatCount} NEW
-                                </div>
-                            )}
-                            <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Doubts / Chat</p>
-                                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-400/10 text-blue-400">
-                                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 w-4" />
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-2xl font-black text-blue-400">Chat Now</p>
-                                <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Ask Doubt</p>
-                            </div>
-                        </div>
-                        )}
+                        const isOddCount = cards.length % 2 === 1;
 
-                        <div className="bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group hover:ring-purple-500/40 transition-all duration-300 shadow-lg shadow-black/20">
-                            <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">Assignments Sub</p>
-                                <div className="p-1.5 sm:p-2 rounded-lg bg-purple-500/10 text-purple-400">
-                                    <FileText className="h-3.5 w-3.5 sm:h-4 w-4" />
-                                </div>
+                        return (
+                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4 relative z-10">
+                                {cards.map((card, idx) => {
+                                    const a = accentMap[card.accent];
+                                    const isLastOdd = isOddCount && idx === cards.length - 1;
+                                    return (
+                                        <button
+                                            key={card.id}
+                                            onClick={card.onClick}
+                                            className={`text-left bg-[#1a1f2e] ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl group ${a.ring} transition-all duration-300 shadow-lg shadow-black/20 hover:-translate-y-0.5 active:scale-[0.97] relative overflow-hidden ${isLastOdd ? 'col-span-2' : ''}`}
+                                        >
+                                            {/* Soft directional glow wash, unique per accent */}
+                                            <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br ${a.glow} to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
+
+                                            {!!card.badge && card.badge > 0 && (
+                                                <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg shadow-lg animate-pulse">
+                                                    {card.badge} NEW
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-between items-start mb-2 sm:mb-3 relative z-10">
+                                                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-widest">{card.label}</p>
+                                                <div className={`p-1.5 sm:p-2 rounded-lg ${a.iconBg} ${a.iconText} shrink-0`}>
+                                                    <card.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-end justify-between relative z-10">
+                                                <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+                                                    <p className={`text-xl sm:text-3xl font-black ${a.valueText}`}>{card.value}</p>
+                                                    <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">{card.sub}</p>
+                                                </div>
+                                                <ChevronRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-slate-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
-                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                                <p className="text-xl sm:text-3xl font-black text-purple-400">{data.stats.assignmentsSubmitted}</p>
-                                <p className="text-[9px] sm:text-xs text-slate-500 font-medium tracking-tight">Solved</p>
-                            </div>
-                        </div>
-                    </div>
+                        );
+                    })()}
 
                     {/* Offline Test Marks Section - Above Test Progress Report */}
                     {data.offlineExams && data.offlineExams.length > 0 && (
                         <div className="mb-8">
                             <h3 className="text-lg font-black text-white mb-6 tracking-wide flex items-center gap-3 uppercase">
-                                <div className="bg-red-500 text-white px-4 py-1.5 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-red-500/30 animate-pulse">
+                                <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-1.5 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-red-500/30">
                                     Offline Test Marks
                                 </div>
                             </h3>

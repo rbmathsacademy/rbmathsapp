@@ -27,17 +27,16 @@ export async function GET(req: NextRequest) {
 
         const schoolExams = await SchoolExam.find(query).sort({ date: -1 }).lean();
 
-        let results = students.map(student => {
+        // Keep every student in scope, even those with no score for the filtered
+        // exam — admins need to see (and select) exactly those "missing" students,
+        // not have them silently dropped from the results.
+        const results = students.map(student => {
             const studentExams = schoolExams.filter((e: any) => e.studentPhone === student.phoneNumber);
             return {
                 ...student,
                 exams: studentExams
             };
         });
-
-        if (examName) {
-            results = results.filter(r => r.exams.length > 0);
-        }
 
         const uniqueExams = await SchoolExam.distinct('examName', { batch });
         const uniqueSchools = await BatchStudent.distinct('schoolName', { courses: batch });

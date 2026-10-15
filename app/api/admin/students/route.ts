@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
+import { registerDirectoryEntry } from '@/lib/schoolCollegeDirectory';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     try {
         await dbConnect();
         const body = await req.json();
-        const { name, phoneNumber, courses, guardianPhone, guardianName, email } = body;
+        const { name, phoneNumber, courses, guardianPhone, guardianName, email, schoolName, board, collegeName, modeOfClass } = body;
 
         if (!name || !phoneNumber) {
             return NextResponse.json({ error: 'Name and phone number are required' }, { status: 400 });
@@ -122,8 +123,17 @@ export async function POST(req: NextRequest) {
             guardianPhone: guardianPhone?.replace(/\D/g, '') || undefined,
             guardianName: guardianName?.trim() || undefined,
             email: email?.trim() || undefined,
+            schoolName: schoolName?.trim() || undefined,
+            board: board?.trim() || undefined,
+            collegeName: collegeName?.trim() || undefined,
+            modeOfClass: modeOfClass?.trim() || undefined,
             bookmarks: []
         });
+
+        await Promise.all([
+            registerDirectoryEntry('school', schoolName),
+            registerDirectoryEntry('college', collegeName)
+        ]);
 
         // Create Guardian User
         try {

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { Plus, Search, Check, X, FileText, Send, User, Download, TrendingUp, TrendingDown, Minus, CheckSquare } from 'lucide-react';
+import { Plus, Search, Check, X, FileText, Send, User, Download, TrendingUp, TrendingDown, Minus, CheckSquare, AlertCircle } from 'lucide-react';
 import { generateBatchSchoolReportPDF } from './generateBatchSchoolReportPDF';
+
+type PerformanceBand = 'ALL' | 'MISSING' | 'EXCEEDED' | 'IN_SYNC' | 'UNDERPERFORMED';
 
 export default function SchoolPerformancePanel({ batch, analyticsData }: { batch: string, analyticsData?: any }) {
     const [loading, setLoading] = useState(true);
@@ -13,7 +15,10 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
 
     const [filterSchool, setFilterSchool] = useState('');
     const [filterExam, setFilterExam] = useState('');
-    
+    // Cascading on filterExam: only meaningful once a specific exam is chosen —
+    // "missing" and the performance bands are both computed per-exam.
+    const [filterBand, setFilterBand] = useState<PerformanceBand>('ALL');
+
     // Add marks modal
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -31,6 +36,12 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
         // Reset selections when filters change
         setSelectedPhones(new Set());
     }, [batch, filterSchool, filterExam]);
+
+    // Band filter only makes sense scoped to one exam — drop back to "All" if the
+    // exam filter is cleared so it can't silently stay applied to nothing.
+    useEffect(() => {
+        if (!filterExam) setFilterBand('ALL');
+    }, [filterExam]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -127,10 +138,10 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
     };
 
     const handleSelectAll = () => {
-        if (selectedPhones.size === students.length) {
+        if (selectedPhones.size === displayedStudents.length) {
             setSelectedPhones(new Set());
         } else {
-            setSelectedPhones(new Set(students.map(s => s.phoneNumber)));
+            setSelectedPhones(new Set(displayedStudents.map(s => s.phoneNumber)));
         }
     };
 
@@ -193,13 +204,37 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
         };
     };
 
+    // Students currently matching school + exam + performance-band filters. This is
+    // what "Select All", the counts, and the PDF export all operate on — so a
+    // filtered-then-exported PDF only contains what's on screen.
+    const displayedStudents = useMemo(() => {
+        if (filterBand === 'ALL' || !filterExam) return students;
+
+        return students.filter(student => {
+            const examRecord = student.exams.find((e: any) => e.examName === filterExam);
+            if (filterBand === 'MISSING') return !examRecord;
+            if (!examRecord) return false;
+
+            const correlation = getCorrelationData(student, examRecord);
+            if (!correlation) return false;
+            if (filterBand === 'EXCEEDED') return correlation.syncStatus === 'IMPROVED';
+            if (filterBand === 'UNDERPERFORMED') return correlation.syncStatus === 'DETERIORATED';
+            if (filterBand === 'IN_SYNC') return correlation.syncStatus === 'IN_SYNC';
+            return true;
+        });
+    }, [students, filterExam, filterBand, analyticsData]);
+
     const handleDownloadBatchReport = () => {
         if (!analyticsData || !analyticsData.analytics) {
             toast.error('Analytics data not fully loaded yet for correlation PDF');
             return;
         }
-        generateBatchSchoolReportPDF(batch, students, getCorrelationData);
-        toast.success('Batch Report downloaded');
+        // Selected rows take priority; otherwise export everything currently shown.
+        const rowsToExport = selectedPhones.size > 0
+            ? displayedStudents.filter(s => selectedPhones.has(s.phoneNumber))
+            : displayedStudents;
+        generateBatchSchoolReportPDF(batch, rowsToExport, getCorrelationData, filterExam || undefined);
+        toast.success(`Report downloaded (${rowsToExport.length} student${rowsToExport.length === 1 ? '' : 's'})`);
     };
 
     return (
@@ -224,13 +259,29 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                         {uniqueExams.map(e => <option key={e} value={e}>{e}</option>)}
                     </select>
 
-                    {students.length > 0 && (
-                        <button 
+                    {/* Cascades from the exam filter — missing scores and
+                        performance bands are only meaningful for one exam at a time. */}
+                    <select
+                        value={filterBand}
+                        onChange={(e) => setFilterBand(e.target.value as PerformanceBand)}
+                        disabled={!filterExam}
+                        title={!filterExam ? 'Select an exam first' : undefined}
+                        className="bg-slate-900 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500 flex-1 min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <option value="ALL">All Students</option>
+                        <option value="MISSING">Missing Score</option>
+                        <option value="EXCEEDED">Exceeded</option>
+                        <option value="IN_SYNC">In Sync</option>
+                        <option value="UNDERPERFORMED">Underperformed</option>
+                    </select>
+
+                    {displayedStudents.length > 0 && (
+                        <button
                             onClick={handleSelectAll}
                             className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
                         >
                             <CheckSquare className="w-4 h-4 text-indigo-400" />
-                            {selectedPhones.size === students.length ? 'Deselect All' : 'Select All'}
+                            {selectedPhones.size === displayedStudents.length ? 'Deselect All' : 'Select All'}
                         </button>
                     )}
                 </div>
@@ -263,7 +314,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                 <div className="flex justify-center p-12"><div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {students.map(student => (
+                    {displayedStudents.map(student => (
                         <div key={student.phoneNumber} className={`bg-slate-800/40 border ${selectedPhones.has(student.phoneNumber) ? 'border-indigo-500/50' : 'border-slate-700/50'} rounded-xl overflow-hidden shadow-lg transition-colors`}>
                             <div className="p-3 sm:p-4 border-b border-slate-700/50 flex justify-between items-start bg-slate-800/60">
                                 <div className="min-w-0 flex-1">
@@ -298,7 +349,14 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                             
                             <div className="p-3 sm:p-4 flex flex-col gap-3">
                                 {student.exams.length === 0 ? (
-                                    <p className="text-slate-500 text-sm text-center py-4 italic">No exams recorded.</p>
+                                    filterExam ? (
+                                        <div className="flex items-center justify-center gap-2 text-amber-400 text-sm text-center py-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                                            <AlertCircle className="w-4 h-4 shrink-0" />
+                                            No score recorded for &quot;{filterExam}&quot;
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-500 text-sm text-center py-4 italic">No exams recorded.</p>
+                                    )
                                 ) : (
                                     student.exams.map((exam: any) => {
                                         const correlation = getCorrelationData(student, exam);

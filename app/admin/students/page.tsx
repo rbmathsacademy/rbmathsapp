@@ -75,6 +75,26 @@ export default function AdminStudents() {
     const [newCourseInput, setNewCourseInput] = useState('');
     const [guardianFilter, setGuardianFilter] = useState('');
 
+    // Permanent school/college directory for the add/edit form's dropdown — unlike
+    // `schools`/`colleges` above (live distinct() over current students, used for
+    // filters), this never shrinks when students are deleted. See
+    // models/SchoolCollegeEntry.ts.
+    const [schoolDirectory, setSchoolDirectory] = useState<string[]>([]);
+    const [collegeDirectory, setCollegeDirectory] = useState<string[]>([]);
+
+    const fetchDirectories = useCallback(async () => {
+        try {
+            const [schoolRes, collegeRes] = await Promise.all([
+                fetch('/api/admin/school-college-directory?type=school'),
+                fetch('/api/admin/school-college-directory?type=college')
+            ]);
+            if (schoolRes.ok) setSchoolDirectory((await schoolRes.json()).names || []);
+            if (collegeRes.ok) setCollegeDirectory((await collegeRes.json()).names || []);
+        } catch { }
+    }, []);
+
+    useEffect(() => { fetchDirectories(); }, [fetchDirectories]);
+
     const fetchStudents = useCallback(async () => {
         setLoading(true);
         try {
@@ -188,6 +208,7 @@ export default function AdminStudents() {
             resetForm();
             fetchStudents();
             fetchBatches();
+            fetchDirectories();
         } catch (error: any) {
             toast.error(error.message || 'Failed to add student');
         }
@@ -209,6 +230,7 @@ export default function AdminStudents() {
             resetForm();
             fetchStudents();
             fetchBatches();
+            fetchDirectories();
         } catch (error: any) {
             toast.error(error.message || 'Failed to update student');
         }
@@ -632,9 +654,13 @@ export default function AdminStudents() {
                     <input
                         type="text" value={form.schoolName}
                         onChange={e => setForm({ ...form, schoolName: e.target.value })}
+                        list="school-directory-options"
                         className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
                         placeholder="Full school name"
                     />
+                    <datalist id="school-directory-options">
+                        {schoolDirectory.map(s => <option key={s} value={s} />)}
+                    </datalist>
                 </div>
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Board</label>
@@ -657,9 +683,13 @@ export default function AdminStudents() {
                     <input
                         type="text" value={form.collegeName}
                         onChange={e => setForm({ ...form, collegeName: e.target.value })}
+                        list="college-directory-options"
                         className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
                         placeholder="College name"
                     />
+                    <datalist id="college-directory-options">
+                        {collegeDirectory.map(c => <option key={c} value={c} />)}
+                    </datalist>
                 </div>
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Mode of Class</label>

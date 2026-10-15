@@ -100,7 +100,7 @@ export default function FolderSidebar({
             if (res.ok) {
                 toast.success('Folder deleted');
                 if (selectedFolder === id) {
-                    onSelectFolder(null);
+                    onSelectFolder('__none__');
                 }
                 onFolderChange();
             } else {
@@ -126,6 +126,18 @@ export default function FolderSidebar({
 
             {/* Folder List (Responsive) */}
             <div className="flex flex-col gap-1 max-h-48 overflow-y-auto lg:max-h-none lg:overflow-visible pr-1 lg:pr-0 custom-scrollbar">
+                {/* Root / Uncategorized — the default landing view */}
+                <button
+                    onClick={() => onSelectFolder('__none__')}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${selectedFolder === '__none__'
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'text-slate-300 hover:bg-slate-800'
+                        }`}
+                >
+                    <FolderIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm truncate">🗂 Uncategorized</span>
+                </button>
+
                 {/* View All Tests */}
                 <button
                     onClick={() => onSelectFolder(null)}

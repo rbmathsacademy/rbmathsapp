@@ -40,6 +40,9 @@ export default function CreateTestPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const testId = searchParams?.get('id');
+    // Only relevant when creating a brand-new test from inside a folder — once the
+    // test exists, its folder is managed via the folder UI, not by this param.
+    const folderIdFromQuery = searchParams?.get('folderId') || null;
 
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [title, setTitle] = useState('');
@@ -273,6 +276,9 @@ export default function CreateTestPage() {
 
             if (testId) {
                 body.id = testId;
+            } else if (folderIdFromQuery) {
+                // Brand-new test opened from inside a folder — save it there directly.
+                body.folderId = folderIdFromQuery;
             }
 
             const res = await fetch('/api/admin/online-tests', {

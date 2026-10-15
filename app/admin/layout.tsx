@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, FileText, BookOpen, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, GraduationCap } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 const user = JSON.parse(storedUser);
                 const allowedRoutes: Record<string, string[]> = {
                     'manager': ['/admin/fees'],
-                    'copy_checker': ['/admin/questions', '/admin/answers', '/admin/jee-section', '/admin/online-tests', '/admin/assignments'],
+                    'copy_checker': ['/admin/questions', '/admin/jee-section', '/admin/online-tests', '/admin/assignments'],
                     'admin': [], // Admin allows all
                     'superadmin': []
                 };
@@ -219,7 +219,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Students', href: '/admin/students', icon: Users },
         { name: 'Student Chat', href: '/admin/chat', icon: MessageSquare },
         { name: 'Question Bank', href: '/admin/questions', icon: FileText },
-        { name: 'Answer Bank', href: '/admin/answers', icon: BookOpen },
         { name: 'JEE Section', href: '/admin/jee-section', icon: GraduationCap },
         { name: 'Deploy Questions', href: '/admin/deploy', icon: Upload },
         { name: 'Online Tests', href: '/admin/online-tests', icon: ClipboardCheck },

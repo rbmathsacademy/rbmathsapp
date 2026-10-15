@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 import DeletedStudent from '@/models/DeletedStudent';
+import { registerDirectoryEntry } from '@/lib/schoolCollegeDirectory';
 
 const ARCHIVE_DAYS = 100;
 
@@ -45,6 +46,11 @@ export async function PUT(
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
+
+        await Promise.all([
+            registerDirectoryEntry('school', schoolName),
+            registerDirectoryEntry('college', collegeName)
+        ]);
 
         // Sync with Student login model if exists
         if (student.loginId) {

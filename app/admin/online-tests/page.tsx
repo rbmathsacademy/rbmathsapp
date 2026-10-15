@@ -43,6 +43,12 @@ export default function OnlineTestsPage() {
     const [movingTest, setMovingTest] = useState<string | null>(null);
     const [visibleCount, setVisibleCount] = useState(10);
 
+    // A test created while looking at a specific folder should save into that
+    // folder; from the root/uncategorized or "View All" views, it saves to root.
+    const createTestHref = selectedFolder && selectedFolder !== '__none__'
+        ? `/admin/online-tests/create?folderId=${selectedFolder}`
+        : '/admin/online-tests/create';
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -54,14 +60,8 @@ export default function OnlineTestsPage() {
     useEffect(() => {
         if (userEmail) {
             fetchFolders();
-            // Only fetch tests if a folder is selected or 'View All' was clicked
-            if (selectedFolder !== '__none__') {
-                setVisibleCount(10);
-                fetchTests();
-            } else {
-                setTests([]);
-                setLoading(false);
-            }
+            setVisibleCount(10);
+            fetchTests();
         }
     }, [userEmail, filter, selectedFolder]);
 
@@ -79,8 +79,14 @@ export default function OnlineTestsPage() {
                 params.append('status', filter);
             }
 
-            // Only add folderId param when a specific folder is selected (not viewing all tests)
-            if (selectedFolder !== null && selectedFolder !== '__none__') {
+            // '__none__' (the default) = root/uncategorized tests only.
+            // null = deliberate "View All Tests" click = every test, any folder.
+            // anything else = that specific folder's tests.
+            if (selectedFolder === null) {
+                params.append('all', '1');
+            } else if (selectedFolder === '__none__') {
+                params.append('folderId', 'null');
+            } else {
                 params.append('folderId', selectedFolder);
             }
 
@@ -265,7 +271,7 @@ export default function OnlineTestsPage() {
                     <p className="text-slate-400 text-sm mt-1">Create and manage online tests for students</p>
                 </div>
                 <button
-                    onClick={() => router.push('/admin/online-tests/create')}
+                    onClick={() => router.push(createTestHref)}
                     className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
                 >
                     <Plus className="h-5 w-5" />
@@ -317,21 +323,7 @@ export default function OnlineTestsPage() {
                     </div>
 
                     {/* Tests Grid */}
-                    {selectedFolder === '__none__' ? (
-                        <div className="text-center py-20">
-                            <FolderInput className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-white mb-2">Select a Folder</h3>
-                            <p className="text-slate-400 mb-6">
-                                Choose a folder from the sidebar to view tests, or click "View All Tests" to load everything.
-                            </p>
-                            <button
-                                onClick={() => router.push('/admin/online-tests/create')}
-                                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all"
-                            >
-                                + Create New Test
-                            </button>
-                        </div>
-                    ) : loading ? (
+                    {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {[1, 2, 3].map(i => (
                                 <div key={i} className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 animate-pulse">
@@ -346,11 +338,17 @@ export default function OnlineTestsPage() {
                             <FileText className="h-16 w-16 text-slate-600 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-white mb-2">No tests found</h3>
                             <p className="text-slate-400 mb-6">
-                                {searchQuery ? 'Try a different search term' : 'No tests in this folder yet'}
+                                {searchQuery
+                                    ? 'Try a different search term'
+                                    : selectedFolder === '__none__'
+                                        ? 'No uncategorized tests — everything is sorted into a folder, or none exist yet'
+                                        : selectedFolder === null
+                                            ? 'No tests yet'
+                                            : 'No tests in this folder yet'}
                             </p>
                             {!searchQuery && (
                                 <button
-                                    onClick={() => router.push('/admin/online-tests/create')}
+                                    onClick={() => router.push(createTestHref)}
                                     className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all"
                                 >
                                     Create Test

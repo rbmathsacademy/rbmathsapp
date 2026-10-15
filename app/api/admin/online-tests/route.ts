@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
-        const folderId = searchParams.get('folderId');
+        const showAll = searchParams.get('all') === '1' || searchParams.get('all') === 'true';
         const userEmail = request.headers.get('X-User-Email');
 
         if (!userEmail || userEmail === 'null' || userEmail.trim() === '') {
@@ -33,10 +33,17 @@ export async function GET(request: NextRequest) {
                 query.status = status;
             }
         }
-        // Apply folder filter only when explicitly requested
-        if (searchParams.has('folderId')) {
-            const folderIdParam = searchParams.get('folderId');
-            query.folderId = folderIdParam === 'null' ? null : folderIdParam;
+        // Folder scoping: a specific folderId filters to that folder; "all=1" (the
+        // deliberate "View All Tests" action) skips folder filtering entirely;
+        // otherwise default to root/uncategorized tests only (folderId: null also
+        // matches documents where the field was never set).
+        if (!showAll) {
+            if (searchParams.has('folderId')) {
+                const folderIdParam = searchParams.get('folderId');
+                query.folderId = folderIdParam === 'null' ? null : folderIdParam;
+            } else {
+                query.folderId = null;
+            }
         }
 
         console.log('🔍 GET /api/admin/online-tests - Query:', JSON.stringify(query));
