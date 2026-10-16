@@ -41,6 +41,10 @@ export default function StudentAssignmentsPage() {
     const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
     const { profile, loading: profileLoading, updateProfile } = useStudentProfile();
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+    // Difference between the server clock and this device's clock (ms). Phones
+    // frequently have the wrong time, so all open/lock comparisons use server time.
+    const [clockOffset, setClockOffset] = useState(0);
+    const nowMs = () => Date.now() + clockOffset;
 
     // Derive non-free batches from profile
     const nonFreeBatches = (profile?.courses || []).filter(c => c.trim().toLowerCase() !== FREE_BATCH_LOWER);
@@ -58,7 +62,7 @@ export default function StudentAssignmentsPage() {
 
     const fetchAssignments = async () => {
         try {
-            const res = await fetch('/api/student/assignments');
+            const res = await fetch('/api/student/assignments', { cache: 'no-store' });
             if (!res.ok) {
                 if (res.status === 401) {
                     toast.error('Session expired. Please login again.');
@@ -67,6 +71,9 @@ export default function StudentAssignmentsPage() {
                 throw new Error('Failed to fetch');
             }
             const data = await res.json();
+            if (data.serverNow) {
+                setClockOffset(new Date(data.serverNow).getTime() - Date.now());
+            }
             if (data.assignments) {
                 setAssignments(data.assignments);
             }
@@ -81,7 +88,7 @@ export default function StudentAssignmentsPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (assignment.status === 'SCHEDULED' || (assignment.scheduledFor && new Date() < new Date(assignment.scheduledFor))) {
+        if (assignment.status === 'SCHEDULED' || (assignment.scheduledFor && nowMs() < new Date(assignment.scheduledFor).getTime())) {
             toast.error('This assignment is scheduled and has not opened yet.');
             e.target.value = '';
             return;
@@ -218,7 +225,7 @@ export default function StudentAssignmentsPage() {
     };
 
     const openAssignment = (assignment: Assignment) => {
-        if (assignment.status === 'SCHEDULED' || (assignment.scheduledFor && new Date() < new Date(assignment.scheduledFor))) {
+        if (assignment.status === 'SCHEDULED' || (assignment.scheduledFor && nowMs() < new Date(assignment.scheduledFor).getTime())) {
             toast.error('This assignment is scheduled and has not opened yet.');
             return;
         }
@@ -277,7 +284,7 @@ export default function StudentAssignmentsPage() {
     // Missed = CLOSED (deadline + cooldown expired, never submitted)
     // Scheduled assignments (SCHEDULED status or future scheduledFor) appear in the Pending tab as a separate section
     const isAssignmentScheduled = (a: Assignment) => {
-        return a.status === 'SCHEDULED' || (!!a.scheduledFor && new Date() < new Date(a.scheduledFor));
+        return a.status === 'SCHEDULED' || (!!a.scheduledFor && nowMs() < new Date(a.scheduledFor).getTime());
     };
 
     const scheduledAssignments = batchFilteredAssignments.filter(a => isAssignmentScheduled(a));
@@ -419,7 +426,7 @@ export default function StudentAssignmentsPage() {
                     </div>
                     <div className="space-y-3">
                         {scheduledAssignments.map(assignment => (
-                            <ScheduledAssignmentCard key={assignment._id} assignment={assignment} onOpenNow={fetchAssignments} />
+                            <ScheduledAssignmentCard key={assignment._id} assignment={assignment} clockOffset={clockOffset} onOpenNow={fetchAssignments} />
                         ))}
                     </div>
                 </div>
@@ -699,7 +706,7 @@ function AssignmentCard({
     );
 }
 
-function ScheduledAssignmentCard({ assignment, onOpenNow }: { assignment: Assignment; onOpenNow?: () => void }) {
+function ScheduledAssignmentCard({ assignment, clockOffset, onOpenNow }: { assignment: Assignment; clockOffset: number; onOpenNow?: () => void }) {
     const scheduledDate = new Date(assignment.scheduledFor!);
     const deadlineDate = new Date(assignment.deadline);
     const [timeUntilOpen, setTimeUntilOpen] = useState('');
@@ -707,8 +714,7 @@ function ScheduledAssignmentCard({ assignment, onOpenNow }: { assignment: Assign
     useEffect(() => {
         let timerId: ReturnType<typeof setInterval>;
         const tick = () => {
-            const now = new Date();
-            const diff = scheduledDate.getTime() - now.getTime();
+            const diff = scheduledDate.getTime() - (Date.now() + clockOffset);
             if (diff <= 0) {
                 setTimeUntilOpen('Opening now...');
                 clearInterval(timerId);
@@ -726,7 +732,7 @@ function ScheduledAssignmentCard({ assignment, onOpenNow }: { assignment: Assign
         tick();
         timerId = setInterval(tick, 1000);
         return () => clearInterval(timerId);
-    }, [assignment.scheduledFor]);
+    }, [assignment.scheduledFor, clockOffset]);
 
     return (
         <div className="bg-[#1a1f2e] rounded-xl overflow-hidden ring-1 ring-amber-500/20 opacity-90">

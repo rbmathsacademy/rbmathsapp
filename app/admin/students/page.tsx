@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw, Archive, RotateCcw, Clock, AlertTriangle, Infinity } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import DirectorySelect from './components/DirectorySelect';
 
 interface Student {
     _id: string;
@@ -651,16 +652,14 @@ export default function AdminStudents() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">School Name</label>
-                    <input
-                        type="text" value={form.schoolName}
-                        onChange={e => setForm({ ...form, schoolName: e.target.value })}
-                        list="school-directory-options"
-                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
-                        placeholder="Full school name"
+                    <DirectorySelect
+                        type="school"
+                        value={form.schoolName}
+                        options={schoolDirectory}
+                        onChange={v => setForm(f => ({ ...f, schoolName: v }))}
+                        onAdded={fetchDirectories}
+                        placeholder="Select school"
                     />
-                    <datalist id="school-directory-options">
-                        {schoolDirectory.map(s => <option key={s} value={s} />)}
-                    </datalist>
                 </div>
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Board</label>
@@ -680,16 +679,14 @@ export default function AdminStudents() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">College Name</label>
-                    <input
-                        type="text" value={form.collegeName}
-                        onChange={e => setForm({ ...form, collegeName: e.target.value })}
-                        list="college-directory-options"
-                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
-                        placeholder="College name"
+                    <DirectorySelect
+                        type="college"
+                        value={form.collegeName}
+                        options={collegeDirectory}
+                        onChange={v => setForm(f => ({ ...f, collegeName: v }))}
+                        onAdded={fetchDirectories}
+                        placeholder="Select college"
                     />
-                    <datalist id="college-directory-options">
-                        {collegeDirectory.map(c => <option key={c} value={c} />)}
-                    </datalist>
                 </div>
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Mode of Class</label>

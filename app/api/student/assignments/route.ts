@@ -145,8 +145,11 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             assignments: enhancedAssignments,
-            needsBoardSetup: hasBoardWiseAssignment && !studentBoard
-        });
+            needsBoardSetup: hasBoardWiseAssignment && !studentBoard,
+            // Lets the client measure its own clock drift, so a phone with a wrong
+            // clock doesn't show/unlock a scheduled assignment at the wrong moment.
+            serverNow: now.toISOString()
+        }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
 
     } catch (error: any) {
         console.error('Failed to fetch student assignments', error);
