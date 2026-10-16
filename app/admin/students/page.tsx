@@ -83,11 +83,25 @@ export default function AdminStudents() {
     const [schoolDirectory, setSchoolDirectory] = useState<string[]>([]);
     const [collegeDirectory, setCollegeDirectory] = useState<string[]>([]);
 
+    // Directory names plus the filter lists already loaded on this page, de-duplicated
+    // case-insensitively — so the dropdown is populated even if the directory call fails.
+    const mergeNames = (primary: string[], extra: string[]) => {
+        const seen = new Map<string, string>();
+        [...primary, ...extra].forEach(n => {
+            const name = (n || '').trim();
+            if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+        });
+        return [...seen.values()].sort((a, b) => a.localeCompare(b));
+    };
+
     const fetchDirectories = useCallback(async () => {
         try {
+            // Unique query value per call: the service worker keys its saved API copies
+            // by full URL, so it can never hand back an old (e.g. empty) list for this.
+            const t = Date.now();
             const [schoolRes, collegeRes] = await Promise.all([
-                fetch('/api/admin/school-college-directory?type=school'),
-                fetch('/api/admin/school-college-directory?type=college')
+                fetch(`/api/admin/school-college-directory?type=school&_=${t}`, { cache: 'no-store' }),
+                fetch(`/api/admin/school-college-directory?type=college&_=${t}`, { cache: 'no-store' })
             ]);
             if (schoolRes.ok) setSchoolDirectory((await schoolRes.json()).names || []);
             if (collegeRes.ok) setCollegeDirectory((await collegeRes.json()).names || []);
@@ -655,7 +669,7 @@ export default function AdminStudents() {
                     <DirectorySelect
                         type="school"
                         value={form.schoolName}
-                        options={schoolDirectory}
+                        options={mergeNames(schoolDirectory, schools)}
                         onChange={v => setForm(f => ({ ...f, schoolName: v }))}
                         onAdded={fetchDirectories}
                         placeholder="Select school"
@@ -682,7 +696,7 @@ export default function AdminStudents() {
                     <DirectorySelect
                         type="college"
                         value={form.collegeName}
-                        options={collegeDirectory}
+                        options={mergeNames(collegeDirectory, colleges)}
                         onChange={v => setForm(f => ({ ...f, collegeName: v }))}
                         onAdded={fetchDirectories}
                         placeholder="Select college"

@@ -21,16 +21,32 @@ export async function GET(req: NextRequest) {
         }
 
         const field = type === 'school' ? 'schoolName' : 'collegeName';
-        const existingNames: string[] = await BatchStudent.distinct(field);
-        // Case-insensitive de-dupe; first spelling seen wins.
-        const seen = new Set<string>();
-        for (const raw of existingNames) {
+        const [studentNames, known] = await Promise.all([
+            BatchStudent.distinct(field) as Promise<string[]>,
+            SchoolCollegeEntry.find({ type }).select('nameLower').lean(),
+        ]);
+
+        // Only write names the directory doesn't have yet — one batched write, and
+        // nothing at all on the common path. (Writing every name on every read made
+        // this endpoint slow enough to trip the service worker's 10s network timeout.)
+        const knownKeys = new Set((known as any[]).map(k => k.nameLower));
+        const missing = new Map<string, string>(); // lowercase key -> first spelling seen
+        for (const raw of studentNames) {
             const name = (raw || '').trim();
-            if (!name) continue;
             const key = name.toLowerCase();
-            if (seen.has(key)) continue;
-            seen.add(key);
-            await registerDirectoryEntry(type, name);
+            if (name && !knownKeys.has(key) && !missing.has(key)) missing.set(key, name);
+        }
+        if (missing.size > 0) {
+            await SchoolCollegeEntry.bulkWrite(
+                [...missing.entries()].map(([key, name]) => ({
+                    updateOne: {
+                        filter: { type, nameLower: key },
+                        update: { $setOnInsert: { name, type, nameLower: key } },
+                        upsert: true,
+                    },
+                })),
+                { ordered: false }
+            );
         }
 
         const entries = await SchoolCollegeEntry.find({ type }).sort({ nameLower: 1 }).select('name').lean();
