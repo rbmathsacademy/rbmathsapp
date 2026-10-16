@@ -4,20 +4,8 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   reloadOnOnline: true,
   swcMinify: true,
   disable: process.env.NODE_ENV === "development",
-  extendDefaultRuntimeCaching: true,
   workboxOptions: {
     disableDevLogs: true,
-    // Custom rules are matched before the defaults. API responses are per-user
-    // and time-sensitive (assignment open times, test windows), so they must never
-    // be served from a cache — the default "apis" NetworkFirst rule fell back to a
-    // stale copy whenever a phone's network took longer than 10s.
-    runtimeCaching: [
-      {
-        urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
-          sameOrigin && url.pathname.startsWith("/api/"),
-        handler: "NetworkOnly",
-      },
-    ],
   },
 });
 
