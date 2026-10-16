@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { QUESTION_TRASH_RETENTION_SECONDS } from '../lib/trashRetention';
 
 const QuestionSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
@@ -22,6 +23,16 @@ const QuestionSchema = new mongoose.Schema({
     deletedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now }
 });
+
+// Permanently remove trashed questions QUESTION_TRASH_RETENTION_DAYS after deletion.
+// MongoDB's TTL monitor does this on its own (same approach as the student recycle bin).
+// The partial filter means ONLY documents with deleted:true can ever expire — a live
+// question can't be removed even if it somehow carries a stray deletedAt date.
+// Restoring a question sets deletedAt back to null, which TTL ignores.
+QuestionSchema.index(
+    { deletedAt: 1 },
+    { expireAfterSeconds: QUESTION_TRASH_RETENTION_SECONDS, partialFilterExpression: { deleted: true } }
+);
 
 // Prevent model overwrite in dev
 if (process.env.NODE_ENV === 'development') {

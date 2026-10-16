@@ -14,6 +14,7 @@ import FileUploadZone from './components/FileUploadZone';
 import ExtractionProgress from './components/ExtractionProgress';
 import AutoDebugger from './components/AutoDebugger';
 import { AlertCircle } from 'lucide-react';
+import { QUESTION_TRASH_RETENTION_DAYS, daysUntilPurge } from '@/lib/trashRetention';
 
 // --- MultiSelect Component ---
 const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
@@ -2716,7 +2717,9 @@ export default function QuestionBank() {
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex justify-between">
                                                                 <span className="text-xs font-semibold text-blue-400">{q.subtopic}</span>
-                                                                <span className="text-[10px] text-gray-500">{new Date(q.deletedAt).toLocaleDateString()}</span>
+                                                                <span className="text-[10px] text-gray-500">
+                                                                    {new Date(q.deletedAt).toLocaleDateString()} · {daysUntilPurge(q.deletedAt)}d left
+                                                                </span>
                                                             </div>
                                                             <p className="text-sm text-gray-300 truncate">{q.text.substring(0, 80)}{q.text.length > 80 ? '...' : ''}</p>
                                                         </div>
@@ -2729,7 +2732,7 @@ export default function QuestionBank() {
                             )}
                         </div>
                         <div className="p-4 border-t border-gray-700 bg-gray-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <span className="text-xs text-gray-500">Trash auto-purges after 30 days</span>
+                            <span className="text-xs text-gray-500">Deleted questions are permanently removed {QUESTION_TRASH_RETENTION_DAYS} days after deletion</span>
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <button 
                                     disabled={selectedTrashIds.size === 0 || trashLoading}

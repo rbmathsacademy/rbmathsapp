@@ -16,11 +16,9 @@ export async function GET(req: Request) {
     }
 
     try {
-        // Auto-purge old trash (older than 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        await Question.deleteMany({ deleted: true, deletedAt: { $lt: thirtyDaysAgo } });
-
+        // Expiry is handled by the TTL index on Question.deletedAt (see models/Question.ts),
+        // 100 days after deletion. Nothing is purged here — merely opening the trash must
+        // never delete anything.
         const questions = await Question.find(
             { deleted: true },
             { id: 1, text: 1, topic: 1, subtopic: 1, deletedAt: 1, uploadedBy: 1 }
