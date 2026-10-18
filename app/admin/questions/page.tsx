@@ -280,7 +280,6 @@ export default function QuestionBank() {
     const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
     const [selectedExams, setSelectedExams] = useState<string[]>([]);
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
-    const [selectedUploadedBy, setSelectedUploadedBy] = useState<string[]>([]);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [availableBatches, setAvailableBatches] = useState<string[]>([]);
     // Singular Selection for Modal
@@ -291,10 +290,15 @@ export default function QuestionBank() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Server-loaded filter metadata (for instant filter loading)
-    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[]; uploadedBys: string[]; types: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [], uploadedBys: [], types: [] });
+    const [serverFilters, setServerFilters] = useState<{ topics: string[]; subtopics: string[]; examNames: string[]; batches: string[]; types: string[] }>({ topics: [], subtopics: [], examNames: [], batches: [], types: [] });
     const [filtersLoading, setFiltersLoading] = useState(true);
     const [globalSearchQuery, setGlobalSearchQuery] = useState('');
     const [isGlobalSearching, setIsGlobalSearching] = useState(false);
+    // True while the list is showing global-search results. Those results span every topic,
+    // so the "load questions when a topic changes" logic must leave them alone.
+    const [globalSearchActive, setGlobalSearchActive] = useState(false);
+    const [globalSearchTerm, setGlobalSearchTerm] = useState(''); // the term the shown results were fetched for
+    const [copyInfoLoading, setCopyInfoLoading] = useState(false);
 
 
     // Batch Tagging Modal State
@@ -469,18 +473,14 @@ export default function QuestionBank() {
 
     // Compute filtered questions based on selected topics and subtopics
     const filteredQuestions = useMemo(() => {
-        // If global search results are loaded, show all
-        if (isGlobalSearching || (globalSearchQuery && questions.length > 0 && selectedTopics.includes("No Topic"))) {
-            return questions;
-        }
-
-        // Questions are only shown once a topic is explicitly selected
-        if (selectedTopics.includes("No Topic") && !searchQuery) {
-            return [];
-        }
-
         // Filter out "No Topic" for actual filtering
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
+
+        // Questions are only shown once a topic is explicitly selected — except while a
+        // global search is showing its results, which deliberately span every topic.
+        if (!globalSearchActive && actualTopics.length === 0 && !searchQuery) {
+            return [];
+        }
 
         return questions.filter(q => {
             const topicMatch = actualTopics.length === 0 || actualTopics.includes(q.topic);
@@ -506,12 +506,11 @@ export default function QuestionBank() {
                 (q.subtopic || '').toLowerCase().includes(searchLower) ||
                 (q.id || '').toLowerCase().includes(searchLower);
 
-            const uploadedByMatch = selectedUploadedBy.length === 0 || (q.uploadedBy ? selectedUploadedBy.includes(q.uploadedBy) : false);
             const typeMatch = selectedTypes.length === 0 || (q.type ? selectedTypes.includes(q.type) : false);
 
-            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch && uploadedByMatch && typeMatch;
+            return topicMatch && subtopicMatch && examMatch && batchMatch && searchMatch && typeMatch;
         });
-    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedUploadedBy, selectedTypes, searchQuery]);
+    }, [questions, selectedTopics, selectedSubtopics, selectedExams, selectedBatches, selectedTypes, searchQuery, globalSearchActive]);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
@@ -544,7 +543,7 @@ export default function QuestionBank() {
     };
 
     // Fetch questions with server-side filters (on-demand)
-    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; uploadedBys?: string[]; types?: string[]; search?: string }) => {
+    const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; types?: string[]; search?: string }) => {
         setLoading(true);
         try {
             const headers: any = { 'X-User-Email': email };
@@ -564,9 +563,6 @@ export default function QuestionBank() {
             }
             if (filters?.batches && filters.batches.length > 0) {
                 params.set('batch', filters.batches.join('|||'));
-            }
-            if (filters?.uploadedBys && filters.uploadedBys.length > 0) {
-                params.set('uploadedBy', filters.uploadedBys.join('|||'));
             }
             if (filters?.types && filters.types.length > 0) {
                 params.set('type', filters.types.join('|||'));
@@ -596,13 +592,17 @@ export default function QuestionBank() {
     // Trigger fetch when topic filter changes (lazy load)
     useEffect(() => {
         if (!userEmail) return;
+        // Global search results span every topic: don't replace or clear them.
+        // (This effect used to run right after a search, see no topic selected and
+        // wipe the freshly loaded results — that was the "global search returns nothing" bug.)
+        if (globalSearchActive) return;
         const actualTopics = selectedTopics.filter(t => t !== "No Topic");
         if (actualTopics.length > 0) {
-            fetchQuestions(userEmail, { topics: actualTopics, uploadedBys: selectedUploadedBy });
+            fetchQuestions(userEmail, { topics: actualTopics });
         } else {
             setQuestions([]); // No topic selected = empty
         }
-    }, [selectedTopics, selectedUploadedBy, userEmail]);
+    }, [selectedTopics, userEmail]);
 
     // Clear selection when topic changes to prevent stale cross-topic mass deletes
     useEffect(() => {
@@ -615,7 +615,7 @@ export default function QuestionBank() {
         const actualTopics = selectedTopics.filter(t => t !== 'No Topic');
         if (actualTopics.length === 0 && selectedBatches.length === 0) {
             // No topic and no batch selected — fetch by exam so the question list populates
-            fetchQuestions(userEmail, { exams: selectedExams, uploadedBys: selectedUploadedBy });
+            fetchQuestions(userEmail, { exams: selectedExams });
         }
     }, [selectedExams]);
 
@@ -625,7 +625,7 @@ export default function QuestionBank() {
         const actualTopics = selectedTopics.filter(t => t !== 'No Topic');
         if (actualTopics.length === 0) {
             // No topic selected — fetch by batch so the question list populates
-            fetchQuestions(userEmail, { batches: selectedBatches, exams: selectedExams, uploadedBys: selectedUploadedBy });
+            fetchQuestions(userEmail, { batches: selectedBatches, exams: selectedExams });
         }
     }, [selectedBatches]);
 
@@ -638,16 +638,93 @@ export default function QuestionBank() {
             if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
                 headers['X-Global-Admin-Key'] = 'globaladmin_25';
             }
-            const res = await fetch(`/api/admin/questions?search=${encodeURIComponent(globalSearchQuery)}`, { headers });
-            if (res.ok) {
-                const data = await res.json();
-                setQuestions(data);
-                setSelectedTopics(["No Topic"]); // Reset topic filter to show all results
+            const res = await fetch(`/api/admin/questions?search=${encodeURIComponent(globalSearchQuery.trim())}`, { headers, cache: 'no-store' });
+            const data = await res.json();
+            if (!res.ok || !Array.isArray(data)) {
+                toast.error(data?.error || 'Search failed');
+                return;
             }
+            // Flag first so the topic-change effect knows to leave these results alone.
+            setGlobalSearchActive(true);
+            setGlobalSearchTerm(globalSearchQuery.trim());
+            setQuestions(data);
+            setSelectedTopics(["No Topic"]); // results span all topics
+            setSelectedQuestionIds(new Set());
+            if (data.length === 0) toast('No questions matched that search');
         } catch (error) {
             console.error(error);
+            toast.error('Search failed');
         } finally {
             setIsGlobalSearching(false);
+        }
+    };
+
+    const clearGlobalSearch = () => {
+        setGlobalSearchActive(false);
+        setGlobalSearchQuery('');
+        setQuestions([]);
+        setSelectedQuestionIds(new Set());
+    };
+
+    // Picking a topic, batch or exam means "go back to normal browsing": drop the
+    // global-search view so those selections load their own questions.
+    const leaveGlobalSearch = () => {
+        if (globalSearchActive) {
+            setGlobalSearchActive(false);
+            setGlobalSearchQuery('');
+        }
+    };
+
+    // Copies the selected batch's topics + sub-topics as a prompt for an AI question generator,
+    // so it reuses existing categories instead of inventing near-duplicate ones.
+    const copyTaxonomyInfo = async () => {
+        if (!userEmail || selectedBatches.length === 0) return;
+        setCopyInfoLoading(true);
+        try {
+            const headers: any = { 'X-User-Email': userEmail };
+            if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
+                headers['X-Global-Admin-Key'] = 'globaladmin_25';
+            }
+            const res = await fetch(`/api/admin/questions/taxonomy?batch=${encodeURIComponent(selectedBatches.join('|||'))}`, { headers, cache: 'no-store' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || 'Could not load topics');
+
+            const entries: { topic: string; subtopics: string[] }[] = data.topics || [];
+            if (entries.length === 0) {
+                toast.error('No topics found for the selected batch');
+                return;
+            }
+
+            const lines = entries.map((e, i) => `${i + 1}. ${e.topic} >> ${e.subtopics.join('; ')}`);
+            const text = [
+                'Use any one of the following topics along with its sub-topics:',
+                '',
+                ...lines,
+                '',
+                'If any topic or its sub-topics do not broadly match the available data, then create a new one, but at the end inform me about it.'
+            ].join('\n');
+
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch {
+                // Clipboard API unavailable (e.g. non-secure context) — fall back to a temporary textarea
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (!ok) throw new Error('Copy failed');
+            }
+
+            const subCount = entries.reduce((n, e) => n + e.subtopics.length, 0);
+            toast.success(`Copied ${entries.length} topics and ${subCount} sub-topics`);
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to copy');
+        } finally {
+            setCopyInfoLoading(false);
         }
     };
 
@@ -1141,7 +1218,7 @@ export default function QuestionBank() {
                     await fetchFilters(userEmail);
                     const actualTopics = selectedTopics.filter((t: string) => t !== "No Topic");
                     if (actualTopics.length > 0) {
-                        await fetchQuestions(userEmail, { topics: actualTopics, uploadedBys: selectedUploadedBy });
+                        await fetchQuestions(userEmail, { topics: actualTopics });
                     }
                 }
             }
@@ -1487,7 +1564,7 @@ export default function QuestionBank() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Topic</label>
-                            <MultiSelect options={topics} selected={selectedTopics} onChange={setSelectedTopics} placeholder="All Topics" />
+                            <MultiSelect options={topics} selected={selectedTopics} onChange={(v: string[]) => { leaveGlobalSearch(); setSelectedTopics(v); }} placeholder="All Topics" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Subtopic</label>
@@ -1495,28 +1572,37 @@ export default function QuestionBank() {
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Exam</label>
-                            <MultiSelect options={examNames} selected={selectedExams} onChange={setSelectedExams} placeholder="All Exams" />
+                            <MultiSelect options={examNames} selected={selectedExams} onChange={(v: string[]) => { leaveGlobalSearch(); setSelectedExams(v); }} placeholder="All Exams" />
                         </div>
                         <div className="space-y-1">
-                            <div className="flex justify-between items-center ml-1">
+                            <div className="flex justify-between items-center ml-1 gap-2">
                                 <label className="text-xs font-medium text-gray-500">Batch</label>
-                                <button 
-                                    onClick={() => setSelectedBatches(['Untagged'])}
-                                    className="text-[10px] text-amber-500 hover:text-amber-400 font-bold transition-colors"
-                                    title="Show topics with questions not linked to any batch"
-                                >
-                                    Untagged Topics
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    {selectedBatches.length > 0 && (
+                                        <button
+                                            onClick={copyTaxonomyInfo}
+                                            disabled={copyInfoLoading}
+                                            className="flex items-center gap-1 text-[10px] text-sky-400 hover:text-sky-300 font-bold transition-colors disabled:opacity-50"
+                                            title="Copy this batch's topics and sub-topics as a ready-to-paste AI prompt"
+                                        >
+                                            {copyInfoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Copy className="h-3 w-3" />}
+                                            Copy info
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => { leaveGlobalSearch(); setSelectedBatches(['Untagged']); }}
+                                        className="text-[10px] text-amber-500 hover:text-amber-400 font-bold transition-colors"
+                                        title="Show topics with questions not linked to any batch"
+                                    >
+                                        Untagged Topics
+                                    </button>
+                                </div>
                             </div>
-                            <MultiSelect options={availableBatchNames} selected={selectedBatches} onChange={setSelectedBatches} placeholder="All Batches" />
+                            <MultiSelect options={availableBatchNames} selected={selectedBatches} onChange={(v: string[]) => { leaveGlobalSearch(); setSelectedBatches(v); }} placeholder="All Batches" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Type</label>
                             <MultiSelect options={types} selected={selectedTypes} onChange={setSelectedTypes} placeholder="All Types" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-gray-500 ml-1">Created By</label>
-                            <MultiSelect options={serverFilters.uploadedBys || []} selected={selectedUploadedBy} onChange={setSelectedUploadedBy} placeholder="All Creators" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 ml-1">Search (within topic)</label>
@@ -1555,6 +1641,12 @@ export default function QuestionBank() {
                             Global Search
                         </button>
                     </div>
+                    {globalSearchActive && (
+                        <div className="flex items-center justify-between gap-3 bg-amber-900/10 border border-amber-600/20 rounded px-3 py-2 text-xs text-amber-300">
+                            <span>Showing results for &ldquo;{globalSearchTerm}&rdquo; across all topics</span>
+                            <button onClick={clearGlobalSearch} className="font-bold text-amber-400 hover:text-amber-200 underline">Clear</button>
+                        </div>
+                    )}
 
                     {/* Bulk Actions */}
                     {/* List Toolbar (Select All, Stats, Bulk Actions) */}
@@ -2550,7 +2642,7 @@ export default function QuestionBank() {
                                                     await fetchFilters(userEmail);
                                                     const actualTopics = selectedTopics.filter(t => t !== 'No Topic');
                                                     if (actualTopics.length > 0) {
-                                                        fetchQuestions(userEmail, { topics: actualTopics, uploadedBys: selectedUploadedBy });
+                                                        fetchQuestions(userEmail, { topics: actualTopics });
                                                     }
                                                 }
                                             } else {
@@ -2640,7 +2732,7 @@ export default function QuestionBank() {
                                             if (userEmail) {
                                                 const actualTopics = selectedTopics.filter(t => t !== 'No Topic');
                                                 if (actualTopics.length > 0) {
-                                                    fetchQuestions(userEmail, { topics: actualTopics, uploadedBys: selectedUploadedBy });
+                                                    fetchQuestions(userEmail, { topics: actualTopics });
                                                 }
                                             }
                                         } else {

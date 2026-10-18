@@ -33,6 +33,9 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Conditions that must ALL hold (batch and search each bring their own OR group)
+    const andClauses: any[] = [];
+
     // Apply server-side filters
     if (topicParam) {
         baseQuery.topic = { $in: topicParam.split('|||') };
@@ -49,16 +52,16 @@ export async function GET(req: Request) {
         const realBatches = batchValues.filter(b => b !== 'Untagged');
         
         if (wantUntagged && realBatches.length > 0) {
-            baseQuery.$or = [
+            andClauses.push({ $or: [
                 { batches: { $size: 0 } },
                 { batches: { $exists: false } },
                 { batches: { $in: realBatches } }
-            ];
+            ] });
         } else if (wantUntagged) {
-            baseQuery.$or = [
+            andClauses.push({ $or: [
                 { batches: { $size: 0 } },
                 { batches: { $exists: false } }
-            ];
+            ] });
         } else if (realBatches.length > 0) {
             baseQuery.batches = { $in: realBatches };
         }
@@ -70,15 +73,18 @@ export async function GET(req: Request) {
     if (uploadedByParam) {
         baseQuery.uploadedBy = { $in: uploadedByParam.split('|||') };
     }
-    if (searchParam) {
-        baseQuery.$or = [
-            ...(baseQuery.$or || []),
-            { text: { $regex: searchParam, $options: 'i' } },
-            { topic: { $regex: searchParam, $options: 'i' } },
-            { subtopic: { $regex: searchParam, $options: 'i' } },
-            { id: { $regex: searchParam, $options: 'i' } }
-        ];
+    if (searchParam && searchParam.trim()) {
+        // Match the text literally. Unescaped, characters that are common in maths/LaTeX
+        // (^ ( [ \ $ + ...) either broke the regular expression or silently matched nothing.
+        const escaped = searchParam.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        andClauses.push({ $or: [
+            { text: { $regex: escaped, $options: 'i' } },
+            { topic: { $regex: escaped, $options: 'i' } },
+            { subtopic: { $regex: escaped, $options: 'i' } },
+            { id: { $regex: escaped, $options: 'i' } }
+        ] });
     }
+    if (andClauses.length > 0) baseQuery.$and = andClauses;
 
     try {
         const questions = await Question.find(baseQuery, projection).sort({ createdAt: 1 }).lean();
