@@ -695,12 +695,19 @@ export default function QuestionBank() {
                 return;
             }
 
-            const lines = entries.map((e, i) => `${i + 1}. ${e.topic} >> ${e.subtopics.join('; ')}`);
+            // "Practice questions" is a manual bucket: keep it out of the list so the AI
+            // never picks it, and say so explicitly in the prompt.
+            const PRACTICE = /^practice questions?$/i;
+            const usable = entries.map(e => ({ topic: e.topic, subtopics: e.subtopics.filter(s => !PRACTICE.test(s.trim())) }));
+
+            const lines = usable.map((e, i) =>
+                `${i + 1}. ${e.topic} >> ${e.subtopics.length > 0 ? e.subtopics.join('; ') : '(no sub-topics yet)'}`);
             const text = [
                 'Use any one of the following topics along with its sub-topics:',
                 '',
                 ...lines,
                 '',
+                'Never tag any question with the sub-topic "Practice questions" unless I specifically instruct you to.',
                 'If any topic or its sub-topics do not broadly match the available data, then create a new one, but at the end inform me about it.'
             ].join('\n');
 
@@ -719,8 +726,8 @@ export default function QuestionBank() {
                 if (!ok) throw new Error('Copy failed');
             }
 
-            const subCount = entries.reduce((n, e) => n + e.subtopics.length, 0);
-            toast.success(`Copied ${entries.length} topics and ${subCount} sub-topics`);
+            const subCount = usable.reduce((n, e) => n + e.subtopics.length, 0);
+            toast.success(`Copied ${usable.length} topics and ${subCount} sub-topics`);
         } catch (error: any) {
             toast.error(error?.message || 'Failed to copy');
         } finally {
