@@ -1,0 +1,351 @@
+{
+ "Straight Lines": {
+  "Angle Between Two Lines": "Angle between Two Lines",
+  "Angle between Lines": "Angle between Two Lines",
+  "Angle between lines": "Angle between Two Lines",
+  "Angle between two lines": "Angle between Two Lines",
+  "Angle Bisector": "Angle Bisectors",
+  "Collinearity": "Collinearity of Points",
+  "Distance Between Parallel Lines": "Distance between Parallel Lines",
+  "Distance of Point from Line": "Distance of a Point from a Line",
+  "Distance of a Point From a Line": "Distance of a Point from a Line",
+  "Perpendicular Distance": "Distance of a Point from a Line",
+  "Equations of Lines": "Equation of a Line",
+  "Intercept Form with Conditions": "Intercept Form",
+  "Locus and Equations": "Locus",
+  "Lines in a Triangle - Median": "Median of a Triangle",
+  "Normal Form": "Normal Form of a Line",
+  "Reduction to Normal Form": "Normal Form of a Line",
+  "Orthocentre of a Triangle": "Orthocentre",
+  "Right Bisector of a Segment": "Perpendicular Bisector",
+  "Properties of Rectangles": "Rectangle",
+  "Reflection of Light - Equation of Lines": "Reflection of Light",
+  "Reflection of a Point": "Reflection of a Point in a Line",
+  "Image of a Point in a Line": "Reflection of a Point in a Line",
+  "Intercept Form and Section Formula": "Section Formula and Intercept Form",
+  "Point-Slope Form": "Slope-Point Form"
+ },
+ "Permutation & Combination": {
+  "Arrangements": "Permutations",
+  "Linear Permutations": "Permutations",
+  "Arrangements with Restrictions": "Permutations with Restrictions",
+  "Arrangements with Conditions": "Permutations with Restrictions",
+  "Permutations with Position Constraints": "Permutations with Restrictions",
+  "Arrangements with Repeated Letters": "Permutations with Repeated Letters",
+  "Combinations with Constraints": "Combinations with Restrictions",
+  "Selection with Conditions": "Combinations with Restrictions",
+  "Permutations - Without Repetition": "Permutations without Repetition",
+  "Permutations of distinct objects": "Permutations without Repetition",
+  "Combinations in Geometry": "Geometrical Applications of Combinations",
+  "Combinations - Geometry Applications": "Geometrical Applications of Combinations",
+  "Geometry (Parallelograms from lines)": "Geometrical Applications of Combinations",
+  "Geometry (Triangles from points)": "Geometrical Applications of Combinations",
+  "Committees with Specific Compositions": "Committee Formation",
+  "Committees with Specific Inclusions/Exclusions": "Committee Formation",
+  "Combinations - Selection of a Team": "Committee Formation",
+  "Combinatorics (Matches/Handshakes)": "Combinations (Handshakes)",
+  "Gap Method (Arrangements)": "Gap Method",
+  "Stars and Bars (Multiple Item Types)": "Stars and Bars",
+  "Stars and Bars (Positive Integer Solutions)": "Stars and Bars",
+  "Stars and Bars / Complementary Counting": "Stars and Bars",
+  "Distribution of Identical Objects": "Stars and Bars",
+  "Combinations and Permutations of Multisets": "Permutations of Multisets",
+  "Basic Counting Principle": "Fundamental Principle of Counting",
+  "Rank of a Word": "Dictionary Rank",
+  "Digit Sums": "Sum of Numbers Formed from Digits",
+  "Permutations (Complementary Counting)": "Complementary Counting"
+ },
+ "Relations": {
+  "Algebra of Real Functions": "Algebra of Functions",
+  "Cartesian Product of Sets": "Cartesian Product",
+  "Definition of Function": "Definition of a Function",
+  "Domain": "Domain of a Function",
+  "Domain of a Function - Greatest Integer": "Domain of a Function",
+  "Domain & Range": "Domain and Range",
+  "Domain and Range of a Function": "Domain and Range",
+  "Domain and Range of a Relation": "Domain and Range",
+  "Modulus Function - Domain and Range": "Modulus Function",
+  "Range": "Range of a Function",
+  "Equal Functions": "Equality of Functions",
+  "Functions - Graphs": "Graphs of Functions",
+  "Functions and Graphs": "Graphs of Functions",
+  "Functions in Real Life": "Applications of Functions",
+  "Number of Functions": "Counting Functions",
+  "Number of Relations": "Counting Relations",
+  "Relations - Roster Form": "Roster Form",
+  "Types of Functions - Graphs": "Types of Functions",
+  "Functions - Piecewise Definitions": "Piecewise Functions"
+ },
+ "Beta & Gamma Functions (1st Sem Engg)": {
+  "Gamma Function Properties": "Properties of Gamma Function",
+  "Beta Function Properties": "Properties of Beta Function",
+  "Integral Evaluation with Beta Function": "Integration using Beta Function",
+  "Integral Evaluation with Gamma Function": "Integration using Gamma Function"
+ },
+ "Binomial Theorem": {
+  "Binomial Expansion for Powers": "Binomial Expansion",
+  "Binomial Properties": "Properties of Binomial Coefficients",
+  "Divisibility Problems": "Divisibility using Binomial Theorem",
+  "Finding Coefficient in Product": "Finding Coefficient",
+  "Number of Terms in an Expansion": "Number of Terms",
+  "Specific Term from End": "Term from the End"
+ },
+ "Complex Numbers": {
+  "Algebraic Operations": "Algebra of Complex Numbers",
+  "Arithmetic of Complex Numbers": "Algebra of Complex Numbers",
+  "Amplitude": "Argument of a Complex Number",
+  "Amplitude (Argument) of a Complex Number": "Argument of a Complex Number",
+  "Conjugate and Modulus": "Modulus and Conjugate",
+  "Equality": "Equality of Complex Numbers",
+  "Modulus": "Modulus of a Complex Number",
+  "Modulus of Complex Numbers": "Modulus of a Complex Number",
+  "Modulus Properties": "Properties of Modulus",
+  "Multiplicative Inverse": "Multiplicative Inverse of a Complex Number",
+  "Polar Form of a Complex Number": "Polar Form",
+  "Locus and Geometry": "Locus in the Argand Plane",
+  "Modulus and Amplitude": "Modulus and Argument"
+ },
+ "Conic Section": {
+  "Equation of a Parabola": "Parabola"
+ },
+ "Derivatives - Class XI": {
+  "Derivatives by First Principle": "Derivative from First Principle",
+  "Differentiation from First Principles": "Derivative from First Principle",
+  "First Principle": "Derivative from First Principle",
+  "Derivatives of Standard Functions": "Basic Derivatives",
+  "Derivative - Quotient Rule": "Quotient Rule",
+  "Differentiation of Product": "Product Rule"
+ },
+ "Derivatives - WBJEE": {
+  "Application of Derivatives (Roots of Equation)": "Applications of Derivatives (Roots of Equation)",
+  "Application of Derivatives (Rates of Change)": "Applications of Derivatives (Rates of Change)"
+ },
+ "Determinants": {
+  "Adjoint and Inverse": "Adjoint and Inverse of a Matrix",
+  "Inverse of a Matrix": "Adjoint and Inverse of a Matrix",
+  "Area of Triangle": "Area of a Triangle",
+  "Evaluation of Determinants": "Evaluating Determinants"
+ },
+ "Graph Theory": {
+  "Tree": "Trees",
+  "Adjacency matrix": "Adjacency Matrix",
+  "BFS algorithm": "BFS Algorithm",
+  "Dijkstra's algorithm": "Dijkstra's Algorithm",
+  "Kruskal's algorithm": "Kruskal's Algorithm",
+  "Prim’s algorithm": "Prim's Algorithm"
+ },
+ "Group Theory-I": {
+  "Centre of a Group": "Center of a Group",
+  "Cyclic Groups & Examples": "Cyclic Groups",
+  "Cosets & Lagrange's Theorem": "Lagrange's Theorem",
+  "Isomorphisms & Cayley's Theorem": "Cayley's Theorem",
+  "Isomorphisms & Cyclic Groups": "Cyclic Groups & Isomorphisms"
+ },
+ "LPP": {
+  "Maximum Value — Five-Vertex Feasible Region": "Maximum Value by Corner Point Method",
+  "Optimal Corner Point — Five-Vertex Region": "Optimal Corner Point",
+  "Minimum Value — Unbounded Region": "Unbounded Feasible Region",
+  "Point of Minimum — Unbounded Region": "Unbounded Feasible Region"
+ },
+ "Limits - Class XI": {
+  "Limits - Algebraic Functions": "Algebraic Limits",
+  "Limits of Algebraic Functions": "Algebraic Limits",
+  "Limits of Trigonometric Functions": "Trigonometric Limits",
+  "Limits - Trigonometric Functions": "Trigonometric Limits",
+  "Left Hand Limits": "Left and Right Hand Limits",
+  "Properties and Standard Limits": "Standard Limits",
+  "Limits - Standard Limit of Powers": "Standard Limits"
+ },
+ "Linear Inequality": {
+  "Modulus Inequalities": "Absolute Value Inequalities",
+  "Inequalities with Modulus": "Absolute Value Inequalities",
+  "Solving Modulus Inequalities": "Absolute Value Inequalities",
+  "Rational Inequalities with Modulus": "Rational Absolute Inequalities",
+  "Rational and Modulus Inequalities": "Rational Absolute Inequalities",
+  "Applications of Linear Inequalities": "Applications of Inequalities",
+  "Applications of Linear Inequalities - Budget": "Applications of Inequalities",
+  "Applications of Linear Inequalities - Mixture": "Applications of Inequalities",
+  "Word Problems on Linear Inequalities": "Word Problems",
+  "Linear Inequalities in One Variable": "Basic Linear Inequalities",
+  "Linear Inequality": "Basic Linear Inequalities",
+  "Solving Linear Inequalities": "Basic Linear Inequalities",
+  "Single Inequality": "Basic Linear Inequalities",
+  "Graphical Solution of Linear Inequalities": "Graphical Inequalities",
+  "Graphical Solutions": "Graphical Inequalities",
+  "Quadratic Inequality": "Quadratic Inequalities",
+  "System of Inequalities": "System of Linear Inequalities",
+  "Fractional Inequality": "Rational Inequalities"
+ },
+ "Logarithm": {
+  "Evaluation of Logarithms": "Evaluating Logarithms"
+ },
+ "Matrices": {
+  "Matrix Construction": "Construction of a Matrix",
+  "Inverse of a Matrix": "Matrix Inverse",
+  "Symmetric Matrix": "Symmetric Matrices",
+  "Symmetric and Skew-symmetric Matrices": "Symmetric and Skew-Symmetric Matrices",
+  "Matrix Algebra": "Matrix Operations",
+  "Matrix Multiplication": "Matrix Operations"
+ },
+ "Matrix - JEE Mains": {
+  "Higher Powers of a Matrix": "Properties of Matrix Powers"
+ },
+ "Permutation & Combination (JEE)": {
+  "Linear Equations (Stars and Bars)": "Distribution of Identical Objects"
+ },
+ "Probability (JEE)": {
+  "Binomial Distribution (at least one)": "Binomial Distribution (at least one success)",
+  "Conditional Probability and Set Theory": "Conditional Probability with Sets",
+  "Events and Independence": "Independent Events",
+  "Independence of Events": "Independent Events",
+  "Probability with State Machines / Sequences": "Probability with Sequences",
+  "Set Operations in Probability": "Probability on Sets",
+  "Probability with Venn Diagrams": "Probability on Sets",
+  "Conditional Probability Properties": "Conditional Probability"
+ },
+ "Probability (Stats Minor)": {
+  "Baye's theorem": "Bayes Theorem",
+  "Classical Probability": "Basic Probability"
+ },
+ "Probability - WBJEE": {
+  "Independence of Events": "Independent Events",
+  "Independent Events - At Least One": "Independent Events",
+  "Independent Events - Combined Conditions": "Independent Events",
+  "Independent Events - Product of Probabilities": "Independent Events",
+  "Addition Theorem - Two Dice": "Addition Theorem",
+  "Addition Theorem and Complement": "Addition Theorem",
+  "Conditional Probability and Independence": "Conditional Probability"
+ },
+ "Quadratic Equations": {
+  "Common Root of Quadratic Equations": "Common Roots",
+  "Reducible to Quadratic": "Equations Reducible to Quadratic",
+  "Formation of Equation": "Formation of Quadratic Equation",
+  "Maximum/Minimum Value": "Maximum and Minimum Values",
+  "Minimum Value of a Quadratic": "Maximum and Minimum Values",
+  "Nature of Roots - Discriminant": "Nature of Roots",
+  "Discriminant": "Nature of Roots",
+  "Roots of Equation": "Roots of Quadratic Equations",
+  "Roots of Quadratic Equation": "Roots of Quadratic Equations",
+  "Solving Quadratic Equations": "Roots of Quadratic Equations"
+ },
+ "Rate of change (Applied Maths)": {
+  "Cube Volume to Surface Area": "Surface Area of Cube",
+  "Sphere Volume and Surface Area": "Surface Area of Sphere",
+  "Radius and Circumference": "Circumference of Circle",
+  "Conical Funnel": "Conical Vessel",
+  "Sand Cone": "Conical Vessel"
+ },
+ "Real Functions": {
+  "Application of Derivatives": "Applications of Derivatives",
+  "Taylor's Series": "Taylor's Theorem"
+ },
+ "Sequences and Series": {
+  "AP & GP": "Arithmetic and Geometric Progressions",
+  "Applications of GP": "Applications of Geometric Progression",
+  "Geometric Progression - Application": "Applications of Geometric Progression",
+  "Arithmetic Mean": "Arithmetic Means",
+  "Arithmetic Progression - Sum of n Terms": "Arithmetic Progression",
+  "Arithmetic Progression - Three Terms": "Arithmetic Progression",
+  "Geometric Progression - Properties": "Geometric Progression",
+  "Geometric Progression - Three Terms": "Geometric Progression",
+  "Geometric Progression - Term from the End": "Geometric Progression",
+  "Geometric Progression - nth Term": "Geometric Progression",
+  "Nth Term of a GP": "Geometric Progression",
+  "Geometric Progression - Sum of Terms": "Sum of a Geometric Progression",
+  "Geometric Progression - Sum of n Terms": "Sum of a Geometric Progression",
+  "Sum of a GP": "Sum of a Geometric Progression",
+  "Sum of GP (Assertion-Reason)": "Sum of a Geometric Progression",
+  "Special Series": "Sum of Special Series"
+ },
+ "Sets - Class XI": {
+  "Set Algebra": "Algebra of Sets",
+  "Algebra of Sets - Difference": "Algebra of Sets",
+  "Application of Sets": "Applications of Sets",
+  "Applications of Sets - Three Sets": "Applications of Sets",
+  "Applications of Sets - Two Sets": "Applications of Sets",
+  "Practical Problems on Sets": "Applications of Sets",
+  "Venn Diagram Applications": "Venn Diagrams",
+  "Venn Diagram Problems": "Venn Diagrams",
+  "Cardinality": "Cardinality of Sets",
+  "Union of Sets": "Union and Intersection of Sets",
+  "Intersection of Sets": "Union and Intersection of Sets",
+  "Operations on Sets": "Set Operations",
+  "Set Operations - Difference and Complement": "Set Operations",
+  "Set Properties": "Properties of Sets",
+  "Subsets and Proper Subsets": "Subsets",
+  "Subsets and Power Set": "Power Set",
+  "Number of Subsets": "Power Set",
+  "Types of Sets - Singleton Set": "Types of Sets"
+ },
+ "Sphere - 1st Sem Major/Minor": {
+  "Equation of Sphere": "Equation of a Sphere",
+  "Great Circle of a Sphere": "Great Circles",
+  "Locus of Center": "Locus of the Centre of a Sphere",
+  "Tangent Plane at a Point": "Tangent Plane"
+ },
+ "Statistics": {
+  "Mean & Variance": "Mean and Variance",
+  "Variance & Standard Deviation": "Variance and Standard Deviation",
+  "Variance": "Variance and Standard Deviation",
+  "Mean and Standard Deviation - Discrete Frequency": "Mean and Standard Deviation",
+  "Mean and Standard Deviation - Step Deviation Method": "Mean and Standard Deviation",
+  "Mean Deviation about Mean - Grouped Data": "Mean Deviation about Mean",
+  "Probability - Cards": "Probability",
+  "Probability - Mutually Exclusive and Exhaustive Events": "Probability",
+  "Probability - Selection of a Committee": "Probability",
+  "Probability - Types of Events": "Probability",
+  "Central tendency": "Central Tendency"
+ },
+ "Straight Lines - WBJEE": {
+  "Polar Equations of Lines": "Polar Equation of a Line",
+  "Isosceles Triangle Formed by Lines": "Triangles Formed by Lines",
+  "Rectangle and Locus of Vertex": "Locus of a Rectangle Vertex"
+ },
+ "Tangent & Normal": {
+  "Condition for Tangent": "Condition for Tangency",
+  "Slope of Tangent": "Slope of the Tangent",
+  "Equation of Tangent (Parametric)": "Tangent to Parametric Curve"
+ },
+ "Three Dimensional Geometry": {
+  "Distance Formula - Quadrilaterals": "Distance Formula",
+  "Distance Formula in 3D": "Distance Formula",
+  "Section Formula in 3D": "Section Formula"
+ },
+ "Trigonometry": {
+  "Compound Angle Formulae": "Compound Angles",
+  "Compound Angles Ratio": "Compound Angles",
+  "Sum and Difference Formulas": "Compound Angles",
+  "Conditional Identities": "Conditional Trigonometric Identities",
+  "Degree and Radian Measure": "Angles and Measurement",
+  "Double Angle Formulae": "Multiple & Sub-multiple Angles",
+  "Triple Angle Formula": "Multiple & Sub-multiple Angles",
+  "Multiple Angle Formulas": "Multiple & Sub-multiple Angles",
+  "Multiple and Half Angles": "Multiple & Sub-multiple Angles",
+  "Half Angle Formulas": "Multiple & Sub-multiple Angles",
+  "Half-Angle Formulae": "Multiple & Sub-multiple Angles",
+  "Half-Angle Values": "Multiple & Sub-multiple Angles",
+  "Transformation Formulae": "Transformation Formulas",
+  "Transformations": "Transformation Formulas",
+  "Product to Sum Formulae": "Transformation Formulas",
+  "Product to Sum Formulas": "Transformation Formulas",
+  "Sum to Product Formulas": "Transformation Formulas",
+  "Product of Cosine Expressions": "Product Identities",
+  "Product of Cosines": "Product Identities",
+  "Product of Sines": "Product Identities",
+  "Trigonometric Identities - Product of Sines": "Product Identities",
+  "Trigonometric Identities - Product of Sines and Cosines": "Product Identities",
+  "Signs of Trigonometric Functions": "Signs of Trigonometric Ratios",
+  "Trigonometric Ratios and Quadrants": "Signs of Trigonometric Ratios",
+  "Trigonometric Ratios of Allied Angles": "Allied Angles",
+  "Trigonometric Ratios of Complementary Angles": "Complementary Angles",
+  "Trigonometric Ratios of Special Angles": "Trigonometric Ratios of Standard Angles",
+  "Identities": "Trigonometric Identities",
+  "Trigonometric Identities - Componendo and Dividendo": "Trigonometric Identities",
+  "Trigonometric Identities - Tangent": "Trigonometric Identities",
+  "Trigonometric Equations in Terms of Half Angles": "Trigonometric Equations",
+  "Trigonometry General Solutions": "Trigonometric Equations",
+  "Trigonometric Graphs": "Graphs of Trigonometric Functions",
+  "Behaviour of Cosine Function": "Graphs of Trigonometric Functions",
+  "Cosine Sum over Equally Spaced Angles": "Sum of Cosines of Angles in A.P."
+ }
+}

@@ -370,6 +370,11 @@ export async function PUT(request: NextRequest) {
                 attempt.markModified('answers');
                 await attempt.save();
             }
+
+            // Answers were re-graded, so the cached per-topic summaries of this test's attempts
+            // are out of date. Drop them; the weakness analysis rebuilds them on demand.
+            const AttemptTopicStat = (await import('@/models/AttemptTopicStat')).default;
+            await AttemptTopicStat.deleteMany({ testId: id });
         }
 
         // MERGE deployment updates instead of overwriting (prevents losing batches/times)
@@ -444,6 +449,8 @@ export async function DELETE(request: NextRequest) {
         // Delete associated student attempts first
         const StudentTestAttempt = (await import('@/models/StudentTestAttempt')).default;
         const deleteResult = await StudentTestAttempt.deleteMany({ testId: id });
+        const AttemptTopicStat = (await import('@/models/AttemptTopicStat')).default;
+        await AttemptTopicStat.deleteMany({ testId: id });
         console.log(`🗑️ Deleted ${deleteResult.deletedCount} attempts for test ${id}`);
 
         await OnlineTest.deleteOne({ _id: id });

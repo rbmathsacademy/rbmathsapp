@@ -43,6 +43,8 @@ export async function DELETE(
             testId,
             studentPhone: { $in: phones }
         });
+        const AttemptTopicStat = (await import('@/models/AttemptTopicStat')).default;
+        await AttemptTopicStat.deleteMany({ testId, studentPhone: { $in: phones } });
 
         return NextResponse.json({
             message: `${result.deletedCount} student attempt(s) cleared. Students can now retake the test.`,
