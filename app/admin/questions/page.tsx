@@ -695,10 +695,10 @@ export default function QuestionBank() {
                 return;
             }
 
-            // "Practice questions" is a manual bucket: keep it out of the list so the AI
-            // never picks it, and say so explicitly in the prompt.
-            const PRACTICE = /^practice questions?$/i;
-            const usable = entries.map(e => ({ topic: e.topic, subtopics: e.subtopics.filter(s => !PRACTICE.test(s.trim())) }));
+            // Any sub-topic with "practice"/"practise" in its name is a manual bucket: keep it out
+            // of the list so the AI never picks it, and say so explicitly in the prompt.
+            const PRACTICE = /practi[cs]e/i;
+            const usable = entries.map(e => ({ topic: e.topic, subtopics: e.subtopics.filter(s => !PRACTICE.test(s)) }));
 
             const lines = usable.map((e, i) =>
                 `${i + 1}. ${e.topic} >> ${e.subtopics.length > 0 ? e.subtopics.join('; ') : '(no sub-topics yet)'}`);
@@ -707,7 +707,7 @@ export default function QuestionBank() {
                 '',
                 ...lines,
                 '',
-                'Never tag any question with the sub-topic "Practice questions" unless I specifically instruct you to.',
+                'Never tag any question with a sub-topic named "Practice" or "Practise" (such as "Practice questions") unless I specifically instruct you to.',
                 'If any topic or its sub-topics do not broadly match the available data, then create a new one, but at the end inform me about it.'
             ].join('\n');
 
