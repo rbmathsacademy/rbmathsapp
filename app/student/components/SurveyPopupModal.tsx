@@ -79,7 +79,7 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
 
     if (success) {
         return (
-            <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
                 <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 animate-[pulse_2s_infinite]">
                     <CheckCircle2 className="w-12 h-12 text-emerald-400" />
                 </div>
@@ -94,14 +94,14 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
     }
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg flex items-center justify-center p-0 md:p-4 animate-in fade-in duration-300">
-            <div className="w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl bg-[#0f172a] md:rounded-3xl border-0 md:border border-white/10 flex flex-col overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-0 md:p-4 animate-in fade-in duration-300">
+            <div className="w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl bg-[#140d27] md:rounded-3xl border-0 md:border border-white/10 flex flex-col overflow-hidden shadow-2xl">
                 
                 {/* Header */}
-                <div className="p-6 md:p-8 border-b border-white/10 bg-gradient-to-b from-blue-500/10 to-transparent shrink-0">
+                <div className="p-6 md:p-8 border-b border-white/10 bg-gradient-to-b from-sky-500/10 to-transparent shrink-0">
                     <div className="flex items-center gap-2 mb-3">
-                        <AlertCircle className="w-5 h-5 text-blue-400" />
-                        <span className="text-xs font-black text-blue-400 uppercase tracking-wider">Required Feedback</span>
+                        <AlertCircle className="w-5 h-5 text-sky-400" />
+                        <span className="text-xs font-black text-sky-400 uppercase tracking-wider">Required Feedback</span>
                     </div>
                     <h2 className="text-2xl md:text-3xl font-black text-white mb-2">{survey.title}</h2>
                     {survey.description && (
@@ -118,7 +118,7 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                         return (
                             <div key={q.id} className={`p-5 rounded-2xl border transition-colors ${hasError ? 'bg-red-500/5 border-red-500/30' : 'bg-white/5 border-white/5'}`}>
                                 <div className="flex gap-3 mb-4">
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${isAnswered ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-400'}`}>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${isAnswered ? 'bg-sky-500/20 text-sky-400' : 'bg-[#1d1535] text-slate-400'}`}>
                                         {index + 1}
                                     </div>
                                     <div>
@@ -138,9 +138,9 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                                                 const optImage: string = isObj ? (opt.image ?? '') : '';
                                                 const selected = answers[q.id] === oIdx;
                                                 return (
-                                                    <div key={oIdx} onClick={() => handleOptionSelect(q.id, oIdx, 'mcq')} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-blue-500/10 border-blue-500/50' : 'bg-slate-900 border-white/5 hover:bg-white/5'}`}>
-                                                        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? 'border-blue-500' : 'border-slate-500'}`}>
-                                                            {selected && <div className="w-2 h-2 rounded-full bg-blue-500"/>}
+                                                    <div key={oIdx} onClick={() => handleOptionSelect(q.id, oIdx, 'mcq')} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-sky-500/10 border-sky-500/50' : 'bg-[#140d27] border-white/5 hover:bg-white/5'}`}>
+                                                        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? 'border-sky-500' : 'border-slate-500'}`}>
+                                                            {selected && <div className="w-2 h-2 rounded-full bg-sky-500"/>}
                                                         </div>
                                                         <div className="flex flex-col gap-2">
                                                             {optText && <span className={`text-sm ${selected ? 'text-white font-bold' : 'text-slate-300'}`}>{optText}</span>}
@@ -160,7 +160,7 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                                                 const optImage: string = isObj ? (opt.image ?? '') : '';
                                                 const selected = Array.isArray(answers[q.id]) && answers[q.id].includes(oIdx);
                                                 return (
-                                                    <div key={oIdx} onClick={() => handleOptionSelect(q.id, oIdx, 'checkbox')} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-purple-500/10 border-purple-500/50' : 'bg-slate-900 border-white/5 hover:bg-white/5'}`}>
+                                                    <div key={oIdx} onClick={() => handleOptionSelect(q.id, oIdx, 'checkbox')} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selected ? 'bg-purple-500/10 border-purple-500/50' : 'bg-[#140d27] border-white/5 hover:bg-white/5'}`}>
                                                         <div className={`mt-0.5 w-4 h-4 rounded-[4px] border-2 flex items-center justify-center shrink-0 ${selected ? 'border-purple-500 bg-purple-500' : 'border-slate-500'}`}>
                                                             {selected && <CheckCircle2 className="w-3 h-3 text-white"/>}
                                                         </div>
@@ -182,7 +182,7 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                                                     const selected = answers[q.id] === val;
                                                     return (
                                                         <button key={val} onClick={() => handleRatingSelect(q.id, val)}
-                                                            className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-sm font-bold border transition-all ${selected ? 'bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/20' : 'bg-slate-900 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'}`}>
+                                                            className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-sm font-bold border transition-all ${selected ? 'bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/20' : 'bg-[#140d27] border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'}`}>
                                                             {val}
                                                         </button>
                                                     );
@@ -200,7 +200,7 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                                             value={answers[q.id] || ''}
                                             onChange={e => handleTextChange(q.id, e.target.value)}
                                             placeholder="Type your answer here..."
-                                            className="w-full p-4 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 min-h-[100px] resize-y"
+                                            className="w-full p-4 rounded-xl bg-[#140d27] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 min-h-[100px] resize-y"
                                         />
                                     )}
                                 </div>
@@ -210,14 +210,14 @@ export default function SurveyPopupModal({ survey, onComplete }: SurveyPopupModa
                 </div>
 
                 {/* Footer with Submit Button */}
-                <div className="p-4 md:p-6 border-t border-white/10 bg-[#0f172a] shrink-0">
+                <div className="p-4 md:p-6 border-t border-white/10 bg-[#140d27] shrink-0">
                     <button
                         onClick={handleSubmit}
                         disabled={!allRequiredAnswered || submitting}
                         className={`w-full py-4 rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-all ${
                             allRequiredAnswered && !submitting
-                                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/20'
-                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white hover:from-sky-500 hover:to-cyan-500 shadow-lg shadow-fuchsia-500/20'
+                                : 'bg-[#1d1535] text-slate-500 cursor-not-allowed'
                         }`}
                     >
                         {submitting ? (

@@ -139,14 +139,14 @@ export default function StudentResources() {
     if (!student) return null;
 
     const categories = [
-        { id: 'materials', label: 'Materials', icon: FileText, count: materialsCount, gradient: 'from-blue-500 to-cyan-500', bg: 'bg-blue-500/20' },
+        { id: 'materials', label: 'Materials', icon: FileText, count: materialsCount, gradient: 'from-sky-500 to-cyan-500', bg: 'bg-sky-500/20' },
         { id: 'videos', label: 'Videos', icon: Video, count: videosCount, gradient: 'from-rose-500 to-pink-500', bg: 'bg-rose-500/20' },
         { id: 'practice', label: 'Practice', icon: Brain, count: practiceCount, gradient: 'from-purple-500 to-violet-500', bg: 'bg-purple-500/20' },
         { id: 'mock', label: 'Mock Test', icon: Zap, count: 0, gradient: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-500/20' },
     ];
 
     return (
-        <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans">
+        <div className="min-h-screen sd-bg text-gray-200 font-sans">
             {/* Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-30%] right-[-20%] w-[60%] h-[60%] bg-[radial-gradient(circle,rgba(88,28,135,0.15)_0%,transparent_70%)] rounded-full"></div>
@@ -225,7 +225,7 @@ export default function StudentResources() {
                                         <ArrowLeft className="h-4 w-4" />
                                     </button>
                                     <h2 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
-                                        {activeView === 'materials' && <><FileText className="h-4 w-4 text-blue-400" /> Materials</>}
+                                        {activeView === 'materials' && <><FileText className="h-4 w-4 text-sky-400" /> Materials</>}
                                         {activeView === 'videos' && <><Video className="h-4 w-4 text-rose-400" /> Videos</>}
                                         {activeView === 'practice' && <><Brain className="h-4 w-4 text-purple-400" /> Practice</>}
                                     </h2>
@@ -284,8 +284,8 @@ export default function StudentResources() {
                                             return (
                                                 <div key={resource._id} className="p-3 sm:p-4 rounded-xl bg-white/5 ring-1 ring-white/10">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-lg shrink-0 ${activeView === 'materials' ? 'bg-blue-500/20' : 'bg-rose-500/20'}`}>
-                                                            {activeView === 'materials' && <FileText className="h-4 w-4 text-blue-400" />}
+                                                        <div className={`p-2 rounded-lg shrink-0 ${activeView === 'materials' ? 'bg-sky-500/20' : 'bg-rose-500/20'}`}>
+                                                            {activeView === 'materials' && <FileText className="h-4 w-4 text-sky-400" />}
                                                             {activeView === 'videos' && <Video className="h-4 w-4 text-rose-400" />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -301,7 +301,7 @@ export default function StudentResources() {
                                                                 href={resource.url || resource.videoLink}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
-                                                                className={`p-2 rounded-lg shrink-0 ${activeView === 'videos' ? 'bg-rose-500' : 'bg-blue-500'}`}
+                                                                className={`p-2 rounded-lg shrink-0 ${activeView === 'videos' ? 'bg-rose-500' : 'bg-sky-500'}`}
                                                             >
                                                                 {activeView === 'videos' ? <Play className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
                                                             </a>

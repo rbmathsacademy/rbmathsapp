@@ -35,7 +35,7 @@ export default function BatchTabSwitcher({ batches, selectedBatch, onSelect }: B
         <div className="w-full overflow-hidden">
             <div
                 ref={scrollRef}
-                className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 bg-[#0f1420] ring-1 ring-white/5 rounded-xl"
+                className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 bg-[#120c22] ring-1 ring-white/5 rounded-xl"
             >
                 {filteredBatches.map(batch => {
                     const isActive = batch === selectedBatch;
@@ -48,7 +48,7 @@ export default function BatchTabSwitcher({ batches, selectedBatch, onSelect }: B
                                 relative whitespace-nowrap px-4 py-2 rounded-lg text-[11px] sm:text-xs font-bold uppercase tracking-wider
                                 transition-all duration-300 ease-out shrink-0
                                 ${isActive
-                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 scale-[1.02]'
+                                    ? 'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-lg shadow-fuchsia-500/25 scale-[1.02]'
                                     : 'bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 active:scale-[0.97]'
                                 }
                             `}

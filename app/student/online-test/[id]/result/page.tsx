@@ -165,7 +165,7 @@ export default function TestResultPage() {
     if (loading) {
         // ... loading state ...
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
+            <div className="min-h-screen sd-bg flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
                     <p className="text-slate-400 text-sm">Loading results...</p>
@@ -177,10 +177,10 @@ export default function TestResultPage() {
     if (error) {
         // ... error state ...
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center p-4">
+            <div className="min-h-screen sd-bg flex items-center justify-center p-4">
                 <div className="text-center">
                     <p className="text-red-400 mb-4">{error}</p>
-                    <button onClick={() => router.push('/student/online-test')} className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold">
+                    <button onClick={() => router.push('/student/online-test')} className="px-6 py-2 bg-[#1d1535] text-white rounded-xl font-bold">
                         Back to Tests
                     </button>
                 </div>
@@ -191,8 +191,8 @@ export default function TestResultPage() {
     // PENDING RESULTS VIEW
     if (result?.resultsPending) {
         return (
-            <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-[#0c1220]/90 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
+            <div className="min-h-screen sd-bg font-sans text-slate-200 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-[#100a1f]/90 border border-emerald-500/20 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
 
                     <div className="inline-flex p-4 rounded-full bg-emerald-500/10 mb-6 ring-4 ring-emerald-500/5">
@@ -202,7 +202,7 @@ export default function TestResultPage() {
                     <h1 className="text-2xl font-black text-white mb-2">Test Submitted!</h1>
                     <p className="text-emerald-400 text-sm font-bold uppercase tracking-wider mb-6">Submission Successful</p>
 
-                    <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/5 mb-8">
+                    <div className="relative bg-[#1d1535]/50 rounded-2xl p-6 sd-gborder sd-gborder-soft sd-card mb-8">
                         <Clock className="h-6 w-6 text-slate-400 mx-auto mb-3" />
                         <p className="text-slate-300 text-sm leading-relaxed">
                             {result.message || "Results will be declared after the deadline."}
@@ -211,7 +211,7 @@ export default function TestResultPage() {
 
                     <button
                         onClick={() => router.push('/student/online-test')}
-                        className="w-full px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-white/5 hover:border-white/10"
+                        className="w-full px-6 py-3.5 bg-[#1d1535] hover:bg-[#2a2045] text-white rounded-xl font-bold transition-all border border-white/5 hover:border-white/10"
                     >
                         Back to Tests
                     </button>
@@ -223,20 +223,18 @@ export default function TestResultPage() {
     const hasLeaderboard = !result?.resultsHidden && result?.leaderboard && result.leaderboard.length > 0;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden">
+        <div className="min-h-screen sd-bg font-sans text-slate-200 relative overflow-x-hidden">
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.05)_0%,transparent_70%)]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.05)_0%,transparent_70%)]"></div>
             </div>
 
             {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
+            <header className="sticky top-0 z-50 sd-header px-4 py-3">
                 <div className="max-w-4xl mx-auto flex items-center gap-3">
                     <button onClick={() => router.push('/student/online-test')} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all">
                         <ArrowLeft className="h-4 w-4" />
                     </button>
-                    <h1 className="text-xs font-bold text-white">Test <span className="text-emerald-400">Results</span></h1>
+                    <h1 className="text-xs font-bold text-white">Test <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-300 to-cyan-300">Results</span></h1>
                 </div>
             </header>
 
@@ -246,16 +244,16 @@ export default function TestResultPage() {
                 <div className={`grid gap-6 ${hasLeaderboard ? 'lg:grid-cols-[1.5fr,1fr]' : 'max-w-3xl mx-auto'}`}>
 
                     {/* LEFT COLUMN: Stats & Rank Card */}
-                    <div className="bg-[#0c1220]/90 backdrop-blur-xl ring-1 ring-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col h-full">
+                    <div className="bg-[#100a1f]/90 ring-1 ring-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col h-full">
                         {/* Background glow effects */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-amber-500 opacity-50" />
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-sky-500 to-amber-500 opacity-50" />
 
                         <div className="grid md:grid-cols-2 gap-8 items-center h-full relative z-10 flex-1">
                             {/* LEFT HALF: Score & Rank */}
                             <div className="flex flex-col items-center justify-center space-y-6 shadow-[1px_0_0_0_rgba(255,255,255,0.05)] md:shadow-none pb-6 md:pb-0 md:pr-8">
                                 {result?.resultsHidden ? (
                                     <div className="flex flex-col items-center justify-center text-center p-8">
-                                        <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 ring-1 ring-white/5">
+                                        <div className="w-24 h-24 rounded-full bg-[#1d1535]/50 flex items-center justify-center mb-4 ring-1 ring-white/5">
                                             <Clock className="w-10 h-10 text-slate-500" />
                                         </div>
                                         <h3 className="text-xl font-bold text-white mb-2">Results Hidden</h3>
@@ -320,7 +318,7 @@ export default function TestResultPage() {
                             {/* RIGHT HALF: Stats (Stacked) - Time Taken Removed */}
                             <div className="flex flex-col gap-3 justify-center">
                                 {/* Correct */}
-                                <div className="bg-slate-900/40 hover:bg-slate-900/60 transition-colors rounded-xl p-4 flex items-center gap-4 ring-1 ring-white/5 group">
+                                <div className="bg-[#140d27]/40 hover:bg-[#140d27]/60 transition-colors rounded-xl p-4 flex items-center gap-4 ring-1 ring-white/5 group">
                                     <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 ring-1 ring-emerald-500/20 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]">
                                         <CheckCircle className="h-6 w-6" />
                                     </div>
@@ -331,7 +329,7 @@ export default function TestResultPage() {
                                 </div>
 
                                 {/* Skipped (Placed 2nd to match typical flow, or User order: Correct, Skipped, Incorrect) */}
-                                <div className="bg-slate-900/40 hover:bg-slate-900/60 transition-colors rounded-xl p-4 flex items-center gap-4 ring-1 ring-white/5 group">
+                                <div className="bg-[#140d27]/40 hover:bg-[#140d27]/60 transition-colors rounded-xl p-4 flex items-center gap-4 ring-1 ring-white/5 group">
                                     <div className="w-12 h-12 rounded-xl bg-slate-500/10 flex items-center justify-center text-slate-400 ring-1 ring-slate-500/20 group-hover:scale-110 transition-transform duration-300">
                                         <Minus className="h-6 w-6" />
                                     </div>
@@ -342,7 +340,7 @@ export default function TestResultPage() {
                                 </div>
 
                                 {/* Incorrect */}
-                                <div className="bg-slate-900/40 hover:bg-slate-900/60 transition-colors rounded-xl p-4 flex items-center gap-4 ring-1 ring-white/5 group">
+                                <div className="bg-[#140d27]/40 hover:bg-[#140d27]/60 transition-colors rounded-xl p-4 flex items-center gap-4 ring-1 ring-white/5 group">
                                     <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 ring-1 ring-red-500/20 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_15px_-3px_rgba(239,68,68,0.2)]">
                                         <XCircle className="h-6 w-6" />
                                     </div>
@@ -355,7 +353,7 @@ export default function TestResultPage() {
                         </div>
 
                         {result?.resultsHidden && (
-                            <div className="absolute bottom-0 left-0 w-full bg-slate-900/80 p-3 text-center text-xs text-slate-400 shadow-[0_-1px_0_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+                            <div className="absolute bottom-0 left-0 w-full bg-[#140d27]/80 p-3 text-center text-xs text-slate-400 shadow-[0_-1px_0_0_rgba(255,255,255,0.05)]">
                                 Detailed solutions and leaderboards are hidden for this test.
                             </div>
                         )}
@@ -363,7 +361,7 @@ export default function TestResultPage() {
 
                     {/* RIGHT COLUMN: Leaderboard */}
                     {hasLeaderboard && (
-                        <div className="bg-[#0c1220]/90 backdrop-blur-xl ring-1 ring-white/10 rounded-3xl p-6 shadow-xl flex flex-col h-full max-h-[600px]">
+                        <div className="bg-[#100a1f]/90 ring-1 ring-white/10 rounded-3xl p-6 shadow-xl flex flex-col h-full max-h-[600px]">
                             <div className="flex items-center gap-3 mb-4 shrink-0">
                                 <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
                                     <Trophy className="h-5 w-5" />
@@ -376,7 +374,7 @@ export default function TestResultPage() {
 
                             <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 -mr-2">
                                 <table className="w-full text-xs text-left border-collapse">
-                                    <thead className="text-[9px] text-slate-500 uppercase bg-slate-900/60 shadow-[0_1px_0_0_rgba(255,255,255,0.05)] sticky top-0 backdrop-blur-md z-10">
+                                    <thead className="text-[9px] text-slate-500 uppercase bg-[#140d27]/60 shadow-[0_1px_0_0_rgba(255,255,255,0.05)] sticky top-0 z-10">
                                         <tr>
                                             <th className="px-3 py-2 font-bold">Rank</th>
                                             <th className="px-3 py-2 font-bold">Student</th>
@@ -386,18 +384,18 @@ export default function TestResultPage() {
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
                                         {result.leaderboard.map((entry: any) => (
-                                            <tr key={entry.rank} className={`hover:bg-white/5 transition-colors ${entry.isCurrentUser ? 'bg-blue-500/10' : ''}`}>
+                                            <tr key={entry.rank} className={`hover:bg-white/5 transition-colors ${entry.isCurrentUser ? 'bg-sky-500/10' : ''}`}>
                                                 <td className="px-3 py-3">
                                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${entry.rank === 1 ? 'bg-amber-400 text-amber-950 shadow-amber-900/20' :
                                                         entry.rank === 2 ? 'bg-slate-300 text-slate-900 shadow-slate-900/20' :
                                                             entry.rank === 3 ? 'bg-orange-400 text-orange-950 shadow-orange-900/20' :
-                                                                'text-slate-400 bg-slate-800 border border-white/5'
+                                                                'text-slate-400 bg-[#1d1535] border border-white/5'
                                                         }`}>
                                                         {entry.rank}
                                                     </div>
                                                 </td>
                                                 <td className="px-3 py-3">
-                                                    <span className={`font-bold text-xs block truncate max-w-[120px] ${entry.isCurrentUser ? 'text-blue-400' : 'text-slate-300'}`}>
+                                                    <span className={`font-bold text-xs block truncate max-w-[120px] ${entry.isCurrentUser ? 'text-sky-400' : 'text-slate-300'}`}>
                                                         {entry.name} {entry.isCurrentUser && '(You)'}
                                                     </span>
                                                 </td>
@@ -433,10 +431,10 @@ export default function TestResultPage() {
                     <div className="pt-4">
                         <button
                             onClick={() => setShowQuestions(!showQuestions)}
-                            className="w-full group flex items-center justify-between px-6 py-5 bg-[#0c1220]/80 ring-1 ring-white/10 rounded-2xl hover:ring-emerald-500/30 transition-all hover:shadow-lg hover:shadow-emerald-900/10"
+                            className="w-full group flex items-center justify-between px-6 py-5 bg-[#100a1f]/80 ring-1 ring-white/10 rounded-2xl hover:ring-emerald-500/30 transition-all hover:shadow-lg hover:shadow-emerald-900/10"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-xl bg-slate-800 text-emerald-400 group-hover:bg-emerald-500/10 transition-colors ring-1 ring-white/5">
+                                <div className="p-3 rounded-xl bg-[#1d1535] text-emerald-400 group-hover:bg-emerald-500/10 transition-colors ring-1 ring-white/5">
                                     <Target className="h-6 w-6" />
                                 </div>
                                 <div className="text-left">
@@ -444,7 +442,7 @@ export default function TestResultPage() {
                                     <div className="text-xs text-slate-500">Analyze your mistakes question by question</div>
                                 </div>
                             </div>
-                            <div className="text-xs font-bold text-slate-400 bg-slate-900/50 px-4 py-2 rounded-xl ring-1 ring-white/5 group-hover:ring-emerald-500/20 group-hover:text-emerald-400 transition-all">
+                            <div className="text-xs font-bold text-slate-400 bg-[#140d27]/50 px-4 py-2 rounded-xl ring-1 ring-white/5 group-hover:ring-emerald-500/20 group-hover:text-emerald-400 transition-all">
                                 {showQuestions ? 'Hide Review ▲' : 'Show Review ▼'}
                             </div>
                         </button>
@@ -458,13 +456,13 @@ export default function TestResultPage() {
                                     return (
                                     <div key={q.questionId} className={`relative overflow-x-auto rounded-2xl sm:rounded-3xl p-2 sm:p-6 border transition-all ${q.isCorrect ? 'bg-emerald-900/5 border-emerald-500/20 shadow-lg shadow-emerald-900/5' :
                                         isWrong ? 'bg-red-900/5 border-red-500/20 shadow-lg shadow-red-900/5' :
-                                            'bg-slate-900/40 border-slate-700/30'
+                                            'bg-[#140d27]/40 border-[#352a55]/30'
                                         }`}>
                                         {/* Question header */}
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">
                                             <div className="flex items-center justify-between sm:justify-start gap-4">
                                                 <div className="flex items-center gap-4">
-                                                    <span className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 font-bold border border-white/5">Q{i + 1}</span>
+                                                    <span className="text-xs px-3 py-1.5 rounded-lg bg-[#1d1535] text-slate-400 font-bold border border-white/5">Q{i + 1}</span>
                                                     <div className="flex items-center gap-2">
                                                         {q.isCorrect ? <CheckCircle className="h-5 w-5 text-emerald-500" /> :
                                                             isWrong ? <XCircle className="h-5 w-5 text-red-500" /> :
@@ -510,7 +508,7 @@ export default function TestResultPage() {
                                                         <div key={oi} className={`flex items-start gap-2 sm:gap-4 px-2 sm:px-5 py-3 sm:py-4 rounded-xl text-sm transition-all ${isCorrectOption && isStudentChoice ? 'bg-emerald-500/20 border border-emerald-500/40 shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)]' :
                                                             isCorrectOption ? 'bg-emerald-500/10 border border-emerald-500/20 border-dashed' :
                                                                 isStudentChoice ? 'bg-red-500/15 border border-red-500/30' :
-                                                                    'bg-slate-800/30 border border-transparent'
+                                                                    'bg-[#1d1535]/30 border border-transparent'
                                                             }`}>
                                                             <div className="mt-0.5 shrink-0">
                                                                 {isCorrectOption ? <CheckCircle className="h-5 w-5 text-emerald-400" /> :
@@ -529,7 +527,7 @@ export default function TestResultPage() {
 
                                         {/* Fill blank answer */}
                                         {q.type === 'fillblank' && (
-                                            <div className="bg-slate-900/50 rounded-2xl p-4 sm:p-6 ring-1 ring-white/5 space-y-4 overflow-x-auto">
+                                            <div className="relative bg-[#140d27]/50 rounded-2xl p-4 sm:p-6 sd-gborder sd-gborder-soft sd-card space-y-4 overflow-x-auto">
                                                 <div className="grid grid-cols-[80px,1fr] sm:grid-cols-[120px,1fr] gap-2 sm:gap-4 items-center">
                                                     <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest shrink-0">Your Answer</span>
                                                     <span className={`!text-[11px] sm:!text-base font-bold font-mono break-all ${q.isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -549,7 +547,7 @@ export default function TestResultPage() {
 
                                         {/* Broad answer */}
                                         {q.type === 'broad' && (
-                                            <div className="bg-slate-900/50 rounded-2xl p-4 sm:p-6 ring-1 ring-white/5 overflow-x-auto">
+                                            <div className="relative bg-[#140d27]/50 rounded-2xl p-4 sm:p-6 sd-gborder sd-gborder-soft sd-card overflow-x-auto">
                                                 <div className="text-[10px] sm:text-xs text-slate-500 uppercase font-bold mb-2 tracking-widest">Your Answer</div>
                                                 <div className="!text-[11px] sm:!text-base text-slate-300 font-serif italic mb-4 leading-relaxed break-words max-w-full">"{q.studentAnswer || '(empty)'}"</div>
                                                 <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs text-amber-400/80 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/10 font-bold whitespace-normal break-words max-w-full">

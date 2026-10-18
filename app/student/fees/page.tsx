@@ -90,8 +90,8 @@ export default function FeesPayment() {
     // Access guard for free batch students
     if (!profileLoading && isFreeBatchOnly) {
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center p-4 font-sans">
-                <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-md text-center">
+            <div className="min-h-screen sd-bg flex items-center justify-center p-4 font-sans">
+                <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl shadow-2xl p-8 max-w-md text-center">
                     <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                         <ShieldX className="h-8 w-8 text-red-400" />
                     </div>
@@ -101,7 +101,7 @@ export default function FeesPayment() {
                     </p>
                     <button
                         onClick={() => router.push('/student')}
-                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mx-auto active:scale-[0.98]"
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white font-bold text-sm transition-all shadow-lg shadow-fuchsia-500/25 flex items-center justify-center gap-2 mx-auto active:scale-[0.98]"
                     >
                         <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                     </button>
@@ -292,8 +292,8 @@ export default function FeesPayment() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-blue-400 animate-pulse">Loading...</div>
+            <div className="min-h-screen sd-bg flex items-center justify-center">
+                <div className="text-sky-400 animate-pulse">Loading...</div>
             </div>
         );
     }
@@ -302,9 +302,9 @@ export default function FeesPayment() {
     const years = [selectedYear - 1, selectedYear, selectedYear + 1];
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden">
+        <div className="min-h-screen sd-bg font-sans text-slate-200 relative overflow-x-hidden">
             {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
+            <header className="sticky top-0 z-50 sd-header px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button 
@@ -313,14 +313,14 @@ export default function FeesPayment() {
                         >
                             <ArrowLeft className="h-5 w-5" /> Back
                         </button>
-                        <h1 className="text-sm font-bold text-white">My <span className="text-pink-400">Fees</span></h1>
+                        <h1 className="text-sm font-bold text-white">My <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-rose-400">Fees</span></h1>
                     </div>
                 </div>
             </header>
 
             {!selectedBatch ? (
                 <main className="max-w-md mx-auto px-4 py-12 relative z-10">
-                    <div className="bg-slate-900/50 backdrop-blur-xl ring-1 ring-white/10 rounded-3xl p-6 shadow-xl">
+                    <div className="relative bg-[#140d27]/50 sd-gborder sd-gborder-soft sd-card rounded-3xl p-6 shadow-xl">
                         <h1 className="text-2xl font-bold text-white mb-2">Select Batch</h1>
                         <p className="text-slate-400 text-sm mb-6">Choose a batch to view fee details</p>
 
@@ -330,9 +330,9 @@ export default function FeesPayment() {
                                     <button
                                         key={batch}
                                         onClick={() => setSelectedBatch(batch)}
-                                        className="w-full text-left p-4 rounded-xl bg-slate-800/50 hover:bg-blue-600/20 ring-1 ring-white/5 hover:ring-blue-500/30 transition-all group"
+                                        className="w-full text-left p-4 rounded-xl bg-[#1d1535]/50 hover:bg-sky-600/20 ring-1 ring-white/5 hover:ring-sky-500/30 transition-all group"
                                     >
-                                        <h3 className="text-lg font-bold text-white group-hover:text-blue-400">{batch}</h3>
+                                        <h3 className="text-lg font-bold text-white group-hover:text-sky-400">{batch}</h3>
                                         <p className="text-xs text-slate-500">Click to view fees</p>
                                     </button>
                                 ))
@@ -354,7 +354,7 @@ export default function FeesPayment() {
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="bg-slate-800 ring-1 ring-white/10 rounded-lg px-4 py-2 text-sm focus:ring-pink-500"
+                            className="bg-[#1d1535] ring-1 ring-white/10 rounded-lg px-4 py-2 text-sm focus:ring-pink-500"
                         >
                             {years.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
@@ -364,12 +364,12 @@ export default function FeesPayment() {
                         {MONTHS.map((monthName, index) => {
                             const { status, record } = getStatusForMonth(selectedYear, index);
 
-                            let cardClass = "bg-slate-900/60 ring-white/10";
+                            let cardClass = "bg-[#140d27]/60 ring-white/10";
 
                             if (status === 'PAID') {
                                 cardClass = "bg-green-950/30 ring-green-500/30 hover:ring-green-500 hover:bg-green-900/20 cursor-pointer group";
                             } else if (status === 'NEW_ADMISSION' || status === 'BEFORE_ADMISSION' || status === 'EXEMPTED') {
-                                cardClass = "bg-slate-900/40 ring-white/5 opacity-60";
+                                cardClass = "bg-[#140d27]/40 ring-white/5 opacity-60";
                             } else {
                                 // Pending
                                 cardClass = "bg-red-950/20 ring-red-500/20";

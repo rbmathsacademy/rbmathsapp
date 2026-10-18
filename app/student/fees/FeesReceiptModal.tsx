@@ -39,7 +39,7 @@ export default function FeesReceiptModal({ record, student, onClose }: FeesRecei
     const paidInYear = entryDate.getFullYear();
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200">
             <div className="bg-white text-slate-900 w-full max-w-sm rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header / Logo Area */}
@@ -112,7 +112,7 @@ export default function FeesReceiptModal({ record, student, onClose }: FeesRecei
                 <div className="p-4 border-t border-slate-100 bg-slate-50">
                     <button
                         onClick={onClose}
-                        className="w-full py-2.5 bg-slate-900 text-white rounded-lg font-medium text-sm hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10 active:scale-[0.98]"
+                        className="w-full py-2.5 bg-[#140d27] text-white rounded-lg font-medium text-sm hover:bg-[#1d1535] transition-colors shadow-lg shadow-slate-900/10 active:scale-[0.98]"
                     >
                         Close Receipt
                     </button>

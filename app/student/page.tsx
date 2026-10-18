@@ -34,63 +34,7 @@ import { readCache, writeCache, clearStudentCache } from '@/lib/studentCache';
 const FREE_BATCH = 'Class XI (Free batch) 2026-27';
 const FREE_BATCH_LOWER = FREE_BATCH.trim().toLowerCase();
 
-// Visual-only styles for the dashboard. Everything animated here uses transform / opacity /
-// stroke-dashoffset only (GPU friendly, no layout or blur work), and it all switches off for
-// users who ask for reduced motion.
-const DASHBOARD_CSS = `
-.sd-bg {
-    background:
-        radial-gradient(60% 45% at 0% 0%, rgba(217,70,239,0.22) 0%, transparent 70%),
-        radial-gradient(55% 40% at 100% 8%, rgba(34,211,238,0.16) 0%, transparent 70%),
-        radial-gradient(70% 45% at 50% 100%, rgba(124,58,237,0.20) 0%, transparent 70%),
-        linear-gradient(180deg, #0b0718 0%, #080612 55%, #05040c 100%);
-}
-.sd-grid {
-    background-image:
-        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-    background-size: 28px 28px;
-    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 60%);
-    mask-image: linear-gradient(180deg, #000 0%, transparent 60%);
-}
-/* Gradient hairline border drawn as an overlay, so it never changes the box size */
-.sd-gborder { position: relative; }
-.sd-gborder::before {
-    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: var(--sd-border, linear-gradient(135deg, rgba(232,121,249,0.7), rgba(139,92,246,0.25) 45%, rgba(34,211,238,0.6)));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-}
-.sd-card { background: linear-gradient(160deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.02) 100%); }
-.sd-name {
-    background: linear-gradient(90deg, #fff 0%, #f0abfc 25%, #fde68a 50%, #67e8f9 75%, #fff 100%);
-    background-size: 200% 100%;
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: sd-flow 7s linear infinite;
-}
-@keyframes sd-flow { to { background-position: -200% 0; } }
-.sd-rise { opacity: 0; animation: sd-rise .55s cubic-bezier(.2,.8,.2,1) forwards; }
-@keyframes sd-rise { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
-.sd-shine { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
-.sd-shine::after {
-    content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 35%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.10), transparent);
-    transform: translateX(0) skewX(-18deg); animation: sd-sweep 6.5s ease-in-out infinite; will-change: transform;
-}
-@keyframes sd-sweep { 0%, 55% { transform: translateX(0) skewX(-18deg); } 100% { transform: translateX(420%) skewX(-18deg); } }
-.sd-twinkle { animation: sd-twinkle 2.8s ease-in-out infinite; }
-@keyframes sd-twinkle { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: 1; transform: scale(1); } }
-.sd-ring { animation: sd-ring 1.3s cubic-bezier(.2,.8,.2,1) forwards; }
-@keyframes sd-ring { from { stroke-dashoffset: 226.2; } }
-.sd-bar { transform-origin: left; animation: sd-bar 1s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes sd-bar { from { transform: scaleX(0); } }
-.sd-float { animation: sd-float 4s ease-in-out infinite; }
-@keyframes sd-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-@media (prefers-reduced-motion: reduce) {
-    .sd-name, .sd-shine::after, .sd-twinkle, .sd-ring, .sd-bar, .sd-float { animation: none !important; }
-    .sd-rise { animation: none !important; opacity: 1; }
-}
-`;
+// Visual styles (sd-* classes) live in ./student-theme.css, shared by all student pages.
 
 interface DashboardData {
     student: {
@@ -265,7 +209,6 @@ export default function StudentDashboard() {
     if (loading) {
         return (
             <div className="min-h-screen sd-bg flex items-center justify-center relative overflow-hidden">
-                <style>{DASHBOARD_CSS}</style>
                 <div className="absolute inset-0 sd-grid pointer-events-none" />
                 <div className="relative z-10 flex flex-col items-center gap-4">
                     <div className="relative h-14 w-28 sd-float">
@@ -311,7 +254,6 @@ export default function StudentDashboard() {
 
     return (
         <div className="min-h-screen sd-bg font-sans text-slate-200 relative overflow-x-hidden selection:bg-fuchsia-500/30">
-            <style>{DASHBOARD_CSS}</style>
             <Toaster position="top-center" />
 
             {/* Static neon backdrop: coloured light pools + a fading grid. Nothing here animates. */}
@@ -617,7 +559,7 @@ export default function StudentDashboard() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {data.offlineExams.map((exam, idx) => (
-                                    <div key={exam.examId} className="sd-gborder sd-rise sd-card bg-[#120b1c]/90 rounded-3xl overflow-hidden shadow-[0_14px_34px_-16px_rgba(249,115,22,0.55)]"
+                                    <div key={exam.examId} className="relative sd-gborder sd-rise sd-card bg-[#120b1c]/90 rounded-3xl overflow-hidden shadow-[0_14px_34px_-16px_rgba(249,115,22,0.55)]"
                                         style={{ animationDelay: `${120 + idx * 50}ms`, ['--sd-border' as any]: 'linear-gradient(135deg, rgba(251,113,133,0.7), rgba(251,146,60,0.15) 55%, rgba(252,211,77,0.5))' }}>
                                         {/* Header */}
                                         <div className="bg-gradient-to-r from-rose-500/20 via-orange-500/10 to-transparent px-4 sm:px-5 py-2.5 sm:py-3 flex justify-between items-center border-b border-orange-400/15">
@@ -686,7 +628,7 @@ export default function StudentDashboard() {
                                     const isTop = test.score !== null && test.highestScore > 0 && Number(test.score) >= Number(test.highestScore);
                                     const toneBorder = tone === 'hi' ? 'rgba(163,230,53,0.65)' : tone === 'mid' ? 'rgba(252,211,77,0.6)' : tone === 'lo' ? 'rgba(251,113,133,0.6)' : 'rgba(148,163,184,0.35)';
                                     return (
-                                        <div key={test.testId} className="sd-gborder sd-rise sd-card bg-[#100b1e]/90 rounded-3xl overflow-hidden shadow-[0_14px_32px_-18px_rgba(0,0,0,0.9)]"
+                                        <div key={test.testId} className="relative sd-gborder sd-rise sd-card bg-[#100b1e]/90 rounded-3xl overflow-hidden shadow-[0_14px_32px_-18px_rgba(0,0,0,0.9)]"
                                             style={{ animationDelay: `${Math.min(idx, 8) * 50}ms`, ['--sd-border' as any]: `linear-gradient(135deg, ${toneBorder}, rgba(255,255,255,0.04) 55%, rgba(139,92,246,0.35))` }}>
                                             <div className="bg-gradient-to-r from-white/[0.06] to-transparent px-4 sm:px-5 py-2.5 sm:py-3.5 flex justify-between items-center border-b border-white/5">
                                                 <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-100 min-w-0 flex-1 mr-2">
@@ -751,7 +693,7 @@ export default function StudentDashboard() {
                                 })}
 
                                 {data.tests.length === 0 && (
-                                    <div className="sd-gborder sd-card bg-[#100b1e]/90 rounded-3xl p-12 text-center">
+                                    <div className="relative sd-gborder sd-card bg-[#100b1e]/90 rounded-3xl p-12 text-center">
                                         <BarChart2 className="w-12 h-12 text-violet-400/40 mx-auto mb-4" />
                                         <p className="text-violet-200/50 font-bold uppercase tracking-widest text-[10px]">No test records discovered</p>
                                     </div>
@@ -768,7 +710,7 @@ export default function StudentDashboard() {
 
                             <div className="space-y-2 sm:space-y-3">
                                 {data.assignments.filter(a => a.status !== 'NOT_ENROLLED').map((assign, idx) => (
-                                    <div key={assign.assignmentId} className="sd-gborder sd-rise sd-card bg-[#100b1e]/90 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex justify-between items-center group transition-colors duration-300"
+                                    <div key={assign.assignmentId} className="relative sd-gborder sd-rise sd-card bg-[#100b1e]/90 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex justify-between items-center group transition-colors duration-300"
                                         style={{ animationDelay: `${Math.min(idx, 10) * 40}ms`, ['--sd-border' as any]: 'linear-gradient(135deg, rgba(232,121,249,0.45), rgba(255,255,255,0.03) 50%, rgba(34,211,238,0.35))' }}>
                                         <div className="min-w-0 flex-1 pr-2">
                                             <p className="text-xs sm:text-[13px] font-bold text-slate-100 group-hover:text-fuchsia-200 transition-colors uppercase tracking-tight truncate">{assign.title}</p>
@@ -816,7 +758,7 @@ export default function StudentDashboard() {
                                 ))}
 
                                 {data.assignments.length === 0 && (
-                                    <div className="sd-gborder sd-card bg-[#100b1e]/90 rounded-3xl p-12 text-center">
+                                    <div className="relative sd-gborder sd-card bg-[#100b1e]/90 rounded-3xl p-12 text-center">
                                         <FileText className="w-12 h-12 text-violet-400/40 mx-auto mb-4" />
                                         <p className="text-violet-200/50 font-bold uppercase tracking-widest text-[10px]">No assignments found</p>
                                     </div>

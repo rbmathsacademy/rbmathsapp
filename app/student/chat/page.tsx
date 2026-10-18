@@ -626,7 +626,7 @@ export default function StudentChat() {
 
     if (loading || profileLoading) {
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
+            <div className="min-h-screen sd-bg-calm flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
         );
@@ -635,7 +635,7 @@ export default function StudentChat() {
     // Access guard for free batch students
     if (isFreeBatchOnly) {
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center p-4 font-sans">
+            <div className="min-h-screen sd-bg-calm flex items-center justify-center p-4 font-sans">
                 <div className="bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-8 max-w-md text-center">
                     <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                         <ShieldX className="h-8 w-8 text-red-400" />
@@ -646,7 +646,7 @@ export default function StudentChat() {
                     </p>
                     <button
                         onClick={() => router.push('/student')}
-                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 mx-auto active:scale-[0.98]"
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white font-bold text-sm transition-all shadow-lg shadow-fuchsia-500/25 flex items-center justify-center gap-2 mx-auto active:scale-[0.98]"
                     >
                         <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                     </button>
@@ -656,11 +656,11 @@ export default function StudentChat() {
     }
 
     return (
-        <div className="h-[100svh] bg-[#050b14] flex flex-col font-sans relative overflow-hidden">
+        <div className="h-[100svh] sd-bg-calm flex flex-col font-sans relative overflow-hidden">
 
             
             {/* Header */}
-            <div className="bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-white/10 p-2 shrink-0 z-20 flex flex-row items-center justify-between gap-2">
+            <div className="sd-header relative bg-[#0c0819] p-2 shrink-0 z-20 flex flex-row items-center justify-between gap-2">
                 <button 
                     onClick={() => { lastBatchIdScrolled.current = null; router.push('/student'); }} 
                     className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold transition-colors shrink-0"
@@ -680,7 +680,7 @@ export default function StudentChat() {
 
             {/* Batch Tab Switcher */}
             {batches.filter(b => b.trim().toLowerCase() !== FREE_BATCH_LOWER).length > 1 && (
-                <div className="px-3 py-2 bg-[#0a0f1a]/60 border-b border-white/5 shrink-0 z-10">
+                <div className="px-3 py-2 bg-[#0c0819]/80 border-b border-white/5 shrink-0 z-10">
                     <BatchTabSwitcher
                         batches={batches}
                         selectedBatch={selectedBatch || batches[0]}

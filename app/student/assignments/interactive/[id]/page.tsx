@@ -109,7 +109,7 @@ export default function InteractiveAssignmentPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+            <div className="min-h-screen sd-bg-calm flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
             </div>
         );
@@ -117,7 +117,7 @@ export default function InteractiveAssignmentPage() {
 
     if (scheduledInfo) {
         return (
-            <div className="min-h-screen bg-[#0a0f1a] text-gray-200 p-6 flex flex-col items-center justify-center text-center">
+            <div className="min-h-screen sd-bg-calm text-gray-200 p-6 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
                     <Clock className="w-8 h-8 text-amber-400" />
                 </div>
@@ -138,7 +138,7 @@ export default function InteractiveAssignmentPage() {
 
     if (!assignment) {
         return (
-            <div className="min-h-screen bg-[#0a0f1a] text-gray-200 p-6">
+            <div className="min-h-screen sd-bg-calm text-gray-200 p-6">
                 <Link href="/student/assignments" className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
                     <ArrowLeft className="h-5 w-5" /> Back to Assignments
                 </Link>
@@ -151,11 +151,11 @@ export default function InteractiveAssignmentPage() {
     const htmlContent = generateInteractiveHtml(studentName, assignmentId, assignment.interactiveHtmlId);
 
     return (
-        <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
+        <div className="min-h-screen sd-bg-calm flex flex-col">
             <Toaster position="top-center" />
 
             {/* Header */}
-            <div className="bg-[#1a1f2e] border-b border-white/10 px-4 py-3 flex items-center gap-3 shrink-0">
+            <div className="bg-[#151029] border-b border-white/10 px-4 py-3 flex items-center gap-3 shrink-0">
                 <Link
                     href="/student/assignments"
                     className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-all"

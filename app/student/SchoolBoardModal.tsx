@@ -46,24 +46,22 @@ export default function SchoolBoardModal({ onComplete }: SchoolBoardModalProps) 
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
             {/* Animated background accents */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
             </div>
 
-            <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl shadow-blue-500/10 relative z-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-[#140d27] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl shadow-fuchsia-500/10 relative z-10 animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="p-6 pb-2 text-center">
-                    <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                    <div className="h-16 w-16 bg-gradient-to-br from-fuchsia-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-fuchsia-500/30">
                         <School className="h-8 w-8 text-white" />
                     </div>
                     <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-1">
                         Complete Your Profile
                     </h2>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        Please provide your school details to continue. This is a <span className="text-blue-400 font-semibold">one-time</span> requirement.
+                        Please provide your school details to continue. This is a <span className="text-sky-400 font-semibold">one-time</span> requirement.
                     </p>
                 </div>
 
@@ -78,7 +76,7 @@ export default function SchoolBoardModal({ onComplete }: SchoolBoardModalProps) 
                             type="text"
                             value={schoolName}
                             onChange={e => setSchoolName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all"
                             placeholder="e.g. St. Xavier's Collegiate School"
                             autoFocus
                         />
@@ -96,12 +94,12 @@ export default function SchoolBoardModal({ onComplete }: SchoolBoardModalProps) 
                             <select
                                 value={board}
                                 onChange={e => setBoard(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all appearance-none cursor-pointer"
                             >
-                                <option value="" className="bg-[#0f172a] text-slate-400">Select your board...</option>
-                                <option value="CBSE" className="bg-[#0f172a] text-white">CBSE</option>
-                                <option value="ISC" className="bg-[#0f172a] text-white">ISC</option>
-                                <option value="WBCHSE" className="bg-[#0f172a] text-white">WBCHSE</option>
+                                <option value="" className="bg-[#140d27] text-slate-400">Select your board...</option>
+                                <option value="CBSE" className="bg-[#140d27] text-white">CBSE</option>
+                                <option value="ISC" className="bg-[#140d27] text-white">ISC</option>
+                                <option value="WBCHSE" className="bg-[#140d27] text-white">WBCHSE</option>
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
                         </div>
@@ -111,7 +109,7 @@ export default function SchoolBoardModal({ onComplete }: SchoolBoardModalProps) 
                     <button
                         onClick={handleSubmit}
                         disabled={submitting || !schoolName.trim() || !board}
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold text-sm transition-all shadow-lg shadow-fuchsia-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
                     >
                         {submitting ? (
                             <>

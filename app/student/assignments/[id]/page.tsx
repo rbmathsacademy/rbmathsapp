@@ -93,7 +93,7 @@ export default function AssignmentQuestionsPage() {
                 Back to Assignments
             </button>
 
-            <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6 mb-8">
+            <div className="bg-[#151029] border border-white/5 rounded-xl p-6 mb-8">
                 <h1 className="text-2xl font-bold text-white mb-2">{title}</h1>
                 {deadline && (
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
@@ -106,7 +106,7 @@ export default function AssignmentQuestionsPage() {
 
             <div className="space-y-6">
                 {questions.map((q, i) => (
-                    <div key={q._id} className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6">
+                    <div key={q._id} className="bg-[#151029] border border-white/5 rounded-xl p-6">
                         <div className="flex gap-4">
                             <span className="font-mono text-gray-500 font-bold">{i + 1}.</span>
                             <div className="flex-1 space-y-4">
@@ -153,7 +153,7 @@ export default function AssignmentQuestionsPage() {
                 ))}
 
                 {questions.length === 0 && (
-                    <div className="text-center py-12 text-gray-500 bg-[#1a1f2e] rounded-xl border border-white/5">
+                    <div className="text-center py-12 text-gray-500 bg-[#151029] rounded-xl border border-white/5">
                         No questions found for this assignment.
                     </div>
                 )}

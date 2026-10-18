@@ -41,15 +41,13 @@ export default function CollegeNameModal({ onComplete }: CollegeNameModalProps) 
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
             </div>
 
-            <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl shadow-blue-500/10 relative z-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-[#140d27] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl shadow-fuchsia-500/10 relative z-10 animate-in zoom-in-95 duration-300">
                 <div className="p-6 pb-2 text-center">
-                    <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                    <div className="h-16 w-16 bg-gradient-to-br from-fuchsia-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-fuchsia-500/30">
                         <School className="h-8 w-8 text-white" />
                     </div>
                     <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-1">
@@ -69,7 +67,7 @@ export default function CollegeNameModal({ onComplete }: CollegeNameModalProps) 
                             type="text"
                             value={collegeName}
                             onChange={e => setCollegeName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all"
                             placeholder="e.g. Asutosh College"
                             autoFocus
                         />
@@ -78,7 +76,7 @@ export default function CollegeNameModal({ onComplete }: CollegeNameModalProps) 
                     <button
                         onClick={handleSubmit}
                         disabled={submitting || !collegeName.trim()}
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold text-sm transition-all shadow-lg shadow-fuchsia-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
                     >
                         {submitting ? (
                             <>

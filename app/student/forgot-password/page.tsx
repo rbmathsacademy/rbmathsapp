@@ -64,25 +64,23 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0a0f1a] text-gray-200 px-4 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center sd-bg text-gray-200 px-4 relative overflow-hidden">
             {/* Animated Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-40%] left-[-20%] w-[80%] h-[80%] bg-gradient-radial from-amber-900/30 via-transparent to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
-                <div className="absolute bottom-[-40%] right-[-20%] w-[80%] h-[80%] bg-gradient-radial from-orange-900/30 via-transparent to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s' }}></div>
             </div>
 
             <div className="relative z-10 w-full max-w-md">
                 {/* Progress Indicator */}
                 <div className="flex items-center justify-center gap-4 mb-8">
                     <div className={`flex items-center gap-2 ${step >= 1 ? 'text-amber-400' : 'text-gray-600'}`}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' : 'bg-gray-800 text-gray-500'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' : 'bg-[#1d1535] text-gray-500'}`}>
                             {step > 1 ? <CheckCircle className="h-5 w-5" /> : '1'}
                         </div>
                         <span className="text-xs font-medium hidden sm:inline">Request</span>
                     </div>
-                    <div className={`w-16 h-0.5 ${step > 1 ? 'bg-amber-500' : 'bg-gray-700'}`}></div>
+                    <div className={`w-16 h-0.5 ${step > 1 ? 'bg-amber-500' : 'bg-[#2a2045]'}`}></div>
                     <div className={`flex items-center gap-2 ${step >= 2 ? 'text-amber-400' : 'text-gray-600'}`}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${step >= 2 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' : 'bg-gray-800 text-gray-500'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${step >= 2 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' : 'bg-[#1d1535] text-gray-500'}`}>
                             2
                         </div>
                         <span className="text-xs font-medium hidden sm:inline">Reset</span>
@@ -90,7 +88,7 @@ export default function ForgotPassword() {
                 </div>
 
                 {/* Card */}
-                <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50">
+                <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 border border-white/10 shadow-2xl shadow-black/50">
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="relative inline-block mb-6">

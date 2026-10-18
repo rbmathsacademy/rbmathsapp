@@ -13,8 +13,8 @@ interface NotificationProps {
 
 export default function NotificationPopupModal({ notification, onComplete }: NotificationProps) {
     return (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4">
-            <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-6 max-w-xl w-full flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4">
+            <div className="bg-[#140d27] border border-white/10 rounded-2xl p-6 max-w-xl w-full flex flex-col max-h-[90vh]">
                 <div className="flex-1 overflow-y-auto mb-6 pr-2">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="h-12 w-12 rounded-2xl bg-orange-500/20 flex items-center justify-center shrink-0">

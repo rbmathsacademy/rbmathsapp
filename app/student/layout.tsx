@@ -8,6 +8,7 @@ import CollegeNameModal from './CollegeNameModal';
 
 import SurveyPopupModal from './components/SurveyPopupModal';
 import NotificationPopupModal from './components/NotificationPopupModal';
+import './student-theme.css';
 
 // Helper: check if student belongs to a school batch (contains "class")
 function isSchoolBatch(courses: string[]): boolean {
@@ -181,7 +182,7 @@ export default function StudentLayout({
     const isLoginPage = pathname === '/student/login';
 
     return (
-        <div className="min-h-screen flex flex-col bg-[#0a0f1a]">
+        <div className="min-h-screen flex flex-col bg-[#0b0718]">
             <StudentProfileProvider>
                 <div className="flex-1 w-full">
                     {isLoginPage ? children : (
@@ -198,7 +199,7 @@ export default function StudentLayout({
                 </div>
             </StudentProfileProvider>
             {pathname !== '/student/chat' && (
-                <footer className="py-4 text-center bg-[#0a0f1a] text-gray-500 shadow-[0_-1px_0_0_rgba(255,255,255,0.05)] mt-auto z-10 relative shrink-0">
+                <footer className="py-4 text-center bg-[#0b0718] text-violet-200/50 shadow-[0_-1px_0_0_rgba(217,70,239,0.18)] mt-auto z-10 relative shrink-0">
                     <p className="text-[10px] md:text-sm">&copy; 2026, RB Maths Academy || Coded and developed by Dr. Ritwick Banerjee</p>
                 </footer>
             )}

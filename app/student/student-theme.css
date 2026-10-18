@@ -1,0 +1,119 @@
+/*
+ * Student portal theme (shared by every /student page).
+ *
+ * Two moods:
+ *  - .sd-bg       vibrant neon backdrop for dashboards and lists
+ *  - .sd-bg-calm  quiet, low-contrast backdrop for focus pages (exam, study, assignment work, chat)
+ *
+ * Everything animated uses transform / opacity / stroke-dashoffset only (GPU friendly; no blur or
+ * layout work) and switches off when the device asks for reduced motion. Decorations are drawn as
+ * backgrounds or overlays, so they never change an element's size.
+ */
+
+.sd-bg {
+    background-color: #0b0718;
+    background-image:
+        radial-gradient(60% 45% at 0% 0%, rgba(217, 70, 239, 0.22) 0%, transparent 70%),
+        radial-gradient(55% 40% at 100% 8%, rgba(34, 211, 238, 0.16) 0%, transparent 70%),
+        radial-gradient(70% 45% at 50% 100%, rgba(124, 58, 237, 0.20) 0%, transparent 70%),
+        linear-gradient(180deg, #0b0718 0%, #080612 55%, #05040c 100%);
+}
+
+.sd-bg-calm {
+    background-color: #0a0716;
+    background-image:
+        radial-gradient(70% 35% at 50% 0%, rgba(139, 92, 246, 0.10) 0%, transparent 70%),
+        linear-gradient(180deg, #0c0819 0%, #08060f 100%);
+}
+
+.sd-grid {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 60%);
+    mask-image: linear-gradient(180deg, #000 0%, transparent 60%);
+}
+
+/* Gradient hairline border drawn as an overlay, so it never changes the box size.
+   Override the colours per element with --sd-border. The element must be positioned (add
+   Tailwind's "relative"); these classes deliberately set no position, because unlayered CSS
+   would override Tailwind's sticky / absolute utilities. */
+.sd-gborder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: var(--sd-border, linear-gradient(135deg, rgba(232, 121, 249, 0.7), rgba(139, 92, 246, 0.25) 45%, rgba(34, 211, 238, 0.6)));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+.sd-gborder-soft { --sd-border: linear-gradient(135deg, rgba(232, 121, 249, 0.40), rgba(255, 255, 255, 0.04) 50%, rgba(34, 211, 238, 0.32)); }
+
+.sd-card { background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.065) 0%, rgba(255, 255, 255, 0.02) 100%); }
+
+/* Page headers: solid (no backdrop blur) with a neon underline. The element must be positioned
+   (sticky or relative) so the underline sits inside it. */
+.sd-header { background-color: rgba(11, 8, 24, 0.95) !important; }
+.sd-header::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(217, 70, 239, 0), rgba(232, 121, 249, 0.6), rgba(34, 211, 238, 0));
+}
+.sd-header-calm { background-color: rgba(10, 7, 22, 0.97) !important; }
+
+.sd-title {
+    background: linear-gradient(90deg, #f5d0fe 0%, #ffffff 45%, #a5f3fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.sd-name {
+    background: linear-gradient(90deg, #fff 0%, #f0abfc 25%, #fde68a 50%, #67e8f9 75%, #fff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: sd-flow 7s linear infinite;
+}
+@keyframes sd-flow { to { background-position: -200% 0; } }
+
+.sd-rise { opacity: 0; animation: sd-rise .55s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes sd-rise { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.sd-shine { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.sd-shine::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: -40%;
+    width: 35%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+    transform: translateX(0) skewX(-18deg);
+    animation: sd-sweep 6.5s ease-in-out infinite;
+    will-change: transform;
+}
+@keyframes sd-sweep { 0%, 55% { transform: translateX(0) skewX(-18deg); } 100% { transform: translateX(420%) skewX(-18deg); } }
+
+.sd-twinkle { animation: sd-twinkle 2.8s ease-in-out infinite; }
+@keyframes sd-twinkle { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: 1; transform: scale(1); } }
+
+.sd-ring { animation: sd-ring 1.3s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes sd-ring { from { stroke-dashoffset: 226.2; } }
+
+.sd-bar { transform-origin: left; animation: sd-bar 1s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes sd-bar { from { transform: scaleX(0); } }
+
+.sd-float { animation: sd-float 4s ease-in-out infinite; }
+@keyframes sd-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .sd-name, .sd-shine::after, .sd-twinkle, .sd-ring, .sd-bar, .sd-float { animation: none !important; }
+    .sd-rise { animation: none !important; opacity: 1; }
+}

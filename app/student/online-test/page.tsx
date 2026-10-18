@@ -40,7 +40,7 @@ interface AnalyticsData {
 
 function getRemark(avg: number): { label: string; color: string; bg: string; border: string } {
     if (avg >= 90) return { label: 'Excellent', color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' };
-    if (avg >= 75) return { label: 'Good', color: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30' };
+    if (avg >= 75) return { label: 'Good', color: 'text-sky-400', bg: 'bg-sky-500/15', border: 'border-sky-500/30' };
     if (avg >= 50) return { label: 'Satisfactory', color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30' };
     if (avg >= 35) return { label: 'Poor', color: 'text-orange-400', bg: 'bg-orange-500/15', border: 'border-orange-500/30' };
     return { label: 'Very Poor', color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30' };
@@ -48,7 +48,7 @@ function getRemark(avg: number): { label: string; color: string; bg: string; bor
 
 const remarkLegend = [
     { min: 90, label: 'Excellent', color: 'bg-emerald-500' },
-    { min: 75, label: 'Good', color: 'bg-blue-500' },
+    { min: 75, label: 'Good', color: 'bg-sky-500' },
     { min: 50, label: 'Satisfactory', color: 'bg-amber-500' },
     { min: 35, label: 'Poor', color: 'bg-orange-500' },
     { min: 0, label: 'Very Poor', color: 'bg-red-500' },
@@ -251,10 +251,10 @@ export default function OnlineTestPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#050b14] flex items-center justify-center">
+            <div className="min-h-screen sd-bg flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
-                    <p className="text-slate-400 text-sm">Loading tests...</p>
+                    <div className="w-10 h-10 border-3 border-fuchsia-500/30 border-t-fuchsia-400 rounded-full animate-spin"></div>
+                    <p className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 to-cyan-300">Loading tests...</p>
                 </div>
             </div>
         );
@@ -263,15 +263,12 @@ export default function OnlineTestPage() {
     const remark = analytics ? getRemark(analytics.averageScore) : null;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden">
-            {/* Ambient Background */}
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.05)_0%,transparent_70%)]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(79,70,229,0.05)_0%,transparent_70%)]"></div>
-            </div>
+        <div className="min-h-screen sd-bg font-sans text-slate-200 relative overflow-x-hidden">
+            {/* Static neon grid (backdrop colours come from sd-bg) */}
+            <div className="fixed inset-0 pointer-events-none z-0 sd-grid" />
 
             {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
+            <header className="sticky top-0 z-50 sd-header px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center gap-3">
                     <button 
                         onClick={() => router.push('/student')} 
@@ -279,7 +276,7 @@ export default function OnlineTestPage() {
                     >
                         <ArrowLeft className="h-5 w-5" /> Back
                     </button>
-                    <h1 className="text-sm font-bold text-white">Online<span className="text-emerald-400">Tests</span></h1>
+                    <h1 className="text-sm font-bold text-white">Online<span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-300 to-emerald-400">Tests</span></h1>
                 </div>
             </header>
 
@@ -301,22 +298,22 @@ export default function OnlineTestPage() {
                     <section className="space-y-6">
                         {/* Row 1: Key Metrics */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-slate-900/80 ring-1 ring-white/5 rounded-2xl p-4">
+                            <div className="relative bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Your Avg Score</div>
-                                <div className="text-xl sm:text-3xl font-black text-white">{formatScore(analytics.averageScore)}%</div>
+                                <div className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-fuchsia-300">{formatScore(analytics.averageScore)}%</div>
                             </div>
-                            <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
+                            <div className="relative bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Batch Topper Avg</div>
-                                <div className="text-xl sm:text-3xl font-black text-amber-400">{formatScore(analytics.batchHighestAverage)}%</div>
+                                <div className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-orange-400">{formatScore(analytics.batchHighestAverage)}%</div>
                             </div>
-                            <div className="bg-slate-900/80 border border-white/5 rounded-2xl p-4">
+                            <div className="relative bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Your Highest Score</div>
-                                <div className="text-xl sm:text-3xl font-black text-emerald-400">{formatScore(analytics.highestScore)}%</div>
+                                <div className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-lime-300 to-emerald-400">{formatScore(analytics.highestScore)}%</div>
                             </div>
-                            <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/20 ring-1 ring-indigo-500/20 rounded-2xl p-4">
+                            <div className="relative sd-gborder bg-gradient-to-br from-fuchsia-600/25 to-violet-900/30 rounded-2xl p-4 shadow-[0_12px_30px_-16px_rgba(217,70,239,0.7)]">
                                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-1">Batch Rank</div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-xl sm:text-3xl font-black text-indigo-300">#{analytics.batchRank}</span>
+                                    <span className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-200 to-amber-200">#{analytics.batchRank}</span>
                                     <span className="text-[10px] text-slate-500">/ {analytics.totalBatchStudents}</span>
                                 </div>
                             </div>
@@ -325,7 +322,7 @@ export default function OnlineTestPage() {
                         {/* Row 2: Remark (compact) + Consistency (wider) */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Student Remark Card (1 col) */}
-                            <div className="bg-slate-900/80 ring-1 ring-white/5 rounded-2xl p-6 flex flex-col">
+                            <div className="relative bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6 flex flex-col">
                                 <div className="flex justify-between items-center mb-4">
                                     <div>
                                         <h3 className="text-sm font-bold text-white">Student Remark</h3>
@@ -355,7 +352,7 @@ export default function OnlineTestPage() {
                             </div>
 
                             {/* Consistency Chart (2 cols - wider) */}
-                            <div className="lg:col-span-2 bg-slate-900/80 ring-1 ring-white/5 rounded-2xl p-6 flex flex-col">
+                            <div className="relative lg:col-span-2 bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6 flex flex-col">
                                 <div className="flex justify-between items-center mb-4">
                                     <div>
                                         <h3 className="text-sm font-bold text-white">Consistency</h3>
@@ -381,7 +378,7 @@ export default function OnlineTestPage() {
                                                         <defs>
                                                             <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                                                                 <stop offset="0%" stopColor="#34d399" />
-                                                                <stop offset="100%" stopColor="#3b82f6" />
+                                                                <stop offset="100%" stopColor="#e879f9" />
                                                             </linearGradient>
                                                             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                                                                 <stop offset="0%" stopColor="#34d399" stopOpacity="0.2" />
@@ -405,7 +402,7 @@ export default function OnlineTestPage() {
                                                             const x = len > 1 ? i * (100 / (len - 1)) : 50;
                                                             const y = 40 - (h.percentage / 100) * 40;
                                                             return (
-                                                                <circle key={i} cx={x} cy={y} r="4" fill="#050b14" stroke="#34d399" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                                                                <circle key={i} cx={x} cy={y} r="4" fill="#0b0718" stroke="#34d399" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                                                             );
                                                         })}
                                                     </svg>
@@ -429,7 +426,7 @@ export default function OnlineTestPage() {
 
                         {/* Row 3: Leaderboard */}
                         {analytics.leaderboard.length > 0 && (
-                            <div className="bg-slate-900/80 ring-1 ring-white/5 rounded-2xl p-4 sm:p-6">
+                            <div className="relative bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 sm:p-6">
                                 <div className="flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-2">
                                         <Crown className="h-5 w-5 text-amber-400" />
@@ -438,9 +435,9 @@ export default function OnlineTestPage() {
                                             <p className="text-[10px] text-slate-500">Cumulative average across all tests</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-indigo-500/10 ring-1 ring-indigo-500/20">
-                                        <Medal className="h-3 w-3 text-indigo-400" />
-                                        <span className="text-[10px] sm:text-xs font-bold text-indigo-300">Your Rank: #{analytics.batchRank}</span>
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-fuchsia-500/15 ring-1 ring-fuchsia-400/30">
+                                        <Medal className="h-3 w-3 text-fuchsia-300" />
+                                        <span className="text-[10px] sm:text-xs font-bold text-fuchsia-200">Your Rank: #{analytics.batchRank}</span>
                                     </div>
                                 </div>
                                 <div className="overflow-x-auto">
@@ -491,7 +488,7 @@ export default function OnlineTestPage() {
 
                 {/* Loading state for analytics */}
                 {analyticsLoading && (
-                    <div className="bg-slate-900/50 ring-1 ring-white/5 rounded-2xl p-8 text-center">
+                    <div className="relative bg-[#140d27]/50 sd-gborder sd-gborder-soft sd-card rounded-2xl p-8 text-center">
                         <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-3"></div>
                         <p className="text-sm text-slate-500">Loading analytics...</p>
                     </div>
@@ -503,8 +500,8 @@ export default function OnlineTestPage() {
                     {/* LEFT: Active Zone */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 rounded-lg bg-emerald-500/20">
-                                <Play className="h-4 w-4 text-emerald-400" />
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-lime-400 to-emerald-500 shadow-md shadow-lime-500/30">
+                                <Play className="h-4 w-4 text-black" />
                             </div>
                             <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-emerald-200">
                                 Active Zone
@@ -512,7 +509,7 @@ export default function OnlineTestPage() {
                         </div>
 
                         {available.length === 0 && upcoming.length === 0 && (
-                            <div className="p-8 rounded-2xl bg-white/5 ring-1 ring-white/5 text-center text-slate-500">
+                            <div className="relative p-8 rounded-2xl bg-white/5 sd-gborder sd-gborder-soft sd-card text-center text-slate-500">
                                 <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-20" />
                                 <p>No active tests at the moment.</p>
                             </div>
@@ -520,12 +517,12 @@ export default function OnlineTestPage() {
 
                         {available.map(test => (
                             <div key={test._id} className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                <div className="relative bg-slate-900/80 ring-1 ring-emerald-500/30 rounded-2xl p-5 hover:ring-emerald-500/50 transition-all shadow-xl shadow-emerald-900/10">
+                                <div className="relative sd-gborder sd-card bg-[#120c22]/90 rounded-2xl p-5 transition-all shadow-[0_14px_34px_-14px_rgba(132,204,22,0.55)] overflow-hidden" style={{ ['--sd-border' as any]: 'linear-gradient(135deg, rgba(163,230,53,0.85), rgba(34,211,238,0.25) 55%, rgba(232,121,249,0.6))' }}>
+                                    <div className="sd-shine" />
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-black uppercase">Live</span>
+                                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-gradient-to-r from-lime-300 to-emerald-400 text-black uppercase flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-black/70 animate-pulse" />Live</span>
                                                 <span className="text-[10px] text-slate-400 bg-white/5 px-2 py-0.5 rounded-full flex items-center gap-1">
                                                     <Timer className="h-3 w-3" /> {test.durationMinutes}m
                                                 </span>
@@ -538,7 +535,7 @@ export default function OnlineTestPage() {
                                         </div>
                                         <button
                                             onClick={() => router.push(`/student/online-test/${test._id}`)}
-                                            className="self-center px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-105 active:scale-95"
+                                            className="relative self-center px-5 py-2.5 bg-gradient-to-r from-lime-400 to-emerald-500 text-black rounded-xl font-black text-xs shadow-lg shadow-lime-500/30 transition-transform active:scale-95"
                                         >
                                             {test.attemptStatus === 'in_progress' ? 'Resume' : 'Start'}
                                         </button>
@@ -555,7 +552,7 @@ export default function OnlineTestPage() {
 
                         {upcoming.map(test => (
                             <div key={test._id} className="relative group">
-                                <div className="relative bg-slate-900/60 ring-1 ring-amber-500/20 rounded-2xl p-5 hover:ring-amber-500/40 transition-all">
+                                <div className="relative sd-gborder sd-card bg-[#120c22]/80 rounded-2xl p-5 transition-all" style={{ ['--sd-border' as any]: 'linear-gradient(135deg, rgba(252,211,77,0.6), rgba(255,255,255,0.03) 55%, rgba(251,146,60,0.4))' }}>
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
@@ -582,16 +579,16 @@ export default function OnlineTestPage() {
                     {/* RIGHT: History Zone */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 rounded-lg bg-blue-500/20">
-                                <Trophy className="h-4 w-4 text-blue-400" />
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-md shadow-fuchsia-500/30">
+                                <Trophy className="h-4 w-4 text-white" />
                             </div>
-                            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+                            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-fuchsia-200">
                                 History
                             </h2>
                         </div>
 
                         {completed.length === 0 && expired.length === 0 && preJoin.length === 0 && (
-                            <div className="p-8 rounded-2xl bg-white/5 ring-1 ring-white/5 text-center text-slate-500">
+                            <div className="relative p-8 rounded-2xl bg-white/5 sd-gborder sd-gborder-soft sd-card text-center text-slate-500">
                                 <p>No test history yet.</p>
                             </div>
                         )}
@@ -605,13 +602,13 @@ export default function OnlineTestPage() {
                                     className={`relative group ${test.resultsPending ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}
                                     onClick={() => !test.resultsPending && router.push(`/student/online-test/${test._id}/result`)}
                                 >
-                                    <div className="relative bg-slate-900/40 ring-1 ring-blue-500/10 rounded-2xl p-5 hover:bg-slate-900/60 hover:ring-blue-500/30 transition-all active:scale-[0.98]">
+                                    <div className="relative sd-gborder sd-gborder-soft sd-card bg-[#120c22]/80 rounded-2xl p-5 transition-transform active:scale-[0.98]">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="font-bold text-slate-200 text-xs mb-2 truncate group-hover:text-white transition-colors">{test.title}</h3>
                                                 <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                                                     <span className="text-slate-400">{formatDate(test.submittedAt || '')}</span>
-                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                    <span className="w-1 h-1 rounded-full bg-[#2a2045]"></span>
                                                     <span>{test.totalMarks} Marks</span>
                                                 </div>
                                             </div>
@@ -632,7 +629,7 @@ export default function OnlineTestPage() {
                                                         <div className={`text-lg font-black ${pct >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
                                                             {formatScore(pct)}%
                                                         </div>
-                                                        <span className="text-[9px] text-blue-400 font-bold mt-1 flex items-center gap-1">
+                                                        <span className="text-[9px] text-fuchsia-300 font-bold mt-1 flex items-center gap-1">
                                                             View Result <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                                                         </span>
                                                     </>
@@ -645,15 +642,15 @@ export default function OnlineTestPage() {
                                             <div className="mt-3 pt-3 shadow-[0_-1px_0_0_rgba(255,255,255,0.05)] space-y-1.5">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[9px] text-slate-500 w-24 flex-shrink-0">Your score</span>
-                                                    <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${Math.max(pct, 2)}%` }}></div>
+                                                    <div className="flex-1 h-3 bg-[#1d1535] rounded-full overflow-hidden">
+                                                        <div className="sd-bar h-full bg-gradient-to-r from-lime-300 to-emerald-500 rounded-full" style={{ width: `${Math.max(pct, 2)}%` }}></div>
                                                     </div>
                                                     <span className="text-[10px] font-bold text-emerald-400 w-8 text-right">{formatScore(pct)}%</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[9px] text-slate-500 w-24 flex-shrink-0">Topper&apos;s score</span>
-                                                    <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-amber-500/60 rounded-full transition-all duration-700" style={{ width: `${Math.max(batchHighest, 2)}%` }}></div>
+                                                    <div className="flex-1 h-3 bg-[#1d1535] rounded-full overflow-hidden">
+                                                        <div className="sd-bar h-full bg-gradient-to-r from-amber-300/80 to-orange-500/80 rounded-full" style={{ width: `${Math.max(batchHighest, 2)}%` }}></div>
                                                     </div>
                                                     <span className="text-[10px] font-bold text-amber-400 w-8 text-right">{formatScore(batchHighest)}%</span>
                                                 </div>
@@ -666,7 +663,7 @@ export default function OnlineTestPage() {
 
                         {expired.map(test => (
                             <div key={test._id} className="relative group">
-                                <div className="relative bg-slate-900/20 ring-1 ring-red-500/10 rounded-2xl p-4 hover:ring-red-500/30 transition-all">
+                                <div className="relative bg-[#140d27]/20 ring-1 ring-red-500/10 rounded-2xl p-4 hover:ring-red-500/30 transition-all">
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex-1 min-w-0 opacity-60 group-hover:opacity-100 transition-opacity">
                                             <div className="flex items-center gap-2 mb-1">
@@ -689,7 +686,7 @@ export default function OnlineTestPage() {
                                 </div>
                                 <div className="space-y-2">
                                     {preJoin.map(test => (
-                                        <div key={test._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/20 ring-1 ring-white/5">
+                                        <div key={test._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[#140d27]/20 ring-1 ring-white/5">
                                             <div className="min-w-0 flex-1">
                                                 <h3 className="font-bold text-slate-400 text-sm truncate">{test.title}</h3>
                                                 <div className="text-[10px] text-slate-600 mt-0.5">Ended {formatDate(test.endTime || '')}</div>

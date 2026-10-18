@@ -44,8 +44,8 @@ export default function PerformanceOverviewPage() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-screen bg-[#0f1117]">
-                <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex justify-center items-center h-screen bg-[#0b0718]">
+                <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -55,8 +55,8 @@ export default function PerformanceOverviewPage() {
     const schoolExams = data.schoolExams?.filter((e: any) => e.batch === selectedBatch) || [];
 
     return (
-        <div className="min-h-screen bg-[#0f1117] text-slate-200 font-sans pb-20">
-            <header className="bg-[#151923] border-b border-white/5 sticky top-0 z-30">
+        <div className="min-h-screen sd-bg text-slate-200 font-sans pb-20">
+            <header className="sd-header sticky top-0 z-30">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
                     <button 
                         onClick={() => router.push('/student')}
@@ -65,7 +65,7 @@ export default function PerformanceOverviewPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-xl font-black text-white tracking-tight">Performance Overview</h1>
+                        <h1 className="text-xl font-black sd-title tracking-tight">Performance Overview</h1>
                     </div>
                 </div>
                 
@@ -82,12 +82,12 @@ export default function PerformanceOverviewPage() {
 
             <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 
-                <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-6 mb-8 flex items-start gap-4">
-                    <div className="bg-indigo-500/20 p-3 rounded-xl text-indigo-400 shrink-0">
+                <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-6 mb-8 flex items-start gap-4">
+                    <div className="bg-violet-500/20 p-3 rounded-xl text-violet-400 shrink-0">
                         <Medal className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-indigo-200 text-sm font-medium leading-relaxed">
+                        <p className="text-violet-200 text-sm font-medium leading-relaxed">
                             Here is a comparison between the system's marks prediction (based on your online tests, offline tests, and assignments) vs your actual school marks.
                         </p>
                     </div>
@@ -95,7 +95,7 @@ export default function PerformanceOverviewPage() {
 
                 <div className="space-y-6">
                     {schoolExams.length === 0 ? (
-                        <div className="bg-[#151923] rounded-3xl border border-white/5 p-12 text-center">
+                        <div className="relative bg-[#151029] rounded-3xl sd-gborder sd-gborder-soft sd-card p-12 text-center">
                             <Award className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No school exam records found for this batch yet.</p>
                         </div>
@@ -106,17 +106,17 @@ export default function PerformanceOverviewPage() {
                             const isInSync = exam.syncStatus === 'IN_SYNC';
 
                             return (
-                                <div key={exam._id || idx} className={`bg-[#1a1f2e] border-2 rounded-2xl overflow-hidden shadow-xl ${
+                                <div key={exam._id || idx} className={`bg-[#151029] border-2 rounded-2xl overflow-hidden shadow-xl ${
                                     isImproved ? 'border-emerald-500/30 shadow-emerald-500/10' :
                                     isDeteriorated ? 'border-orange-500/30 shadow-orange-500/10' :
-                                    'border-blue-500/30 shadow-blue-500/10'
+                                    'border-sky-500/30 shadow-fuchsia-500/10'
                                 }`}>
                                     
                                     {/* 1. School Marks */}
                                     <div className={`px-5 py-4 border-b flex justify-between items-center ${
                                         isImproved ? 'bg-emerald-500/10 border-emerald-500/20' :
                                         isDeteriorated ? 'bg-orange-500/10 border-orange-500/20' :
-                                        'bg-blue-500/10 border-blue-500/20'
+                                        'bg-sky-500/10 border-sky-500/20'
                                     }`}>
                                         <div>
                                             <h3 className="text-lg font-black text-white">{exam.examName}</h3>
@@ -129,7 +129,7 @@ export default function PerformanceOverviewPage() {
                                                 <span className={`text-3xl font-black ${
                                                     isImproved ? 'text-emerald-400' :
                                                     isDeteriorated ? 'text-orange-400' :
-                                                    'text-blue-400'
+                                                    'text-sky-400'
                                                 }`}>{exam.marksObtained}</span>
                                                 <span className="text-sm font-bold text-slate-500 mb-1">/{exam.fullMarks}</span>
                                             </div>
@@ -138,17 +138,17 @@ export default function PerformanceOverviewPage() {
                                     </div>
 
                                     {/* 2. System Prediction Highlight */}
-                                    <div className="px-5 py-3 bg-indigo-950/40 border-b border-indigo-500/20 flex justify-between items-center">
-                                        <h4 className="text-indigo-300 font-bold text-sm flex items-center gap-2">
+                                    <div className="px-5 py-3 bg-violet-950/40 border-b border-violet-500/20 flex justify-between items-center">
+                                        <h4 className="text-violet-300 font-bold text-sm flex items-center gap-2">
                                             <Target className="w-4 h-4" /> System Predicted Marks
                                         </h4>
-                                        <div className="text-xl font-black text-indigo-300 bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">
+                                        <div className="text-xl font-black text-violet-300 bg-violet-500/10 px-3 py-1 rounded-lg border border-violet-500/20">
                                             {exam.priorSystemAvg}%
                                         </div>
                                     </div>
                                     
                                     {/* 3. Marks Breakdown */}
-                                    <div className="px-5 py-5 border-b border-white/5 bg-[#1a1f2e]">
+                                    <div className="px-5 py-5 border-b border-white/5 bg-[#151029]">
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5">
                                                 <Target className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
@@ -177,7 +177,7 @@ export default function PerformanceOverviewPage() {
                                             <div className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center border-4 ${
                                                 isImproved ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' :
                                                 isDeteriorated ? 'bg-orange-500/20 border-orange-500/30 text-orange-400' :
-                                                'bg-blue-500/20 border-blue-500/30 text-blue-400'
+                                                'bg-sky-500/20 border-sky-500/30 text-sky-400'
                                             }`}>
                                                 {isImproved && <TrendingUp className="w-7 h-7" />}
                                                 {isDeteriorated && <TrendingDown className="w-7 h-7" />}
@@ -188,7 +188,7 @@ export default function PerformanceOverviewPage() {
                                                 <h4 className={`text-sm font-black leading-tight ${
                                                     isImproved ? 'text-emerald-400' :
                                                     isDeteriorated ? 'text-orange-400' :
-                                                    'text-blue-400'
+                                                    'text-sky-400'
                                                 }`}>
                                                     {isImproved && "Exceeded Expectations! 🎉"}
                                                     {isDeteriorated && "Underperformed — Let's bounce back! 💪"}
@@ -208,8 +208,8 @@ export default function PerformanceOverviewPage() {
                 </div>
                 
                 {schoolExams.length > 0 && (
-                    <div className="mt-8 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl p-5 text-center max-w-3xl mx-auto">
-                        <p className="text-xs text-indigo-200/60 leading-relaxed font-medium">
+                    <div className="mt-8 bg-violet-500/5 border border-violet-500/10 rounded-2xl p-5 text-center max-w-3xl mx-auto">
+                        <p className="text-xs text-violet-200/60 leading-relaxed font-medium">
                             Note: The system average is calculated for all the online, offline tests, and the assignments the student has submitted before the exam date. The average is calculated by taking 35% of online test + 60% offline test and 5% of assignment rating.
                         </p>
                     </div>

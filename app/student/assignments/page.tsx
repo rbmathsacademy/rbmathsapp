@@ -315,19 +315,19 @@ export default function StudentAssignmentsPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen text-gray-200 relative overflow-x-hidden">
+        <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen sd-bg text-gray-200 relative overflow-x-hidden">
             <Toaster position="top-center" />
 
             {/* Upload Error Modal */}
             {showUploadErrorModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#1a1f2e] ring-1 ring-white/10 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#151029] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Decorative Top Bar */}
                         <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-orange-500"></div>
                         
@@ -355,7 +355,7 @@ export default function StudentAssignmentsPage() {
                                     <p className="font-bold text-white">How to fix this:</p>
                                     <ol className="list-decimal pl-4 space-y-2 text-gray-400">
                                         <li>Go to Google and search for <strong className="text-white">"Compress pdf online"</strong></li>
-                                        <li>Open the first website (like <span className="text-blue-400">ilovepdf.com</span> or <span className="text-blue-400">smallpdf.com</span>)</li>
+                                        <li>Open the first website (like <span className="text-sky-400">ilovepdf.com</span> or <span className="text-sky-400">smallpdf.com</span>)</li>
                                         <li>Upload your PDF file and compress it.</li>
                                         <li>Download the smaller version and try uploading it here again.</li>
                                     </ol>
@@ -381,7 +381,7 @@ export default function StudentAssignmentsPage() {
                 <ArrowLeft className="w-5 h-5" /> Back
             </button>
 
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-300 via-white to-cyan-300 bg-clip-text text-transparent mb-6">
                 My Assignments
             </h1>
 
@@ -397,11 +397,11 @@ export default function StudentAssignmentsPage() {
             )}
 
             {/* 3 Tabs */}
-            <div className="flex bg-[#1a1f2e] p-1 rounded-xl mb-6 ring-1 ring-white/5">
+            <div className="flex bg-[#151029] p-1 rounded-xl mb-6 ring-1 ring-white/5">
                 <button
                     onClick={() => setActiveTab('PENDING')}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'PENDING'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                        ? 'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-lg shadow-fuchsia-500/25'
                         : 'text-gray-400 hover:text-white'
                         }`}
                 >
@@ -410,7 +410,7 @@ export default function StudentAssignmentsPage() {
                 <button
                     onClick={() => setActiveTab('COMPLETED')}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'COMPLETED'
-                        ? 'bg-green-600 text-white shadow-lg shadow-green-900/20'
+                        ? 'bg-gradient-to-r from-lime-500 to-emerald-600 text-white shadow-lg shadow-lime-500/20'
                         : 'text-gray-400 hover:text-white'
                         }`}
                 >
@@ -419,7 +419,7 @@ export default function StudentAssignmentsPage() {
                 <button
                     onClick={() => setActiveTab('MISSED')}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'MISSED'
-                        ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                        ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/25'
                         : 'text-gray-400 hover:text-white'
                         }`}
                 >
@@ -456,7 +456,7 @@ export default function StudentAssignmentsPage() {
                 ))}
 
                 {displayedAssignments.length === 0 && (activeTab !== 'PENDING' || scheduledAssignments.length === 0) && (
-                    <div className="text-center py-12 text-gray-500 bg-[#1a1f2e] rounded-xl ring-1 ring-white/5">
+                    <div className="relative text-center py-12 text-violet-200/50 bg-[#140d27]/90 sd-card sd-gborder sd-gborder-soft rounded-xl">
                         <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                         <p>
                             {activeTab === 'PENDING' && 'No pending assignments'}
@@ -477,7 +477,7 @@ export default function StudentAssignmentsPage() {
                     </div>
                     <div className="space-y-2">
                         {preJoinAssignments.map(assignment => (
-                            <div key={assignment._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[#1a1f2e]/60 ring-1 ring-white/5">
+                            <div key={assignment._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[#151029]/60 ring-1 ring-white/5">
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-medium text-slate-400 truncate">{assignment.title}</p>
                                     <p className="text-[11px] text-slate-600 mt-0.5">
@@ -542,10 +542,10 @@ function AssignmentCard({
     const deadlineDate = new Date(assignment.deadline);
 
     return (
-        <div className={`bg-[#1a1f2e] rounded-xl overflow-hidden transition-all ${isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
-            isSubmitted ? 'ring-1 ring-green-500/20' :
+        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
+            isSubmitted ? 'ring-1 ring-lime-400/25' :
                 isClosed ? 'ring-1 ring-red-500/10 opacity-70' :
-                    'ring-1 ring-white/5 hover:ring-blue-500/30'
+                    'sd-gborder shadow-[0_12px_30px_-16px_rgba(217,70,239,0.55)]'
             }`}>
             <div className="p-5">
                 {/* Top Row */}
@@ -589,7 +589,7 @@ function AssignmentCard({
                                         assignment.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
                                         'bg-red-500/10 text-red-500 border-red-500/30'
                                     }`}>
-                                        {assignment.quality}
+                                        {assignment.quality === 'GOOD' ? '🌟 ' : assignment.quality === 'SATISFACTORY' ? '👍 ' : '📌 '}{assignment.quality}
                                     </span>
                                 )}
                             </div>
@@ -615,7 +615,7 @@ function AssignmentCard({
                 </div>
 
                 {/* Title & Deadline */}
-                <h3 className="text-lg font-bold text-white mb-1">{assignment.title}</h3>
+                <h3 className="text-lg font-black text-white mb-1">{assignment.title}</h3>
                 <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-4">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Due: {deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })} at {deadlineDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
@@ -666,7 +666,7 @@ function AssignmentCard({
                             disabled={new Date() > new Date(assignment.cooldownEndDate)}
                             className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-colors border flex items-center justify-center gap-1.5 ${
                                 new Date() > new Date(assignment.cooldownEndDate)
-                                    ? 'bg-gray-800/50 text-gray-600 border-gray-700 cursor-not-allowed'
+                                    ? 'bg-[#1d1535]/50 text-gray-600 border-[#352a55] cursor-not-allowed'
                                     : 'bg-red-600/20 text-red-400 hover:bg-red-600/30 border-red-500/30'
                             }`}
                             title={new Date() > new Date(assignment.cooldownEndDate) ? 'Deadline passed — cannot delete' : 'Delete your submission'}
@@ -685,7 +685,7 @@ function AssignmentCard({
                             onClick={onOpen}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors shadow-lg ${isLateAllowed
                                 ? 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-900/20'
-                                : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20'
+                                : 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-cyan-500/25'
                                 }`}
                         >
                             Start Interactive
@@ -693,7 +693,7 @@ function AssignmentCard({
                     ) : (
                         <label className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors shadow-lg ${isLateAllowed
                             ? 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-900/20'
-                            : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'
+                            : 'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-fuchsia-500/25'
                             } ${uploadingId === assignment._id ? 'opacity-70 pointer-events-none' : ''}`}>
                             {uploadingId === assignment._id ? (
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -745,7 +745,7 @@ function ScheduledAssignmentCard({ assignment, clockOffset, onOpenNow }: { assig
     }, [assignment.scheduledFor, clockOffset]);
 
     return (
-        <div className="bg-[#1a1f2e] rounded-xl overflow-hidden ring-1 ring-amber-500/20 opacity-90">
+        <div className="relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden ring-1 ring-amber-400/30 opacity-90">
             {/* Top amber strip */}
             <div className="h-0.5 bg-gradient-to-r from-amber-500/60 to-amber-300/30" />
             <div className="p-4 flex items-center gap-4">

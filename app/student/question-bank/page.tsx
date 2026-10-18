@@ -143,9 +143,8 @@ export default function QuestionBank() {
 
     if (loadingCourses) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute top-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px] animate-pulse"></div>
-                <div className="text-blue-400 animate-pulse text-xl font-medium relative z-10">Loading your portal...</div>
+            <div className="min-h-screen sd-bg flex items-center justify-center relative overflow-hidden">
+                <div className="text-sky-400 animate-pulse text-xl font-medium relative z-10">Loading your portal...</div>
             </div>
         );
     }
@@ -155,17 +154,14 @@ export default function QuestionBank() {
     const isInsideFolder = folderStack.length > 0;
 
     return (
-        <div className="min-h-screen bg-[#050b14] font-sans text-slate-200 relative overflow-x-hidden selection:bg-blue-500/30 pb-20">
+        <div className="min-h-screen sd-bg font-sans text-slate-200 relative overflow-x-hidden selection:bg-fuchsia-500/30 pb-20">
             <Toaster position="top-center" />
 
-            {/* Ambient Background */}
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(79,70,229,0.07)_0%,transparent_70%)] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.07)_0%,transparent_70%)] animate-pulse" style={{ animationDelay: '1s' }}></div>
-            </div>
+            {/* Static neon grid (backdrop colours come from sd-bg) */}
+            <div className="fixed inset-0 pointer-events-none z-0 sd-grid" />
 
             {/* Header / Navbar - Compact */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl shadow-[0_1px_0_0_rgba(255,255,255,0.05)] bg-[#050b14]/70 px-4 py-3">
+            <header className="sticky top-0 z-50 sd-header px-4 py-3">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button 
@@ -174,11 +170,11 @@ export default function QuestionBank() {
                         >
                             <ArrowLeft className="h-5 w-5" /> Back
                         </button>
-                        <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 text-[10px]">
+                        <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-fuchsia-600 to-violet-600 flex items-center justify-center text-white font-bold shadow-lg shadow-fuchsia-500/20 text-[10px]">
                             {student.studentName?.[0] || 'S'}
                         </div>
                         <div>
-                            <h1 className="text-xs font-bold text-white leading-none">Question<span className="text-blue-400">Bank</span></h1>
+                            <h1 className="text-xs font-bold text-white leading-none">Question<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-fuchsia-400">Bank</span></h1>
                         </div>
                     </div>
                     <button
@@ -195,7 +191,7 @@ export default function QuestionBank() {
                 <div className="mb-6 flex items-end justify-between animate-in fade-in slide-in-from-bottom-2 duration-700">
                     <div>
                         <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase mb-1">{getGreeting()}</p>
-                        <h2 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400">
+                        <h2 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-fuchsia-100 to-cyan-200">
                             {student?.studentName?.split(' ')[0] || 'Student'}
                         </h2>
                     </div>
@@ -218,14 +214,14 @@ export default function QuestionBank() {
                                 <button
                                     key={course}
                                     onClick={() => setActiveCourse(course)}
-                                    className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md ring-1 ring-white/5 p-4 rounded-2xl hover:ring-blue-500/50 transition-all duration-300 active:scale-95 text-left h-32 flex flex-col justify-between"
+                                    className="sd-rise group relative overflow-hidden bg-[#140d27]/80 sd-gborder sd-card p-4 rounded-2xl transition-transform duration-200 active:scale-95 text-left h-32 flex flex-col justify-between shadow-[0_12px_30px_-16px_rgba(217,70,239,0.55)]"
                                     style={{ animationDelay: `${idx * 100}ms` }}
                                 >
                                     <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
                                         <Folder className="h-16 w-16 -mr-6 -mt-6 rotate-12" />
                                     </div>
 
-                                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+                                    <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${['from-fuchsia-500 to-violet-600', 'from-sky-400 to-sky-600', 'from-lime-400 to-emerald-500', 'from-amber-300 to-orange-500', 'from-rose-400 to-pink-600', 'from-cyan-300 to-teal-500'][idx % 6]} flex items-center justify-center text-white font-black text-xs shadow-lg ring-1 ring-white/20`}>
                                         {course && course.length > 0 ? course.charAt(0) : '?'}
                                     </div>
                                     <div>
@@ -267,7 +263,7 @@ export default function QuestionBank() {
                                 {folderStack.map((folder, idx) => (
                                     <div key={folder._id} className="flex items-center">
                                         <ChevronRight className="h-4 w-4 text-slate-600 mx-1" />
-                                        <span className={`text-[10px] sm:text-xs font-semibold ${idx === folderStack.length - 1 ? 'text-blue-400' : 'text-slate-400'}`}>
+                                        <span className={`text-[10px] sm:text-xs font-semibold ${idx === folderStack.length - 1 ? 'text-fuchsia-300' : 'text-slate-400'}`}>
                                             {folder.name}
                                         </span>
                                     </div>
@@ -279,7 +275,7 @@ export default function QuestionBank() {
                         {isInsideFolder && folderHasQuestions && (
                             <button
                                 onClick={() => router.push(`/student/resources/${currentFolder!._id}`)}
-                                className="mb-6 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                                className="mb-6 w-full bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-fuchsia-500/20 active:scale-95 transition-all"
                             >
                                 <FileText className="h-4 w-4" />
                                 Practice Questions in this folder
@@ -289,13 +285,12 @@ export default function QuestionBank() {
                         {loadingFolders ? (
                             <div className="flex flex-col justify-center items-center h-48 space-y-4">
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
-                                    <Folder className="h-8 w-8 text-blue-400 animate-bounce relative z-10" />
+                                    <Folder className="h-8 w-8 text-fuchsia-300 animate-bounce relative z-10" />
                                 </div>
                                 <span className="text-xs font-medium text-slate-400 animate-pulse tracking-widest uppercase">Opening...</span>
                             </div>
                         ) : folders.length === 0 && !folderHasQuestions ? (
-                            <div className="col-span-full bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
+                            <div className="col-span-full bg-[#140d27]/30 border border-dashed border-[#2a2045] rounded-2xl p-8 text-center">
                                 <Folder className="h-8 w-8 text-slate-700 mx-auto mb-2" />
                                 <p className="text-sm text-slate-400 font-medium">No content yet</p>
                             </div>
@@ -306,7 +301,7 @@ export default function QuestionBank() {
                                         key={folder._id}
                                         onClick={() => enterFolder(folder)}
                                         disabled={checkingQuestions}
-                                        className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-md ring-1 ring-white/5 p-4 sm:p-5 rounded-2xl hover:ring-blue-500/50 transition-all duration-300 active:scale-95 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="sd-rise group relative overflow-hidden bg-[#140d27]/80 sd-gborder sd-gborder-soft sd-card p-4 sm:p-5 rounded-2xl transition-transform duration-200 active:scale-95 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >
                                         <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 group-hover:-rotate-12 duration-500">
@@ -314,11 +309,11 @@ export default function QuestionBank() {
                                         </div>
 
                                         <div className="flex flex-col h-full gap-3 sm:gap-4 relative z-10">
-                                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:bg-blue-500/20 transition-colors">
+                                            <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br ${['from-fuchsia-500 to-violet-600', 'from-sky-400 to-sky-600', 'from-lime-400 to-emerald-500', 'from-amber-300 to-orange-500', 'from-rose-400 to-pink-600', 'from-cyan-300 to-teal-500'][idx % 6]} ring-1 ring-white/20 flex items-center justify-center text-white shadow-md`}>
                                                 <Folder className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-300" />
                                             </div>
                                             <div>
-                                                <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-200 mb-1 line-clamp-2 leading-relaxed group-hover:text-blue-300 transition-colors">{folder.name}</h3>
+                                                <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-200 mb-1 line-clamp-2 leading-relaxed group-hover:text-fuchsia-200 transition-colors">{folder.name}</h3>
                                                 <p className="text-[9px] text-slate-500 font-medium">
                                                     {folder.createdAt ? new Date(folder.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
                                                 </p>

@@ -75,30 +75,31 @@ export default function StudentLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
+        <div className="min-h-screen sd-bg flex items-center justify-center p-4 font-sans relative overflow-hidden">
             <Toaster />
-            {/* Background Effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[100px]" />
-            </div>
+            {/* Static neon grid */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none sd-grid" />
 
-            <div className="bg-slate-900 border border-white/5 p-8 rounded-2xl shadow-2xl w-full max-w-md relative z-10">
-                <div className="text-center mb-8">
-                    <div className="h-16 w-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
-                        <KeyRound className="h-8 w-8 text-blue-400" />
+            <div className="sd-gborder sd-rise bg-[#120c24]/95 p-8 rounded-2xl shadow-[0_24px_60px_-20px_rgba(217,70,239,0.45)] w-full max-w-md relative z-10 overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(70%_60%_at_0%_0%,rgba(217,70,239,0.22),transparent_60%),radial-gradient(60%_60%_at_100%_100%,rgba(34,211,238,0.16),transparent_60%)]" />
+                <div className="sd-shine" />
+                <span className="sd-twinkle absolute top-5 right-7 text-[10px] text-amber-200 pointer-events-none">✦</span>
+                <span className="sd-twinkle absolute bottom-6 left-6 text-[8px] text-cyan-200 pointer-events-none" style={{ animationDelay: '1.2s' }}>✦</span>
+                <div className="text-center mb-8 relative">
+                    <div className="sd-float h-16 w-16 bg-gradient-to-br from-fuchsia-500 via-violet-600 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 ring-1 ring-white/20 shadow-[0_0_28px_rgba(217,70,239,0.5)]">
+                        <KeyRound className="h-8 w-8 text-white" />
                     </div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white mb-1.5">Student Login</h1>
+                    <h1 className="text-xl sm:text-2xl font-black sd-name mb-1.5">Student Login</h1>
                     <p className="text-xs sm:text-sm text-slate-400">Enter your password to access your courses.</p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-6">
+                <form onSubmit={handleLogin} className="space-y-6 relative">
                     <div>
                         <label className="block text-xs font-medium text-slate-300 mb-1.5">Enter password Or Your Registered WhatsApp no.</label>
                         <input
                             type="text"
                             placeholder="Enter password Or Your Registered WhatsApp no."
-                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full bg-[#0b0718] border border-[#352a55] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:ring-2 focus:ring-fuchsia-500 outline-none transition-all"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -108,7 +109,7 @@ export default function StudentLogin() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+                        className="w-full bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-fuchsia-600/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                     >
                         {loading ? (
                             <>

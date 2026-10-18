@@ -328,11 +328,9 @@ export default function StudentAttendance() {
     if (!student) return null;
 
     return (
-        <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans">
+        <div className="min-h-screen sd-bg text-gray-200 font-sans">
             {/* Animated Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-30%] left-[-20%] w-[60%] h-[60%] bg-gradient-radial from-blue-900/20 via-transparent to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute bottom-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-cyan-900/20 via-transparent to-transparent rounded-full blur-3xl"></div>
             </div>
 
             <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -343,7 +341,7 @@ export default function StudentAttendance() {
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-fuchsia-300 to-cyan-300">
                                 Attendance
                             </h1>
                             <p className="text-gray-500 text-sm">Track your class participation</p>
@@ -352,7 +350,7 @@ export default function StudentAttendance() {
                     {activeCourse && courses.length > 0 && (
                         <button
                             onClick={downloadAttendancePDF}
-                            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-blue-900/20"
+                            className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-sky-900/20"
                         >
                             <FileDown className="h-4 w-4" />
                             <span className="hidden sm:inline">Download PDF</span>
@@ -363,11 +361,11 @@ export default function StudentAttendance() {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                     </div>
                 ) : courses.length === 0 ? (
                     <div className="text-center py-20">
-                        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gray-800/50 flex items-center justify-center">
+                        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-[#1d1535]/50 flex items-center justify-center">
                             <PieChart className="h-10 w-10 text-gray-600" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-400 mb-2">No Records</h3>
@@ -380,7 +378,7 @@ export default function StudentAttendance() {
                             {/* Overall Stats Card */}
                             <div className={`p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${getPercentColor(overallStats.percent).bgLight} border border-white/10`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ring-2 sm:ring-4 ${getPercentColor(overallStats.percent).ring} bg-[#0a0f1a]`}>
+                                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ring-2 sm:ring-4 ${getPercentColor(overallStats.percent).ring} bg-[#0b0718]`}>
                                         <p className={`text-xl sm:text-2xl font-black ${getPercentColor(overallStats.percent).text}`}>
                                             {overallStats.percent}%
                                         </p>

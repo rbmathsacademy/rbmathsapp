@@ -168,9 +168,9 @@ export default function MockTest() {
         const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
         return (
-            <div className="min-h-screen bg-[#0a0f1a]">
+            <div className="min-h-screen sd-bg">
                 {/* Sticky Header - Dark Theme */}
-                <div className="sticky top-0 z-50 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-emerald-500/30 shadow-lg">
+                <div className="sticky top-0 z-50 sd-header border-b border-emerald-500/30 shadow-lg">
                     <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
                         <h1 className="text-center text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-1 sm:mb-2">
                             RB Maths Academy
@@ -179,7 +179,7 @@ export default function MockTest() {
                             Mock Test
                         </h2>
                         <div className="flex flex-wrap justify-center gap-x-3 sm:gap-x-6 gap-y-1 text-xs sm:text-sm text-gray-400 mb-2">
-                            <span><strong className="text-blue-400">Course:</strong> {student.course_code}</span>
+                            <span><strong className="text-sky-400">Course:</strong> {student.course_code}</span>
                             <span><strong className="text-purple-400">Dept:</strong> {student.department}</span>
                             <span><strong className="text-pink-400">Year:</strong> {student.year}</span>
                             <span className="hidden sm:inline"><strong className="text-amber-400">Topic(s):</strong> {selectedTopics.join(', ')}</span>
@@ -200,10 +200,10 @@ export default function MockTest() {
                 <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
                     <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-lg shadow-2xl p-4 sm:p-6 border border-emerald-500/20">
                         <div className="flex justify-between items-start mb-3 sm:mb-4">
-                            <h3 className="text-base sm:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                            <h3 className="text-base sm:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-fuchsia-300 to-cyan-300">
                                 Question {currentQuestionIndex + 1}
                             </h3>
-                            <span className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold px-2 sm:px-3 py-1 rounded-full">
+                            <span className="bg-gradient-to-r from-sky-500/20 to-purple-500/20 border border-sky-400/30 text-sky-300 text-xs font-semibold px-2 sm:px-3 py-1 rounded-full">
                                 {currentQuestion.marks} {currentQuestion.marks === 1 ? 'mark' : 'marks'}
                             </span>
                         </div>
@@ -227,7 +227,7 @@ export default function MockTest() {
                         <button
                             onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
                             disabled={currentQuestionIndex === 0}
-                            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gray-700 text-white rounded-lg text-sm sm:text-base font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#2a2045] text-white rounded-lg text-sm sm:text-base font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
                         >
                             <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                             <span className="hidden sm:inline">Previous</span>
@@ -250,7 +250,7 @@ export default function MockTest() {
                             <button
                                 onClick={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
                                 disabled={isLastQuestion}
-                                className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg text-sm sm:text-base font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+                                className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-sky-600 text-white rounded-lg text-sm sm:text-base font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-sky-700 transition-colors"
                             >
                                 <span>Next</span>
                                 <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -265,7 +265,7 @@ export default function MockTest() {
     // Finished Screen
     if (step === 'finished') {
         return (
-            <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+            <div className="min-h-screen sd-bg flex items-center justify-center">
                 <div className="text-center">
                     <CheckCircle className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">Session Complete!</h2>
@@ -277,26 +277,26 @@ export default function MockTest() {
 
     // Faculty & Topic Selection
     return (
-        <div className="min-h-screen bg-[#0a0f1a] text-gray-200">
+        <div className="min-h-screen sd-bg text-gray-200">
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="flex items-center gap-4 mb-8">
                     <Link href="/student/resources" className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-fuchsia-300 to-cyan-300">
                         Mock Test
                     </h1>
                 </div>
 
                 {step === 'faculty' && (
-                    <div className="bg-gray-800/50 p-8 rounded-xl border border-gray-700">
+                    <div className="bg-[#1d1535]/50 p-8 rounded-xl border border-[#352a55]">
                         <h2 className="text-xl font-bold text-white mb-4">Select Faculty</h2>
                         <p className="text-gray-400 mb-6">Choose the faculty whose question bank you want to use</p>
 
                         <select
                             value={selectedFaculty}
                             onChange={(e) => setSelectedFaculty(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-900 text-white border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none mb-4"
+                            className="w-full px-4 py-3 bg-[#140d27] text-white border border-gray-600 rounded-lg focus:border-sky-500 focus:outline-none mb-4"
                         >
                             <option value="">-- Select Faculty --</option>
                             {faculties.map(faculty => (
@@ -307,7 +307,7 @@ export default function MockTest() {
                         <button
                             onClick={() => selectedFaculty && fetchTopics(selectedFaculty)}
                             disabled={!selectedFaculty || loading}
-                            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {loading ? 'Loading...' : 'Continue'}
                         </button>
@@ -315,13 +315,13 @@ export default function MockTest() {
                 )}
 
                 {step === 'topics' && (
-                    <div className="bg-gray-800/50 p-8 rounded-xl border border-gray-700">
+                    <div className="bg-[#1d1535]/50 p-8 rounded-xl border border-[#352a55]">
                         <h2 className="text-xl font-bold text-white mb-4">Select Topics</h2>
                         <p className="text-gray-400 mb-6">Choose one or more topics for your question paper</p>
 
                         <div className="space-y-2 mb-6 max-h-96 overflow-y-auto">
                             {topics.map(topic => (
-                                <label key={topic} className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg hover:bg-gray-900 cursor-pointer">
+                                <label key={topic} className="flex items-center gap-3 p-3 bg-[#140d27]/50 rounded-lg hover:bg-[#140d27] cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={selectedTopics.includes(topic)}

@@ -126,7 +126,7 @@ export default function BookmarksPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0a0f1a] text-gray-200 flex items-center justify-center">
+            <div className="min-h-screen sd-bg text-gray-200 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
         );
@@ -134,7 +134,7 @@ export default function BookmarksPage() {
 
     if (questions.length === 0) {
         return (
-            <div className="min-h-screen bg-[#0a0f1a] text-gray-200 p-8 flex flex-col items-center justify-center">
+            <div className="min-h-screen sd-bg text-gray-200 p-8 flex flex-col items-center justify-center">
                 <div className="bg-amber-500/10 p-6 rounded-full mb-6">
                     <Bookmark className="h-12 w-12 text-amber-500" />
                 </div>
@@ -157,15 +157,13 @@ export default function BookmarksPage() {
     // I'll assume `hint` string.
 
     return (
-        <div className="min-h-screen bg-[#0a0f1a] text-gray-200 font-sans flex flex-col">
+        <div className="min-h-screen sd-bg text-gray-200 font-sans flex flex-col">
             {/* Animated Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-30%] left-[-20%] w-[60%] h-[60%] bg-gradient-radial from-amber-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute bottom-[-30%] right-[-20%] w-[60%] h-[60%] bg-gradient-radial from-yellow-900/10 via-transparent to-transparent rounded-full blur-3xl"></div>
             </div>
 
             {/* Header */}
-            <header className="relative z-10 px-3 py-2 md:px-4 md:py-4 border-b border-white/5 bg-black/20 backdrop-blur-md">
+            <header className="relative z-10 px-3 py-2 md:px-4 md:py-4 border-b border-white/5 bg-black/20">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <Link href="/student" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                         <Home className="h-5 w-5" />
@@ -256,7 +254,7 @@ export default function BookmarksPage() {
                             {currentQuestion.explanation && (
                                 <button
                                     onClick={() => setShowExplanation(!showExplanation)}
-                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showExplanation ? 'bg-blue-500 text-black shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30'}`}
+                                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${showExplanation ? 'bg-sky-500 text-black shadow-lg shadow-fuchsia-500/20' : 'bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30'}`}
                                 >
                                     <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
                                     {showExplanation ? 'Hide' : 'Explanation'}
@@ -265,7 +263,7 @@ export default function BookmarksPage() {
 
                             <button
                                 onClick={() => setShowAIModal(true)}
-                                className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30"
+                                className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white shadow-lg shadow-violet-500/20 transition-all border border-violet-400/30"
                             >
                                 <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
                                 AI
@@ -303,11 +301,11 @@ export default function BookmarksPage() {
                         )}
 
                         {showExplanation && currentQuestion.explanation && (
-                            <div className="bg-blue-950/30 border border-blue-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
-                                <h3 className="text-blue-400 font-bold mb-3 flex items-center gap-2">
+                            <div className="bg-sky-950/30 border border-sky-500/20 rounded-2xl p-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                                <h3 className="text-sky-400 font-bold mb-3 flex items-center gap-2">
                                     <BookOpen className="h-4 w-4" /> Explanation
                                 </h3>
-                                <div className="text-blue-100/90 leading-relaxed space-y-2">
+                                <div className="text-sky-100/90 leading-relaxed space-y-2">
                                     <LatexWithImages>{currentQuestion.explanation}</LatexWithImages>
                                 </div>
                             </div>
@@ -342,13 +340,13 @@ export default function BookmarksPage() {
 
             {/* AI Modal */}
             {showAIModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bg-gray-900 border border-gray-700 p-6 rounded-2xl max-w-md w-full text-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in">
+                    <div className="bg-[#140d27] border border-[#352a55] p-6 rounded-2xl max-w-md w-full text-center">
                         <Sparkles className="h-12 w-12 text-amber-500 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Verify with AI</h3>
                         <p className="text-gray-400 mb-6 text-sm">We'll copy a prompt for you to paste into Gemini.</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setShowAIModal(false)} className="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold">Cancel</button>
+                            <button onClick={() => setShowAIModal(false)} className="flex-1 py-3 rounded-xl bg-[#1d1535] text-gray-300 font-bold">Cancel</button>
                             <button onClick={openGemini} className="flex-1 py-3 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-500">Go to Gemini</button>
                         </div>
                     </div>
