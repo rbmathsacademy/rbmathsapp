@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
 import { KeyRound, ArrowRight, Loader2 } from 'lucide-react';
+import { clearStudentCache } from '@/lib/studentCache';
 
 export default function StudentLogin() {
     const [password, setPassword] = useState('');
@@ -35,6 +36,7 @@ export default function StudentLogin() {
         localStorage.removeItem('user');
         localStorage.removeItem('adminSessionStart');
         localStorage.removeItem('admin_session_expiry');
+        clearStudentCache(); // never show the previous user's cached pages
 
         try {
             const res = await fetch('/api/student/login', {

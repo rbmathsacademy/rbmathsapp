@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import { toast } from 'react-hot-toast';
 import FeesReceiptModal from './FeesReceiptModal';
 import { useStudentProfile } from '../StudentProfileContext';
+import { readCache, writeCache } from '@/lib/studentCache';
 
 interface FeeRecord {
     _id: string;
@@ -73,8 +74,15 @@ export default function FeesPayment() {
     // Fetch fees whenever selectedBatch changes
     useEffect(() => {
         if (selectedBatch) {
-            setRecords([]); // Clear old records immediately
-            setLoading(true);
+            // Show this batch's last-seen records instantly (never another batch's); always refresh
+            const cached = readCache<any>(`fees:${selectedBatch}`);
+            if (cached) {
+                setRecords(cached.data.records || []);
+                setLoading(false);
+            } else {
+                setRecords([]); // Clear old records immediately
+                setLoading(true);
+            }
             fetchFees(selectedBatch);
         }
     }, [selectedBatch]);
@@ -110,6 +118,7 @@ export default function FeesPayment() {
             const feesRes = await fetch(url, { cache: 'no-store' });
             if (feesRes.ok) {
                 const data = await feesRes.json();
+                if (batch) writeCache(`fees:${batch}`, data);
                 setRecords(data.records || []);
             }
         } catch (error) {

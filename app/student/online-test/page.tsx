@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { readCache, writeCache } from '@/lib/studentCache';
 import { ArrowLeft, Clock, AlertCircle, Play, Trophy, Calendar, Timer, ChevronRight, Sparkles, Lock, TrendingUp, Activity, Medal, Crown, Star } from 'lucide-react';
 import BatchTabSwitcher from '../../components/BatchTabSwitcher';
 
@@ -71,21 +72,43 @@ export default function OnlineTestPage() {
     const [batches, setBatches] = useState<string[]>([]);
     const [selectedBatch, setSelectedBatch] = useState<string>('');
 
-    useEffect(() => {
+    // Layout effects so cached data is applied before the first paint (no loading-spinner flash)
+    useLayoutEffect(() => {
         // Initial load - fetch analytics first to determine batches
         fetchAnalytics();
     }, []);
 
     // Refetch when batch changes
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (selectedBatch) {
             fetchTests(selectedBatch);
             fetchAnalytics(selectedBatch);
         }
     }, [selectedBatch]);
 
+    // Only the newest request of each kind may update the screen (batch switches can overlap)
+    const testsSeq = useRef(0);
+    const analyticsSeq = useRef(0);
+
+    const applyTests = (data: any) => {
+        setAvailable(data.available || []);
+        setUpcoming(data.upcoming || []);
+        setCompleted(data.completed || []);
+        setExpired(data.expired || []);
+        setPreJoin(data.preJoin || []);
+    };
+
     const fetchTests = async (batch?: string) => {
-        setLoading(true);
+        const seq = ++testsSeq.current;
+        const cacheKey = `ot:tests:${batch || ''}`;
+        // Show the last-seen list instantly; the request below always refreshes it
+        const cached = readCache(cacheKey);
+        if (cached) {
+            applyTests(cached.data);
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
         try {
             const url = batch ? `/api/student/online-tests?batch=${encodeURIComponent(batch)}` : '/api/student/online-tests';
             const res = await fetch(url, { cache: 'no-store' });
@@ -94,59 +117,85 @@ export default function OnlineTestPage() {
                 throw new Error('Failed to fetch');
             }
             const data = await res.json();
-            setAvailable(data.available || []);
-            setUpcoming(data.upcoming || []);
-            setCompleted(data.completed || []);
-            setExpired(data.expired || []);
-            setPreJoin(data.preJoin || []);
+            writeCache(cacheKey, data);
+            if (seq === testsSeq.current) applyTests(data);
         } catch (error) {
             console.error('Error fetching tests:', error);
         } finally {
-            setLoading(false);
+            if (seq === testsSeq.current) setLoading(false);
         }
     };
 
     const fetchAnalytics = async (batch?: string) => {
-        // Only show loading if we don't have data or are switching batches (to avoid flash)
-        if (!analytics || batch) setAnalyticsLoading(true);
+        const seq = ++analyticsSeq.current;
+        const cacheKey = `ot:analytics:${batch || ''}`;
+        const cached = readCache(cacheKey);
+        // Same handling as a fresh response, so the batch tabs and default batch appear instantly too.
+        // "pickedBatch" = this was the initial call and it only chose the default batch.
+        const pickedBatch = cached ? handleAnalytics(cached.data, batch, true) : false;
+        if (cached) {
+            setAnalyticsLoading(false);
+        } else if (!analytics || batch) {
+            // Only show loading if we don't have data or are switching batches (to avoid flash)
+            setAnalyticsLoading(true);
+        }
 
         try {
             const url = batch ? `/api/student/analytics?batch=${encodeURIComponent(batch)}` : '/api/student/analytics';
             const res = await fetch(url, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
-
-                // Initialize batches if not already done
-                if (!batch && data.batches && data.batches.length > 0) {
-                    if (batches.length === 0) setBatches(data.batches);
-
-                    // Default to first batch if none selected
-                    // This creates the "particular batch" view by default instead of "all"
-                    if (!selectedBatch && data.batches && data.batches.length > 0) {
-                        setSelectedBatch(data.batches[0]);
-                        // CRITICAL: Return here to avoid setting aggregate data.
-                        // The useEffect[selectedBatch] will trigger the specific fetch.
-                        return;
-                    }
+                writeCache(cacheKey, data);
+                if (pickedBatch && data.batches && data.batches.length > 0) {
+                    // The default batch was already chosen from the cache (the student may even have
+                    // switched since), so only refresh the list of batch tabs.
+                    setBatches(data.batches);
+                    return;
                 }
-
-                // If we reached here, it means either:
-                // 1. We requested a specific batch
-                // 2. We requested initial (no batch) AND there are NO batches (so we show aggregate/empty)
-
-                setAnalytics(data);
-
-                // If this was initial load (no batch) and NO batches were found, we need to fetch tests manually here
-                // (since useEffect won't trigger)
-                if (!batch && (!data.batches || data.batches.length === 0)) {
-                    fetchTests();
-                }
+                if (seq !== analyticsSeq.current && batch) return;
+                handleAnalytics(data, batch, false);
             }
         } catch (error) {
             console.error('Error fetching analytics:', error);
         } finally {
-            setAnalyticsLoading(false);
+            if (seq === analyticsSeq.current) setAnalyticsLoading(false);
         }
+    };
+
+    /** Applies an analytics response. Returns true when it only chose the default batch. */
+    const handleAnalytics = (data: any, batch: string | undefined, fromCache: boolean): boolean => {
+        // Initialize batches if not already done
+        if (!batch && data.batches && data.batches.length > 0) {
+            if (batches.length === 0) setBatches(data.batches);
+
+            // Default to first batch if none selected
+            // This creates the "particular batch" view by default instead of "all"
+            if (!selectedBatch && data.batches && data.batches.length > 0) {
+                setSelectedBatch(data.batches[0]);
+                // CRITICAL: Return here to avoid setting aggregate data.
+                // The useEffect[selectedBatch] will trigger the specific fetch.
+                return true;
+            }
+        }
+
+        // If we reached here, it means either:
+        // 1. We requested a specific batch
+        // 2. We requested initial (no batch) AND there are NO batches (so we show aggregate/empty)
+
+        setAnalytics(data);
+
+        // If this was initial load (no batch) and NO batches were found, we need to fetch tests manually here
+        // (since useEffect won't trigger). From the cache only the cached list is shown; the fresh
+        // response then triggers the real request.
+        if (!batch && (!data.batches || data.batches.length === 0)) {
+            if (fromCache) {
+                const cachedTests = readCache('ot:tests:');
+                if (cachedTests) { applyTests(cachedTests.data); setLoading(false); }
+            } else {
+                fetchTests();
+            }
+        }
+        return false;
     };
 
     const formatDate = (dateStr: string) => {

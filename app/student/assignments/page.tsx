@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
+import { readCache, writeCache } from '@/lib/studentCache';
 import { Clock, CheckCircle, AlertTriangle, Upload, FileText, ExternalLink, XCircle, ArrowLeft, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -56,7 +57,15 @@ export default function StudentAssignmentsPage() {
         }
     }, [profile]);
 
-    useEffect(() => {
+    // Layout effect so the last-seen list is painted immediately; the request always refreshes it
+    useLayoutEffect(() => {
+        const cached = readCache<any>('assignments');
+        if (cached) {
+            // Keep the clock correction too: server time minus device time when that response arrived
+            if (cached.data.serverNow) setClockOffset(new Date(cached.data.serverNow).getTime() - cached.at);
+            if (cached.data.assignments) setAssignments(cached.data.assignments);
+            setLoading(false);
+        }
         fetchAssignments();
     }, []);
 
@@ -71,6 +80,7 @@ export default function StudentAssignmentsPage() {
                 throw new Error('Failed to fetch');
             }
             const data = await res.json();
+            writeCache('assignments', data);
             if (data.serverNow) {
                 setClockOffset(new Date(data.serverNow).getTime() - Date.now());
             }

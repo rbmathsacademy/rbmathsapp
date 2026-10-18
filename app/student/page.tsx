@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -29,6 +29,7 @@ import {
 import { Toaster, toast } from 'react-hot-toast';
 import { useStudentProfile } from './StudentProfileContext';
 import BatchTabSwitcher from '../components/BatchTabSwitcher';
+import { readCache, writeCache, clearStudentCache } from '@/lib/studentCache';
 
 const FREE_BATCH = 'Class XI (Free batch) 2026-27';
 const FREE_BATCH_LOWER = FREE_BATCH.trim().toLowerCase();
@@ -154,9 +155,29 @@ export default function StudentDashboard() {
         try {
             const res = await fetch('/api/chat/student-status');
             const data = await res.json();
-            if (res.ok) setUnreadChatCount(data.unreadCount || 0);
+            if (res.ok) {
+                setUnreadChatCount(data.unreadCount || 0);
+                writeCache('chat-unread', data.unreadCount || 0);
+            }
         } catch (e) {}
     };
+
+    // Paint the last-seen dashboard before the first frame (fresh data replaces it right after)
+    useLayoutEffect(() => {
+        const cached = readCache<DashboardData>('dash:');
+        if (cached) {
+            setData(cached.data);
+            setLoading(false);
+        }
+        const cachedChat = readCache<number>('chat-unread');
+        if (cachedChat) setUnreadChatCount(cachedChat.data);
+    }, []);
+
+    // Warm up the other portal pages' code so switching to them is instant
+    useEffect(() => {
+        ['/student/online-test', '/student/assignments', '/student/question-bank', '/student/chat', '/student/lesson-plan', '/student/fees', '/student/performance-overview']
+            .forEach(href => { try { router.prefetch(href); } catch { } });
+    }, [router]);
 
     useEffect(() => {
         fetchData();
@@ -187,7 +208,16 @@ export default function StudentDashboard() {
         }
     }, [selectedBatch]);
 
+    // Only the most recent request may update the screen (avoids an older response overwriting a newer batch)
+    const fetchSeq = useRef(0);
+
     const fetchData = async (batch?: string) => {
+        const seq = ++fetchSeq.current;
+        const cacheKey = `dash:${batch || ''}`;
+        if (batch) {
+            const cached = readCache<DashboardData>(cacheKey);
+            if (cached) setData(cached.data);
+        }
         try {
             const url = batch
                 ? `/api/student/dashboard-analytics?batch=${encodeURIComponent(batch)}`
@@ -195,7 +225,8 @@ export default function StudentDashboard() {
             const res = await fetch(url);
             if (res.ok) {
                 const result = await res.json();
-                setData(result);
+                writeCache(cacheKey, result);
+                if (seq === fetchSeq.current) setData(result);
             } else {
                 if (res.status === 401) {
                     handleLogout();
@@ -212,6 +243,7 @@ export default function StudentDashboard() {
 
     const handleLogout = () => {
         document.cookie = 'auth_token=; Max-Age=0; path=/;';
+        clearStudentCache();
         localStorage.clear();
         window.location.replace('/student/login');
     };

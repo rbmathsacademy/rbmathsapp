@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { readCache, writeCache } from '@/lib/studentCache';
 import {
     Calendar as CalendarIcon, BookText, GraduationCap,
     Laptop, ClipboardList, ChevronLeft, Loader2, ArrowRight
@@ -20,25 +21,42 @@ export default function StudentLessonPlan() {
     const [batches, setBatches] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    // Layout effect so a cached copy is painted before the first frame
+    useLayoutEffect(() => {
         fetchLessonPlan();
     }, []);
 
+    const fetchSeq = useRef(0);
+
+    const applyPlan = (data: any) => {
+        setPlans(data.plans);
+        setCurrentBatch(data.currentBatch);
+        setBatches(data.availableBatches || []);
+    };
+
     const fetchLessonPlan = async (batch?: string) => {
-        setLoading(true);
+        const seq = ++fetchSeq.current;
+        const cacheKey = `lesson:${batch || ''}`;
+        // Show the last-seen plan instantly; the request below always refreshes it
+        const cached = readCache(cacheKey);
+        if (cached) {
+            applyPlan(cached.data);
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
         try {
             const url = batch ? `/api/student/lesson-plan?batch=${encodeURIComponent(batch)}` : '/api/student/lesson-plan';
             const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
-                setPlans(data.plans);
-                setCurrentBatch(data.currentBatch);
-                setBatches(data.availableBatches || []);
+                writeCache(cacheKey, data);
+                if (seq === fetchSeq.current) applyPlan(data);
             }
         } catch (e) {
             console.error('Error fetching lesson plan:', e);
         } finally {
-            setLoading(false);
+            if (seq === fetchSeq.current) setLoading(false);
         }
     };
 

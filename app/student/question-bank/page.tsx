@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
 import { Folder, ChevronRight, FileText, ArrowLeft, LogOut, Bookmark } from 'lucide-react';
 import { useStudentProfile } from '../StudentProfileContext';
+import { readCache, writeCache, clearStudentCache } from '@/lib/studentCache';
 
 interface IFolder {
     _id: string;
@@ -53,11 +54,20 @@ export default function QuestionBank() {
     }, [activeCourse]);
 
     const fetchFolders = async (course: string, parentId: string | null) => {
-        setLoadingFolders(true);
+        const cacheKey = `qb:${course}:${parentId || ''}`;
+        // Show the last-seen folder list instantly; the request below always refreshes it
+        const cached = readCache<any>(cacheKey);
+        if (cached) {
+            setFolders(cached.data.folders || []);
+            setLoadingFolders(false);
+        } else {
+            setLoadingFolders(true);
+        }
         try {
             const parentParam = parentId ? `&parentId=${parentId}` : '';
             const res = await fetch(`/api/student/data?course=${encodeURIComponent(course)}${parentParam}`, { cache: 'no-store' });
             const data = await res.json();
+            if (res.ok) writeCache(cacheKey, data);
             setFolders(data.folders || []);
         } catch (e) {
             toast.error('Failed to load course content');
@@ -120,6 +130,7 @@ export default function QuestionBank() {
 
     const handleLogout = () => {
         document.cookie = 'auth_token=; Max-Age=0; path=/;';
+        clearStudentCache();
         router.push('/student/login');
     };
 

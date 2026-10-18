@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
+import { readCache, writeCache } from '@/lib/studentCache';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, TrendingUp, TrendingDown, CheckCircle, Target, Award, BookOpen, Medal, Star } from 'lucide-react';
 import BatchTabSwitcher from '../../components/BatchTabSwitcher';
@@ -11,7 +12,14 @@ export default function PerformanceOverviewPage() {
     const [data, setData] = useState<any>(null);
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
 
-    useEffect(() => {
+    // Same response as the dashboard, so its cached copy paints instantly; the request refreshes it
+    useLayoutEffect(() => {
+        const cached = readCache<any>('dash:');
+        if (cached) {
+            setData(cached.data);
+            if (cached.data.student?.courses?.length > 0) setSelectedBatch(cached.data.student.courses[0]);
+            setLoading(false);
+        }
         fetchData();
     }, []);
 
@@ -20,9 +28,11 @@ export default function PerformanceOverviewPage() {
             const res = await fetch('/api/student/dashboard-analytics');
             if (res.ok) {
                 const json = await res.json();
+                writeCache('dash:', json);
                 setData(json);
                 if (json.student?.courses && json.student.courses.length > 0) {
-                    setSelectedBatch(json.student.courses[0]);
+                    // keep the student's tab choice if they already switched while this loaded
+                    setSelectedBatch(prev => (prev && json.student.courses.includes(prev)) ? prev : json.student.courses[0]);
                 }
             }
         } catch (error) {
