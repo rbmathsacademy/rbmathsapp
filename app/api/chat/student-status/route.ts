@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
 import ChatBatchMetadata from '@/models/ChatBatchMetadata';
 import BatchStudent from '@/models/BatchStudent';
 import { processDueAiRetries } from '@/lib/retryAiWorker';
+
+// Room for the queued-AI-doubt worker that runs after the response (see after() below)
+export const maxDuration = 60;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -17,7 +20,8 @@ export async function GET(req: NextRequest) {
         const phoneNumber = (payload.phoneNumber || payload.userId) as string;
         
         await dbConnect();
-        processDueAiRetries().catch(err => console.error('[Retry worker trigger error]', err));
+        // Answer any queued AI doubts after this response is sent; after() keeps the function alive for it
+        after(() => processDueAiRetries().catch(err => console.error('[Retry worker trigger error]', err)));
 
         const student = await BatchStudent.findOne({ phoneNumber }).lean();
         if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 });

@@ -4,32 +4,39 @@ import { callGeminiWithFallback, driveUrlToBase64 } from '@/lib/geminiChat';
 
 const RETRY_DELAYS_MINUTES = [0, 1, 2, 3]; // attempt 1 -> 1min, attempt 2 -> 2min, attempt 3 -> 3min
 
+// A job left in "processing" for this long was being worked on by a request that got cut off
+// (serverless time limit); it is handed out again instead of staying stuck forever.
+const STALE_PROCESSING_MS = 2 * 60 * 1000;
+
 /**
- * Checks and processes any due AI retry jobs.
- * Uses atomic findOneAndUpdate to prevent duplicate concurrent runs.
+ * Checks and processes due AI retry jobs. Call it via Next's after() so the platform keeps the
+ * function alive until the work finishes (a plain fire-and-forget promise is frozen on Vercel as soon
+ * as the response is sent). Handles at most `maxJobs` jobs within `budgetMs`.
+ * Uses atomic findOneAndUpdate so concurrent polls never take the same job.
  */
-export async function processDueAiRetries(batchId?: string) {
+export async function processDueAiRetries(batchId?: string, { maxJobs = 1, budgetMs = 45_000 } = {}) {
+    const startedAt = Date.now();
     try {
-        const now = new Date();
-        const query: any = {
-            status: 'pending',
-            nextRetryAt: { $lte: now },
-        };
-        if (batchId) {
-            query.batchId = batchId;
-        }
+        for (let n = 0; n < maxJobs; n++) {
+            const remaining = budgetMs - (Date.now() - startedAt);
+            if (remaining < 10_000) return;
 
-        const dueJobs = await AiRetryJob.find(query).limit(5);
-        if (!dueJobs || dueJobs.length === 0) return;
+            const now = new Date();
+            const query: any = {
+                $or: [
+                    { status: 'pending', nextRetryAt: { $lte: now } },
+                    { status: 'processing', updatedAt: { $lte: new Date(now.getTime() - STALE_PROCESSING_MS) } },
+                ],
+            };
+            if (batchId) query.batchId = batchId;
 
-        for (const rawJob of dueJobs) {
             // Atomic lock: mark as processing so no other poll takes it
             const job = await AiRetryJob.findOneAndUpdate(
-                { _id: rawJob._id, status: 'pending' },
+                query,
                 { $set: { status: 'processing' } },
-                { new: true }
+                { new: true, sort: { nextRetryAt: 1 } }
             );
-            if (!job) continue;
+            if (!job) return;
 
             try {
                 // Reconstruct conversation history for this doubt session
@@ -60,6 +67,7 @@ export async function processDueAiRetries(batchId?: string) {
                     imageBase64,
                     mimeType: job.mimeType || 'image/jpeg',
                     history,
+                    budgetMs: Math.max(5_000, budgetMs - (Date.now() - startedAt) - 3_000),
                 });
 
                 // Post AI response into chat

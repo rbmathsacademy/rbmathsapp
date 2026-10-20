@@ -56,6 +56,25 @@ export async function POST(req: NextRequest) {
             finalBase64 = await driveUrlToBase64(imageUrl) ?? undefined;
         }
 
+        // Queue the retry job and link the student's message BEFORE calling Gemini. If this function
+        // is cut off by the platform time limit mid-call, the doubt is still queued and will be
+        // answered by the retry worker (previously a timeout left nothing behind: no reply, no retry).
+        // nextRetryAt is past this request's own time limit, so the worker can't pick it up while
+        // this request is still trying.
+        const job = await AiRetryJob.create({
+            batchId,
+            studentId,
+            text,
+            imageUrl: imageUrl || null,
+            mimeType,
+            doubtSessionId: sessionToUse,
+            attemptNumber: 1,
+            maxAttempts: 3,
+            nextRetryAt: new Date(Date.now() + 90 * 1000),
+            status: 'pending',
+        });
+        await linkUnlinkedMessages(batchId, studentId, sessionToUse);
+
         // --- Try Gemini now ---
         let aiResponseText = '';
         let success = false;
@@ -65,29 +84,16 @@ export async function POST(req: NextRequest) {
                 imageBase64: finalBase64,
                 mimeType,
                 history,
+                budgetMs: 40_000, // leaves room inside maxDuration (60s) for the DB work around it
             });
             success = true;
         } catch (err: any) {
-            console.error('[ask-ai] All Gemini models failed, scheduling retry:', err.message);
+            console.error('[ask-ai] All Gemini models failed, retry queued:', err.message);
         }
 
         if (!success) {
-            // Schedule a retry job: 1 min → 2 min → 3 min
-            await AiRetryJob.create({
-                batchId,
-                studentId,
-                text,
-                imageUrl: imageUrl || null,
-                mimeType,
-                doubtSessionId: sessionToUse,
-                attemptNumber: 1,
-                maxAttempts: 3,
-                nextRetryAt: new Date(Date.now() + 60 * 1000), // 1 minute from now
-                status: 'pending',
-            });
-
-            // Link the student's triggering messages to the session so badges appear later
-            await linkUnlinkedMessages(batchId, studentId, sessionToUse);
+            // Retry schedule: 1 min → 2 min → 3 min
+            await AiRetryJob.updateOne({ _id: job._id, status: 'pending' }, { $set: { nextRetryAt: new Date(Date.now() + 60 * 1000) } });
 
             return NextResponse.json({
                 error: 'AI assistant is busy. Your question has been queued and will be answered automatically within a few minutes.',
@@ -112,7 +118,8 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        await linkUnlinkedMessages(batchId, studentId, sessionToUse);
+        // Answered now (reply saved first), so the queued retry is no longer needed
+        await AiRetryJob.updateOne({ _id: job._id }, { $set: { status: 'success' } });
 
         return NextResponse.json({ success: true, message: aiMessage, doubtSessionId: sessionToUse });
     } catch (error: any) {
