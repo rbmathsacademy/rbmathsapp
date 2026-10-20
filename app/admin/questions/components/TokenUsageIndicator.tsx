@@ -53,9 +53,9 @@ export default function TokenUsageIndicator({ userEmail, onQuotaExhausted, refre
 
     if (loading || !usageData) {
         return (
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 animate-pulse">
-                <div className="h-4 bg-gray-700 rounded w-24 mb-2" />
-                <div className="h-8 bg-gray-700 rounded" />
+            <div className="bg-[#1d1535] border border-[#352a55] rounded-lg p-4 animate-pulse">
+                <div className="h-4 bg-[#2a2045] rounded w-24 mb-2" />
+                <div className="h-8 bg-[#2a2045] rounded" />
             </div>
         );
     }
@@ -71,12 +71,12 @@ export default function TokenUsageIndicator({ userEmail, onQuotaExhausted, refre
                 ? 'bg-red-900/20 border-red-500/50'
                 : isNearLimit
                     ? 'bg-yellow-900/20 border-yellow-500/50'
-                    : 'bg-gray-800 border-gray-700'}
+                    : 'bg-[#1d1535] border-[#352a55]'}
     `}>
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                    <Zap className={`h-4 w-4 ${isAtLimit ? 'text-red-400' : isNearLimit ? 'text-yellow-400' : 'text-blue-400'}`} />
+                    <Zap className={`h-4 w-4 ${isAtLimit ? 'text-red-400' : isNearLimit ? 'text-yellow-400' : 'text-violet-400'}`} />
                     <h4 className="text-sm font-bold text-white">Global API Usage</h4>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -99,13 +99,13 @@ export default function TokenUsageIndicator({ userEmail, onQuotaExhausted, refre
                     </span>
                 </div>
 
-                <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-[#2a2045] rounded-full h-2 overflow-hidden">
                     <div
                         className={`h-full transition-all duration-500 ${isAtLimit
                             ? 'bg-red-500'
                             : isNearLimit
                                 ? 'bg-yellow-500'
-                                : 'bg-gradient-to-r from-green-500 to-blue-500'
+                                : 'bg-gradient-to-r from-green-500 to-violet-500'
                             }`}
                         style={{ width: `${Math.min(percentage, 100)}%` }}
                     />

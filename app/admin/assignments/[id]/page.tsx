@@ -475,7 +475,7 @@ export default function AssignmentDetailsPage() {
                         </button>
                         <button
                             onClick={() => setIsEditQuestionsExpanded(true)}
-                            className="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors flex items-center gap-1.5"
+                            className="bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium text-white transition-colors flex items-center gap-1.5"
                         >
                             <Pen className="w-4 h-4" /> Edit Questions
                         </button>
@@ -484,10 +484,10 @@ export default function AssignmentDetailsPage() {
             </div>
 
             {/* Header Card */}
-            <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-4 sm:p-8 mb-6 sm:mb-8 relative group">
+            <div className="bg-[#151029] border border-white/5 rounded-xl p-4 sm:p-8 mb-6 sm:mb-8 relative group">
                 <button
                     onClick={() => setIsEditModalOpen(true)}
-                    className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all"
+                    className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-violet-500/10 text-violet-400 hover:bg-violet-500 hover:text-white rounded-lg transition-all"
                     title="Edit Assignment"
                 >
                     <Pen className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -495,7 +495,7 @@ export default function AssignmentDetailsPage() {
 
                 <div>
                     <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                        <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-mono">
+                        <span className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-mono">
                             {assignment.type}
                         </span>
                         <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-mono">
@@ -543,7 +543,7 @@ export default function AssignmentDetailsPage() {
                             {(['CBSE', 'ISC', 'WBCHSE'] as const).map(board => {
                                 const url = assignment.boardContent?.[board];
                                 const colors = board === 'CBSE'
-                                    ? 'bg-blue-600 hover:bg-blue-500'
+                                    ? 'bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500'
                                     : board === 'ISC'
                                         ? 'bg-amber-600 hover:bg-amber-500'
                                         : 'bg-purple-600 hover:bg-purple-500';
@@ -559,7 +559,7 @@ export default function AssignmentDetailsPage() {
                                         {board} Paper
                                     </a>
                                 ) : (
-                                    <span key={board} className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-700 rounded-lg text-gray-400 text-sm cursor-not-allowed">
+                                    <span key={board} className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#2a2045] rounded-lg text-gray-400 text-sm cursor-not-allowed">
                                         <FileText className="w-4 h-4" />
                                         {board} — Not uploaded
                                     </span>
@@ -573,7 +573,7 @@ export default function AssignmentDetailsPage() {
                             href={typeof assignment.content === 'string' && assignment.content.startsWith('http') ? assignment.content : '#'}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition-colors text-sm"
+                            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg text-white font-medium transition-colors text-sm"
                             onClick={(e) => {
                                 if (typeof assignment.content !== 'string' || !assignment.content.startsWith('http')) {
                                     e.preventDefault();
@@ -591,7 +591,7 @@ export default function AssignmentDetailsPage() {
 
 
             {/* Submissions List */}
-            <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
+            <div className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-white/5">
                     <h2 className="text-lg sm:text-xl font-semibold mb-3">Student Status</h2>
                     <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
@@ -622,7 +622,7 @@ export default function AssignmentDetailsPage() {
                                 New Admission: {newAdmissionCount}
                             </div>
                         )}
-                        <div className="flex items-center gap-1.5 text-blue-400 ml-auto sm:ml-4 border-l border-white/10 pl-4">
+                        <div className="flex items-center gap-1.5 text-violet-400 ml-auto sm:ml-4 border-l border-white/10 pl-4">
                             Total Submissions: {submittedCount}
                         </div>
                         <div className="flex items-center gap-1.5 text-purple-400 border-l border-white/10 pl-4">
@@ -646,7 +646,7 @@ export default function AssignmentDetailsPage() {
                             <select
                                 value={submissionFilter}
                                 onChange={(e) => setSubmissionFilter(e.target.value as any)}
-                                className="bg-black/30 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-300 outline-none focus:border-blue-500 cursor-pointer"
+                                className="bg-black/30 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer"
                             >
                                 <option value="ALL">All Submissions</option>
                                 <option value="ON_TIME">On Time</option>
@@ -671,7 +671,7 @@ export default function AssignmentDetailsPage() {
                 </div>
 
                 {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && filteredStudents.length > 0 && (
-                    <div className="bg-slate-900/60 border-b border-white/5 px-4 sm:px-6 py-4">
+                    <div className="bg-[#140d27]/60 border-b border-white/5 px-4 sm:px-6 py-4">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
                                 📱 WhatsApp Auto-Sender
@@ -680,7 +680,7 @@ export default function AssignmentDetailsPage() {
                                 <select 
                                     value={recipientMode} 
                                     onChange={e => setRecipientMode(e.target.value as any)}
-                                    className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-blue-500 cursor-pointer"
+                                    className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer"
                                 >
                                     <option value="student">Send to Student</option>
                                     <option value="guardian">Send to Guardian</option>
@@ -692,7 +692,7 @@ export default function AssignmentDetailsPage() {
                                         if (selectedPhones.length === filteredStudents.length) setSelectedPhones([]);
                                         else setSelectedPhones(filteredStudents.map((s: any) => s.student._id));
                                     }}
-                                    className="text-xs text-blue-400 hover:text-blue-300 font-medium bg-blue-500/10 px-2 py-1 rounded transition-colors"
+                                    className="text-xs text-violet-400 hover:text-violet-300 font-medium bg-violet-500/10 px-2 py-1 rounded transition-colors"
                                 >
                                     {selectedPhones.length === filteredStudents.length ? 'Deselect All' : 'Select All'}
                                 </button>
@@ -703,9 +703,9 @@ export default function AssignmentDetailsPage() {
                             placeholder="WhatsApp Message..." 
                             value={whatsappMessage} 
                             onChange={e => setWhatsappMessage(e.target.value)}
-                            className="w-full px-4 py-2 mb-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500"
+                            className="w-full px-4 py-2 mb-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500"
                         />
-                        <button onClick={copyForAutoSender} disabled={selectedPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                        <button onClick={copyForAutoSender} disabled={selectedPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                             Copy for WhatsApp Auto-Sender ({selectedPhones.length})
                         </button>
                     </div>
@@ -737,7 +737,7 @@ export default function AssignmentDetailsPage() {
                                 filteredStudents.map(student => {
                                     const isSelected = selectedPhones.includes(student.student._id);
                                     return (
-                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-blue-500/10' : ''}`}>
+                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''}`}>
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
                                             <td className="p-4">
                                                 <input
@@ -747,13 +747,13 @@ export default function AssignmentDetailsPage() {
                                                         if (e.target.checked) setSelectedPhones(prev => [...prev, student.student._id]);
                                                         else setSelectedPhones(prev => prev.filter(p => p !== student.student._id));
                                                     }}
-                                                    className="rounded border-white/20 bg-slate-800 text-blue-500 focus:ring-blue-500/20"
+                                                    className="rounded border-white/20 bg-[#1d1535] text-violet-500 focus:ring-violet-500/20"
                                                 />
                                             </td>
                                         )}
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                                <div className="w-10 h-10 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400">
                                                     <User className="w-5 h-5" />
                                                 </div>
                                                 <div>
@@ -828,7 +828,7 @@ export default function AssignmentDetailsPage() {
                                                         onClick={() => toggleStatus(student._id, student.status)}
                                                         className={`px-3 py-1 rounded-full text-xs font-bold transition-all border w-24 ${student.status === 'CORRECTED'
                                                             ? 'bg-green-500/20 text-green-400 border-green-500/50 shadow-[0_0_10px_rgba(74,222,128,0.2)]'
-                                                            : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:bg-gray-700'
+                                                            : 'bg-[#2a2045]/50 text-gray-400 border-[#433666] hover:bg-[#2a2045]'
                                                             }`}
                                                     >
                                                         {student.status === 'CORRECTED' ? 'CORRECTED' : 'PENDING'}
@@ -839,7 +839,7 @@ export default function AssignmentDetailsPage() {
                                                             value={student.quality || ''}
                                                             onChange={(e) => handleQualityChange(student._id!, e.target.value)}
                                                             className={`text-[10px] font-bold px-2 py-1 rounded border outline-none cursor-pointer w-24 ${
-                                                                !student.quality ? 'bg-gray-800 text-gray-400 border-gray-600' :
+                                                                !student.quality ? 'bg-[#1d1535] text-gray-400 border-[#433666]' :
                                                                 student.quality === 'GOOD' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
                                                                 student.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
                                                                 'bg-red-500/10 text-red-400 border-red-500/30'
@@ -864,7 +864,7 @@ export default function AssignmentDetailsPage() {
                                                             href={student.link}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition-colors text-white"
+                                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg text-xs font-medium transition-colors text-white"
                                                         >
                                                             View <ExternalLink className="w-3 h-3" />
                                                         </a>
@@ -893,7 +893,7 @@ export default function AssignmentDetailsPage() {
                                                                     navigator.clipboard.writeText(student.student.phoneNumber);
                                                                     toast.success('Phone number copied!');
                                                                 }}
-                                                                className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                                                                className="p-1.5 hover:bg-violet-500/20 rounded text-violet-400 hover:text-violet-300 transition-colors"
                                                                 title="Copy Phone Number"
                                                             >
                                                                 📞
@@ -944,7 +944,7 @@ export default function AssignmentDetailsPage() {
                         filteredStudents.map(student => {
                             const isSelected = selectedPhones.includes(student.student.phoneNumber);
                             return (
-                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-blue-500/5' : ''}`}>
+                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''}`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
@@ -955,10 +955,10 @@ export default function AssignmentDetailsPage() {
                                                     if (e.target.checked) setSelectedPhones(prev => [...prev, student.student.phoneNumber]);
                                                     else setSelectedPhones(prev => prev.filter(p => p !== student.student.phoneNumber));
                                                 }}
-                                                className="rounded border-white/20 bg-slate-800 text-blue-500 focus:ring-blue-500/20 mr-1"
+                                                className="rounded border-white/20 bg-[#1d1535] text-violet-500 focus:ring-violet-500/20 mr-1"
                                             />
                                         )}
-                                        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 flex-shrink-0">
+                                        <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 flex-shrink-0">
                                             <User className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0">
@@ -1030,7 +1030,7 @@ export default function AssignmentDetailsPage() {
                                                     onClick={() => toggleStatus(student._id, student.status)}
                                                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all border ${student.status === 'CORRECTED'
                                                         ? 'bg-green-500/20 text-green-400 border-green-500/50'
-                                                        : 'bg-gray-700/50 text-gray-400 border-gray-600'
+                                                        : 'bg-[#2a2045]/50 text-gray-400 border-[#433666]'
                                                         }`}
                                                 >
                                                     {student.status === 'CORRECTED' ? 'CORRECTED' : 'PENDING'}
@@ -1041,7 +1041,7 @@ export default function AssignmentDetailsPage() {
                                                         value={student.quality || ''}
                                                         onChange={(e) => handleQualityChange(student._id!, e.target.value)}
                                                         className={`text-[9px] font-bold px-1.5 py-0.5 rounded border outline-none cursor-pointer ${
-                                                            !student.quality ? 'bg-gray-800 text-gray-400 border-gray-600' :
+                                                            !student.quality ? 'bg-[#1d1535] text-gray-400 border-[#433666]' :
                                                             student.quality === 'GOOD' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
                                                             student.quality === 'SATISFACTORY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
                                                             'bg-red-500/10 text-red-400 border-red-500/30'
@@ -1063,7 +1063,7 @@ export default function AssignmentDetailsPage() {
                                                     href={student.link}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-medium text-white flex-shrink-0"
+                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg text-[10px] font-medium text-white flex-shrink-0"
                                                 >
                                                     View <ExternalLink className="w-3 h-3" />
                                                 </a>
@@ -1092,7 +1092,7 @@ export default function AssignmentDetailsPage() {
                                                             navigator.clipboard.writeText(student.student.phoneNumber);
                                                             toast.success('Phone copied!');
                                                         }}
-                                                        className="p-1 hover:bg-blue-500/20 rounded text-blue-400"
+                                                        className="p-1 hover:bg-violet-500/20 rounded text-violet-400"
                                                         title="Copy Phone"
                                                     >
                                                         📞
@@ -1135,7 +1135,7 @@ export default function AssignmentDetailsPage() {
 
             {/* Excluded Students Section */}
             {excludedStudents.length > 0 && (
-                <div className="bg-[#1a1f2e] border border-orange-500/20 rounded-xl mt-6 overflow-hidden">
+                <div className="bg-[#151029] border border-orange-500/20 rounded-xl mt-6 overflow-hidden">
                     <button
                         onClick={() => setShowExcluded(!showExcluded)}
                         className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-white/5 transition-colors"
@@ -1174,8 +1174,8 @@ export default function AssignmentDetailsPage() {
 
             {/* Edit Modal */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-                    <div className="bg-[#1a1f2e] p-5 sm:p-6 rounded-xl border border-white/10 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#151029] p-5 sm:p-6 rounded-xl border border-white/10 w-full max-w-md shadow-2xl">
                         <h2 className="text-xl font-bold mb-6 text-white flex items-center gap-2">
                             <Pen className="w-5 h-5" /> Edit Assignment
                         </h2>
@@ -1186,7 +1186,7 @@ export default function AssignmentDetailsPage() {
                                 <input
                                     value={editTitle}
                                     onChange={(e) => setEditTitle(e.target.value)}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-violet-500"
                                 />
                             </div>
                             <div>
@@ -1195,7 +1195,7 @@ export default function AssignmentDetailsPage() {
                                     type="datetime-local"
                                     value={editDeadline}
                                     onChange={(e) => setEditDeadline(e.target.value)}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-violet-500"
                                 />
                             </div>
                             {/* Scheduled Open Time */}
@@ -1238,10 +1238,10 @@ export default function AssignmentDetailsPage() {
                                     value={editCooldownEndTime}
                                     onChange={(e) => handleEditCooldownEndTimeChange(e.target.value)}
                                     min={editDeadline}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-violet-500"
                                 />
                                 {editDeadline && editCooldownEndTime && (
-                                    <p className="text-xs text-blue-400 mt-1 font-medium">
+                                    <p className="text-xs text-violet-400 mt-1 font-medium">
                                         Duration: {editCooldown} minutes after deadline
                                     </p>
                                 )}
@@ -1258,7 +1258,7 @@ export default function AssignmentDetailsPage() {
                             </button>
                             <button
                                 onClick={handleUpdateAssignment}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg text-white transition-colors flex items-center gap-2"
                             >
                                 <Save className="w-4 h-4" /> Save Changes
                             </button>
@@ -1269,8 +1269,8 @@ export default function AssignmentDetailsPage() {
 
             {/* Question Edit Modal */}
             {isQEditModalOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4">
+                    <div className="relative bg-[#151029] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl sd-gborder sd-gborder-soft sd-card flex flex-col shadow-2xl">
                         {/* Modal Header */}
                         <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center">
                             <h2 className="text-xl font-bold">Edit Assignment Questions</h2>
@@ -1289,13 +1289,13 @@ export default function AssignmentDetailsPage() {
                                         value={qSearchQuery}
                                         onChange={(e) => setQSearchQuery(e.target.value)}
                                         placeholder="Search questions by text, ID, or topic..."
-                                        className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm outline-none focus:border-blue-500"
+                                        className="w-full bg-[#151029] border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm outline-none focus:border-violet-500"
                                     />
                                 </div>
                                 <select
                                     value={qTopicFilter}
                                     onChange={(e) => setQTopicFilter(e.target.value)}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
                                 >
                                     <option value="">All Topics</option>
                                     {bankTopics.map(t => <option key={t} value={t}>{t}</option>)}
@@ -1303,7 +1303,7 @@ export default function AssignmentDetailsPage() {
                                 <select
                                     value={qTypeFilter}
                                     onChange={(e) => setQTypeFilter(e.target.value)}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[120px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[120px]"
                                 >
                                     <option value="">All Types</option>
                                     {bankTypes.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
@@ -1316,7 +1316,7 @@ export default function AssignmentDetailsPage() {
                                         filteredBankQuestions.forEach(q => s.add(q.id || q._id));
                                         setQEditSelectedIds(s);
                                     }}
-                                    className="px-4 py-1.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-sm border border-blue-500/30"
+                                    className="px-4 py-1.5 bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 rounded-lg text-sm border border-violet-500/30"
                                 >
                                     Select All ({filteredBankQuestions.length})
                                 </button>
@@ -1349,12 +1349,12 @@ export default function AssignmentDetailsPage() {
                                             key={qId}
                                             onClick={() => toggleQEditSelection(qId)}
                                             className={`p-4 rounded-xl border cursor-pointer transition-all ${isSelected
-                                                ? 'bg-blue-500/10 border-blue-500/50'
+                                                ? 'bg-violet-500/10 border-violet-500/50'
                                                 : 'bg-black/20 border-white/5 hover:border-white/20'
                                             }`}
                                         >
                                             <div className="flex gap-4">
-                                                <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-500'}`}>
+                                                <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500 border-violet-500' : 'border-gray-500'}`}>
                                                     {isSelected && (
                                                         <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
                                                     )}
@@ -1402,17 +1402,17 @@ export default function AssignmentDetailsPage() {
 
             {/* Manage Deployed Questions Modal */}
             {isEditQuestionsExpanded && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4">
+                    <div className="relative bg-[#151029] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl sd-gborder sd-gborder-soft sd-card flex flex-col shadow-2xl">
                         <div className="p-4 sm:p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-black/20">
                             <div>
-                                <h2 className="text-xl font-bold flex items-center gap-2"><Pen className="w-5 h-5 text-blue-400" /> Deployed Questions</h2>
+                                <h2 className="text-xl font-bold flex items-center gap-2"><Pen className="w-5 h-5 text-violet-400" /> Deployed Questions</h2>
                                 <p className="text-xs text-gray-400 mt-1">Delete questions from this assignment or add new ones</p>
                             </div>
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <button
                                     onClick={openQEditModal}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                                    className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
                                 >
                                     <Plus className="w-4 h-4" /> Add More Questions
                                 </button>
@@ -1438,7 +1438,7 @@ export default function AssignmentDetailsPage() {
                                             <span className="text-gray-500 font-mono text-sm sm:text-base font-bold flex-shrink-0 pt-0.5">{i + 1}.</span>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex flex-wrap gap-2 mb-3">
-                                                    <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.topic}</span>
+                                                    <span className="text-[10px] bg-violet-900/40 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.topic}</span>
                                                     {q.subtopic && <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.subtopic}</span>}
                                                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${q.type === 'broad' ? 'border-pink-500/30 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500/30 text-yellow-400' : 'border-cyan-500/30 text-cyan-400'}`}>{q.type}</span>
                                                     {q.marks && <span className="text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">{q.marks}M</span>}
@@ -1481,8 +1481,8 @@ export default function AssignmentDetailsPage() {
 
             {/* View Questions Modal */}
             {isViewQModalOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[45] flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 z-[45] flex items-center justify-center p-2 sm:p-4">
+                    <div className="relative bg-[#151029] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl sd-gborder sd-gborder-soft sd-card flex flex-col shadow-2xl">
                         <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
                             <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-5 h-5 text-purple-400" /> Assignment View</h2>
                             <button onClick={() => setIsViewQModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors">
@@ -1499,7 +1499,7 @@ export default function AssignmentDetailsPage() {
                                             <span className="text-gray-500 font-mono text-sm sm:text-base font-bold flex-shrink-0 pt-0.5">{i + 1}.</span>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex flex-wrap gap-2 mb-3">
-                                                    <span className="text-[10px] bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.topic}</span>
+                                                    <span className="text-[10px] bg-violet-900/40 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.topic}</span>
                                                     {q.subtopic && <span className="text-[10px] bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded font-bold uppercase">{q.subtopic}</span>}
                                                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${q.type === 'broad' ? 'border-pink-500/30 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500/30 text-yellow-400' : 'border-cyan-500/30 text-cyan-400'}`}>{q.type}</span>
                                                     {q.marks && <span className="text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">{q.marks}M</span>}

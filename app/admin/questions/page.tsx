@@ -59,36 +59,36 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
     return (
         <div className="relative" ref={containerRef}>
             <div
-                className="w-full bg-gray-900 border border-gray-600 text-gray-300 rounded p-2 text-xs min-h-[38px] flex items-center justify-between cursor-pointer"
+                className="w-full bg-[#140d27] border border-[#433666] text-gray-300 rounded p-2 text-xs min-h-[38px] flex items-center justify-between cursor-pointer"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex flex-wrap gap-1">
                     {selected.length === 0 ? <span className="text-gray-500">{placeholder}</span> :
                         selected.length > 2 ? <span className="text-white">{selected.length} selected</span> :
                             selected.map((s: string) => (
-                                <span key={s} className="bg-blue-900 text-blue-200 px-1.5 py-0.5 rounded text-[10px]">{s}</span>
+                                <span key={s} className="bg-violet-900 text-violet-200 px-1.5 py-0.5 rounded text-[10px]">{s}</span>
                             ))}
                 </div>
                 <ChevronDown className="h-3 w-3 text-gray-400" />
             </div>
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-lg max-h-96 overflow-hidden flex flex-col">
+                <div className="absolute z-50 w-full mt-1 bg-[#1d1535] border border-[#433666] rounded shadow-lg max-h-96 overflow-hidden flex flex-col">
                     {/* Search Input */}
-                    <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+                    <div className="p-2 border-b border-[#352a55] sticky top-0 bg-[#1d1535] z-10">
                         <input
                             type="text"
                             placeholder="Type to search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-gray-900 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-blue-500"
+                            className="w-full bg-[#140d27] border border-[#433666] text-gray-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-violet-500"
                             onClick={(e) => e.stopPropagation()}
                         />
                     </div>
 
                     {/* Selection Toolbar */}
-                    <div className="flex border-b border-gray-700 sticky top-[42px] bg-gray-800 z-10">
+                    <div className="flex border-b border-[#352a55] sticky top-[42px] bg-[#1d1535] z-10">
                         <div
-                            className="flex-1 px-3 py-2 hover:bg-blue-900/30 cursor-pointer flex items-center justify-center gap-1.5 text-xs text-blue-400 border-r border-gray-700"
+                            className="flex-1 px-3 py-2 hover:bg-violet-900/30 cursor-pointer flex items-center justify-center gap-1.5 text-xs text-violet-400 border-r border-[#352a55]"
                             onClick={() => {
                                 const allReal = options.filter((o: string) => o !== "No Topic" && o !== "Untagged");
                                 onChange(allReal);
@@ -114,10 +114,10 @@ const MultiSelect = ({ options, selected, onChange, placeholder }: any) => {
                             filteredOptions.map((opt: string) => (
                                 <div
                                     key={opt}
-                                    className="px-3 py-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-xs text-gray-300"
+                                    className="px-3 py-2 hover:bg-[#2a2045] cursor-pointer flex items-center gap-2 text-xs text-gray-300"
                                     onClick={() => toggleOption(opt)}
                                 >
-                                    <div className={`w-3 h-3 rounded border border-gray-500 flex items-center justify-center ${selected.includes(opt) ? 'bg-blue-600 border-blue-600' : ''}`}>
+                                    <div className={`w-3 h-3 rounded border border-gray-500 flex items-center justify-center ${selected.includes(opt) ? 'bg-violet-600 border-violet-600' : ''}`}>
                                         {selected.includes(opt) && <Check className="h-2 w-2 text-white" />}
                                     </div>
                                     {opt}
@@ -1534,17 +1534,17 @@ export default function QuestionBank() {
             {!isEditorOpen && (
                 <div className="space-y-6 h-full flex flex-col">
                     {/* Header */}
-                    <div className="flex flex-col gap-4 border-b border-gray-800 pb-4 md:pb-6">
+                    <div className="flex flex-col gap-4 border-b border-[#2a2045] pb-4 md:pb-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <button onClick={() => window.history.back()} className="p-2 hover:bg-slate-800 rounded-lg transition-colors bg-slate-800/50 md:bg-transparent">
+                                <button onClick={() => window.history.back()} className="p-2 hover:bg-[#1d1535] rounded-lg transition-colors bg-[#1d1535]/50 md:bg-transparent">
                                     <ArrowLeft className="h-5 w-5 text-slate-400" />
                                 </button>
-                                <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20 hidden md:block">
+                                <div className="p-2 bg-gradient-to-br from-fuchsia-500 to-purple-600 rounded-xl shadow-lg shadow-fuchsia-500/20 hidden md:block">
                                     <FileText className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                                    <h1 className="text-xl md:text-2xl font-black sd-title">
                                         Question Bank
                                     </h1>
                                     <p className="text-xs text-slate-400 font-medium">{questions.length} questions • {selectedQuestionIds.size} selected</p>
@@ -1558,7 +1558,7 @@ export default function QuestionBank() {
                                 <span className="hidden sm:inline">Import JSON</span>
                                 <span className="sm:hidden">Import</span>
                             </button>
-                            <button onClick={() => handleModeSwitch('latex')} className="col-span-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/30 px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                            <button onClick={() => handleModeSwitch('latex')} className="col-span-1 bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 border border-violet-600/30 px-3 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all">
                                 <Plus className="h-3 w-3 md:h-4 md:w-4" />
                                 <span className="hidden sm:inline">Add New</span>
                                 <span className="sm:hidden">Add</span>
@@ -1620,7 +1620,7 @@ export default function QuestionBank() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Filter loaded questions..."
-                                    className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-indigo-500 h-[38px]"
+                                    className="w-full bg-[#140d27] border border-[#433666] rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-fuchsia-500 h-[38px]"
                                 />
                             </div>
                         </div>
@@ -1636,7 +1636,7 @@ export default function QuestionBank() {
                                 onChange={(e) => setGlobalSearchQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleGlobalSearch()}
                                 placeholder="Global search across ALL topics..."
-                                className="w-full bg-gray-900 border border-amber-600/30 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-amber-500"
+                                className="w-full bg-[#140d27] border border-amber-600/30 rounded px-3 py-2 pl-9 text-sm text-white focus:outline-none focus:border-amber-500"
                             />
                         </div>
                         <button
@@ -1645,7 +1645,7 @@ export default function QuestionBank() {
                             className="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/30 rounded text-sm font-bold flex items-center gap-2 transition-all disabled:opacity-50"
                         >
                             {isGlobalSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                            Global Search
+                            <span className="hidden sm:inline">Global Search</span><span className="sm:hidden">Go</span>
                         </button>
                     </div>
                     {globalSearchActive && (
@@ -1657,24 +1657,24 @@ export default function QuestionBank() {
 
                     {/* Bulk Actions */}
                     {/* List Toolbar (Select All, Stats, Bulk Actions) */}
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-gray-900/50 p-3 rounded-lg border border-gray-800 mb-2">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-[#140d27]/50 p-3 rounded-lg border border-[#2a2045] mb-2">
                         <div className="flex items-center gap-4 w-full md:w-auto">
                             <label className="flex items-center gap-2 cursor-pointer hover:text-white text-gray-400 transition-colors select-none">
                                 <input
                                     type="checkbox"
                                     checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
                                     onChange={toggleSelectAll}
-                                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500/50"
+                                    className="w-4 h-4 rounded border-[#433666] bg-[#1d1535] text-violet-600 focus:ring-violet-500/50"
                                 />
                                 <span className="text-sm font-medium">Select All</span>
                             </label>
 
-                            <div className="h-4 w-px bg-gray-700 hidden md:block"></div>
+                            <div className="h-4 w-px bg-[#2a2045] hidden md:block"></div>
 
                             <div className="flex items-center gap-3 text-sm">
                                 <span className="text-gray-500"><b className="text-gray-300">{filteredQuestions.length}</b> questions</span>
                                 {selectedQuestionIds.size > 0 && (
-                                    <span className="text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded text-xs font-bold border border-blue-500/20">
+                                    <span className="text-violet-400 bg-violet-900/20 px-2 py-0.5 rounded text-xs font-bold border border-violet-500/20">
                                         {selectedQuestionIds.size} selected
                                     </span>
                                 )}
@@ -1685,18 +1685,18 @@ export default function QuestionBank() {
                         <div className={`flex items-center gap-2 transition-all duration-300 flex-wrap ${selectedQuestionIds.size > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
                             {selectedQuestionIds.size > 0 && (
                                 <>
-                                    <button onClick={downloadJson} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-blue-400 border border-gray-700 rounded text-xs font-medium transition-colors">
+                                    <button onClick={downloadJson} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-[#2a2045] text-violet-400 border border-[#352a55] rounded text-xs font-medium transition-colors">
                                         <Download className="h-3.5 w-3.5" /> JSON
                                     </button>
-                                    <button onClick={downloadPdf} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-purple-400 border border-gray-700 rounded text-xs font-medium transition-colors">
+                                    <button onClick={downloadPdf} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-[#2a2045] text-purple-400 border border-[#352a55] rounded text-xs font-medium transition-colors">
                                         <Printer className="h-3.5 w-3.5" /> Print
                                     </button>
-                                    <button onClick={deleteSelected} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-red-900/30 text-red-400 border border-gray-700 hover:border-red-500/30 rounded text-xs font-medium transition-colors">
+                                    <button onClick={deleteSelected} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-red-900/30 text-red-400 border border-[#352a55] hover:border-red-500/30 rounded text-xs font-medium transition-colors">
                                         <Trash2 className="h-3.5 w-3.5" /> Delete
                                     </button>
                                     <button
                                         onClick={() => { setBatchTagTarget(''); setIsBatchTagModalOpen(true); }}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-amber-900/30 text-amber-400 border border-gray-700 hover:border-amber-500/30 rounded text-xs font-medium transition-colors"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-amber-900/30 text-amber-400 border border-[#352a55] hover:border-amber-500/30 rounded text-xs font-medium transition-colors"
                                     >
                                         <GraduationCap className="h-3.5 w-3.5" /> Tag Batch
                                     </button>
@@ -1707,7 +1707,7 @@ export default function QuestionBank() {
                                             setRenameNewValue('');
                                             setIsRenameModalOpen(true);
                                         }}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-cyan-900/20 text-cyan-400 border border-gray-700 hover:border-cyan-500/30 rounded text-xs font-medium transition-colors"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-cyan-900/20 text-cyan-400 border border-[#352a55] hover:border-cyan-500/30 rounded text-xs font-medium transition-colors"
                                     >
                                         <Pencil className="h-3.5 w-3.5" /> Rename
                                     </button>
@@ -1717,17 +1717,17 @@ export default function QuestionBank() {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => { setIsMergeModalOpen(true); setMergeQuestions([]); setMergeIdsInput(''); setMergeFetchError(null); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-blue-900/20 text-blue-400 border border-gray-700 hover:border-blue-500/30 rounded text-xs font-medium transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-violet-900/20 text-violet-400 border border-[#352a55] hover:border-violet-500/30 rounded text-xs font-medium transition-colors"
                             >
                                 <RefreshCw className="h-3.5 w-3.5" /> Merge
                             </button>
                             <button
                                 onClick={openAnalytics}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-purple-900/20 text-purple-400 border border-gray-700 hover:border-purple-500/30 rounded text-xs font-medium transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-purple-900/20 text-purple-400 border border-[#352a55] hover:border-purple-500/30 rounded text-xs font-medium transition-colors"
                             >
                                 <BarChart2 className="h-3.5 w-3.5" /> Analytics
                             </button>
-                            <button onClick={openTrash} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 border border-gray-700 rounded text-xs font-medium transition-colors">
+                            <button onClick={openTrash} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1d1535] hover:bg-[#2a2045] text-gray-400 border border-[#352a55] rounded text-xs font-medium transition-colors">
                                 <Trash2 className="h-3.5 w-3.5" /> Trash
                             </button>
                         </div>
@@ -1764,7 +1764,7 @@ export default function QuestionBank() {
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 md:space-y-4 pr-1 md:pr-2">
                         {loading ? (
                             <div className="flex items-center justify-center h-40">
-                                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                                <Loader2 className="h-8 w-8 animate-spin text-fuchsia-500" />
                             </div>
                         ) : filteredQuestions.length === 0 ? (
                             <div className="text-center py-20 text-gray-500">
@@ -1773,7 +1773,7 @@ export default function QuestionBank() {
                             </div>
                         ) : (
                             filteredQuestions.map((q, i) => (
-                                <div key={q.id} id={`q-${q.id}`} className="group bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-xl p-3 md:p-4 transition-all hover:shadow-lg hover:shadow-indigo-500/5 relative">
+                                <div key={q.id} id={`q-${q.id}`} className="group bg-[#140d27]/50 border border-[#2a2045] hover:border-fuchsia-500/50 rounded-xl p-3 md:p-4 transition-all hover:shadow-lg hover:shadow-fuchsia-500/5 relative">
                                     <div className="flex items-start gap-3 md:gap-4">
                                         <div className="pt-1 select-none flex flex-col items-center gap-2">
                                             <span className="text-xs font-mono text-gray-500 font-bold">{i + 1}</span>
@@ -1786,15 +1786,15 @@ export default function QuestionBank() {
                                                     else newSet.add(q.id);
                                                     setSelectedQuestionIds(newSet);
                                                 }}
-                                                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500/20 cursor-pointer"
+                                                className="w-5 h-5 rounded border-[#433666] bg-[#1d1535] text-fuchsia-500 focus:ring-fuchsia-500/20 cursor-pointer"
                                             />
                                         </div>
                                         <div className="flex-1 space-y-2 md:space-y-3 overflow-hidden">
                                             <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 border border-gray-700">
+                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-[#1d1535] text-gray-400 border border-[#352a55]">
                                                     {q.type}
                                                 </span>
-                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-indigo-900/30 text-indigo-300 border border-indigo-500/30">
+                                                <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-fuchsia-900/30 text-fuchsia-300 border border-fuchsia-500/30">
                                                     {q.topic}
                                                 </span>
                                                 <span className="px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-purple-900/30 text-purple-300 border border-purple-500/30">
@@ -1813,7 +1813,7 @@ export default function QuestionBank() {
                                             <div className="text-gray-200 text-xs md:text-sm leading-relaxed prose prose-invert max-w-none overflow-x-auto">
                                                 {q.image && (
                                                     <div className="mb-2">
-                                                        <img src={q.image} alt="Question" className="max-h-32 rounded border border-gray-700 hover:scale-105 transition-transform origin-left" />
+                                                        <img src={q.image} alt="Question" className="max-h-32 rounded border border-[#352a55] hover:scale-105 transition-transform origin-left" />
                                                     </div>
                                                 )}
                                                 <Latex>{q.text}</Latex>
@@ -1826,13 +1826,13 @@ export default function QuestionBank() {
                                                             const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
                                                             const optImage: string = isObj ? (opt.image ?? '') : '';
                                                             return (
-                                                                <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex flex-col gap-1 ${q.answer && (optText.includes(q.answer) || q.answer.includes(optText)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                <div key={i} className={`text-xs px-3 py-1.5 rounded border border-[#352a55] bg-[#140d27]/50 flex flex-col gap-1 ${q.answer && (optText.includes(q.answer) || q.answer.includes(optText)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
                                                                     <div className="flex items-start gap-2">
                                                                         <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
                                                                         {optText && <span className="text-gray-300"><Latex>{optText}</Latex></span>}
                                                                     </div>
                                                                     {optImage && (
-                                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-16 object-contain rounded border border-gray-700 mt-1" />
+                                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-16 object-contain rounded border border-[#352a55] mt-1" />
                                                                     )}
                                                                 </div>
                                                             );
@@ -1843,7 +1843,7 @@ export default function QuestionBank() {
 
                                             {/* Action Buttons (Always show edit on mobile, hover on desktop) */}
                                             <div className="flex items-center gap-2 pt-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleEditQuestion(q)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded flex items-center gap-1 transition-colors">
+                                                <button onClick={() => handleEditQuestion(q)} className="text-xs bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-3 py-1.5 rounded flex items-center gap-1 transition-colors">
                                                     <Edit className="h-3 w-3" /> Edit
                                                 </button>
                                             </div>
@@ -1861,26 +1861,26 @@ export default function QuestionBank() {
 
             {/* Editor Panel */}
             {isEditorOpen && (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-xl overflow-hidden flex flex-col transition-all duration-300">
-                    <div className="bg-gray-900 p-4 border-b border-gray-700 flex justify-between items-center">
+                <div className="bg-[#1d1535] rounded-lg border border-[#352a55] shadow-xl overflow-hidden flex flex-col transition-all duration-300">
+                    <div className="bg-[#140d27] p-4 border-b border-[#352a55] flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <h3 className="text-lg font-bold text-white">
                                 {editorMode === 'latex' ? 'LATEX Editor Mode' :
                                     editorMode === 'json' ? 'JSON Editor Mode' :
                                         editorMode === 'image' ? 'Image Editor Mode' : 'AI Editor'}
                             </h3>
-                            <span className="px-2 py-0.5 rounded text-xs bg-gray-700 text-gray-300 uppercase tracking-wider">{editorMode} Mode</span>
-                            <span className="px-2 py-0.5 rounded text-xs bg-blue-900/50 text-blue-300 border border-blue-500/30">
+                            <span className="px-2 py-0.5 rounded text-xs bg-[#2a2045] text-gray-300 uppercase tracking-wider">{editorMode} Mode</span>
+                            <span className="px-2 py-0.5 rounded text-xs bg-violet-900/50 text-violet-300 border border-violet-500/30">
                                 ({previewContent.length} Questions)
                             </span>
                         </div>
                         <div className="flex gap-2">
                             {editorMode === 'json' && (
                                 <>
-                                    <button onClick={copyPrompt} className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded text-sm font-medium flex items-center gap-2 border border-gray-600">
+                                    <button onClick={copyPrompt} className="bg-[#2a2045] hover:bg-[#352a55] text-gray-200 px-3 py-1 rounded text-sm font-medium flex items-center gap-2 border border-[#433666]">
                                         <Copy className="h-4 w-4" /> Copy Prompt
                                     </button>
-                                    <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium cursor-pointer flex items-center gap-2">
+                                    <label className="bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white px-3 py-1 rounded text-sm font-medium cursor-pointer flex items-center gap-2">
                                         <input
                                             type="file"
                                             accept=".json"
@@ -1911,7 +1911,7 @@ export default function QuestionBank() {
                     {/* AI Features Section - Full Width Above Split Screen */}
                     {
                         editorMode === 'pdf' && (
-                            <div className="bg-gray-900 border-b border-gray-700 p-6 space-y-6">
+                            <div className="bg-[#140d27] border-b border-[#352a55] p-6 space-y-6">
                                 {/* Token Usage Indicator */}
                                 {userEmail && !quotaExhausted && (
                                     <TokenUsageIndicator
@@ -1975,7 +1975,7 @@ export default function QuestionBank() {
                                         <span>Manual: Use External AI Tool</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <a href="https://gemini.google.com/app" target="_blank" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
+                                        <a href="https://gemini.google.com/app" target="_blank" className="flex-1 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
                                             Gemini <ExternalLink className="h-3 w-3" />
                                         </a>
                                         <a href="https://chatgpt.com/" target="_blank" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1">
@@ -2004,7 +2004,7 @@ export default function QuestionBank() {
 
 
                     <textarea
-                        className="w-full h-48 bg-gray-950 border border-gray-700 rounded-lg p-3 text-xs md:text-sm font-mono text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-y"
+                        className="w-full h-48 bg-[#0b0718] border border-[#352a55] rounded-lg p-3 text-xs md:text-sm font-mono text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-y"
                         placeholder={`[\n  {\n    "text": "Question text...",\n    "type": "broad",\n    "topic": "Math",\n    "subtopic": "Algebra",\n    "examNames": ["JEE Main"],\n    "marks": 4\n  }\n]`}
                         value={jsonContent}
                         onChange={handleJsonInput}
@@ -2017,12 +2017,12 @@ export default function QuestionBank() {
             {/* Row-Based Editor List */}
             {
                 isEditorOpen && (
-                    <div className="flex flex-col bg-gray-900 border-t border-gray-700">
+                    <div className="flex flex-col bg-[#140d27] border-t border-[#352a55]">
                         {/* Total Generated Questions Count */}
                         {previewContent.length > 0 && (
-                            <div className="bg-gray-800 border-b border-gray-700 px-6 py-3 flex justify-center">
-                                <div className="bg-blue-900/30 border border-blue-500/50 px-4 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
-                                    <span className="text-blue-200 text-xs uppercase font-bold tracking-wider">Total Generated Questions:</span>
+                            <div className="bg-[#1d1535] border-b border-[#352a55] px-6 py-3 flex justify-center">
+                                <div className="bg-violet-900/30 border border-violet-500/50 px-4 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+                                    <span className="text-violet-200 text-xs uppercase font-bold tracking-wider">Total Generated Questions:</span>
                                     <span className="text-white font-bold text-lg">{previewContent.length}</span>
                                 </div>
                             </div>
@@ -2038,7 +2038,7 @@ export default function QuestionBank() {
                                 {!['json', 'latex', 'image'].includes(editorMode) && (
                                     <button
                                         onClick={handleAddNewQuestion}
-                                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold flex items-center gap-2"
+                                        className="bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white px-4 py-2 rounded font-bold flex items-center gap-2"
                                     >
                                         <Plus className="h-4 w-4" /> Add First Question
                                     </button>
@@ -2060,10 +2060,10 @@ export default function QuestionBank() {
                                 ))}
 
                                 {!['json', 'latex'].includes(editorMode) && (
-                                    <div className="p-8 flex flex-col gap-4 justify-center bg-gray-900 border-t border-gray-700">
+                                    <div className="p-8 flex flex-col gap-4 justify-center bg-[#140d27] border-t border-[#352a55]">
                                         <button
                                             onClick={handleAddNewQuestion}
-                                            className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors w-full max-w-md mx-auto justify-center"
+                                            className="bg-[#1d1535] hover:bg-[#2a2045] text-white border border-[#433666] px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors w-full max-w-md mx-auto justify-center"
                                         >
                                             <Plus className="h-5 w-5" /> Add New Question
                                         </button>
@@ -2079,15 +2079,15 @@ export default function QuestionBank() {
 
             {/* Viewer Panel - Only visible when Editor is Open */}
             {isEditorOpen && (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex-1 flex flex-col shadow-lg">
-                    <div className="sticky top-0 z-20 bg-gray-800 pb-4 pt-2 -mt-2 flex flex-col items-stretch gap-4 border-b border-gray-700 mb-4">
+                <div className="bg-[#1d1535] rounded-lg border border-[#352a55] p-4 flex-1 flex flex-col shadow-lg">
+                    <div className="sticky top-0 z-20 bg-[#1d1535] pb-4 pt-2 -mt-2 flex flex-col items-stretch gap-4 border-b border-[#352a55] mb-4">
                         <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end w-full">
                             <div className="flex items-center h-[38px] px-2">
                                 <input
                                     type="checkbox"
                                     checked={filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length}
                                     onChange={toggleSelectAll}
-                                    className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
+                                    className="w-5 h-5 rounded border-[#433666] text-violet-600 focus:ring-violet-500 bg-[#1d1535] cursor-pointer"
                                     title="Select All"
                                 />
                             </div>
@@ -2128,7 +2128,7 @@ export default function QuestionBank() {
                                         placeholder="Search questions..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                                        className="w-full bg-[#1d1535] border border-[#352a55] rounded h-[38px] pl-9 pr-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                                     />
                                 </div>
                             </div>
@@ -2136,8 +2136,8 @@ export default function QuestionBank() {
                             {/* Filtered Count Box */}
                             <div className="flex flex-col justify-end">
                                 <label className="text-xs text-gray-400 mb-1 block opacity-0">Count</label>
-                                <div className="h-[38px] px-3 bg-blue-900/30 border border-blue-500/30 rounded flex items-center justify-center min-w-[60px]">
-                                    <span className="text-blue-300 font-bold text-sm">{filteredQuestions.length}</span>
+                                <div className="h-[38px] px-3 bg-violet-900/30 border border-violet-500/30 rounded flex items-center justify-center min-w-[60px]">
+                                    <span className="text-violet-300 font-bold text-sm">{filteredQuestions.length}</span>
                                 </div>
                             </div>
                         </div>
@@ -2150,7 +2150,7 @@ export default function QuestionBank() {
                                     <button onClick={downloadPdf} className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
                                         <Printer className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Print Selected</span>
                                     </button>
-                                    <button onClick={downloadJson} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
+                                    <button onClick={downloadJson} className="bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
                                         <Download className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Export JSON</span>
                                     </button>
                                     <button onClick={deleteSelected} disabled={selectedQuestionIds.size === 0} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full shadow-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-12 h-12 md:w-auto md:h-auto whitespace-nowrap transition-all hover:scale-105">
@@ -2181,7 +2181,7 @@ export default function QuestionBank() {
                             </div>
                         ) : (
                             filteredQuestions.map((q, index) => (
-                                <div id={`q-${q.id}`} key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-gray-900 border-gray-700'} hover:border-gray-500 transition-colors group`}>
+                                <div id={`q-${q.id}`} key={q.id} className={`p-4 rounded border ${selectedQuestionIds.has(q.id) ? 'bg-violet-900/20 border-violet-500/50' : 'bg-[#140d27] border-[#352a55]'} hover:border-gray-500 transition-colors group`}>
                                     <div className="flex gap-3">
                                         <div className="pt-1 flex flex-col items-center gap-2">
                                             <span className="text-xs font-mono text-gray-500 font-bold">{index + 1}</span>
@@ -2189,19 +2189,19 @@ export default function QuestionBank() {
                                                 type="checkbox"
                                                 checked={selectedQuestionIds.has(q.id)}
                                                 onChange={() => toggleSelection(q.id)}
-                                                className="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-800 cursor-pointer"
+                                                className="w-4 h-4 rounded border-[#433666] text-violet-600 focus:ring-violet-500 bg-[#1d1535] cursor-pointer"
                                             />
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex flex-wrap gap-1.5 mb-1">
-                                                    <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
-                                                    <span className="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.subtopic}</span>
+                                                    <span className="bg-[#2a2045] text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.topic}</span>
+                                                    <span className="bg-[#2a2045] text-gray-300 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">{q.subtopic}</span>
                                                     <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type?.toLowerCase() === 'broad' ? 'border-pink-500 text-pink-400' : q.type?.toLowerCase() === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
                                                         {q.type}
                                                     </span>
                                                     {q.examNames && q.examNames.length > 0 && q.examNames.map((exam: string, idx: number) => (
-                                                        <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                        <span key={idx} className="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
                                                             {exam}
                                                         </span>
                                                     ))}
@@ -2216,7 +2216,7 @@ export default function QuestionBank() {
                                                         e.stopPropagation();
                                                         handleEditQuestion(q);
                                                     }}
-                                                    className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                    className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white text-xs font-medium rounded transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                                 >
                                                     <Edit className="h-3 w-3" />
                                                     Edit
@@ -2225,7 +2225,7 @@ export default function QuestionBank() {
                                             <div className="text-gray-300 text-sm leading-relaxed">
                                                 {q.image && (
                                                     <div className="mb-2">
-                                                        <img src={q.image} alt="Question" className="max-h-32 rounded border border-gray-700 hover:scale-105 transition-transform origin-left" />
+                                                        <img src={q.image} alt="Question" className="max-h-32 rounded border border-[#352a55] hover:scale-105 transition-transform origin-left" />
                                                     </div>
                                                 )}
                                                 <Latex>{q.text}</Latex>
@@ -2238,13 +2238,13 @@ export default function QuestionBank() {
                                                             const optText: string = isObj ? (opt.text ?? '') : (opt ?? '');
                                                             const optImage: string = isObj ? (opt.image ?? '') : '';
                                                             return (
-                                                                <div key={i} className={`text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900/50 flex flex-col gap-1 ${q.answer && (optText.includes(q.answer) || q.answer.includes(optText)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
+                                                                <div key={i} className={`text-xs px-3 py-1.5 rounded border border-[#352a55] bg-[#140d27]/50 flex flex-col gap-1 ${q.answer && (optText.includes(q.answer) || q.answer.includes(optText)) ? 'border-green-500/30 bg-green-900/10' : ''}`}>
                                                                     <div className="flex items-start gap-2">
                                                                         <span className="font-bold text-gray-500 uppercase">{String.fromCharCode(65 + i)}.</span>
                                                                         {optText && <span className="text-gray-300"><Latex>{optText}</Latex></span>}
                                                                     </div>
                                                                     {optImage && (
-                                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-16 object-contain rounded border border-gray-700 mt-1" />
+                                                                        <img src={optImage} alt={`Option ${String.fromCharCode(65 + i)}`} className="max-h-16 object-contain rounded border border-[#352a55] mt-1" />
                                                                     )}
                                                                 </div>
                                                             );
@@ -2263,8 +2263,8 @@ export default function QuestionBank() {
 
             {/* ⚠️ ID Clash Modal */}
             {isIdClashModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 p-6 rounded-xl max-w-2xl w-full border border-red-500/40 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#1d1535] p-6 rounded-xl max-w-2xl w-full border border-red-500/40 shadow-2xl max-h-[90svh] overflow-y-auto">
                         <h3 className="text-xl font-bold text-red-400 mb-1 flex items-center gap-2">
                             <AlertCircle className="h-5 w-5" /> ID Clash Detected!
                         </h3>
@@ -2283,7 +2283,7 @@ export default function QuestionBank() {
                                             <div className="text-gray-500 mt-1">{clash.incoming.topic} › {clash.incoming.subtopic}</div>
                                         </div>
                                         <div>
-                                            <div className="text-blue-400 font-semibold mb-1">📦 Existing in DB</div>
+                                            <div className="text-violet-400 font-semibold mb-1">📦 Existing in DB</div>
                                             <div className="text-gray-300 line-clamp-3">{clash.existing.text}</div>
                                             <div className="text-gray-500 mt-1">{clash.existing.topic} › {clash.existing.subtopic}</div>
                                         </div>
@@ -2295,7 +2295,7 @@ export default function QuestionBank() {
                         <div className="flex flex-col sm:flex-row gap-3 justify-end">
                             <button
                                 onClick={() => { setIsIdClashModalOpen(false); setIdClashQuestions([]); setPendingSaveQuestions([]); }}
-                                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium"
+                                className="px-4 py-2 rounded-lg bg-[#2a2045] hover:bg-[#352a55] text-gray-300 text-sm font-medium"
                             >
                                 Cancel
                             </button>
@@ -2319,8 +2319,8 @@ export default function QuestionBank() {
             {/* Duplicate Modal */}
             {
                 isDuplicateModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <div className="bg-gray-800 p-6 rounded-lg max-w-2xl w-full border border-gray-700 shadow-2xl">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                        <div className="bg-[#1d1535] p-6 rounded-lg max-w-2xl w-full border border-[#352a55] shadow-2xl max-h-[90svh] overflow-y-auto">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                 <RefreshCw className="h-5 w-5 text-yellow-500" /> Duplicates Detected
                             </h3>
@@ -2328,7 +2328,7 @@ export default function QuestionBank() {
 
                             <div className="max-h-60 overflow-y-auto mb-6 space-y-2">
                                 {duplicateQuestions.map((d, i) => (
-                                    <div key={i} className="p-3 bg-gray-900 rounded border border-gray-700 text-xs">
+                                    <div key={i} className="p-3 bg-[#140d27] rounded border border-[#352a55] text-xs">
                                         <div className="text-red-400 font-bold mb-1">Duplicate #{i + 1}</div>
                                         <div className="text-gray-300 mb-1">{d.new.text.substring(0, 100)}...</div>
                                     </div>
@@ -2336,7 +2336,7 @@ export default function QuestionBank() {
                             </div>
 
                             <div className="flex gap-4 justify-end">
-                                <button onClick={() => resolveDuplicates('keep')} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium">
+                                <button onClick={() => resolveDuplicates('keep')} className="bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white px-4 py-2 rounded font-medium">
                                     Keep Both (Create New)
                                 </button>
                                 <button onClick={() => resolveDuplicates('overwrite')} className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded font-medium">
@@ -2350,13 +2350,13 @@ export default function QuestionBank() {
 
             {/* ── Merge Modal ── */}
             {isMergeModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 rounded-xl border border-blue-500/30 shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                        <div className="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#1d1535] rounded-xl border border-violet-500/30 shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+                        <div className="p-5 border-b border-[#352a55] flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <RefreshCw className="h-5 w-5 text-blue-400" /> Merge Questions by ID
+                                <RefreshCw className="h-5 w-5 text-violet-400" /> Merge Questions by ID
                             </h2>
-                            <button onClick={() => { setIsMergeModalOpen(false); setMergeQuestions([]); setMergeIdsInput(''); }} className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                            <button onClick={() => { setIsMergeModalOpen(false); setMergeQuestions([]); setMergeIdsInput(''); }} className="p-2 hover:bg-[#2a2045] rounded-lg transition-colors">
                                 <X className="h-5 w-5 text-gray-400" />
                             </button>
                         </div>
@@ -2369,12 +2369,12 @@ export default function QuestionBank() {
                                     value={mergeIdsInput}
                                     onChange={e => setMergeIdsInput(e.target.value)}
                                     placeholder="Enter question IDs separated by commas: q_abc, q_xyz, ..."
-                                    className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
+                                    className="flex-1 bg-[#140d27] border border-[#433666] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 font-mono"
                                 />
                                 <button
                                     onClick={fetchMergeQuestions}
                                     disabled={mergeLoading || !mergeIdsInput.trim()}
-                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-bold text-sm transition-all"
+                                    className="px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-lg font-bold text-sm transition-all"
                                 >
                                     {mergeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Fetch'}
                                 </button>
@@ -2388,7 +2388,7 @@ export default function QuestionBank() {
 
                             {mergeQuestions.length >= 2 && (
                                 <>
-                                    <p className="text-xs text-gray-400 mb-3">Select the <span className="text-blue-400 font-bold">primary question</span> to keep. All ExamNames will be merged into it. Others will be moved to Trash.</p>
+                                    <p className="text-xs text-gray-400 mb-3">Select the <span className="text-violet-400 font-bold">primary question</span> to keep. All ExamNames will be merged into it. Others will be moved to Trash.</p>
                                     <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(mergeQuestions.length, 3)}, 1fr)` }}>
                                         {mergeQuestions.map(q => (
                                             <div
@@ -2396,19 +2396,19 @@ export default function QuestionBank() {
                                                 onClick={() => setMergePrimaryId(q.id)}
                                                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                                                     mergePrimaryId === q.id
-                                                        ? 'border-blue-500 bg-blue-900/20'
-                                                        : 'border-gray-700 bg-gray-900/50 hover:border-gray-500'
+                                                        ? 'border-violet-500 bg-violet-900/20'
+                                                        : 'border-[#352a55] bg-[#140d27]/50 hover:border-gray-500'
                                                 }`}
                                             >
                                                 {mergePrimaryId === q.id && (
-                                                    <div className="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-wider">★ Primary (Keep)</div>
+                                                    <div className="text-[10px] font-bold text-violet-400 mb-2 uppercase tracking-wider">★ Primary (Keep)</div>
                                                 )}
                                                 <div className="font-mono text-[10px] text-gray-500 mb-1">{q.id}</div>
                                                 <div className="text-xs font-semibold text-gray-300 mb-1">{q.topic} › {q.subtopic}</div>
                                                 <div className="text-xs text-gray-400 line-clamp-3 mb-2">{q.text?.substring(0, 120)}...</div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {(q.examNames || (q.examName ? [q.examName] : [])).map((e: string) => (
-                                                        <span key={e} className="text-[10px] bg-blue-900/30 text-blue-300 border border-blue-500/20 rounded px-1.5 py-0.5">{e}</span>
+                                                        <span key={e} className="text-[10px] bg-violet-900/30 text-violet-300 border border-violet-500/20 rounded px-1.5 py-0.5">{e}</span>
                                                     ))}
                                                 </div>
                                             </div>
@@ -2429,12 +2429,12 @@ export default function QuestionBank() {
                         </div>
 
                         {mergeQuestions.length >= 2 && (
-                            <div className="p-5 border-t border-gray-700 flex justify-end gap-3">
+                            <div className="p-5 border-t border-[#352a55] flex justify-end gap-3">
                                 <button onClick={() => { setIsMergeModalOpen(false); setMergeQuestions([]); }} className="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancel</button>
                                 <button
                                     onClick={handleMerge}
                                     disabled={mergeLoading || !mergePrimaryId}
-                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+                                    className="px-6 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2"
                                 >
                                     {mergeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                                     Confirm Merge
@@ -2447,13 +2447,13 @@ export default function QuestionBank() {
 
             {/* ── Analytics Modal ── */}
             {isAnalyticsModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 rounded-xl border border-purple-500/30 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                        <div className="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#1d1535] rounded-xl border border-purple-500/30 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                        <div className="p-5 border-b border-[#352a55] flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <BarChart2 className="h-5 w-5 text-purple-400" /> Question Bank Analytics
                             </h2>
-                            <button onClick={() => setIsAnalyticsModalOpen(false)} className="p-2 hover:bg-gray-700 rounded-lg">
+                            <button onClick={() => setIsAnalyticsModalOpen(false)} className="p-2 hover:bg-[#2a2045] rounded-lg">
                                 <X className="h-5 w-5 text-gray-400" />
                             </button>
                         </div>
@@ -2465,7 +2465,7 @@ export default function QuestionBank() {
                                 <>
                                     {/* Summary */}
                                     <div className="grid grid-cols-2 gap-3 mb-6">
-                                        <div className="bg-gray-900 rounded-xl p-4 border border-gray-700">
+                                        <div className="bg-[#140d27] rounded-xl p-4 border border-[#352a55]">
                                             <div className="text-3xl font-bold text-white">{analyticsData.total}</div>
                                             <div className="text-xs text-gray-400 mt-1">Total Questions</div>
                                         </div>
@@ -2520,9 +2520,9 @@ export default function QuestionBank() {
                             ) : <p className="text-gray-500 text-center py-8">Failed to load analytics.</p>}
                         </div>
 
-                        <div className="p-4 border-t border-gray-700 flex justify-between items-center">
+                        <div className="p-4 border-t border-[#352a55] flex justify-between items-center">
                             <button onClick={openAnalytics} className="text-xs text-purple-400 hover:text-purple-300">↻ Refresh</button>
-                            <button onClick={() => setIsAnalyticsModalOpen(false)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">Close</button>
+                            <button onClick={() => setIsAnalyticsModalOpen(false)} className="px-4 py-2 bg-[#2a2045] hover:bg-[#352a55] text-white rounded-lg text-sm">Close</button>
                         </div>
                     </div>
                 </div>
@@ -2547,8 +2547,8 @@ export default function QuestionBank() {
                 )).sort();
 
                 return (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <div className="bg-gray-800 p-6 rounded-xl max-w-md w-full border border-cyan-500/30 shadow-2xl">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                        <div className="bg-[#1d1535] p-6 rounded-xl max-w-md w-full border border-cyan-500/30 shadow-2xl">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <Pencil className="h-5 w-5 text-cyan-400" /> Bulk Rename
@@ -2571,7 +2571,7 @@ export default function QuestionBank() {
                                         className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
                                             renameField === f
                                                 ? 'bg-cyan-600/20 text-cyan-300 border-cyan-500/40'
-                                                : 'bg-gray-900 border-gray-700 text-slate-500 hover:text-slate-300'
+                                                : 'bg-[#140d27] border-[#352a55] text-slate-500 hover:text-slate-300'
                                         }`}
                                     >
                                         {f === 'topic' ? 'Topic' : f === 'subtopic' ? 'Subtopic' : f === 'examName' ? 'Exam Name' : 'Type'}
@@ -2587,12 +2587,12 @@ export default function QuestionBank() {
                                 {currentValues.length === 0 ? (
                                     <p className="text-xs text-gray-500 italic">No value found in selected questions.</p>
                                 ) : currentValues.length === 1 ? (
-                                    <div className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">{currentValues[0]}</div>
+                                    <div className="bg-[#140d27] border border-[#352a55] rounded-lg px-3 py-2 text-sm text-white">{currentValues[0]}</div>
                                 ) : (
-                                    <div className="space-y-1 max-h-32 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg p-2">
+                                    <div className="space-y-1 max-h-32 overflow-y-auto bg-[#140d27] border border-[#352a55] rounded-lg p-2">
                                         {currentValues.map(v => (
                                             <label key={v} className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-sm transition-all ${
-                                                renameOldValue === v ? 'bg-cyan-900/20 text-cyan-300' : 'text-gray-300 hover:bg-gray-800'
+                                                renameOldValue === v ? 'bg-cyan-900/20 text-cyan-300' : 'text-gray-300 hover:bg-[#1d1535]'
                                             }`}>
                                                 <input type="radio" name="oldVal" checked={renameOldValue === v} onChange={() => setRenameOldValue(v)} className="accent-cyan-500" />
                                                 {v}
@@ -2614,7 +2614,7 @@ export default function QuestionBank() {
                                     value={renameNewValue}
                                     onChange={e => setRenameNewValue(e.target.value)}
                                     placeholder={`Enter new ${renameField === 'examName' ? 'exam name' : renameField}...`}
-                                    className="w-full bg-gray-900 border border-gray-600 focus:border-cyan-500 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
+                                    className="w-full bg-[#140d27] border border-[#433666] focus:border-cyan-500 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none transition-colors"
                                 />
                             </div>
 
@@ -2674,8 +2674,8 @@ export default function QuestionBank() {
 
             {/* Batch Tag Modal */}
             {isBatchTagModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 p-6 rounded-xl max-w-md w-full border border-gray-700 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#1d1535] p-6 rounded-xl max-w-md w-full border border-[#352a55] shadow-2xl">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 <GraduationCap className="h-5 w-5 text-amber-400" /> Tag to Batch
@@ -2691,12 +2691,12 @@ export default function QuestionBank() {
                         <p className="text-[10px] text-amber-500/70 mb-4">⚠ Existing batch tag will be replaced.</p>
 
                         {/* Single-select batch list */}
-                        <div className="max-h-64 overflow-y-auto space-y-1 mb-5 bg-gray-900 rounded-lg p-2 border border-gray-700">
+                        <div className="max-h-64 overflow-y-auto space-y-1 mb-5 bg-[#140d27] rounded-lg p-2 border border-[#352a55]">
                             {PREDEFINED_BATCHES.map(batch => (
                                 <label key={batch} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm transition-all ${
                                     batchTagTarget === batch
                                         ? 'bg-amber-600/20 text-amber-300 border border-amber-500/30'
-                                        : 'hover:bg-gray-800 text-gray-300 border border-transparent'
+                                        : 'hover:bg-[#1d1535] text-gray-300 border border-transparent'
                                 }`}>
                                     <input
                                         type="radio"
@@ -2760,25 +2760,25 @@ export default function QuestionBank() {
                 </div>
             )}
             {isTrashModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
-                        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#1d1535] rounded-xl border border-[#352a55] shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+                        <div className="p-4 border-b border-[#352a55] flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Trash2 className="h-6 w-6 text-gray-400" />
                                 Trash
                             </h2>
-                            <button onClick={() => { setIsTrashModalOpen(false); setSelectedTrashIds(new Set()); setDeleteConfirmation(''); }} className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg">
+                            <button onClick={() => { setIsTrashModalOpen(false); setSelectedTrashIds(new Set()); setDeleteConfirmation(''); }} className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-[#2a2045] rounded-lg">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="p-4 flex-1 overflow-y-auto">
                             {trashLoading ? (
-                                <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-blue-500" /></div>
+                                <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-violet-500" /></div>
                             ) : trashQuestions.length === 0 ? (
                                 <div className="text-center p-8 text-gray-400">Trash is empty.</div>
                             ) : (
                                 <div className="space-y-4">
-                                    <div className="flex justify-between items-center bg-gray-900 p-2 rounded border border-gray-700">
+                                    <div className="flex justify-between items-center bg-[#140d27] p-2 rounded border border-[#352a55]">
                                         <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
                                             <input 
                                                 type="checkbox" 
@@ -2790,7 +2790,7 @@ export default function QuestionBank() {
                                                         setSelectedTrashIds(new Set());
                                                     }
                                                 }}
-                                                className="rounded bg-gray-800 border-gray-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                                className="rounded bg-[#1d1535] border-[#433666] text-violet-500 focus:ring-violet-500 focus:ring-offset-gray-900"
                                             />
                                             Select All ({selectedTrashIds.size}/{trashQuestions.length})
                                         </label>
@@ -2798,10 +2798,10 @@ export default function QuestionBank() {
                                     {/* Group by topic for better UX */}
                                     {Array.from(new Set(trashQuestions.map(q => q.topic))).sort().map((topic: any) => (
                                         <div key={topic} className="mb-4">
-                                            <h3 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-700 pb-1">{topic}</h3>
+                                            <h3 className="text-sm font-bold text-gray-400 mb-2 border-b border-[#352a55] pb-1">{topic}</h3>
                                             <div className="space-y-2">
                                                 {trashQuestions.filter(q => q.topic === topic).map(q => (
-                                                    <div key={q.id} className="flex gap-3 bg-gray-900/50 p-2 rounded border border-gray-700/50 hover:bg-gray-700/30">
+                                                    <div key={q.id} className="flex gap-3 bg-[#140d27]/50 p-2 rounded border border-[#352a55]/50 hover:bg-[#2a2045]/30">
                                                         <input 
                                                             type="checkbox" 
                                                             checked={selectedTrashIds.has(q.id)}
@@ -2811,11 +2811,11 @@ export default function QuestionBank() {
                                                                 else next.delete(q.id);
                                                                 setSelectedTrashIds(next);
                                                             }}
-                                                            className="mt-1 rounded bg-gray-800 border-gray-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                                            className="mt-1 rounded bg-[#1d1535] border-[#433666] text-violet-500 focus:ring-violet-500 focus:ring-offset-gray-900"
                                                         />
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex justify-between">
-                                                                <span className="text-xs font-semibold text-blue-400">{q.subtopic}</span>
+                                                                <span className="text-xs font-semibold text-violet-400">{q.subtopic}</span>
                                                                 <span className="text-[10px] text-gray-500">
                                                                     {new Date(q.deletedAt).toLocaleDateString()} · {daysUntilPurge(q.deletedAt)}d left
                                                                 </span>
@@ -2830,7 +2830,7 @@ export default function QuestionBank() {
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-700 bg-gray-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="p-4 border-t border-[#352a55] bg-[#140d27]/50 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <span className="text-xs text-gray-500">Deleted questions are permanently removed {QUESTION_TRASH_RETENTION_DAYS} days after deletion</span>
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <button 
@@ -2847,7 +2847,7 @@ export default function QuestionBank() {
                                             placeholder="Type DELETE"
                                             value={deleteConfirmation}
                                             onChange={e => setDeleteConfirmation(e.target.value)}
-                                            className="w-24 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-sm text-white"
+                                            className="w-24 px-2 py-1 bg-[#1d1535] border border-[#433666] rounded text-sm text-white"
                                         />
                                     )}
                                     <button 

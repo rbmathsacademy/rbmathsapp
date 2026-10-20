@@ -54,7 +54,7 @@ export default function DirectorySelect({ type, value, options, onChange, onAdde
         }
     };
 
-    const selectClasses = 'w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500';
+    const selectClasses = 'w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500';
 
     if (adding) {
         return (
@@ -69,13 +69,13 @@ export default function DirectorySelect({ type, value, options, onChange, onAdde
                         if (e.key === 'Escape') { setAdding(false); setDraft(''); }
                     }}
                     placeholder={`New ${type} name`}
-                    className="flex-1 min-w-0 px-4 py-2.5 rounded-xl bg-white/5 border border-blue-500/50 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                    className="flex-1 min-w-0 px-4 py-2.5 rounded-xl bg-white/5 border border-violet-500/50 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                 />
                 <button
                     type="button"
                     onClick={saveNew}
                     disabled={saving}
-                    className="px-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-bold"
+                    className="px-3 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 text-white text-sm font-bold"
                 >
                     {saving ? '...' : 'Add'}
                 </button>
@@ -102,12 +102,12 @@ export default function DirectorySelect({ type, value, options, onChange, onAdde
             }}
             className={selectClasses}
         >
-            <option value="" className="bg-slate-800 text-white">{placeholder}</option>
-            {hasValue && <option value={value} className="bg-slate-800 text-white">{value}</option>}
+            <option value="" className="bg-[#1d1535] text-white">{placeholder}</option>
+            {hasValue && <option value={value} className="bg-[#1d1535] text-white">{value}</option>}
             {options.map(o => (
-                <option key={o} value={o} className="bg-slate-800 text-white">{o}</option>
+                <option key={o} value={o} className="bg-[#1d1535] text-white">{o}</option>
             ))}
-            <option value={ADD_NEW} className="bg-slate-800 text-blue-300">＋ Add new entry…</option>
+            <option value={ADD_NEW} className="bg-[#1d1535] text-violet-300">＋ Add new entry…</option>
         </select>
     );
 }

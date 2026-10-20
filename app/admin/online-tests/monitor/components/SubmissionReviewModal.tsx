@@ -100,9 +100,9 @@ export default function SubmissionReviewModal({
 
     if (loading) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
                 <div className="flex flex-col items-center gap-3">
-                    <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+                    <RefreshCw className="w-8 h-8 text-violet-500 animate-spin" />
                     <span className="text-white font-medium">Loading submission...</span>
                 </div>
             </div>
@@ -131,10 +131,10 @@ export default function SubmissionReviewModal({
         const timeTakenDesc = timeTakenMs > 0 ? (m > 0 ? `${m}m ${s}s` : `${s}s`) : '-';
 
         return (
-            <div key={q.id} className={`bg-slate-800/50 border rounded-xl p-5 mb-4 ${ans?.isGraceAwarded ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5'}`}>
+            <div key={q.id} className={`bg-[#1d1535]/50 border rounded-xl p-5 mb-4 ${ans?.isGraceAwarded ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5'}`}>
                 <div className="flex flex-col lg:flex-row justify-between items-start gap-3 sm:gap-4 mb-3">
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className="px-2 py-1 bg-slate-700 rounded-md text-xs font-bold text-white">Q{index + 1}</span>
+                        <span className="px-2 py-1 bg-[#2a2045] rounded-md text-xs font-bold text-white">Q{index + 1}</span>
                         <span className="text-xs font-semibold text-slate-400 capitalize">{q.type}</span>
                         {ans?.isGraceAwarded && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold border border-amber-500/30">
@@ -142,7 +142,7 @@ export default function SubmissionReviewModal({
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 bg-slate-900/80 rounded-lg p-1.5 border border-white/10 w-full lg:w-auto justify-between lg:justify-start">
+                    <div className="flex flex-wrap items-center gap-2 bg-[#140d27]/80 rounded-lg p-1.5 border border-white/10 w-full lg:w-auto justify-between lg:justify-start">
                         <div className="text-[10px] text-slate-400 flex flex-col items-center px-1 sm:px-2 pr-1 sm:pr-3">
                             <span className="flex items-center gap-1 font-bold whitespace-nowrap"><Clock className="w-3 h-3" /> {timeTakenDesc}</span>
                             <span className="font-mono mt-0.5 whitespace-nowrap px-1 rounded bg-black/50 border border-white/10 text-slate-300">
@@ -239,10 +239,10 @@ export default function SubmissionReviewModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200">
+            <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="bg-slate-900 p-4 md:p-5 px-4 md:px-6 border-b border-white/5 flex items-start justify-between sticky top-0 z-10 gap-2">
+                <div className="bg-[#140d27] p-4 md:p-5 px-4 md:px-6 border-b border-white/5 flex items-start justify-between sticky top-0 z-10 gap-2">
                     <div className="min-w-0 pr-2">
                         <h2 className="text-lg md:text-xl font-bold text-white flex flex-wrap items-center gap-2 md:gap-3 leading-tight">
                             <span className="truncate">{student.name}</span>
@@ -271,9 +271,9 @@ export default function SubmissionReviewModal({
                 {/* Body / Questions List */}
                 <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
                     {/* Alert */}
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                        <div className="text-sm text-blue-200">
+                    <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-violet-400 shrink-0 mt-0.5" />
+                        <div className="text-sm text-violet-200">
                             Enter adjustment marks in the <strong>Adj</strong> fields for specific questions. This can be positive (+) or negative (-). The final score will recalculate and automatically update all analytics when saved.
                         </div>
                     </div>
@@ -282,8 +282,8 @@ export default function SubmissionReviewModal({
                     {attempt.questions.map((q: any, i: number) => {
                         if (q.type === 'comprehension' && q.subQuestions) {
                             return (
-                                <div key={q.id} className="mb-6 bg-slate-900/40 rounded-xl border border-white/5 overflow-hidden">
-                                    <div className="p-4 border-b border-white/5 bg-slate-900/80">
+                                <div key={q.id} className="mb-6 bg-[#140d27]/40 rounded-xl border border-white/5 overflow-hidden">
+                                    <div className="p-4 border-b border-white/5 bg-[#140d27]/80">
                                         <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Comprehension Passage</div>
                                         <div className="text-sm text-slate-300 prose prose-invert">
                                             <LatexRender content={q.text} />
@@ -302,7 +302,7 @@ export default function SubmissionReviewModal({
                 </div>
 
                 {/* Footer */}
-                <div className="bg-slate-900 p-5 px-6 border-t border-white/5 flex items-center justify-between sticky bottom-0 z-10 shrink-0">
+                <div className="bg-[#140d27] p-5 px-6 border-t border-white/5 flex items-center justify-between sticky bottom-0 z-10 shrink-0">
                     <div className="text-sm text-slate-400">
                         Total Adjustments:{' '}
                         <strong className="text-amber-400">

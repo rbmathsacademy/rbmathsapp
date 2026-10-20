@@ -32,10 +32,10 @@ export default function LineNumberTextarea({ value, errorLine, className, ...pro
     }, [errorLine]);
 
     return (
-        <div className={`flex border border-gray-600 rounded overflow-hidden bg-gray-800 ${className}`}>
+        <div className={`flex border border-[#433666] rounded overflow-hidden bg-[#1d1535] ${className}`}>
             <div
                 ref={lineNumbersRef}
-                className="bg-gray-900 text-gray-500 text-right p-4 select-none overflow-hidden font-mono text-sm leading-relaxed border-r border-gray-700 w-12 flex-shrink-0"
+                className="bg-[#140d27] text-gray-500 text-right p-4 select-none overflow-hidden font-mono text-sm leading-relaxed border-r border-[#352a55] w-12 flex-shrink-0"
                 style={{ fontFamily: 'monospace' }}
             >
                 {lines.map((line) => (
@@ -51,7 +51,7 @@ export default function LineNumberTextarea({ value, errorLine, className, ...pro
                 ref={textareaRef}
                 value={value}
                 onScroll={handleScroll}
-                className="flex-1 bg-gray-800 text-green-400 font-mono p-4 focus:outline-none text-sm leading-relaxed resize-none whitespace-pre-wrap border-none"
+                className="flex-1 bg-[#1d1535] text-green-400 font-mono p-4 focus:outline-none text-sm leading-relaxed resize-none whitespace-pre-wrap border-none"
                 style={{ fontFamily: 'monospace' }}
                 {...props}
             />

@@ -224,10 +224,10 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+            <div className="relative bg-[#140d27] rounded-2xl sd-gborder sd-gborder-soft sd-card w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Header */}
-                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-slate-900/50 rounded-t-2xl">
+                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#140d27]/50 rounded-t-2xl">
                     <div>
                         <h3 className="text-2xl font-bold text-white flex items-center gap-3">
                             <Plus className="h-6 w-6 text-emerald-400" />
@@ -241,7 +241,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 </div>
 
                 {/* Filters */}
-                <div className="p-6 bg-slate-950/30 border-b border-white/5 space-y-4">
+                <div className="p-6 bg-[#0b0718]/30 border-b border-white/5 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                         <div className="relative md:col-span-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -250,7 +250,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search questions..."
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                className="w-full bg-[#140d27] border border-[#352a55] rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
                         </div>
 
@@ -309,7 +309,7 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                             <span>Loading Question Bank...</span>
                         </div>
                     ) : filteredQuestions.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-500 bg-slate-950/20 rounded-xl border border-dashed border-slate-800">
+                        <div className="h-full flex flex-col items-center justify-center text-slate-500 bg-[#0b0718]/20 rounded-xl border border-dashed border-[#2a2045]">
                             <Filter className="h-10 w-10 mb-4 opacity-20" />
                             <p>No questions found matching your filters</p>
                         </div>
@@ -321,22 +321,22 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                                     onClick={() => toggleSelection(q.id)}
                                     className={`relative p-4 rounded-xl border transition-all cursor-pointer group ${selectedIds.has(q.id)
                                         ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5'
-                                        : 'bg-slate-950/50 border-white/5 hover:border-white/10'
+                                        : 'bg-[#0b0718]/50 border-white/5 hover:border-white/10'
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className={`mt-1 flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedIds.has(q.id) ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 group-hover:border-slate-500'
+                                        <div className={`mt-1 flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedIds.has(q.id) ? 'bg-emerald-500 border-emerald-500' : 'border-[#433666] group-hover:border-slate-500'
                                             }`}>
                                             {selectedIds.has(q.id) && <Check className="h-3.5 w-3.5 text-white" />}
                                         </div>
 
                                         <div className="flex-1 space-y-3">
                                             <div className="flex flex-wrap gap-2 items-center">
-                                                <span className="text-[10px] font-bold bg-slate-800 text-slate-400 px-2 py-0.5 rounded uppercase tracking-wider">
+                                                <span className="text-[10px] font-bold bg-[#1d1535] text-slate-400 px-2 py-0.5 rounded uppercase tracking-wider">
                                                     {q.type}
                                                 </span>
                                                 {q.topic && (
-                                                    <span className="text-[10px] font-bold bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded uppercase">
+                                                    <span className="text-[10px] font-bold bg-violet-500/10 text-violet-400 px-2 py-0.5 rounded uppercase">
                                                         {q.topic}
                                                     </span>
                                                 )}
@@ -371,8 +371,8 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                                                         
                                                         const isCorrect = String(q.answer) === String(optText) || String(q.answer) === String(idx);
                                                         return (
-                                                            <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-900/50 border-white/5'}`}>
-                                                                <span className={`text-[10px] font-bold mt-0.5 px-1.5 py-0.5 rounded flex-shrink-0 ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                                                            <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-[#140d27]/50 border-white/5'}`}>
+                                                                <span className={`text-[10px] font-bold mt-0.5 px-1.5 py-0.5 rounded flex-shrink-0 ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-[#1d1535] text-slate-400'}`}>
                                                                     {String.fromCharCode(65 + idx)}
                                                                 </span>
                                                                 <div className="text-sm text-slate-300 prose prose-invert prose-sm max-w-none break-words overflow-hidden flex flex-col gap-2">
@@ -393,13 +393,13 @@ export default function QuestionImportModal({ onImport, onCancel }: QuestionImpo
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between bg-slate-900/50 rounded-b-2xl gap-4">
+                <div className="p-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between bg-[#140d27]/50 rounded-b-2xl gap-4">
                     <div className="flex items-center gap-4">
                         <p className="text-sm text-slate-400">
                             <span className="text-emerald-400 font-bold">{selectedIds.size}</span> questions selected
                         </p>
                         <button onClick={handleSelectAll} disabled={filteredQuestions.length === 0} className="text-xs px-3 py-1.5 bg-emerald-500/20 text-emerald-300 rounded hover:bg-emerald-500/30 transition-colors disabled:opacity-50">Select All Filtered</button>
-                        <button onClick={handleDeselectAll} disabled={selectedIds.size === 0} className="text-xs px-3 py-1.5 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 transition-colors disabled:opacity-50">Deselect All</button>
+                        <button onClick={handleDeselectAll} disabled={selectedIds.size === 0} className="text-xs px-3 py-1.5 bg-[#2a2045] text-slate-300 rounded hover:bg-[#352a55] transition-colors disabled:opacity-50">Deselect All</button>
                     </div>
                     <div className="flex gap-3">
                         <button

@@ -168,7 +168,7 @@ export default function AnalyticsPage() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
                         Analytics Dashboard
                     </h1>
                     <p className="text-gray-400 mt-1">Detailed student performance insights</p>
@@ -178,7 +178,7 @@ export default function AnalyticsPage() {
                     <select
                         value={selectedBatch}
                         onChange={(e) => setSelectedBatch(e.target.value)}
-                        className="w-full sm:w-64 bg-[#1a1f2e] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500/50"
+                        className="w-full sm:w-64 bg-[#151029] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-violet-500/50"
                     >
                         <option value="">Select Batch</option>
                         {batches.map(batch => (
@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
                                 }
                             }}
                             disabled={pdfLoading}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-medium text-sm shadow-lg shadow-purple-500/20 disabled:opacity-50 whitespace-nowrap"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white rounded-xl font-medium text-sm shadow-lg shadow-purple-500/20 disabled:opacity-50 whitespace-nowrap"
                         >
                             {pdfLoading ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
@@ -215,29 +215,29 @@ export default function AnalyticsPage() {
 
             {selectedBatch && !data && loading && (
                 <div className="flex justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
                 </div>
             )}
 
             {data && (
                 <div className="space-y-6">
                     {/* TABS */}
-                    <div className="flex border-b border-white/10 mb-6">
+                    <div className="flex border-b border-white/10 mb-6 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                         <button 
                             onClick={() => setActiveTab('overview')} 
-                            className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'overview' ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                            className={`shrink-0 whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'overview' ? 'border-violet-500 text-violet-400' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
                         >
                             Overview & Anomalies
                         </button>
                         <button 
                             onClick={() => setActiveTab('school')} 
-                            className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'school' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                            className={`shrink-0 whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'school' ? 'border-fuchsia-500 text-fuchsia-400' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
                         >
                             School Performance
                         </button>
                         <button
                             onClick={() => setActiveTab('weakness')}
-                            className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'weakness' ? 'border-rose-500 text-rose-400' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                            className={`shrink-0 whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'weakness' ? 'border-rose-500 text-rose-400' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
                         >
                             Student Weakness
                         </button>
@@ -253,7 +253,7 @@ export default function AnalyticsPage() {
                     <AnomalyDetectionPanel batch={selectedBatch} />
 
                     {/* Student List */}
-                    <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
+                    <div className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden">
                         <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <h2 className="text-lg font-semibold text-white">Student Overview</h2>
                             <div className="relative w-full sm:w-64">
@@ -263,7 +263,7 @@ export default function AnalyticsPage() {
                                     placeholder="Search students..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-violet-500/50"
                                 />
                             </div>
                         </div>
@@ -273,16 +273,16 @@ export default function AnalyticsPage() {
                             <table className="w-full text-left border-collapse min-w-[800px]">
                                 <thead>
                                     <tr className="bg-black/20 text-gray-400 text-sm uppercase">
-                                        <th className="p-4 font-medium sticky left-0 bg-[#0f1115] z-10">Student Info</th>
+                                        <th className="p-4 font-medium sticky left-0 bg-[#0b0718] z-10">Student Info</th>
                                         <th className="p-4 font-medium text-center">Test Performance</th>
                                         <th className="p-4 font-medium text-center">Assignment Stats</th>
-                                        <th className="p-4 font-medium text-right sticky right-0 bg-[#0f1115] z-10">Action</th>
+                                        <th className="p-4 font-medium text-right sticky right-0 bg-[#0b0718] z-10">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {filteredStudents.map((student) => (
                                         <tr key={student.student._id} className="hover:bg-white/5 transition-colors group">
-                                            <td className="p-4 sticky left-0 bg-[#1a1f2e] group-hover:bg-[#252a3b] transition-colors z-10">
+                                            <td className="p-4 sticky left-0 bg-[#151029] group-hover:bg-[#241b3d] transition-colors z-10">
                                                 <div>
                                                     <p className="font-medium text-white">{student.student.name || 'Unknown'}</p>
                                                     <p className="text-xs text-gray-500">{student.student.phoneNumber}</p>
@@ -298,9 +298,9 @@ export default function AnalyticsPage() {
                                                         <div className="text-xs text-gray-400">Missed</div>
                                                         <div className="font-bold text-red-400">{student.stats.testsMissed}</div>
                                                     </div>
-                                                    <div className="bg-blue-500/10 rounded p-1 border border-blue-500/20">
+                                                    <div className="bg-violet-500/10 rounded p-1 border border-violet-500/20">
                                                         <div className="text-xs text-gray-400">Avg %</div>
-                                                        <div className="font-bold text-blue-400">{student.stats.avgTestPercentage}%</div>
+                                                        <div className="font-bold text-violet-400">{student.stats.avgTestPercentage}%</div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -320,24 +320,24 @@ export default function AnalyticsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-3 gap-2 text-center">
-                                                    <div className="flex flex-col items-center justify-center bg-[#1a1f2e] rounded border border-white/5 py-1">
+                                                    <div className="flex flex-col items-center justify-center bg-[#151029] rounded border border-white/5 py-1">
                                                         <div className="text-[10px] text-gray-500 w-full text-center tracking-tighter">GOOD</div>
                                                         <div className="font-bold text-green-400 text-sm mt-0.5">{student.stats.goodQuality}</div>
                                                     </div>
-                                                    <div className="flex flex-col items-center justify-center bg-[#1a1f2e] rounded border border-white/5 py-1">
+                                                    <div className="flex flex-col items-center justify-center bg-[#151029] rounded border border-white/5 py-1">
                                                         <div className="text-[10px] text-gray-500 w-full text-center tracking-tighter">SATISFACTORY</div>
                                                         <div className="font-bold text-yellow-400 text-sm mt-0.5">{student.stats.satisfactoryQuality}</div>
                                                     </div>
-                                                    <div className="flex flex-col items-center justify-center bg-[#1a1f2e] rounded border border-white/5 py-1">
+                                                    <div className="flex flex-col items-center justify-center bg-[#151029] rounded border border-white/5 py-1">
                                                         <div className="text-[10px] text-gray-500 w-full text-center tracking-tighter">POOR</div>
                                                         <div className="font-bold text-red-400 text-sm mt-0.5">{student.stats.poorQuality}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-right sticky right-0 bg-[#1a1f2e] group-hover:bg-[#252a3b] transition-colors z-10">
+                                            <td className="p-4 text-right sticky right-0 bg-[#151029] group-hover:bg-[#241b3d] transition-colors z-10">
                                                 <button
                                                     onClick={() => setSelectedStudent(student)}
-                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-medium shadow-lg shadow-blue-500/20"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white rounded-lg transition-colors text-sm font-medium shadow-lg shadow-violet-500/20"
                                                 >
                                                     View Progress
                                                 </button>
@@ -372,9 +372,9 @@ export default function AnalyticsPage() {
                                                     <div className="font-bold text-red-400">{student.stats.testsMissed}</div>
                                                 </div>
                                             </div>
-                                            <div className="bg-blue-500/10 rounded p-2 text-center border border-blue-500/20 mt-2">
+                                            <div className="bg-violet-500/10 rounded p-2 text-center border border-violet-500/20 mt-2">
                                                 <div className="text-[10px] text-gray-400">Avg %</div>
-                                                <div className="font-bold text-blue-400">{student.stats.avgTestPercentage}%</div>
+                                                <div className="font-bold text-violet-400">{student.stats.avgTestPercentage}%</div>
                                             </div>
                                         </div>
 
@@ -395,15 +395,15 @@ export default function AnalyticsPage() {
                                                 <div className="font-bold text-red-300">{student.stats.assignmentsMissed}</div>
                                             </div>
                                             <div className="grid grid-cols-3 gap-1 mt-2">
-                                                <div className="bg-[#1a1f2e] border border-white/5 rounded py-1 flex flex-col items-center">
+                                                <div className="bg-[#151029] border border-white/5 rounded py-1 flex flex-col items-center">
                                                     <span className="text-[8px] text-gray-500">GOOD</span>
                                                     <span className="text-xs font-bold text-green-400">{student.stats.goodQuality}</span>
                                                 </div>
-                                                <div className="bg-[#1a1f2e] border border-white/5 rounded py-1 flex flex-col items-center">
+                                                <div className="bg-[#151029] border border-white/5 rounded py-1 flex flex-col items-center">
                                                     <span className="text-[8px] text-gray-500">SAT</span>
                                                     <span className="text-xs font-bold text-yellow-400">{student.stats.satisfactoryQuality}</span>
                                                 </div>
-                                                <div className="bg-[#1a1f2e] border border-white/5 rounded py-1 flex flex-col items-center">
+                                                <div className="bg-[#151029] border border-white/5 rounded py-1 flex flex-col items-center">
                                                     <span className="text-[8px] text-gray-500">POOR</span>
                                                     <span className="text-xs font-bold text-red-400">{student.stats.poorQuality}</span>
                                                 </div>
@@ -413,7 +413,7 @@ export default function AnalyticsPage() {
 
                                     <button
                                         onClick={() => setSelectedStudent(student)}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-medium shadow-lg shadow-blue-500/20"
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white rounded-lg transition-colors text-sm font-medium shadow-lg shadow-violet-500/20"
                                     >
                                         View Progress <ChevronRight className="w-4 h-4" />
                                     </button>
@@ -428,10 +428,10 @@ export default function AnalyticsPage() {
 
             {/* Student Detail Modal */}
             {selectedStudent && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end">
-                    <div className="w-full max-w-2xl bg-[#0f1115] h-full border-l border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+                <div className="fixed inset-0 bg-black/80 z-50 flex justify-end">
+                    <div className="w-full max-w-2xl bg-[#0b0718] h-full border-l border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
                         {/* Header */}
-                        <div className="p-4 border-b border-white/10 flex justify-between items-start bg-[#1a1f2e]">
+                        <div className="p-4 border-b border-white/10 flex justify-between items-start bg-[#151029]">
                             <div>
                                 <h2 className="text-xl font-bold text-white mb-1">{selectedStudent.student.name}</h2>
                                 <p className="text-xs sm:text-sm text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
@@ -449,18 +449,18 @@ export default function AnalyticsPage() {
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#0f1115]">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#0b0718]">
 
                             {/* Chronological Test List */}
                             <div>
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <BarChart2 className="w-5 h-5 text-blue-400" />
+                                    <BarChart2 className="w-5 h-5 text-violet-400" />
                                     Test Progress Report
                                 </h3>
 
                                 <div className="space-y-4">
                                     {selectedStudent.tests.filter(t => t.status !== 'not_enrolled').map((test, index) => (
-                                        <div key={test.testId} className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden shadow-lg">
+                                        <div key={test.testId} className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden shadow-lg">
                                             {/* Header */}
                                             <div className="bg-white/5 px-4 py-3 flex justify-between items-center border-b border-white/5">
                                                 <div className="flex items-center gap-2 text-sm text-gray-300">
@@ -509,10 +509,10 @@ export default function AnalyticsPage() {
                                                 {/* Average Score */}
                                                 <div className="flex flex-row sm:flex-col justify-between sm:justify-center items-center border-l-0 sm:border-l border-white/10 pt-2 sm:pt-0 border-t sm:border-t-0 mt-2 sm:mt-0">
                                                     <span className="text-gray-400 text-xs uppercase tracking-wider mb-0 sm:mb-1 flex items-center gap-1">
-                                                        <Users className="w-3 h-3 text-blue-400" /> <span className="sm:hidden">Avg:</span><span className="hidden sm:inline">Batch Avg</span>
+                                                        <Users className="w-3 h-3 text-violet-400" /> <span className="sm:hidden">Avg:</span><span className="hidden sm:inline">Batch Avg</span>
                                                     </span>
                                                     <div className="flex flex-col items-end sm:items-center">
-                                                        <span className="text-xl sm:text-2xl font-bold text-blue-400">
+                                                        <span className="text-xl sm:text-2xl font-bold text-violet-400">
                                                             {test.averageScore}
                                                         </span>
                                                         <span className="text-[10px] text-gray-500 hidden sm:inline">Average</span>
@@ -524,7 +524,7 @@ export default function AnalyticsPage() {
                                     ))}
 
                                     {selectedStudent.tests.filter(t => t.status !== 'not_enrolled').length === 0 && (
-                                        <div className="text-center py-10 bg-[#1a1f2e] rounded-xl border border-white/5">
+                                        <div className="text-center py-10 bg-[#151029] rounded-xl border border-white/5">
                                             <p className="text-gray-400">No tests available for this student.</p>
                                         </div>
                                     )}
@@ -542,7 +542,7 @@ export default function AnalyticsPage() {
 
                                     <div className="space-y-3">
                                         {selectedStudent.offlineExams.map((exam: any, index: number) => (
-                                            <div key={exam.examId || index} className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
+                                            <div key={exam.examId || index} className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden">
                                                 <div className="bg-red-500/10 px-4 py-2.5 flex justify-between items-center border-b border-red-500/20">
                                                     <span className="text-sm font-semibold text-white">{exam.chapterName}</span>
                                                     <span className="text-[10px] font-bold text-gray-400">
@@ -563,7 +563,7 @@ export default function AnalyticsPage() {
                                                     </div>
                                                     <div>
                                                         <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Average</span>
-                                                        <span className="text-lg font-black text-blue-400">{exam.averagePercentage}%</span>
+                                                        <span className="text-lg font-black text-violet-400">{exam.averagePercentage}%</span>
                                                     </div>
                                                     <div>
                                                         <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Rank</span>

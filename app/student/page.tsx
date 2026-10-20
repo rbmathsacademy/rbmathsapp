@@ -34,7 +34,7 @@ import { readCache, writeCache, clearStudentCache } from '@/lib/studentCache';
 const FREE_BATCH = 'Class XI (Free batch) 2026-27';
 const FREE_BATCH_LOWER = FREE_BATCH.trim().toLowerCase();
 
-// Visual styles (sd-* classes) live in ./student-theme.css, shared by all student pages.
+// Visual styles (sd-* classes) live in app/portal-theme.css, shared by the student and admin portals.
 
 interface DashboardData {
     student: {

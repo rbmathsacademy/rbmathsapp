@@ -239,12 +239,12 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-4 bg-slate-800/50 p-3 sm:p-4 rounded-xl border border-slate-700">
+            <div className="flex flex-col gap-4 bg-[#1d1535]/50 p-3 sm:p-4 rounded-xl border border-[#352a55]">
                 <div className="flex flex-wrap gap-2 sm:gap-4 w-full items-center">
                     <select 
                         value={filterSchool} 
                         onChange={(e) => setFilterSchool(e.target.value)}
-                        className="bg-slate-900 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500 flex-1 min-w-[120px]"
+                        className="bg-[#140d27] border border-[#352a55] text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-fuchsia-500 flex-1 min-w-[120px]"
                     >
                         <option value="">All Schools</option>
                         {uniqueSchools.map(s => <option key={s} value={s}>{s || 'Unknown'}</option>)}
@@ -253,7 +253,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                     <select 
                         value={filterExam} 
                         onChange={(e) => setFilterExam(e.target.value)}
-                        className="bg-slate-900 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500 flex-1 min-w-[120px]"
+                        className="bg-[#140d27] border border-[#352a55] text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-fuchsia-500 flex-1 min-w-[120px]"
                     >
                         <option value="">All Exams</option>
                         {uniqueExams.map(e => <option key={e} value={e}>{e}</option>)}
@@ -266,7 +266,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                         onChange={(e) => setFilterBand(e.target.value as PerformanceBand)}
                         disabled={!filterExam}
                         title={!filterExam ? 'Select an exam first' : undefined}
-                        className="bg-slate-900 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500 flex-1 min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-[#140d27] border border-[#352a55] text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-fuchsia-500 flex-1 min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <option value="ALL">All Students</option>
                         <option value="MISSING">Missing Score</option>
@@ -278,9 +278,9 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                     {displayedStudents.length > 0 && (
                         <button
                             onClick={handleSelectAll}
-                            className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+                            className="flex items-center gap-2 px-3 py-2 bg-[#140d27] border border-[#352a55] hover:bg-[#1d1535] text-slate-300 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
                         >
-                            <CheckSquare className="w-4 h-4 text-indigo-400" />
+                            <CheckSquare className="w-4 h-4 text-fuchsia-400" />
                             {selectedPhones.size === displayedStudents.length ? 'Deselect All' : 'Select All'}
                         </button>
                     )}
@@ -289,7 +289,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                 <div className="flex flex-wrap gap-2 sm:gap-3 w-full items-center">
                     <button 
                         onClick={handleDownloadBatchReport}
-                        className="px-3 sm:px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors whitespace-nowrap"
+                        className="px-3 sm:px-4 py-2 bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 border border-violet-500/30 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors whitespace-nowrap"
                     >
                         <Download className="w-4 h-4" /> Download Report
                     </button>
@@ -299,7 +299,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                         placeholder="WhatsApp message..."
                         value={whatsappMessage}
                         onChange={(e) => setWhatsappMessage(e.target.value)}
-                        className="bg-slate-900 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-500 flex-1 min-w-[150px]"
+                        className="bg-[#140d27] border border-[#352a55] text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-fuchsia-500 flex-1 min-w-[150px]"
                     />
                     <button 
                         onClick={copyForWhatsApp}
@@ -311,19 +311,19 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
             </div>
 
             {loading ? (
-                <div className="flex justify-center p-12"><div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>
+                <div className="flex justify-center p-12"><div className="w-8 h-8 border-3 border-fuchsia-500 border-t-transparent rounded-full animate-spin"></div></div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {displayedStudents.map(student => (
-                        <div key={student.phoneNumber} className={`bg-slate-800/40 border ${selectedPhones.has(student.phoneNumber) ? 'border-indigo-500/50' : 'border-slate-700/50'} rounded-xl overflow-hidden shadow-lg transition-colors`}>
-                            <div className="p-3 sm:p-4 border-b border-slate-700/50 flex justify-between items-start bg-slate-800/60">
+                        <div key={student.phoneNumber} className={`bg-[#1d1535]/40 border ${selectedPhones.has(student.phoneNumber) ? 'border-fuchsia-500/50' : 'border-[#352a55]/50'} rounded-xl overflow-hidden shadow-lg transition-colors`}>
+                            <div className="p-3 sm:p-4 border-b border-[#352a55]/50 flex justify-between items-start bg-[#1d1535]/60">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
                                         <input 
                                             type="checkbox" 
                                             checked={selectedPhones.has(student.phoneNumber)}
                                             onChange={() => toggleSelection(student.phoneNumber)}
-                                            className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer shrink-0"
+                                            className="w-4 h-4 rounded border-[#433666] bg-[#140d27] text-fuchsia-500 focus:ring-fuchsia-500 focus:ring-offset-slate-900 cursor-pointer shrink-0"
                                         />
                                         <h3 className="text-slate-200 font-bold text-base sm:text-lg cursor-pointer truncate" onClick={() => toggleSelection(student.phoneNumber)}>{student.name}</h3>
                                     </div>
@@ -340,7 +340,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                         setFormMarksObtained('');
                                         setIsModalOpen(true);
                                     }}
-                                    className="p-1.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-md transition-colors shrink-0"
+                                    className="p-1.5 bg-fuchsia-500/10 text-fuchsia-400 hover:bg-fuchsia-500/20 rounded-md transition-colors shrink-0"
                                     title="Add Exam Record"
                                 >
                                     <Plus className="w-5 h-5" />
@@ -361,11 +361,11 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                     student.exams.map((exam: any) => {
                                         const correlation = getCorrelationData(student, exam);
                                         return (
-                                        <div key={exam._id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-sm relative group overflow-hidden">
+                                        <div key={exam._id} className="bg-[#140d27]/50 border border-[#352a55] rounded-lg p-3 text-sm relative group overflow-hidden">
                                             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                                 <button 
                                                     onClick={() => handleDelete(exam._id)}
-                                                    className="p-1 bg-slate-800 rounded text-slate-300 hover:text-red-400 border border-slate-600 shadow-lg"
+                                                    className="p-1 bg-[#1d1535] rounded text-slate-300 hover:text-red-400 border border-[#433666] shadow-lg"
                                                     title="Delete Record"
                                                 >
                                                     <X className="w-4 h-4" />
@@ -376,7 +376,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                                 <span className="font-semibold text-slate-300 truncate mr-2">{exam.examName}</span>
                                                 <span className="font-bold text-emerald-400 text-lg shrink-0">{exam.marksObtained}<span className="text-slate-500 text-xs font-normal">/{exam.fullMarks}</span></span>
                                             </div>
-                                            <div className="text-xs text-slate-500 flex justify-between border-b border-slate-800 pb-2 mb-2">
+                                            <div className="text-xs text-slate-500 flex justify-between border-b border-[#2a2045] pb-2 mb-2">
                                                 <span>{new Date(exam.date).toLocaleDateString()}</span>
                                                 <span>{exam.percentage.toFixed(1)}%</span>
                                             </div>
@@ -399,7 +399,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                                         </div>
                                                     )}
                                                     {correlation.syncStatus === 'IN_SYNC' && (
-                                                        <div className="flex items-center gap-1 text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs font-bold whitespace-nowrap shrink-0">
+                                                        <div className="flex items-center gap-1 text-violet-400 bg-violet-400/10 px-2 py-1 rounded text-xs font-bold whitespace-nowrap shrink-0">
                                                             <Minus className="w-3 h-3"/> In Sync
                                                         </div>
                                                     )}
@@ -415,16 +415,16 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
             )}
 
             {isModalOpen && selectedStudent && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-                        <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/30">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                    <div className="bg-[#140d27] border border-[#352a55] rounded-2xl w-full max-w-md shadow-2xl max-h-[90svh] overflow-y-auto">
+                        <div className="p-4 border-b border-[#2a2045] flex justify-between items-center bg-[#1d1535]/30">
                             <h2 className="text-lg font-bold text-white">Add Exam Record</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white"><X className="w-5 h-5"/></button>
                         </div>
                         <form onSubmit={handleSaveMarks} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Student</label>
-                                <div className="text-slate-200 bg-slate-800 px-3 py-2 rounded-lg">{selectedStudent.name} ({selectedStudent.phoneNumber})</div>
+                                <div className="text-slate-200 bg-[#1d1535] px-3 py-2 rounded-lg">{selectedStudent.name} ({selectedStudent.phoneNumber})</div>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Exam Name</label>
@@ -433,7 +433,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                     required 
                                     value={formExamName}
                                     onChange={(e) => setFormExamName(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-indigo-500" 
+                                    className="w-full bg-[#0b0718] border border-[#2a2045] text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-fuchsia-500" 
                                     placeholder="e.g. Pre-Board 1"
                                 />
                             </div>
@@ -444,7 +444,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                     required 
                                     value={formDate}
                                     onChange={(e) => setFormDate(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-indigo-500" 
+                                    className="w-full bg-[#0b0718] border border-[#2a2045] text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-fuchsia-500" 
                                 />
                             </div>
                             <div className="flex gap-4">
@@ -455,7 +455,7 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                         required min="1"
                                         value={formFullMarks}
                                         onChange={(e) => setFormFullMarks(Number(e.target.value))}
-                                        className="w-full bg-slate-950 border border-slate-800 text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-indigo-500" 
+                                        className="w-full bg-[#0b0718] border border-[#2a2045] text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-fuchsia-500" 
                                     />
                                 </div>
                                 <div className="flex-1">
@@ -465,13 +465,13 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                                         required min="0" step="0.5"
                                         value={formMarksObtained}
                                         onChange={(e) => setFormMarksObtained(e.target.value)}
-                                        className="w-full bg-slate-950 border border-slate-800 text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-indigo-500" 
+                                        className="w-full bg-[#0b0718] border border-[#2a2045] text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:border-fuchsia-500" 
                                     />
                                 </div>
                             </div>
                             <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors">Cancel</button>
-                                <button type="submit" className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-colors">Save Marks</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 bg-[#1d1535] hover:bg-[#2a2045] text-slate-300 rounded-lg font-semibold transition-colors">Cancel</button>
+                                <button type="submit" className="flex-1 px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-lg font-semibold transition-colors">Save Marks</button>
                             </div>
                         </form>
                     </div>

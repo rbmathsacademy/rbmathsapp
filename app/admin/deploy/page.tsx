@@ -339,11 +339,11 @@ export default function DeployPage() {
     const isInsideFolder = folderStack.length > 0;
 
     return (
-        <div className="p-6 max-w-7xl mx-auto text-slate-200 font-sans">
+        <div className="p-0 sm:p-6 max-w-7xl mx-auto text-slate-200 font-sans">
             <Toaster />
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Deploy Questions</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Deploy Questions</h1>
                     <p className="text-slate-400">Manage course content and distribute questions.</p>
                 </div>
             </div>
@@ -362,13 +362,13 @@ export default function DeployPage() {
                             <div
                                 key={course}
                                 onClick={() => setSelectedCourse(course)}
-                                className="bg-slate-800/50 hover:bg-slate-800 border border-white/5 hover:border-indigo-500/50 p-6 rounded-2xl cursor-pointer transition-all group"
+                                className="relative bg-[#1d1535]/50 hover:bg-[#1d1535] sd-gborder sd-gborder-soft sd-card hover:border-fuchsia-500/50 p-6 rounded-2xl cursor-pointer transition-all group"
                             >
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="h-12 w-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                                    <div className="h-12 w-12 rounded-xl bg-fuchsia-500/10 flex items-center justify-center text-fuchsia-400 group-hover:scale-110 transition-transform">
                                         <LayoutGrid className="h-6 w-6" />
                                     </div>
-                                    <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-indigo-400" />
+                                    <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-fuchsia-400" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-1">{course}</h3>
                                 <p className="text-sm text-slate-500">Click to manage folders</p>
@@ -394,7 +394,7 @@ export default function DeployPage() {
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Back
                         </button>
-                        <div className="h-4 w-[1px] bg-slate-700"></div>
+                        <div className="h-4 w-[1px] bg-[#2a2045]"></div>
 
                         {/* Breadcrumb */}
                         <button
@@ -433,7 +433,7 @@ export default function DeployPage() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowFolderModal(true)}
-                                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium border border-slate-600"
+                                className="bg-[#2a2045] hover:bg-[#352a55] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium border border-[#433666]"
                             >
                                 <FolderPlus className="h-4 w-4" />
                                 {isInsideFolder ? 'New Sub-folder' : 'New Folder'}
@@ -441,7 +441,7 @@ export default function DeployPage() {
                             {isInsideFolder && (
                                 <button
                                     onClick={openQuestionPicker}
-                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium shadow-lg shadow-indigo-500/20"
+                                    className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-medium shadow-lg shadow-fuchsia-500/20"
                                 >
                                     <Plus className="h-4 w-4" /> Add Questions
                                 </button>
@@ -454,7 +454,7 @@ export default function DeployPage() {
                         {loadingFolders ? (
                             <div className="text-center col-span-full py-12 text-slate-500">Loading folders...</div>
                         ) : folders.length === 0 && !isInsideFolder ? (
-                            <div className="col-span-full bg-slate-800/20 border border-dashed border-slate-700 rounded-2xl p-12 text-center">
+                            <div className="col-span-full bg-[#1d1535]/20 border border-dashed border-[#352a55] rounded-2xl p-12 text-center">
                                 <FolderIcon className="h-12 w-12 text-slate-600 mx-auto mb-4" />
                                 <p className="text-slate-400 mb-2">No folders yet</p>
                                 <p className="text-sm text-slate-500">Create a folder to start organizing questions</p>
@@ -464,7 +464,7 @@ export default function DeployPage() {
                                 <div
                                     key={folder._id}
                                     onClick={() => enterFolder(folder)}
-                                    className="bg-slate-800/40 hover:bg-slate-800 border border-white/5 hover:border-indigo-500/50 p-5 rounded-2xl cursor-pointer transition-all group relative"
+                                    className="bg-[#1d1535]/40 hover:bg-[#1d1535] sd-gborder sd-gborder-soft sd-card hover:border-fuchsia-500/50 p-5 rounded-2xl cursor-pointer transition-all group relative"
                                 >
                                     <button
                                         onClick={(e) => deleteFolder(folder._id, e)}
@@ -472,7 +472,7 @@ export default function DeployPage() {
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
-                                    <FolderIcon className="h-10 w-10 text-indigo-400 mb-4 group-hover:scale-110 transition-transform" />
+                                    <FolderIcon className="h-10 w-10 text-fuchsia-400 mb-4 group-hover:scale-110 transition-transform" />
                                     <h3 className="font-bold text-white truncate">{folder.name}</h3>
                                     <p className="text-xs text-slate-500 mt-1">{new Date(folder.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
                                 </div>
@@ -484,21 +484,21 @@ export default function DeployPage() {
                     {isInsideFolder && (
                         <div className="mt-8">
                             <h3 className="text-lg font-bold text-white mb-4">Questions in this folder</h3>
-                            <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden">
+                            <div className="relative bg-[#140d27]/50 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden">
                                 {loadingQuestions ? (
                                     <div className="p-8 text-center text-slate-500">Loading questions...</div>
                                 ) : deployedQuestions.length === 0 ? (
                                     <div className="p-12 text-center">
                                         <FileText className="h-12 w-12 text-slate-600 mx-auto mb-4" />
                                         <p className="text-slate-400">No questions in this folder yet</p>
-                                        <button onClick={openQuestionPicker} className="text-indigo-400 hover:text-indigo-300 text-sm mt-2 font-medium">Browse Question Bank</button>
+                                        <button onClick={openQuestionPicker} className="text-fuchsia-400 hover:text-fuchsia-300 text-sm mt-2 font-medium">Browse Question Bank</button>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-white/5">
                                         {deployedQuestions.map((q, i) => (
-                                            <div key={i} className="p-4 hover:bg-slate-800/30 transition-colors flex gap-4">
+                                            <div key={i} className="p-4 hover:bg-[#1d1535]/30 transition-colors flex gap-4">
                                                 <div className="flex-shrink-0 pt-1">
-                                                    <div className="h-6 w-6 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-medium text-slate-400">
+                                                    <div className="h-6 w-6 rounded bg-[#1d1535] border border-[#352a55] flex items-center justify-center text-xs font-medium text-slate-400">
                                                         {i + 1}
                                                     </div>
                                                 </div>
@@ -510,9 +510,9 @@ export default function DeployPage() {
                                                         <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold border ${q.type === 'broad' ? 'border-pink-500 text-pink-400' : q.type === 'mcq' ? 'border-yellow-500 text-yellow-400' : 'border-cyan-500 text-cyan-400'}`}>
                                                             {q.type}
                                                         </span>
-                                                        <span className="px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-400 border border-slate-700">{q.topic}</span>
+                                                        <span className="px-2 py-0.5 rounded bg-[#1d1535] text-xs text-slate-400 border border-[#352a55]">{q.topic}</span>
                                                         {q.examNames && q.examNames.length > 0 && q.examNames.map((exam, idx) => (
-                                                            <span key={idx} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+                                                            <span key={idx} className="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
                                                                 {exam}
                                                             </span>
                                                         ))}
@@ -535,15 +535,15 @@ export default function DeployPage() {
 
             {/* Create Folder Modal */}
             {showFolderModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-slate-900 rounded-xl border border-white/10 p-6 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#140d27] rounded-xl border border-white/10 p-6 w-full max-w-md shadow-2xl">
                         <h3 className="text-xl font-bold text-white mb-4">
                             {isInsideFolder ? `Create Sub-folder in "${currentFolder!.name}"` : 'Create New Folder'}
                         </h3>
                         <input
                             type="text"
                             placeholder={isInsideFolder ? "Sub-folder Name" : "Folder Name (e.g., Week 1, Algebra Basics)"}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none mb-6"
+                            className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-fuchsia-500 outline-none mb-6"
                             value={newFolderName}
                             onChange={(e) => setNewFolderName(e.target.value)}
                             autoFocus
@@ -557,7 +557,7 @@ export default function DeployPage() {
                             </button>
                             <button
                                 onClick={createFolder}
-                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium"
+                                className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-lg font-medium"
                             >
                                 Create
                             </button>
@@ -568,8 +568,8 @@ export default function DeployPage() {
 
             {/* Question Picker Modal */}
             {showQuestionPicker && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-slate-900 rounded-xl border border-white/10 w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="bg-[#140d27] rounded-xl border border-white/10 w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl">
                         <div className="p-6 border-b border-white/10 flex justify-between items-center flex-shrink-0">
                             <h3 className="text-xl font-bold text-white">Select Questions</h3>
                             <button onClick={() => setShowQuestionPicker(false)} className="text-slate-400 hover:text-white">
@@ -577,7 +577,7 @@ export default function DeployPage() {
                             </button>
                         </div>
 
-                        <div className="p-4 border-b border-white/10 bg-slate-900/50 flex flex-col gap-4 flex-shrink-0">
+                        <div className="p-4 border-b border-white/10 bg-[#140d27]/50 flex flex-col gap-4 flex-shrink-0">
                             <div className="flex gap-4">
                                 <div className="flex-1">
                                     <label className="text-xs text-slate-400 mb-1 block">Topics</label>
@@ -620,13 +620,13 @@ export default function DeployPage() {
                                 <input
                                     type="text"
                                     placeholder="Search questions..."
-                                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="flex-1 bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-fuchsia-500 outline-none"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                                 <button
                                     onClick={toggleSelectAll}
-                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium border border-slate-700 flex items-center gap-2"
+                                    className="px-4 py-2 bg-[#1d1535] hover:bg-[#2a2045] text-white rounded-lg text-sm font-medium border border-[#352a55] flex items-center gap-2"
                                 >
                                     {filteredQuestions.length > 0 && filteredQuestions.every(q => selectedQuestionIds.includes(q._id)) ?
                                         <><CheckSquare className="h-4 w-4" /> Deselect All ({filteredQuestions.length})</> :
@@ -648,11 +648,11 @@ export default function DeployPage() {
                                         key={q._id}
                                         onClick={() => toggleQuestionSelection(q._id)}
                                         className={`p-4 rounded-xl border cursor-pointer transition-all flex gap-4 ${selectedQuestionIds.includes(q._id)
-                                            ? 'bg-indigo-500/10 border-indigo-500/50'
-                                            : 'bg-slate-950/50 border-white/5 hover:border-white/10'
+                                            ? 'bg-fuchsia-500/10 border-fuchsia-500/50'
+                                            : 'bg-[#0b0718]/50 border-white/5 hover:border-white/10'
                                             }`}
                                     >
-                                        <div className={`h-6 w-6 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${selectedQuestionIds.includes(q._id) ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-600'
+                                        <div className={`h-6 w-6 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${selectedQuestionIds.includes(q._id) ? 'bg-fuchsia-500 border-fuchsia-500 text-white' : 'border-[#433666]'
                                             }`}>
                                             {selectedQuestionIds.includes(q._id) && <Plus className="h-4 w-4" />}
                                         </div>
@@ -661,7 +661,7 @@ export default function DeployPage() {
                                                 <Latex>{q.text}</Latex>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                <span className="text-xs text-slate-500 bg-slate-900 border border-slate-800 px-1 py-0.5 rounded">{q.topic}</span>
+                                                <span className="text-xs text-slate-500 bg-[#140d27] border border-[#2a2045] px-1 py-0.5 rounded">{q.topic}</span>
                                                 {q.examNames && q.examNames.length > 0 && q.examNames.map((exam, idx) => (
                                                     <span key={idx} className="bg-purple-900/30 text-purple-300 text-[10px] px-1.5 py-0.5 rounded border border-purple-500/20">
                                                         {exam}
@@ -679,7 +679,7 @@ export default function DeployPage() {
                             )}
                         </div>
 
-                        <div className="p-6 border-t border-white/10 flex justify-between items-center bg-slate-900 flex-shrink-0">
+                        <div className="p-6 border-t border-white/10 flex justify-between items-center bg-[#140d27] flex-shrink-0">
                             <span className="text-slate-400 text-sm">{selectedQuestionIds.length} selected</span>
                             <div className="flex gap-3">
                                 <button
@@ -691,7 +691,7 @@ export default function DeployPage() {
                                 <button
                                     onClick={deployQuestions}
                                     disabled={selectedQuestionIds.length === 0}
-                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-6 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Add to Folder
                                 </button>

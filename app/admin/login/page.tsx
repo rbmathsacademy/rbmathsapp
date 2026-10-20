@@ -93,7 +93,7 @@ export default function AdminLogin() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#050b14] text-gray-200 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center sd-bg text-gray-200 relative overflow-hidden">
 
             {/* Top Right Controls */}
             <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
@@ -108,8 +108,6 @@ export default function AdminLogin() {
 
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-blue-900/20 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-emerald-900/20 rounded-full blur-[120px] animate-pulse"></div>
             </div>
 
             <div className="w-full max-w-md p-8 relative z-10 animate-in fade-in zoom-in duration-500">
@@ -123,7 +121,7 @@ export default function AdminLogin() {
                     <p className="text-slate-400 text-sm mt-2">Sign in to manage the platform</p>
                 </div>
 
-                <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-8 shadow-2xl">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-4">
                             <div>

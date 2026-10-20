@@ -342,7 +342,7 @@ export default function CreateTestPage() {
         const colors: any = {
             mcq: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
             msq: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-            fillblank: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+            fillblank: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
             comprehension: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
             broad: 'bg-pink-500/20 text-pink-300 border-pink-500/30'
         };
@@ -351,43 +351,43 @@ export default function CreateTestPage() {
 
     if (showSetupModal) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-purple-500"></div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Create New Online Test</h1>
+            <div className="min-h-screen sd-bg flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-[#140d27] border border-[#2a2045] rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-emerald-500 to-purple-500"></div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Create New Online Test</h1>
                     <p className="text-slate-400 mb-8">Choose how you want to structure this test.</p>
 
                     {boardConfigStep ? (
-                        <div className="mb-8 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                        <div className="mb-8 bg-[#1d1535]/50 p-6 rounded-2xl border border-[#352a55]">
                             <h3 className="text-lg font-bold text-white mb-4">Choose Board Grouping</h3>
                             <div className="space-y-3">
-                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
-                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" defaultChecked onClick={() => {
+                                <label className="flex items-center gap-3 p-4 bg-[#140d27] rounded-xl border border-[#352a55] cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-[#1d1535] border-[#433666] focus:ring-emerald-500" defaultChecked onClick={() => {
                                         setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['ISC'], questions: [] }, { boards: ['WBCHSE'], questions: [] }]);
                                     }} />
                                     <span className="text-white font-medium">3 Sets: CBSE, ISC, and WBCHSE separately</span>
                                 </label>
-                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
-                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
+                                <label className="flex items-center gap-3 p-4 bg-[#140d27] rounded-xl border border-[#352a55] cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-[#1d1535] border-[#433666] focus:ring-emerald-500" onClick={() => {
                                         setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['WBCHSE', 'ISC'], questions: [] }]);
                                     }} />
                                     <span className="text-white font-medium">2 Sets: CBSE separate, WBCHSE & ISC combined</span>
                                 </label>
-                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
-                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
+                                <label className="flex items-center gap-3 p-4 bg-[#140d27] rounded-xl border border-[#352a55] cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-[#1d1535] border-[#433666] focus:ring-emerald-500" onClick={() => {
                                         setBoardQuestionSets([{ boards: ['ISC'], questions: [] }, { boards: ['CBSE', 'WBCHSE'], questions: [] }]);
                                     }} />
                                     <span className="text-white font-medium">2 Sets: ISC separate, CBSE & WBCHSE combined</span>
                                 </label>
-                                <label className="flex items-center gap-3 p-4 bg-slate-900 rounded-xl border border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
-                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500" onClick={() => {
+                                <label className="flex items-center gap-3 p-4 bg-[#140d27] rounded-xl border border-[#352a55] cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                    <input type="radio" name="boardGrouping" className="w-4 h-4 text-emerald-500 bg-[#1d1535] border-[#433666] focus:ring-emerald-500" onClick={() => {
                                         setBoardQuestionSets([{ boards: ['WBCHSE'], questions: [] }, { boards: ['CBSE', 'ISC'], questions: [] }]);
                                     }} />
                                     <span className="text-white font-medium">2 Sets: WBCHSE separate, CBSE & ISC combined</span>
                                 </label>
                             </div>
                             <div className="mt-6 flex justify-end gap-3">
-                                <button onClick={() => setBoardConfigStep(false)} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700">Back</button>
+                                <button onClick={() => setBoardConfigStep(false)} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-[#2a2045]">Back</button>
                                 <button onClick={() => {
                                     if (boardQuestionSets.length === 0) {
                                         setBoardQuestionSets([{ boards: ['CBSE'], questions: [] }, { boards: ['ISC'], questions: [] }, { boards: ['WBCHSE'], questions: [] }]);
@@ -404,9 +404,9 @@ export default function CreateTestPage() {
                                     setIsBoardSpecific(false);
                                     setShowSetupModal(false);
                                 }}
-                                className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
+                                className="bg-[#1d1535]/50 hover:bg-[#1d1535] border border-[#352a55] hover:border-violet-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
                             >
-                                <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <div className="w-12 h-12 bg-violet-500/20 text-violet-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <span className="text-2xl font-bold">1</span>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2">Standard Test</h3>
@@ -419,7 +419,7 @@ export default function CreateTestPage() {
                                 onClick={() => {
                                     setBoardConfigStep(true);
                                 }}
-                                className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
+                                className="bg-[#1d1535]/50 hover:bg-[#1d1535] border border-[#352a55] hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all group"
                             >
                                 <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <span className="text-2xl font-bold">N</span>
@@ -435,7 +435,7 @@ export default function CreateTestPage() {
                     <div className="flex justify-end">
                         <button 
                             onClick={() => router.back()}
-                            className="px-6 py-2.5 rounded-xl font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="px-6 py-2.5 rounded-xl font-medium text-slate-300 hover:text-white hover:bg-[#1d1535] transition-colors"
                         >
                             Cancel
                         </button>
@@ -460,7 +460,7 @@ export default function CreateTestPage() {
                         <span>Back</span>
                     </button>
                     <div>
-                        <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
+                        <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                             {testId ? 'Edit Test' : 'Create New Test'}
                         </h1>
                         <p className="text-slate-400 text-sm mt-1">Build your online test with various question types</p>
@@ -469,7 +469,7 @@ export default function CreateTestPage() {
             </div>
 
             {/* Test Metadata */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6 space-y-4">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6 space-y-4">
                 <h2 className="text-xl font-bold text-white mb-4">Test Information</h2>
 
                 <div>
@@ -479,7 +479,7 @@ export default function CreateTestPage() {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="e.g., Mid-Term Mathematics Test"
-                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                        className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                 </div>
 
@@ -489,7 +489,7 @@ export default function CreateTestPage() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Brief description of the test..."
-                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 min-h-[80px] resize-y"
+                        className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 min-h-[80px] resize-y"
                     />
                 </div>
 
@@ -502,7 +502,7 @@ export default function CreateTestPage() {
                             readOnly={config.enablePerQuestionTimer}
                             disabled={config.enablePerQuestionTimer}
                             onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
-                            className={`w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
                             min="1"
                         />
                         {config.enablePerQuestionTimer && (
@@ -515,37 +515,37 @@ export default function CreateTestPage() {
             </div>
 
             {/* Test Configuration */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                 <h2 className="text-xl font-bold text-white mb-4">Test Settings</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                    <label className="flex items-center gap-3 p-3 md:p-4 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors">
                         <input
                             type="checkbox"
                             checked={config.shuffleQuestions}
                             onChange={(e) => setConfig({ ...config, shuffleQuestions: e.target.checked })}
-                            className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                            className="w-5 h-5 rounded border-[#433666] bg-[#0b0718] text-emerald-500 focus:ring-emerald-500"
                         />
                         <span className="text-sm font-medium text-slate-300">Shuffle Questions</span>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                    <label className="flex items-center gap-3 p-3 md:p-4 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors">
                         <input
                             type="checkbox"
                             checked={config.showTimer}
                             onChange={(e) => setConfig({ ...config, showTimer: e.target.checked })}
-                            className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                            className="w-5 h-5 rounded border-[#433666] bg-[#0b0718] text-emerald-500 focus:ring-emerald-500"
                         />
                         <span className="text-sm font-medium text-slate-300">Show Timer</span>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                    <label className="flex items-center gap-3 p-3 md:p-4 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors">
                         <input
                             type="checkbox"
                             checked={config.allowBackNavigation}
                             onChange={(e) => setConfig({ ...config, allowBackNavigation: e.target.checked })}
                             disabled={config.enablePerQuestionTimer}
-                            className={`w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`w-5 h-5 rounded border-[#433666] bg-[#0b0718] text-emerald-500 focus:ring-emerald-500 ${config.enablePerQuestionTimer ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         <span className="text-sm font-medium text-slate-300">Allow Back Nav</span>
                     </label>
@@ -556,7 +556,7 @@ export default function CreateTestPage() {
                             type="number"
                             value={config.passingPercentage}
                             onChange={(e) => setConfig({ ...config, passingPercentage: parseInt(e.target.value) || 0 })}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                            className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             min="0"
                             max="100"
                         />
@@ -565,12 +565,12 @@ export default function CreateTestPage() {
                     {/* Show Results Config */}
                     <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                            <label className="flex items-center gap-3 p-3 md:p-4 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors">
                                 <input
                                     type="checkbox"
                                     checked={config.showResultsImmediately}
                                     onChange={(e) => setConfig({ ...config, showResultsImmediately: e.target.checked, showResults: true })}
-                                    className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                                    className="w-5 h-5 rounded border-[#433666] bg-[#0b0718] text-emerald-500 focus:ring-emerald-500"
                                 />
                                 <div>
                                     <span className="text-sm font-bold text-slate-200 block">Show Results Immediately</span>
@@ -601,7 +601,7 @@ export default function CreateTestPage() {
                                             setConfig({ ...config, maxQuestionsToAttempt: val });
                                         }}
                                         placeholder={`All ${questions.length} questions`}
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                        className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         min="1"
                                         max={questions.length}
                                     />
@@ -614,7 +614,7 @@ export default function CreateTestPage() {
                     </div>
 
                     <div className="col-span-2 md:col-span-3 border-t border-white/10 pt-4 mt-2">
-                        <label className="flex items-center gap-3 p-3 md:p-4 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors mb-4">
+                        <label className="flex items-center gap-3 p-3 md:p-4 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors mb-4">
                             <input
                                 type="checkbox"
                                 checked={config.enablePerQuestionTimer || false}
@@ -626,7 +626,7 @@ export default function CreateTestPage() {
                                         allowBackNavigation: isEnabled ? false : config.allowBackNavigation // Auto-disable back nav
                                     });
                                 }}
-                                className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-purple-500 focus:ring-purple-500"
+                                className="w-5 h-5 rounded border-[#433666] bg-[#0b0718] text-purple-500 focus:ring-purple-500"
                             />
                             <div>
                                 <span className="text-sm font-bold text-slate-200 block">Enable Per-Question Timer</span>
@@ -642,7 +642,7 @@ export default function CreateTestPage() {
                                         type="number"
                                         value={config.perQuestionDuration || 60}
                                         onChange={(e) => setConfig({ ...config, perQuestionDuration: parseInt(e.target.value) || 60 })}
-                                        className="w-full md:w-1/3 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                        className="w-full md:w-1/3 bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                                         min="10"
                                     />
                                     <span className="text-sm text-slate-500">
@@ -656,7 +656,7 @@ export default function CreateTestPage() {
             </div>
 
             {/* Questions Section */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-white">
@@ -667,7 +667,7 @@ export default function CreateTestPage() {
                     <div className="flex items-center gap-2 md:gap-3 flex-wrap">
                         <button
                             onClick={() => setShowQuestionImport(true)}
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 rounded-lg font-bold transition-all text-sm md:text-base"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1d1535] hover:bg-[#2a2045] text-slate-200 border border-white/10 rounded-lg font-bold transition-all text-sm md:text-base"
                         >
                             <Plus className="h-4 w-4 md:h-5 md:w-5" />
                             <span className="whitespace-nowrap">Import</span>
@@ -694,7 +694,7 @@ export default function CreateTestPage() {
                                 className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${
                                     activeBoardSetIndex === idx 
                                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
-                                        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
+                                        : 'bg-[#1d1535] text-slate-400 border border-[#352a55] hover:bg-[#2a2045]'
                                 }`}
                             >
                                 {set.boards.join(', ') || `Set ${idx + 1}`} ({set.questions.length})
@@ -704,7 +704,7 @@ export default function CreateTestPage() {
                 )}
 
                 {(isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions.length === 0 : questions.length === 0) ? (
-                    <div className="text-center py-12 bg-slate-950/30 rounded-xl border border-dashed border-slate-700">
+                    <div className="text-center py-12 bg-[#0b0718]/30 rounded-xl border border-dashed border-[#352a55]">
                         <p className="text-slate-400 mb-4">No questions added yet</p>
                         <button
                             onClick={() => setShowQuestionEditor(true)}
@@ -718,26 +718,26 @@ export default function CreateTestPage() {
                         {(isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions || [] : questions).map((q, index) => (
                             <div
                                 key={q.id}
-                                className="bg-slate-950/50 border border-white/5 hover:border-emerald-500/30 rounded-xl p-3 md:p-4 transition-all group relative"
+                                className="bg-[#0b0718]/50 border border-white/5 hover:border-emerald-500/30 rounded-xl p-3 md:p-4 transition-all group relative"
                             >
                                 <div className="flex flex-col sm:flex-row items-start gap-4">
                                     {/* Question Number & Drag Handle - Horizontal on mobile */}
                                     <div className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 w-full sm:w-auto border-b sm:border-b-0 border-white/5 pb-2 sm:pb-0">
-                                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-slate-300 font-bold text-sm">
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1d1535] text-slate-300 font-bold text-sm">
                                             {index + 1}
                                         </div>
                                         <div className="flex flex-row sm:flex-col gap-1 ml-auto sm:ml-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => moveQuestion(index, 'up')}
                                                 disabled={index === 0}
-                                                className="p-1 hover:bg-slate-800 rounded disabled:opacity-30"
+                                                className="p-1 hover:bg-[#1d1535] rounded disabled:opacity-30"
                                             >
                                                 <GripVertical className="h-3 w-3 text-slate-500 sm:rotate-180 rotate-90" />
                                             </button>
                                             <button
                                                 onClick={() => moveQuestion(index, 'down')}
                                                 disabled={index === (isBoardSpecific ? boardQuestionSets[activeBoardSetIndex]?.questions.length : questions.length) - 1}
-                                                className="p-1 hover:bg-slate-800 rounded disabled:opacity-30"
+                                                className="p-1 hover:bg-[#1d1535] rounded disabled:opacity-30"
                                             >
                                                 <GripVertical className="h-3 w-3 text-slate-500 rotate-90 sm:rotate-0" />
                                             </button>
@@ -764,7 +764,7 @@ export default function CreateTestPage() {
 
                                         {q.image && (
                                             <div className="mt-2 mb-2">
-                                                <img src={q.image} alt="Question" className="h-16 md:h-20 rounded border border-slate-700" />
+                                                <img src={q.image} alt="Question" className="h-16 md:h-20 rounded border border-[#352a55]" />
                                             </div>
                                         )}
 
@@ -782,7 +782,7 @@ export default function CreateTestPage() {
 
                                         {/* Mobile-only actions visible always */}
                                         <div className="flex sm:hidden gap-3 mt-3 pt-3 border-t border-white/5">
-                                            <button onClick={() => editQuestion(q)} className="text-xs text-blue-400 font-medium flex items-center gap-1">
+                                            <button onClick={() => editQuestion(q)} className="text-xs text-violet-400 font-medium flex items-center gap-1">
                                                 <Edit className="h-3 w-3" /> Edit
                                             </button>
                                             <button onClick={() => deleteQuestion(q.id)} className="text-xs text-red-400 font-medium flex items-center gap-1">
@@ -795,7 +795,7 @@ export default function CreateTestPage() {
                                     <div className="hidden sm:flex gap-2 self-start">
                                         <button
                                             onClick={() => editQuestion(q)}
-                                            className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                                            className="p-2 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors"
                                         >
                                             <Edit className="h-4 w-4" />
                                         </button>
@@ -814,7 +814,7 @@ export default function CreateTestPage() {
             </div>
 
             {/* Fixed Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-white/10 p-3 md:p-6 backdrop-blur-lg z-50 transition-all">
+            <div className="fixed bottom-0 left-0 right-0 bg-[#140d27] border-t border-white/10 p-3 md:p-6 z-50 transition-all">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="text-xs md:text-sm text-slate-400 hidden md:block">
                         {questions.length} question{questions.length !== 1 ? 's' : ''} · {calculateTotalMarks()} marks
@@ -829,14 +829,14 @@ export default function CreateTestPage() {
                     <div className="flex gap-2 md:gap-3 w-full md:w-auto">
                         <button
                             onClick={() => router.back()}
-                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 text-slate-400 hover:text-white transition-colors font-medium text-sm md:text-base border border-transparent hover:border-slate-700 rounded-lg"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 text-slate-400 hover:text-white transition-colors font-medium text-sm md:text-base border border-transparent hover:border-[#352a55] rounded-lg"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={() => saveTest(false)}
                             disabled={loading}
-                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-[#2a2045] hover:bg-[#352a55] text-white rounded-lg font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
                         >
                             <Save className="h-4 w-4" />
                             <span className="hidden sm:inline">Save Draft</span>

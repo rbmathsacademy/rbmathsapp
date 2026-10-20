@@ -419,8 +419,8 @@ export default function CreateAssignmentPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Settings */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6 space-y-4">
-                        <h2 className="text-lg font-semibold text-blue-400 mb-4">Settings</h2>
+                    <div className="bg-[#151029] border border-white/5 rounded-xl p-6 space-y-4">
+                        <h2 className="text-lg font-semibold text-violet-400 mb-4">Settings</h2>
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Title *</label>
@@ -428,7 +428,7 @@ export default function CreateAssignmentPage() {
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-violet-500/50 outline-none"
                                 placeholder="e.g. Linear Algebra Assignment 1"
                             />
                         </div>
@@ -438,7 +438,7 @@ export default function CreateAssignmentPage() {
                             <select
                                 value={batch}
                                 onChange={(e) => setBatch(e.target.value)}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-violet-500/50 outline-none"
                             >
                                 <option value="">Select Batch</option>
                                 {batches.map(b => <option key={b} value={b}>{b}</option>)}
@@ -451,7 +451,7 @@ export default function CreateAssignmentPage() {
                                 type="datetime-local"
                                 value={deadline}
                                 onChange={(e) => setDeadline(e.target.value)}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-violet-500/50 outline-none"
                             />
                         </div>
 
@@ -490,10 +490,10 @@ export default function CreateAssignmentPage() {
                                 value={cooldownEndTime}
                                 onChange={(e) => handleCooldownEndTimeChange(e.target.value)}
                                 min={deadline}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500/50 outline-none"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-violet-500/50 outline-none"
                             />
                             {deadline && cooldownEndTime && (
-                                <p className="text-xs text-blue-400 mt-1 font-medium">
+                                <p className="text-xs text-violet-400 mt-1 font-medium">
                                     Duration: {cooldown} minutes after deadline
                                 </p>
                             )}
@@ -512,7 +512,7 @@ export default function CreateAssignmentPage() {
                                     </label>
                                     <button
                                         onClick={() => setRandomDeploy(!randomDeploy)}
-                                        className={`w-11 h-6 rounded-full transition-colors relative ${randomDeploy ? 'bg-amber-500' : 'bg-gray-700'}`}
+                                        className={`w-11 h-6 rounded-full transition-colors relative ${randomDeploy ? 'bg-amber-500' : 'bg-[#2a2045]'}`}
                                     >
                                         <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${randomDeploy ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
                                     </button>
@@ -536,13 +536,13 @@ export default function CreateAssignmentPage() {
                         )}
                     </div>
 
-                    <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6">
-                        <h2 className="text-lg font-semibold text-blue-400 mb-4">Assignment Type</h2>
+                    <div className="bg-[#151029] border border-white/5 rounded-xl p-6">
+                        <h2 className="text-lg font-semibold text-violet-400 mb-4">Assignment Type</h2>
                         <div className="flex gap-3 flex-wrap">
                             <button
                                 onClick={() => setType('PDF')}
                                 className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${type === 'PDF'
-                                    ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                                    ? 'bg-violet-500/20 border-violet-500 text-violet-400'
                                     : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
                                     }`}
                             >
@@ -585,15 +585,15 @@ export default function CreateAssignmentPage() {
 
                 {/* Right Column: Content */}
                 <div className="lg:col-span-2">
-                    <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-6 min-h-[500px]">
+                    <div className="bg-[#151029] border border-white/5 rounded-xl p-6 min-h-[500px]">
                         <h2 className="text-lg font-semibold text-white mb-6">Content</h2>
 
                         {type === 'PDF' ? (
-                            <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-xl p-12 hover:border-blue-500/50 transition-colors">
+                            <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-xl p-12 hover:border-violet-500/50 transition-colors">
                                 <Upload className="w-12 h-12 text-gray-500 mb-4" />
                                 <p className="text-gray-300 font-medium mb-2">Upload Assignment PDF</p>
                                 <p className="text-gray-500 text-sm mb-1">Max size: 3MB</p>
-                                <p className="text-gray-600 text-xs mb-4">If larger, compress at <a href="https://www.ilovepdf.com/compress_pdf" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">ilovepdf.com</a></p>
+                                <p className="text-gray-600 text-xs mb-4">If larger, compress at <a href="https://www.ilovepdf.com/compress_pdf" target="_blank" rel="noopener noreferrer" className="text-violet-400 underline">ilovepdf.com</a></p>
                                 <input
                                     type="file"
                                     accept="application/pdf"
@@ -603,7 +603,7 @@ export default function CreateAssignmentPage() {
                                 />
                                 <label
                                     htmlFor="pdf-upload"
-                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg cursor-pointer transition-colors"
+                                    className="px-6 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white rounded-lg cursor-pointer transition-colors"
                                 >
                                     Select PDF
                                 </label>
@@ -629,7 +629,7 @@ export default function CreateAssignmentPage() {
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
                                                 <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
-                                                    board === 'CBSE' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                                                    board === 'CBSE' ? 'bg-violet-500/10 text-violet-400 border-violet-500/30' :
                                                     board === 'ISC' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
                                                     'bg-purple-500/10 text-purple-400 border-purple-500/30'
                                                 }`}>{board}</span>
@@ -757,8 +757,8 @@ export default function CreateAssignmentPage() {
 
             {/* Question Selection Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-[#1a1f2e] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4">
+                    <div className="relative bg-[#151029] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-2xl sd-gborder sd-gborder-soft sd-card flex flex-col shadow-2xl">
                         {/* Modal Header */}
                         <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center">
                             <h2 className="text-xl font-bold">Import from Question Bank</h2>
@@ -773,7 +773,7 @@ export default function CreateAssignmentPage() {
                                 <select
                                     value={topicFilter}
                                     onChange={(e) => { setTopicFilter(e.target.value); setSubtopicFilter(''); }}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
                                 >
                                     <option value="">All Topics</option>
                                     {topics.map(t => <option key={t} value={t}>{t}</option>)}
@@ -781,7 +781,7 @@ export default function CreateAssignmentPage() {
                                 <select
                                     value={subtopicFilter}
                                     onChange={(e) => setSubtopicFilter(e.target.value)}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[150px]"
                                 >
                                     <option value="">All Sub-Topics</option>
                                     {subtopics.map(t => <option key={t} value={t}>{t}</option>)}
@@ -789,7 +789,7 @@ export default function CreateAssignmentPage() {
                                 <select
                                     value={typeFilter}
                                     onChange={(e) => setTypeFilter(e.target.value)}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[120px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[120px]"
                                 >
                                     <option value="">All Types</option>
                                     {types.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
@@ -797,7 +797,7 @@ export default function CreateAssignmentPage() {
                                 <select
                                     value={batchFilter}
                                     onChange={(e) => setBatchFilter(e.target.value)}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[130px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[130px]"
                                 >
                                     <option value="">All Batches</option>
                                     {batchNames.map(b => <option key={b} value={b}>{b}</option>)}
@@ -805,14 +805,14 @@ export default function CreateAssignmentPage() {
                                 <select
                                     value={examFilter}
                                     onChange={(e) => setExamFilter(e.target.value)}
-                                    className="bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[130px]"
+                                    className="bg-[#151029] border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none min-w-[130px]"
                                 >
                                     <option value="">All Exams</option>
                                     {examNames.map(e => <option key={e} value={e}>{e}</option>)}
                                 </select>
                             </div>
                             <div className="flex gap-2 sm:gap-3 items-center flex-wrap">
-                                <button onClick={selectAllFiltered} className="px-4 py-1.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-sm border border-blue-500/30">
+                                <button onClick={selectAllFiltered} className="px-4 py-1.5 bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 rounded-lg text-sm border border-violet-500/30">
                                     Select All ({filteredQuestions.length})
                                 </button>
                                 <button onClick={deselectAll} className="px-4 py-1.5 bg-red-600/10 text-red-400 hover:bg-red-600/20 rounded-lg text-sm border border-red-500/20">
@@ -834,12 +834,12 @@ export default function CreateAssignmentPage() {
                                         key={q._id}
                                         onClick={() => toggleSelection(q._id)}
                                         className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedIds.has(q._id)
-                                            ? 'bg-blue-500/10 border-blue-500/50'
+                                            ? 'bg-violet-500/10 border-violet-500/50'
                                             : 'bg-black/20 border-white/5 hover:border-white/20'
                                             }`}
                                     >
                                         <div className="flex gap-4">
-                                            <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedIds.has(q._id) ? 'bg-blue-500 border-blue-500' : 'border-gray-500'
+                                            <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedIds.has(q._id) ? 'bg-violet-500 border-violet-500' : 'border-gray-500'
                                                 }`}>
                                                 {selectedIds.has(q._id) && (
                                                     <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
@@ -867,7 +867,7 @@ export default function CreateAssignmentPage() {
                             <span className="text-gray-400 font-medium">{selectedIds.size} questions selected</span>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium"
+                                className="px-6 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg font-medium"
                             >
                                 Done
                             </button>

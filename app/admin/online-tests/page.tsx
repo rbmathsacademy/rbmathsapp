@@ -245,7 +245,7 @@ export default function OnlineTestsPage() {
         switch (status) {
             case 'draft': return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
             case 'deployed': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-            case 'completed': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+            case 'completed': return 'bg-violet-500/20 text-violet-300 border-violet-500/30';
             default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
         }
     };
@@ -263,16 +263,16 @@ export default function OnlineTestsPage() {
             <Toaster />
 
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
+                    <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                         Online Tests Management
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">Create and manage online tests for students</p>
                 </div>
                 <button
                     onClick={() => router.push(createTestHref)}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                    className="self-start sm:self-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
                 >
                     <Plus className="h-5 w-5" />
                     Create New Test
@@ -303,7 +303,7 @@ export default function OnlineTestsPage() {
                                 placeholder="Search tests..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-900/60 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full pl-10 pr-4 py-2.5 bg-[#140d27]/60 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div className="flex gap-2">
@@ -313,7 +313,7 @@ export default function OnlineTestsPage() {
                                     onClick={() => setFilter(status as any)}
                                     className={`px-4 py-2.5 rounded-xl font-medium capitalize transition-all ${filter === status
                                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
-                                        : 'bg-slate-900/60 text-slate-400 border border-white/10 hover:border-white/20'
+                                        : 'bg-[#140d27]/60 text-slate-400 border border-white/10 hover:border-white/20'
                                         }`}
                                 >
                                     {status}
@@ -326,7 +326,7 @@ export default function OnlineTestsPage() {
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 animate-pulse">
+                                <div key={i} className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6 animate-pulse">
                                     <div className="h-6 bg-white/5 rounded mb-4"></div>
                                     <div className="h-4 bg-white/5 rounded mb-2"></div>
                                     <div className="h-4 bg-white/5 rounded w-2/3"></div>
@@ -360,7 +360,7 @@ export default function OnlineTestsPage() {
                             {filteredTests.slice(0, visibleCount).map(test => (
                                 <div
                                     key={test._id}
-                                    className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group ${movingTest === test._id ? 'relative z-50 shadow-2xl' : ''}`}
+                                    className={`bg-[#140d27]/60 border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all group ${movingTest === test._id ? 'relative z-50 shadow-2xl' : ''}`}
                                 >
                                     {/* Status Badge */}
                                     <div className="flex items-center justify-between mb-4">
@@ -371,7 +371,7 @@ export default function OnlineTestsPage() {
                                             {/* Clone Button - Available for all tests */}
                                             <button
                                                 onClick={() => cloneTest(test._id)}
-                                                className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+                                                className="p-2 rounded-lg bg-fuchsia-500/10 text-fuchsia-400 hover:bg-fuchsia-500/20 transition-colors"
                                                 title="Duplicate Test"
                                             >
                                                 <FileText className="h-4 w-4" />
@@ -381,7 +381,7 @@ export default function OnlineTestsPage() {
                                                 <>
                                                     <button
                                                         onClick={() => router.push(`/admin/online-tests/create?id=${test._id}`)}
-                                                        className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                                                        className="p-2 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors"
                                                         title="Edit"
                                                     >
                                                         <Edit className="h-4 w-4" />
@@ -400,7 +400,7 @@ export default function OnlineTestsPage() {
                                                 <>
                                                     <button
                                                         onClick={() => router.push(`/admin/online-tests/create?id=${test._id}`)}
-                                                        className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                                                        className="p-2 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors"
                                                         title="Edit Questions & Content"
                                                     >
                                                         <Edit className="h-4 w-4" />
@@ -432,10 +432,10 @@ export default function OnlineTestsPage() {
                                                     <FolderInput className="h-4 w-4" />
                                                 </button>
                                                 {movingTest === test._id && (
-                                                    <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-50 p-2">
+                                                    <div className="absolute right-0 mt-2 w-48 bg-[#1d1535] border border-white/10 rounded-lg shadow-xl z-50 p-2">
                                                         <button
                                                             onClick={() => moveTestToFolder(test._id, null)}
-                                                            className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded"
+                                                            className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-[#2a2045] rounded"
                                                         >
                                                             📂 Root (No Folder)
                                                         </button>
@@ -443,7 +443,7 @@ export default function OnlineTestsPage() {
                                                             <button
                                                                 key={folder._id}
                                                                 onClick={() => moveTestToFolder(test._id, folder._id)}
-                                                                className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded"
+                                                                className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-[#2a2045] rounded"
                                                             >
                                                                 📁 {folder.name}
                                                             </button>
@@ -536,7 +536,7 @@ export default function OnlineTestsPage() {
                         <div className="mt-8 flex justify-center">
                             <button
                                 onClick={() => setVisibleCount(prev => prev + 20)}
-                                className="px-6 py-2.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold hover:bg-slate-700 transition-colors shadow-lg"
+                                className="px-6 py-2.5 rounded-full bg-[#1d1535] border border-[#352a55] text-slate-300 hover:text-white font-semibold hover:bg-[#2a2045] transition-colors shadow-lg"
                             >
                                 View More ({filteredTests.length - visibleCount} remaining)
                             </button>

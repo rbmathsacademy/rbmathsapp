@@ -75,11 +75,11 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-900 text-gray-200">
+        <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 sd-bg text-gray-200">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center mb-6">
-                    <div className="p-3 bg-blue-600/20 rounded-full">
-                        <KeyRound className="h-8 w-8 text-blue-500" />
+                    <div className="p-3 bg-violet-600/20 rounded-full">
+                        <KeyRound className="h-8 w-8 text-violet-500" />
                     </div>
                 </div>
                 <h2 className="text-center text-3xl font-bold tracking-tight text-white">
@@ -91,7 +91,7 @@ export default function ForgotPassword() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-700">
+                <div className="bg-[#1d1535] py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-[#352a55]">
                     {step === 'email' ? (
                         <form className="space-y-6" onSubmit={handleSendOTP}>
                             <div>
@@ -105,7 +105,7 @@ export default function ForgotPassword() {
                                     <input
                                         type="email"
                                         required
-                                        className="block w-full pl-10 bg-gray-700 border-gray-600 rounded-md text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2"
+                                        className="block w-full pl-10 bg-[#2a2045] border-[#433666] rounded-md text-white placeholder-gray-400 focus:ring-violet-500 focus:border-violet-500 sm:text-sm py-2"
                                         placeholder="admin@example.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -116,7 +116,7 @@ export default function ForgotPassword() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50"
                             >
                                 {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Send OTP'}
                             </button>
@@ -128,7 +128,7 @@ export default function ForgotPassword() {
                                 <input
                                     type="text"
                                     required
-                                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md text-white text-center tracking-widest text-lg font-mono focus:ring-blue-500 focus:border-blue-500 py-2"
+                                    className="mt-1 block w-full bg-[#2a2045] border-[#433666] rounded-md text-white text-center tracking-widest text-lg font-mono focus:ring-violet-500 focus:border-violet-500 py-2"
                                     placeholder="XXXXXX"
                                     maxLength={6}
                                     value={otp}
@@ -141,7 +141,7 @@ export default function ForgotPassword() {
                                 <input
                                     type="password"
                                     required
-                                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
+                                    className="mt-1 block w-full bg-[#2a2045] border-[#433666] rounded-md text-white focus:ring-violet-500 focus:border-violet-500 py-2 px-3"
                                     placeholder="••••••••"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
@@ -166,7 +166,7 @@ export default function ForgotPassword() {
                         </form>
                     )}
 
-                    <div className="mt-6 border-t border-gray-700 pt-6">
+                    <div className="mt-6 border-t border-[#352a55] pt-6">
                         <Link href="/admin/login" className="flex items-center justify-center text-sm font-medium text-gray-400 hover:text-white gap-2">
                             <ArrowLeft className="h-4 w-4" /> Back to Login
                         </Link>

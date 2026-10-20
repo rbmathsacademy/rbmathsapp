@@ -8,7 +8,7 @@ import CollegeNameModal from './CollegeNameModal';
 
 import SurveyPopupModal from './components/SurveyPopupModal';
 import NotificationPopupModal from './components/NotificationPopupModal';
-import './student-theme.css';
+import '../portal-theme.css';
 
 // Helper: check if student belongs to a school batch (contains "class")
 function isSchoolBatch(courses: string[]): boolean {

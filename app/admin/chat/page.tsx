@@ -354,7 +354,7 @@ export default function AdminChat() {
                 <div className="flex gap-2 justify-end">
                     <button 
                         onClick={() => toast.dismiss(t.id)} 
-                        className="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                        className="px-3 py-1 text-xs font-semibold rounded-lg bg-[#2a2045] hover:bg-[#352a55] text-white transition-colors"
                     >
                         Cancel
                     </button>
@@ -490,16 +490,16 @@ export default function AdminChat() {
     };
 
     return (
-        <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100svh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#0f172a] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
+        <div className="fixed top-[64px] left-0 right-0 bottom-0 md:relative md:top-0 h-[calc(100svh-64px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row bg-[#140d27] md:rounded-3xl md:border border-white/10 overflow-hidden shadow-2xl w-full z-20">
 
             
             {/* Sidebar: Batch List */}
 
-            <div className={`w-full md:w-80 border-r border-white/10 flex flex-col bg-[#0a0f1a]/50 ${selectedBatch ? 'hidden md:flex' : 'flex'}`}>
+            <div className={`w-full md:w-80 border-r border-white/10 flex flex-col bg-[#0b0718]/50 ${selectedBatch ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <MessageSquare className="text-blue-400" /> Student Chat
+                            <MessageSquare className="text-violet-400" /> Student Chat
                         </h2>
                         <button onClick={fetchBatches} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors">
                             <RefreshCcw className="h-4 w-4" />
@@ -512,7 +512,7 @@ export default function AdminChat() {
                             placeholder="Search batches..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                         />
                     </div>
                 </div>
@@ -533,7 +533,7 @@ export default function AdminChat() {
                             onClick={() => setSelectedBatch(batch)}
                             className={`w-full p-4 rounded-2xl transition-all duration-200 flex items-center justify-between group ${
                                 selectedBatch?.id === batch.id 
-                                ? 'bg-blue-600 text-white shadow-lg' 
+                                ? 'bg-violet-600 text-white shadow-lg' 
                                 : batch.hasUnread
                                 ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
                                 : 'hover:bg-white/5 text-slate-400 border border-transparent'
@@ -545,7 +545,7 @@ export default function AdminChat() {
                                     ? 'bg-white/20' 
                                     : batch.hasUnread 
                                     ? 'bg-red-500/20 text-red-200 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
-                                    : 'bg-slate-800 text-slate-400'
+                                    : 'bg-[#1d1535] text-slate-400'
                                 }`}>
                                     {batch.name[0]}
                                 </div>
@@ -563,15 +563,15 @@ export default function AdminChat() {
             {selectedBatch ? (
                 <div className="flex-1 flex flex-col bg-gradient-to-b from-[#0f172a] to-[#050b14] relative min-h-0">
                     {/* Chat Header */}
-                    <div className="p-2 border-b border-white/10 backdrop-blur-md bg-white/5 flex flex-row items-center justify-between shrink-0 z-10 gap-2">
+                    <div className="p-2 border-b border-white/10 bg-white/5 flex flex-row items-center justify-between shrink-0 z-10 gap-2">
                         <button 
                             onClick={() => { setSelectedBatch(null); lastBatchIdScrolled.current = null; }} 
                             className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold transition-colors md:hidden shrink-0"
                         >
                             <ChevronLeft className="h-4 w-4" /> Back
                         </button>
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-1.5 flex-1 shadow-sm overflow-hidden">
-                            <p className="text-[9px] sm:text-[10px] text-blue-300 leading-[1.2]">
+                        <div className="bg-violet-500/10 border border-violet-500/30 rounded-md p-1.5 flex-1 shadow-sm overflow-hidden">
+                            <p className="text-[9px] sm:text-[10px] text-violet-300 leading-[1.2]">
                                 • Anonymous to all. Auto-deleted in 7 days.<br/>
                                 • AI answers first. If unresolved, RB Sir will clear it.
                             </p>
@@ -586,7 +586,7 @@ export default function AdminChat() {
                     >
                         {loadingMessages ? (
                             <div className="flex items-center justify-center h-full">
-                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-violet-500"></div>
                             </div>
                         ) : messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full opacity-30">
@@ -602,7 +602,7 @@ export default function AdminChat() {
                                     <div 
                                         key={msg._id}
                                         id={`msg-${msg._id}`}
-                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 transition-colors duration-700 rounded-2xl ${isHighlighted ? 'bg-blue-500/20' : ''}`}
+                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 transition-colors duration-700 rounded-2xl ${isHighlighted ? 'bg-violet-500/20' : ''}`}
                                         onTouchStart={(e) => handleTouchStart(e, msg._id)}
                                         onTouchMove={handleTouchMove}
                                         onTouchEnd={handleTouchEnd}
@@ -614,8 +614,8 @@ export default function AdminChat() {
                                         {/* Reply indicator on swipe */}
                                         {offset > 20 && (
                                             <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center" style={{ opacity: Math.min(offset / 50, 1) }}>
-                                                <div className="bg-blue-600/30 rounded-full p-2">
-                                                    <Reply className="h-4 w-4 text-blue-400" />
+                                                <div className="bg-violet-600/30 rounded-full p-2">
+                                                    <Reply className="h-4 w-4 text-violet-400" />
                                                 </div>
                                             </div>
                                         )}
@@ -626,7 +626,7 @@ export default function AdminChat() {
                                                         RB Sir's Math-AI Assistant
                                                     </p>
                                                 ) : (
-                                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 ml-2">
+                                                    <p className="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-1 ml-2">
                                                         {msg.senderName}
                                                     </p>
                                                 )
@@ -637,18 +637,18 @@ export default function AdminChat() {
                                                     : msg.doubtMetadata?.status === 'resolved' && !msg.isAiResponse && !isMe
                                                         ? 'bg-green-900/40 text-green-100 rounded-tl-none border border-green-500/50'
                                                         : isMe 
-                                                            ? 'bg-[#1e293b] text-slate-200 rounded-tr-none border border-slate-700 shadow-md' 
+                                                            ? 'bg-[#1d1535] text-slate-200 rounded-tr-none border border-[#352a55] shadow-md' 
                                                             : msg.isAiResponse 
                                                                 ? 'bg-yellow-900/40 text-amber-50 border border-yellow-700/50 rounded-tl-none shadow-md shadow-yellow-900/20' 
-                                                                : 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5'
+                                                                : 'bg-[#1d1535] text-slate-200 rounded-tl-none border border-white/5'
                                             }`}>
                                                 {/* Reply preview inside message - clickable to scroll */}
                                                 {msg.replyTo && (
                                                     <div 
-                                                        className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-700/50 border-blue-400'}`}
+                                                        className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? 'bg-[#2a2045]/50 border-slate-500' : 'bg-[#2a2045]/50 border-violet-400'}`}
                                                         onClick={() => scrollToMessage(msg.replyTo!.messageId)}
                                                     >
-                                                        <p className={`text-[10px] font-bold ${isMe ? 'text-slate-300' : 'text-blue-300'}`}>{msg.replyTo.senderRole === 'admin' ? 'Admin' : msg.replyTo.senderName}</p>
+                                                        <p className={`text-[10px] font-bold ${isMe ? 'text-slate-300' : 'text-violet-300'}`}>{msg.replyTo.senderRole === 'admin' ? 'Admin' : msg.replyTo.senderName}</p>
                                                         <p className="text-[11px] opacity-80 truncate max-w-[250px]">
                                                             {msg.replyTo.content?.substring(0, 80)}{(msg.replyTo.content?.length || 0) > 80 ? '...' : ''}
                                                         </p>
@@ -682,12 +682,12 @@ export default function AdminChat() {
                                                     <div className="relative">
                                                         <img src={getPreviewUrl(msg.content)} alt="Sent" className="rounded-2xl max-h-80 w-auto object-contain cursor-pointer bg-white/5" onClick={() => window.open(msg.content, '_blank')} />
                                                         {msg.doubtMetadata?.status === 'resolved' && !msg.isAiResponse && !isMe && (
-                                                            <div className="absolute top-2 right-2 text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-md backdrop-blur-md">
+                                                            <div className="absolute top-2 right-2 text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-md">
                                                                 Resolved
                                                             </div>
                                                         )}
                                                         {msg.doubtMetadata?.status === 'unresolved' && !msg.isAiResponse && !isMe && (
-                                                            <div className="absolute top-2 right-2 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shadow-md backdrop-blur-md">
+                                                            <div className="absolute top-2 right-2 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shadow-md">
                                                                 Unresolved
                                                             </div>
                                                         )}
@@ -745,43 +745,43 @@ export default function AdminChat() {
                     {/* Edit Overlay */}
                     {editingMessage && (
                         <div className="absolute bottom-24 left-4 right-4 z-20 animate-in slide-in-from-bottom-4">
-                            <div className="bg-slate-900 border border-blue-500/50 rounded-2xl p-4 shadow-2xl flex items-center gap-4">
+                            <div className="bg-[#140d27] border border-violet-500/50 rounded-2xl p-4 shadow-2xl flex items-center gap-4">
                                 <div className="flex-1">
-                                    <p className="text-[10px] text-blue-400 font-black uppercase mb-2">Editing Message</p>
+                                    <p className="text-[10px] text-violet-400 font-black uppercase mb-2">Editing Message</p>
                                     <input 
                                         type="text" 
                                         value={editContent} 
                                         onChange={e => setEditContent(e.target.value)} 
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500" 
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-violet-500" 
                                         autoFocus
                                     />
                                 </div>
                                 <div className="flex gap-2">
                                     <button onClick={() => setEditingMessage(null)} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:bg-white/10"><X className="h-5 w-5"/></button>
-                                    <button onClick={handleEditMessage} className="p-2 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20"><Check className="h-5 w-5"/></button>
+                                    <button onClick={handleEditMessage} className="p-2 rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-500/20"><Check className="h-5 w-5"/></button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {/* Chat Input */}
-                    <div className="p-4 sm:p-6 border-t border-white/10 bg-[#0a0f1a] relative shrink-0">
+                    <div className="p-4 sm:p-6 border-t border-white/10 bg-[#0b0718] relative shrink-0">
                         {imagePreview && (
-                            <div className="absolute bottom-full left-0 right-0 p-4 bg-slate-900 border-t border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 duration-300 z-30">
+                            <div className="absolute bottom-full left-0 right-0 p-4 bg-[#140d27] border-t border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 duration-300 z-30">
                                 <div className="relative group">
                                     <img src={imagePreview} alt="Preview" className="max-h-60 rounded-xl border border-white/10 shadow-2xl" />
                                     <button onClick={() => setImagePreview(null)} className="absolute -top-3 -right-3 p-1.5 bg-red-600 rounded-full text-white shadow-lg"><X className="h-4 w-4" /></button>
                                 </div>
                                 <div className="flex gap-4 mt-4 w-full max-w-md">
                                     <button onClick={() => setImagePreview(null)} className="flex-1 py-3 rounded-2xl border border-white/10 text-slate-400 font-bold hover:bg-white/5">Cancel</button>
-                                    <button onClick={handleSendImage} className="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl">Send Photo</button>
+                                    <button onClick={handleSendImage} className="flex-1 py-3 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-500 shadow-xl">Send Photo</button>
                                 </div>
                             </div>
                         )}
                         
                         {/* Math Tools Palette */}
                         {showMathTools && (
-                            <div className="absolute bottom-full left-0 right-0 p-3 bg-[#0f172a] border-t border-white/10 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+                            <div className="absolute bottom-full left-0 right-0 p-3 bg-[#140d27] border-t border-white/10 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
                                 <div className="flex items-center justify-between mb-2 px-1">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Math Symbols</span>
                                     <button onClick={() => setShowMathTools(false)} className="text-slate-500 hover:text-white"><X className="h-4 w-4" /></button>
@@ -795,7 +795,7 @@ export default function AdminChat() {
                                                 setNewMessage(prev => prev + item.insert);
                                                 inputRef.current?.focus();
                                             }}
-                                            className="px-2.5 py-1.5 bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-lg text-white font-mono text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center min-w-[36px]"
+                                            className="px-2.5 py-1.5 bg-[#1d1535] hover:bg-violet-600 border border-[#352a55] hover:border-violet-500 rounded-lg text-white font-mono text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center min-w-[36px]"
                                             title={item.label}
                                         >
                                             {item.insert}
@@ -807,10 +807,10 @@ export default function AdminChat() {
 
                         {/* Reply preview bar */}
                         {replyingTo && (
-                            <div className="mb-2 flex items-center gap-3 bg-slate-800/80 border border-white/10 rounded-xl p-2.5 animate-in slide-in-from-bottom-2">
-                                <div className="w-1 h-8 bg-blue-500 rounded-full shrink-0"></div>
+                            <div className="mb-2 flex items-center gap-3 bg-[#1d1535]/80 border border-white/10 rounded-xl p-2.5 animate-in slide-in-from-bottom-2">
+                                <div className="w-1 h-8 bg-violet-500 rounded-full shrink-0"></div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-bold text-blue-400">{replyingTo.senderRole === 'admin' ? 'Admin' : replyingTo.senderName}</p>
+                                    <p className="text-[10px] font-bold text-violet-400">{replyingTo.senderRole === 'admin' ? 'Admin' : replyingTo.senderName}</p>
                                     <p className="text-xs text-slate-400 truncate">{replyingTo.type === 'image' ? '📷 Photo' : replyingTo.content.substring(0, 60)}</p>
                                 </div>
                                 <button onClick={() => setReplyingTo(null)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors shrink-0">
@@ -820,10 +820,10 @@ export default function AdminChat() {
                         )}
 
                         <form onSubmit={handleSendMessage} className="flex items-end gap-2 sm:gap-3">
-                            <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
+                            <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-violet-600/20 text-violet-400 border-violet-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                 <Calculator className="h-5 w-5" />
                             </button>
-                            <label className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden">
+                            <label className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 sd-gborder sd-gborder-soft sd-card transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden">
                                 <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
                                 <input 
                                     type="file" 
@@ -841,16 +841,16 @@ export default function AdminChat() {
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Type a message..." 
                                 rows={1}
-                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-blue-500 focus:outline-none transition-all resize-none overflow-hidden"
+                                className="relative flex-1 min-w-0 bg-white/5 sd-gborder sd-gborder-soft sd-card rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 text-sm text-white focus:border-violet-500 focus:outline-none transition-all resize-none overflow-hidden"
                                 style={{ maxHeight: '120px' }}
                             />
                             
-                            <button type="submit" disabled={!newMessage.trim()} className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-5 w-5" /></button>
+                            <button type="submit" disabled={!newMessage.trim()} className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white shadow-lg disabled:opacity-50 shrink-0"><Send className="h-5 w-5" /></button>
                         </form>
                     </div>
                 </div>
             ) : (
-                <div className="flex-1 flex flex-col items-center justify-center bg-[#0f172a] text-slate-500">
+                <div className="flex-1 flex flex-col items-center justify-center bg-[#140d27] text-slate-500">
                     <MessageSquare className="h-16 w-16 mb-4 opacity-20" />
                     <h3 className="text-xl font-bold text-slate-300">Select a batch to chat</h3>
                 </div>

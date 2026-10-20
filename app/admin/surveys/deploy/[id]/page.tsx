@@ -110,9 +110,9 @@ export default function DeploySurveyPage({ params }: { params: Promise<{ id: str
                 </div>
             </div>
 
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6">
                 <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-400" /> Select Target Batches
+                    <Users className="h-5 w-5 text-violet-400" /> Select Target Batches
                 </h2>
 
                 <div className="flex gap-2 mb-4">
@@ -122,12 +122,12 @@ export default function DeploySurveyPage({ params }: { params: Promise<{ id: str
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {batches.map(batch => (
-                        <label key={batch} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedBatches.has(batch) ? 'bg-blue-500/10 border-blue-500/30 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}>
+                        <label key={batch} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedBatches.has(batch) ? 'bg-violet-500/10 border-violet-500/30 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}>
                             <input
                                 type="checkbox"
                                 checked={selectedBatches.has(batch)}
                                 onChange={() => toggleBatch(batch)}
-                                className="rounded bg-slate-900 border-white/20 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                                className="rounded bg-[#140d27] border-white/20 text-violet-500 focus:ring-violet-500 focus:ring-offset-slate-900"
                             />
                             <span className="text-sm font-medium">{batch}</span>
                         </label>
@@ -135,13 +135,13 @@ export default function DeploySurveyPage({ params }: { params: Promise<{ id: str
                 </div>
                 
                 {selectedBatches.size > 0 && (
-                    <p className="mt-4 text-sm font-bold text-blue-400 text-center">
+                    <p className="mt-4 text-sm font-bold text-violet-400 text-center">
                         {selectedBatches.size} batch(es) selected
                     </p>
                 )}
             </div>
 
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6">
                 <label className="block text-sm font-bold text-white mb-2">Auto-Close Date (Optional)</label>
                 <p className="text-xs text-slate-400 mb-4">Survey will automatically close and disappear from popups after this date.</p>
                 <input

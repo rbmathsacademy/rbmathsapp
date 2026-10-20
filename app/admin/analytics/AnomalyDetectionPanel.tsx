@@ -73,13 +73,13 @@ export default function AnomalyDetectionPanel({ batch }: AnomalyDetectionPanelPr
                     {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <AlertTriangle className="w-4 h-4" />}
                     Detect Anomalies
                 </button>
-                <button onClick={() => setShowSettings(!showSettings)} className="p-2.5 bg-[#1a1f2e] border border-white/10 rounded-xl hover:bg-white/5 transition-colors text-slate-400 hover:text-white">
+                <button onClick={() => setShowSettings(!showSettings)} className="p-2.5 bg-[#151029] border border-white/10 rounded-xl hover:bg-white/5 transition-colors text-slate-400 hover:text-white">
                     <Settings className="w-5 h-5" />
                 </button>
             </div>
 
             {showSettings && (
-                <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-4 max-w-sm animate-in fade-in slide-in-from-top-2">
+                <div className="bg-[#151029] border border-white/10 rounded-xl p-4 max-w-sm animate-in fade-in slide-in-from-top-2">
                     <h3 className="text-sm font-bold text-white mb-3">Anomaly Settings</h3>
                     <label className="block text-xs font-medium text-slate-400 mb-1">
                         Malpractice Gap Threshold (%)
@@ -116,7 +116,7 @@ export default function AnomalyDetectionPanel({ batch }: AnomalyDetectionPanelPr
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                     {anomalies.malpracticeAlerts.map((alert: any, i: number) => (
-                                        <div key={i} className="bg-[#1a1f2e] border border-white/5 rounded-lg p-4">
+                                        <div key={i} className="bg-[#151029] border border-white/5 rounded-lg p-4">
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <div className="font-bold text-white text-sm">{alert.student.name}</div>
@@ -130,12 +130,12 @@ export default function AnomalyDetectionPanel({ batch }: AnomalyDetectionPanelPr
                                             <div className="space-y-2 mb-3">
                                                 <div className="flex items-center text-xs">
                                                     <span className="w-20 text-slate-400">Online Avg:</span>
-                                                    <div className="flex-1 h-1.5 bg-slate-800 rounded-full mr-2"><div className="h-full bg-blue-400 rounded-full" style={{width: `${alert.onlineAvg}%`}}></div></div>
-                                                    <span className="w-10 text-right text-blue-400 font-bold">{alert.onlineAvg}%</span>
+                                                    <div className="flex-1 h-1.5 bg-[#1d1535] rounded-full mr-2"><div className="h-full bg-violet-400 rounded-full" style={{width: `${alert.onlineAvg}%`}}></div></div>
+                                                    <span className="w-10 text-right text-violet-400 font-bold">{alert.onlineAvg}%</span>
                                                 </div>
                                                 <div className="flex items-center text-xs">
                                                     <span className="w-20 text-slate-400">Offline Avg:</span>
-                                                    <div className="flex-1 h-1.5 bg-slate-800 rounded-full mr-2"><div className="h-full bg-orange-400 rounded-full" style={{width: `${alert.offlineAvg}%`}}></div></div>
+                                                    <div className="flex-1 h-1.5 bg-[#1d1535] rounded-full mr-2"><div className="h-full bg-orange-400 rounded-full" style={{width: `${alert.offlineAvg}%`}}></div></div>
                                                     <span className="w-10 text-right text-orange-400 font-bold">{alert.offlineAvg}%</span>
                                                 </div>
                                                 <div className="flex items-center text-xs border-t border-white/5 pt-1 mt-1">
@@ -153,7 +153,7 @@ export default function AnomalyDetectionPanel({ batch }: AnomalyDetectionPanelPr
                                                 <div className="mt-3 pt-3 border-t border-white/5 space-y-2 text-[10px]">
                                                     <div className="font-bold text-slate-300">Online (Latest 3)</div>
                                                     {alert.onlineTests.map((t:any, idx:number) => (
-                                                        <div key={idx} className="flex justify-between text-slate-400"><span className="truncate pr-2">{t.title}</span><span className="text-blue-400 font-bold">{t.percentage}%</span></div>
+                                                        <div key={idx} className="flex justify-between text-slate-400"><span className="truncate pr-2">{t.title}</span><span className="text-violet-400 font-bold">{t.percentage}%</span></div>
                                                     ))}
                                                     <div className="font-bold text-slate-300 mt-2">Offline (Latest 3)</div>
                                                     {alert.offlineTests.map((t:any, idx:number) => (
@@ -182,7 +182,7 @@ export default function AnomalyDetectionPanel({ batch }: AnomalyDetectionPanelPr
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                     {anomalies.deterioratingAlerts.map((alert: any, i: number) => (
-                                        <div key={i} className="bg-[#1a1f2e] border border-white/5 rounded-lg p-4">
+                                        <div key={i} className="bg-[#151029] border border-white/5 rounded-lg p-4">
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <div className="font-bold text-white text-sm">{alert.student.name}</div>
@@ -239,7 +239,7 @@ export default function AnomalyDetectionPanel({ batch }: AnomalyDetectionPanelPr
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {anomalies.poorPerformanceAlerts.map((alert: any, i: number) => (
-                                        <div key={i} className="bg-[#1a1f2e] border border-white/5 rounded-lg p-3 flex items-center gap-3">
+                                        <div key={i} className="bg-[#151029] border border-white/5 rounded-lg p-3 flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-full border-4 border-orange-500/20 flex items-center justify-center shrink-0">
                                                 <span className="text-orange-400 font-black text-sm">{alert.avgPercentage}%</span>
                                             </div>

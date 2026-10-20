@@ -601,7 +601,7 @@ export default function AdminStudents() {
                 <input
                     type="text" value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                     placeholder="Full name"
                 />
             </div>
@@ -612,7 +612,7 @@ export default function AdminStudents() {
                     <input
                         type="tel" value={form.phoneNumber}
                         onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                         placeholder="10-digit phone number"
                     />
                 </div>
@@ -621,7 +621,7 @@ export default function AdminStudents() {
                     <input
                         type="tel" value={form.alternativePhone}
                         onChange={e => setForm({ ...form, alternativePhone: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                         placeholder="Alternative WhatsApp number"
                     />
                 </div>
@@ -631,7 +631,7 @@ export default function AdminStudents() {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Batches / Courses</label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                     {form.courses.map(c => (
-                        <span key={c} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 text-xs font-medium border border-blue-500/20">
+                        <span key={c} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-medium border border-violet-500/20">
                             {c}
                             <button onClick={() => removeCourseFromForm(c)} className="hover:text-red-400 transition-colors"><X className="h-3 w-3" /></button>
                         </span>
@@ -641,14 +641,14 @@ export default function AdminStudents() {
                     <select
                         value={newCourseInput}
                         onChange={e => setNewCourseInput(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500"
+                        className="flex-1 px-3 py-2 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500"
                     >
-                        <option value="" className="bg-slate-800 text-white">Select existing batch...</option>
+                        <option value="" className="bg-[#1d1535] text-white">Select existing batch...</option>
                         {batches.filter(b => !form.courses.includes(b)).map(b => (
-                            <option key={b} value={b} className="bg-slate-800 text-white">{b}</option>
+                            <option key={b} value={b} className="bg-[#1d1535] text-white">{b}</option>
                         ))}
                     </select>
-                    <button onClick={addCourseToForm} className="px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">
+                    <button onClick={addCourseToForm} className="px-3 py-2 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-500 transition-colors">
                         Add
                     </button>
                 </div>
@@ -657,7 +657,7 @@ export default function AdminStudents() {
                         type="text" value={newCourseInput}
                         onChange={e => setNewCourseInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCourseToForm(); } }}
-                        className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500"
+                        className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500"
                         placeholder="Or type new batch name..."
                     />
                 </div>
@@ -680,12 +680,12 @@ export default function AdminStudents() {
                     <select
                         value={form.board}
                         onChange={e => setForm({ ...form, board: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500"
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500"
                     >
-                        <option value="" className="bg-slate-800 text-white">No board selected</option>
-                        <option value="CBSE" className="bg-slate-800 text-white">CBSE</option>
-                        <option value="ISC" className="bg-slate-800 text-white">ISC</option>
-                        <option value="WBCHSE" className="bg-slate-800 text-white">WBCHSE</option>
+                        <option value="" className="bg-[#1d1535] text-white">No board selected</option>
+                        <option value="CBSE" className="bg-[#1d1535] text-white">CBSE</option>
+                        <option value="ISC" className="bg-[#1d1535] text-white">ISC</option>
+                        <option value="WBCHSE" className="bg-[#1d1535] text-white">WBCHSE</option>
                     </select>
                 </div>
             </div>
@@ -707,11 +707,11 @@ export default function AdminStudents() {
                     <select
                         value={form.modeOfClass}
                         onChange={e => setForm({ ...form, modeOfClass: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500"
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500"
                     >
-                        <option value="" className="bg-slate-800 text-white">Unassigned</option>
-                        <option value="online" className="bg-slate-800 text-white">Online</option>
-                        <option value="offline" className="bg-slate-800 text-white">Offline</option>
+                        <option value="" className="bg-[#1d1535] text-white">Unassigned</option>
+                        <option value="online" className="bg-[#1d1535] text-white">Online</option>
+                        <option value="offline" className="bg-[#1d1535] text-white">Offline</option>
                     </select>
                 </div>
             </div>
@@ -722,7 +722,7 @@ export default function AdminStudents() {
                     <input
                         type="text" value={form.guardianName}
                         onChange={e => setForm({ ...form, guardianName: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                         placeholder="Parent/Guardian name"
                     />
                 </div>
@@ -731,7 +731,7 @@ export default function AdminStudents() {
                     <input
                         type="tel" value={form.guardianPhone}
                         onChange={e => setForm({ ...form, guardianPhone: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                         placeholder="Guardian phone"
                     />
                 </div>
@@ -742,7 +742,7 @@ export default function AdminStudents() {
                 <input
                     type="email" value={form.email}
                     onChange={e => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                     placeholder="student@email.com"
                 />
             </div>
@@ -758,12 +758,12 @@ export default function AdminStudents() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => window.history.back()}
-                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors bg-slate-800/50 md:bg-transparent"
+                        className="p-2 hover:bg-[#1d1535] rounded-lg transition-colors bg-[#1d1535]/50 md:bg-transparent"
                     >
                         <ChevronLeft className="h-5 w-5 text-slate-400" />
                     </button>
                     <div>
-                        <h1 className="text-xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400">
+                        <h1 className="text-xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-300 to-teal-400">
                             Student Database
                         </h1>
                         <p className="text-slate-400 text-xs md:text-sm mt-0.5">{total} students total</p>
@@ -784,7 +784,7 @@ export default function AdminStudents() {
                         <span className="sm:hidden">Import</span>
                     </button>
                     <button onClick={() => { resetForm(); setShowAddModal(true); }}
-                        className="col-span-1 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                        className="col-span-1 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
                         <Plus className="h-3 w-3 md:h-4 md:w-4" />
                         <span>Add</span>
                     </button>
@@ -798,7 +798,7 @@ export default function AdminStudents() {
                     <input
                         type="text" value={search}
                         onChange={e => handleSearchChange(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50"
                         placeholder="Search by name or phone..."
                     />
                 </div>
@@ -806,10 +806,10 @@ export default function AdminStudents() {
                 <select
                     value={batchFilter}
                     onChange={e => { setBatchFilter(e.target.value); setPage(1); }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 w-full sm:w-auto min-w-[160px]"
+                    className="px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500 w-full sm:w-auto min-w-[160px]"
                 >
-                    <option value="" className="bg-slate-800 text-white">All Batches</option>
-                    {batches.map(b => <option key={b} value={b} className="bg-slate-800 text-white">{b}</option>)}
+                    <option value="" className="bg-[#1d1535] text-white">All Batches</option>
+                    {batches.map(b => <option key={b} value={b} className="bg-[#1d1535] text-white">{b}</option>)}
                 </select>
                 {/* School filter — selecting auto-ticks all visible students of that school */}
                 <select
@@ -826,10 +826,10 @@ export default function AdminStudents() {
                             setSelectedStudents(new Set());
                         }
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 w-full sm:w-auto min-w-[180px]"
+                    className="px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500 w-full sm:w-auto min-w-[180px]"
                 >
-                    <option value="" className="bg-slate-800 text-white">All Schools</option>
-                    {schools.map(s => <option key={s} value={s} className="bg-slate-800 text-white">{s}</option>)}
+                    <option value="" className="bg-[#1d1535] text-white">All Schools</option>
+                    {schools.map(s => <option key={s} value={s} className="bg-[#1d1535] text-white">{s}</option>)}
                 </select>
                 {/* College filter */}
                 <select
@@ -845,10 +845,10 @@ export default function AdminStudents() {
                             setSelectedStudents(new Set());
                         }
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 w-full sm:w-auto min-w-[180px]"
+                    className="px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500 w-full sm:w-auto min-w-[180px]"
                 >
-                    <option value="" className="bg-slate-800 text-white">All Colleges</option>
-                    {colleges.map(c => <option key={c} value={c} className="bg-slate-800 text-white">{c}</option>)}
+                    <option value="" className="bg-[#1d1535] text-white">All Colleges</option>
+                    {colleges.map(c => <option key={c} value={c} className="bg-[#1d1535] text-white">{c}</option>)}
                 </select>
                 {/* Mode filter */}
                 <select
@@ -857,12 +857,12 @@ export default function AdminStudents() {
                         setModeFilter(e.target.value);
                         setPage(1);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 w-full sm:w-auto min-w-[140px]"
+                    className="px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500 w-full sm:w-auto min-w-[140px]"
                 >
-                    <option value="" className="bg-slate-800 text-white">All Modes</option>
-                    <option value="online" className="bg-slate-800 text-white">Online</option>
-                    <option value="offline" className="bg-slate-800 text-white">Offline</option>
-                    <option value="none" className="bg-slate-800 text-white">Unassigned</option>
+                    <option value="" className="bg-[#1d1535] text-white">All Modes</option>
+                    <option value="online" className="bg-[#1d1535] text-white">Online</option>
+                    <option value="offline" className="bg-[#1d1535] text-white">Offline</option>
+                    <option value="none" className="bg-[#1d1535] text-white">Unassigned</option>
                 </select>
                 {/* Guardian Filter */}
                 <select
@@ -871,17 +871,17 @@ export default function AdminStudents() {
                         setGuardianFilter(e.target.value);
                         setPage(1);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 w-full sm:w-auto min-w-[140px]"
+                    className="px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-violet-500 w-full sm:w-auto min-w-[140px]"
                 >
-                    <option value="" className="bg-slate-800 text-white">All Guardians</option>
-                    <option value="missing" className="bg-slate-800 text-white">Missing Guardian Number</option>
+                    <option value="" className="bg-[#1d1535] text-white">All Guardians</option>
+                    <option value="missing" className="bg-[#1d1535] text-white">Missing Guardian Number</option>
                 </select>
             </div>
 
             {/* Floating Action Bar */}
             {selectedStudents.size > 0 && (
-                <div className="bg-blue-600/20 border border-blue-500/30 rounded-2xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
-                    <p className="text-sm text-blue-300 font-bold">
+                <div className="bg-violet-600/20 border border-violet-500/30 rounded-2xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-200">
+                    <p className="text-sm text-violet-300 font-bold">
                         {selectedStudents.size} student(s) selected
                     </p>
                     <div className="flex gap-2 flex-wrap">
@@ -889,7 +889,7 @@ export default function AdminStudents() {
                             setMarkModeForm({ mode: '' });
                             setShowMarkModeModal(true);
                         }}
-                            className="px-3 py-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-bold text-xs hover:bg-indigo-600/30 transition-all flex items-center gap-2">
+                            className="px-3 py-2 rounded-xl bg-fuchsia-600/20 border border-fuchsia-500/30 text-fuchsia-300 font-bold text-xs hover:bg-fuchsia-600/30 transition-all flex items-center gap-2">
                             <RefreshCw className="h-3 w-3" />
                             Mark Mode
                         </button>
@@ -925,7 +925,7 @@ export default function AdminStudents() {
                             Delete Selected
                         </button>
                         <button onClick={() => setSelectedStudents(new Set())}
-                            className="px-3 py-2 rounded-xl bg-slate-700/50 border border-white/10 text-slate-400 font-bold text-xs hover:bg-slate-700 transition-all">
+                            className="px-3 py-2 rounded-xl bg-[#2a2045]/50 border border-white/10 text-slate-400 font-bold text-xs hover:bg-[#2a2045] transition-all">
                             Clear
                         </button>
                     </div>
@@ -933,7 +933,7 @@ export default function AdminStudents() {
             )}
 
             {/* Student Table */}
-            <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+            <div className="relative bg-white/5 rounded-2xl sd-gborder sd-gborder-soft sd-card overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
@@ -941,7 +941,7 @@ export default function AdminStudents() {
                                 <th className="px-2 md:px-3 py-3 w-10">
                                     <button onClick={toggleSelectAll} className="p-1 rounded hover:bg-white/10 transition-colors">
                                         {selectedStudents.size === students.length && students.length > 0
-                                            ? <CheckSquare className="h-4 w-4 text-blue-400" />
+                                            ? <CheckSquare className="h-4 w-4 text-violet-400" />
                                             : <Square className="h-4 w-4 text-slate-500" />}
                                     </button>
                                 </th>
@@ -955,7 +955,7 @@ export default function AdminStudents() {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-500">
-                                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                    <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                                     Loading students...
                                 </td></tr>
                             ) : students.length === 0 ? (
@@ -964,17 +964,17 @@ export default function AdminStudents() {
                                     No students found
                                 </td></tr>
                             ) : students.map(student => (
-                                <tr key={student._id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedStudents.has(student._id) ? 'bg-blue-500/5' : ''}`}>
+                                <tr key={student._id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${selectedStudents.has(student._id) ? 'bg-violet-500/5' : ''}`}>
                                     <td className="px-2 md:px-3 py-3 w-10">
                                         <button onClick={() => toggleStudentSelection(student._id)} className="p-1 rounded hover:bg-white/10 transition-colors">
                                             {selectedStudents.has(student._id)
-                                                ? <CheckSquare className="h-4 w-4 text-blue-400" />
+                                                ? <CheckSquare className="h-4 w-4 text-violet-400" />
                                                 : <Square className="h-4 w-4 text-slate-600" />}
                                         </button>
                                     </td>
                                     <td className="px-3 md:px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                            <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
                                                 {student.name?.[0]?.toUpperCase() || '?'}
                                             </div>
                                             <div className="max-w-[120px] sm:max-w-none truncate">
@@ -1022,7 +1022,7 @@ export default function AdminStudents() {
                                     <td className="px-3 md:px-4 py-3 hidden md:table-cell">
                                         <div className="flex flex-wrap gap-1">
                                             {student.courses.map(c => (
-                                                <span key={c} className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 text-[10px] font-semibold border border-blue-500/10">
+                                                <span key={c} className="px-2 py-0.5 rounded-md bg-violet-500/15 text-violet-300 text-[10px] font-semibold border border-violet-500/10">
                                                     {c}
                                                 </span>
                                             ))}
@@ -1051,7 +1051,7 @@ export default function AdminStudents() {
                                                 <Infinity className="h-4 w-4" />
                                             </button>
                                             <button onClick={() => openEditModal(student)}
-                                                className="p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-all" title="Edit">
+                                                className="p-2 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all" title="Edit">
                                                 <Edit3 className="h-4 w-4" />
                                             </button>
                                             <button onClick={() => handleDeleteStudent(student)}
@@ -1088,11 +1088,11 @@ export default function AdminStudents() {
 
             {/* Add Student Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowAddModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowAddModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Plus className="h-5 w-5 text-blue-400" /> Add New Student
+                                <Plus className="h-5 w-5 text-violet-400" /> Add New Student
                             </h2>
                             <button onClick={() => setShowAddModal(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400"><X className="h-5 w-5" /></button>
                         </div>
@@ -1102,7 +1102,7 @@ export default function AdminStudents() {
                                 <button onClick={() => setShowAddModal(false)}
                                     className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-400 font-bold text-sm hover:bg-white/5">Cancel</button>
                                 <button onClick={handleAddStudent}
-                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold text-sm hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/20">
+                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-bold text-sm hover:from-violet-500 hover:to-cyan-500 shadow-lg shadow-violet-500/20">
                                     Add Student
                                 </button>
                             </div>
@@ -1113,8 +1113,8 @@ export default function AdminStudents() {
 
             {/* Edit Student Modal */}
             {showEditModal && editingStudent && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => { setShowEditModal(false); setEditingStudent(null); }}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => { setShowEditModal(false); setEditingStudent(null); }}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <Edit3 className="h-5 w-5 text-amber-400" /> Edit Student
@@ -1138,8 +1138,8 @@ export default function AdminStudents() {
 
             {/* Bulk Import Modal */}
             {showBulkModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowBulkModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowBulkModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <Upload className="h-5 w-5 text-purple-400" /> Bulk Import Students
@@ -1175,8 +1175,8 @@ export default function AdminStudents() {
 
             {/* Rename Batch Modal */}
             {showRenameBatchModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRenameBatchModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowRenameBatchModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <RefreshCw className="h-5 w-5 text-amber-400" /> Rename Batch
@@ -1193,11 +1193,11 @@ export default function AdminStudents() {
                                 <select
                                     value={renameBatchForm.oldBatch}
                                     onChange={e => setRenameBatchForm({ ...renameBatchForm, oldBatch: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-amber-500"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-amber-500"
                                 >
-                                    <option value="" className="bg-slate-800 text-white">Select batch to rename...</option>
+                                    <option value="" className="bg-[#1d1535] text-white">Select batch to rename...</option>
                                     {getCommonBatches().map(b => (
-                                        <option key={b} value={b} className="bg-slate-800 text-white">{b}</option>
+                                        <option key={b} value={b} className="bg-[#1d1535] text-white">{b}</option>
                                     ))}
                                 </select>
                             </div>
@@ -1225,8 +1225,8 @@ export default function AdminStudents() {
 
             {/* Rename School Modal */}
             {showRenameSchoolModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRenameSchoolModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowRenameSchoolModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <RefreshCw className="h-5 w-5 text-teal-400" /> Rename School
@@ -1243,11 +1243,11 @@ export default function AdminStudents() {
                                 <select
                                     value={renameSchoolForm.oldSchool}
                                     onChange={e => setRenameSchoolForm({ ...renameSchoolForm, oldSchool: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-teal-500"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-teal-500"
                                 >
-                                    <option value="" className="bg-slate-800 text-white">Select school to rename...</option>
+                                    <option value="" className="bg-[#1d1535] text-white">Select school to rename...</option>
                                     {schools.map(s => (
-                                        <option key={s} value={s} className="bg-slate-800 text-white">{s}</option>
+                                        <option key={s} value={s} className="bg-[#1d1535] text-white">{s}</option>
                                     ))}
                                 </select>
                             </div>
@@ -1275,8 +1275,8 @@ export default function AdminStudents() {
 
             {/* Rename College Modal */}
             {showRenameCollegeModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRenameCollegeModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowRenameCollegeModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <RefreshCw className="h-5 w-5 text-fuchsia-400" /> Rename College
@@ -1293,11 +1293,11 @@ export default function AdminStudents() {
                                 <select
                                     value={renameCollegeForm.oldCollege}
                                     onChange={e => setRenameCollegeForm({ ...renameCollegeForm, oldCollege: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-fuchsia-500"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-fuchsia-500"
                                 >
-                                    <option value="" className="bg-slate-800 text-white">Select college to rename...</option>
+                                    <option value="" className="bg-[#1d1535] text-white">Select college to rename...</option>
                                     {colleges.map(c => (
-                                        <option key={c} value={c} className="bg-slate-800 text-white">{c}</option>
+                                        <option key={c} value={c} className="bg-[#1d1535] text-white">{c}</option>
                                     ))}
                                 </select>
                             </div>
@@ -1325,8 +1325,8 @@ export default function AdminStudents() {
 
             {/* Recycle Bin Modal */}
             {showRecycleBinModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowRecycleBinModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowRecycleBinModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <Archive className="h-5 w-5 text-amber-400" /> Recycle Bin
@@ -1365,7 +1365,7 @@ export default function AdminStudents() {
                                                     <div className="flex flex-wrap items-center gap-2 mt-0.5">
                                                         <span className="text-xs text-slate-400">{student.phoneNumber}</span>
                                                         {student.courses?.map((c: string) => (
-                                                            <span key={c} className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 text-[9px] font-semibold border border-blue-500/10">{c}</span>
+                                                            <span key={c} className="px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 text-[9px] font-semibold border border-violet-500/10">{c}</span>
                                                         ))}
                                                     </div>
                                                     <div className="flex items-center gap-1 mt-1">
@@ -1407,16 +1407,16 @@ export default function AdminStudents() {
 
             {/* Mark Mode Modal */}
             {showMarkModeModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowMarkModeModal(false)}>
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={() => setShowMarkModeModal(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-white/10">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <RefreshCw className="h-5 w-5 text-indigo-400" /> Mark Mode of Class
+                                <RefreshCw className="h-5 w-5 text-fuchsia-400" /> Mark Mode of Class
                             </h2>
                             <button onClick={() => setShowMarkModeModal(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400"><X className="h-5 w-5" /></button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
+                            <div className="p-3 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-xs text-fuchsia-300">
                                 <p className="font-bold mb-1">This will update the mode of class for {selectedStudents.size} selected student(s).</p>
                             </div>
                             <div>
@@ -1424,19 +1424,19 @@ export default function AdminStudents() {
                                 <select
                                     value={markModeForm.mode}
                                     onChange={e => setMarkModeForm({ ...markModeForm, mode: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-[#1d1535] border border-white/10 text-white text-sm focus:outline-none focus:border-fuchsia-500"
                                 >
-                                    <option value="" className="bg-slate-800 text-white">Select mode...</option>
-                                    <option value="online" className="bg-slate-800 text-white">Online</option>
-                                    <option value="offline" className="bg-slate-800 text-white">Offline</option>
-                                    <option value="none" className="bg-slate-800 text-white">Unassigned (Clear)</option>
+                                    <option value="" className="bg-[#1d1535] text-white">Select mode...</option>
+                                    <option value="online" className="bg-[#1d1535] text-white">Online</option>
+                                    <option value="offline" className="bg-[#1d1535] text-white">Offline</option>
+                                    <option value="none" className="bg-[#1d1535] text-white">Unassigned (Clear)</option>
                                 </select>
                             </div>
                             <div className="flex gap-3 mt-6">
                                 <button onClick={() => setShowMarkModeModal(false)}
                                     className="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-400 font-bold text-sm hover:bg-white/5">Cancel</button>
                                 <button onClick={handleMarkMode}
-                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold text-sm hover:from-indigo-500 hover:to-blue-500 shadow-lg shadow-indigo-500/20">
+                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white font-bold text-sm hover:from-fuchsia-500 hover:to-violet-500 shadow-lg shadow-fuchsia-500/20">
                                     Update Mode
                                 </button>
                             </div>

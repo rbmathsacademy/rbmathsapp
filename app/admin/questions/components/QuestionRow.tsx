@@ -113,14 +113,14 @@ function McqOptionEditor({ optIndex, option, onChange, onDelete }: McqOptionEdit
     };
 
     return (
-        <div className="rounded border border-gray-700 bg-gray-900/60 p-2 flex flex-col gap-1.5">
+        <div className="rounded border border-[#352a55] bg-[#140d27]/60 p-2 flex flex-col gap-1.5">
             {/* Header row */}
             <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-gray-400 uppercase w-5 flex-shrink-0">{letter}.</span>
 
                 {/* Image upload button */}
                 <label
-                    className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer border border-blue-500/30 bg-blue-900/10 hover:bg-blue-900/20 px-1.5 py-0.5 rounded transition-colors flex-shrink-0"
+                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 cursor-pointer border border-violet-500/30 bg-violet-900/10 hover:bg-violet-900/20 px-1.5 py-0.5 rounded transition-colors flex-shrink-0"
                     title={`Upload or Ctrl+V paste image for option ${letter}`}
                 >
                     <input
@@ -150,7 +150,7 @@ function McqOptionEditor({ optIndex, option, onChange, onDelete }: McqOptionEdit
 
             {/* Image preview (if attached) */}
             {imageVal && (
-                <div className="relative group/img flex justify-center bg-gray-950 rounded border border-gray-700 overflow-hidden" style={{ maxHeight: '7rem' }}>
+                <div className="relative group/img flex justify-center bg-[#0b0718] rounded border border-[#352a55] overflow-hidden" style={{ maxHeight: '7rem' }}>
                     <img src={imageVal} alt={`Option ${letter}`} className="object-contain" style={{ maxHeight: '7rem' }} />
                     <button
                         onClick={handleRemoveImage}
@@ -165,7 +165,7 @@ function McqOptionEditor({ optIndex, option, onChange, onDelete }: McqOptionEdit
             {/* Text input — also accepts Ctrl+V image paste */}
             <input
                 type="text"
-                className="w-full bg-gray-950 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-600"
+                className="w-full bg-[#0b0718] border border-[#352a55] text-gray-300 text-xs rounded px-2 py-1 font-mono focus:outline-none focus:ring-1 focus:ring-violet-500 placeholder-gray-600"
                 value={textVal}
                 onChange={(e) => handleTextChange(e.target.value)}
                 onPaste={handlePaste}
@@ -308,7 +308,7 @@ function AnswerImageUploader({ hasImage, onImage }: AnswerImageUploaderProps) {
                 📋 Paste Image
             </button>
             <label
-                className="flex items-center gap-1 text-[10px] text-blue-300 hover:text-white border border-blue-500/40 bg-blue-900/20 hover:bg-blue-700/30 px-2 py-0.5 rounded cursor-pointer transition-colors flex-shrink-0"
+                className="flex items-center gap-1 text-[10px] text-violet-300 hover:text-white border border-violet-500/40 bg-violet-900/20 hover:bg-violet-700/30 px-2 py-0.5 rounded cursor-pointer transition-colors flex-shrink-0"
                 title="Upload image file"
             >
                 <input
@@ -385,15 +385,15 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
 
     if (mode === 'latex' || mode === 'manual') {
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-gray-700 bg-gray-900 group">
+            <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-[#352a55] bg-[#140d27] group">
                 {/* Left: Raw Latex Editor */}
-                <div className="p-4 border-r border-gray-700 flex flex-col gap-4">
+                <div className="p-4 border-r border-[#352a55] flex flex-col gap-4">
                     <div className="flex justify-between items-center mb-1">
                         <span className="text-xs font-bold text-gray-500 uppercase">Q{index + 1} Latex Content</span>
                         <button onClick={onDelete} className="text-gray-600 hover:text-red-400 p-1"><Trash2 className="h-4 w-4" /></button>
                     </div>
                     <textarea
-                        className="flex-1 w-full bg-gray-950 p-4 rounded border border-gray-700 text-sm font-mono resize-y focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[150px] text-gray-300"
+                        className="flex-1 w-full bg-[#0b0718] p-4 rounded border border-[#352a55] text-sm font-mono resize-y focus:outline-none focus:ring-1 focus:ring-violet-500 min-h-[150px] text-gray-300"
                         value={localQuestion.text || ''}
                         onChange={(e) => handleFieldChange('text', e.target.value)}
                         placeholder="Write your question in LateX here..."
@@ -414,7 +414,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Topic</label>
                             <input
                                 list={`topics-${index}`}
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.topic || ''}
                                 onChange={(e) => handleFieldChange('topic', e.target.value)}
                                 placeholder="Select/Type"
@@ -427,7 +427,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Subtopic</label>
                             <input
                                 list={`subtopics-${index}`}
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.subtopic || ''}
                                 onChange={(e) => handleFieldChange('subtopic', e.target.value)}
                                 placeholder="Select/Type"
@@ -439,7 +439,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Type</label>
                             <select
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.type || 'broad'}
                                 onChange={(e) => handleFieldChange('type', e.target.value)}
                             >
@@ -455,7 +455,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Exam Name</label>
                             <input
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.examNames?.join(', ') || localQuestion.examName || ''}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -470,7 +470,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Marks</label>
                             <input
                                 type="number"
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.marks || ''}
                                 onChange={(e) => handleFieldChange('marks', e.target.value)}
                                 placeholder="e.g. 4"
@@ -535,9 +535,9 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
         };
 
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-gray-700 bg-gray-900 group">
+            <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-[#352a55] bg-[#140d27] group">
                 {/* Left: Inputs (Image + Text) */}
-                <div className="p-4 border-r border-gray-700 flex flex-col gap-4">
+                <div className="p-4 border-r border-[#352a55] flex flex-col gap-4">
                     <div className="flex justify-between items-center mb-1">
                         <span className="text-xs font-bold text-gray-500 uppercase">Q{index + 1} Editor</span>
                         <button onClick={onDelete} className="text-gray-600 hover:text-red-400 p-1"><Trash2 className="h-4 w-4" /></button>
@@ -545,10 +545,10 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
 
                     {/* Image Input */}
                     {!localQuestion.image ? (
-                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-700 rounded bg-gray-950 p-6 transition-colors hover:border-blue-500 min-h-[150px]">
+                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#352a55] rounded bg-[#0b0718] p-6 transition-colors hover:border-violet-500 min-h-[150px]">
                             <input type="file" accept="image/*" className="hidden" id={`img-upload-${index}`} onChange={handleImageUpload} />
                             <label htmlFor={`img-upload-${index}`} className="flex flex-col items-center cursor-pointer">
-                                <div className="bg-gray-800 p-3 rounded-full mb-3 text-blue-400">
+                                <div className="bg-[#1d1535] p-3 rounded-full mb-3 text-violet-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                                 </div>
                                 <span className="text-xs font-bold text-white mb-1">Upload Image</span>
@@ -557,7 +557,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             {error && <span className="text-xs text-red-500 mt-2">{error}</span>}
                         </div>
                     ) : (
-                        <div className="relative group/preview min-h-[150px] bg-gray-950 flex items-center justify-center rounded border border-gray-700 overflow-hidden">
+                        <div className="relative group/preview min-h-[150px] bg-[#0b0718] flex items-center justify-center rounded border border-[#352a55] overflow-hidden">
                             <img src={localQuestion.image} alt="Preview" className="max-w-full max-h-[200px] object-contain" />
                             <button
                                 onClick={() => updateParent({ ...localQuestion, image: '' })}
@@ -572,7 +572,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                     <div className="flex flex-col gap-2 flex-1">
                         <label className="text-[10px] font-bold text-gray-400 uppercase">Input Question Text (Latex)</label>
                         <textarea
-                            className="w-full h-full min-h-[150px] bg-gray-950 p-4 rounded border border-gray-700 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-300 resize-y"
+                            className="w-full h-full min-h-[150px] bg-[#0b0718] p-4 rounded border border-[#352a55] text-sm font-mono focus:outline-none focus:ring-1 focus:ring-violet-500 text-gray-300 resize-y"
                             placeholder="Enter the text of the question (Latex)..."
                             value={localQuestion.text || ''}
                             onChange={(e) => handleFieldChange('text', e.target.value)}
@@ -610,7 +610,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Exam Names</label>
                             <input
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.examNames?.join(', ') || localQuestion.examName || ''}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -625,7 +625,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Marks</label>
                             <input
                                 type="number"
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.marks || ''}
                                 onChange={(e) => handleFieldChange('marks', e.target.value)}
                                 placeholder="e.g. 4"
@@ -637,7 +637,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Topic <span className="text-red-500">*</span></label>
                             <input
                                 list={`topics-${index}`}
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.topic || ''}
                                 onChange={(e) => handleFieldChange('topic', e.target.value)}
                                 placeholder="Required"
@@ -650,7 +650,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Subtopic <span className="text-red-500">*</span></label>
                             <input
                                 list={`subtopics-${index}`}
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.subtopic || ''}
                                 onChange={(e) => handleFieldChange('subtopic', e.target.value)}
                                 placeholder="Required"
@@ -662,7 +662,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Type <span className="text-red-500">*</span></label>
                             <select
-                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 focus:ring-1 focus:ring-violet-500 outline-none"
                                 value={localQuestion.type || 'broad'}
                                 onChange={(e) => handleFieldChange('type', e.target.value)}
                             >
@@ -689,16 +689,16 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
 
     // Default (JSON) Row View
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-gray-700 bg-gray-900 group">
+        <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-[#352a55] bg-[#140d27] group">
             {/* Left: JSON Editor */}
-            <div className="p-4 border-r border-gray-700 flex flex-col gap-4">
+            <div className="p-4 border-r border-[#352a55] flex flex-col gap-4">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-bold text-gray-500 uppercase">Q{index + 1} JSON Object</span>
                     <button onClick={onDelete} className="text-gray-600 hover:text-red-400 p-1"><Trash2 className="h-4 w-4" /></button>
                 </div>
                 {error && <span className="text-xs text-red-400 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Invalid JSON</span>}
                 <textarea
-                    className={`flex-1 w-full bg-gray-950 p-3 rounded border text-xs font-mono resize-none focus:outline-none focus:ring-1 transition-all min-h-[150px] text-emerald-400 ${error ? 'border-red-500/50 focus:ring-red-500' : 'border-gray-700 focus:ring-blue-500'
+                    className={`flex-1 w-full bg-[#0b0718] p-3 rounded border text-xs font-mono resize-none focus:outline-none focus:ring-1 transition-all min-h-[150px] text-emerald-400 ${error ? 'border-red-500/50 focus:ring-red-500' : 'border-[#352a55] focus:ring-violet-500'
                         }`}
                     value={jsonInput}
                     onChange={(e) => handleJsonChange(e.target.value)}
@@ -736,8 +736,8 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                 />
 
                 {/* Manual Image Upload for JSON Mode */}
-                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-800">
-                    <label className="flex items-center gap-2 text-xs text-gray-400 hover:text-blue-400 cursor-pointer transition-colors">
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#2a2045]">
+                    <label className="flex items-center gap-2 text-xs text-gray-400 hover:text-violet-400 cursor-pointer transition-colors">
                         <input
                             type="file"
                             accept="image/*"
@@ -767,7 +767,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                                 };
                             }}
                         />
-                        <div className="p-1.5 bg-gray-800 rounded border border-gray-700">
+                        <div className="p-1.5 bg-[#1d1535] rounded border border-[#352a55]">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                         </div>
                         <span>Upload/Paste Image</span>
@@ -781,13 +781,13 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
             </div>
 
             {/* Right: Live Preview */}
-            <div className="p-4 bg-gray-900 min-h-[200px] border-l border-gray-700">
+            <div className="p-4 bg-[#140d27] min-h-[200px] border-l border-[#352a55]">
                 {!error ? (
                     <div className="h-full flex flex-col">
                         {/* Distinct Colored Badges at Top */}
-                        <div className="mb-4 border-b border-gray-700 pb-2 flex flex-wrap gap-2 items-center">
+                        <div className="mb-4 border-b border-[#352a55] pb-2 flex flex-wrap gap-2 items-center">
                             {/* Topic -> Blue */}
-                            <span className="bg-blue-900/40 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                            <span className="bg-violet-900/40 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                                 {localQuestion.topic || 'No Topic'}
                             </span>
 
@@ -800,21 +800,21 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${localQuestion.type?.toLowerCase() === 'mcq' ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/30' :
                                 localQuestion.type?.toLowerCase() === 'broad' ? 'bg-pink-900/40 text-pink-300 border-pink-500/30' :
                                     localQuestion.type?.toLowerCase() === 'short' ? 'bg-purple-900/40 text-purple-300 border-purple-500/30' :
-                                        'bg-gray-700 text-gray-300 border-gray-600'
+                                        'bg-[#2a2045] text-gray-300 border-[#433666]'
                                 }`}>
                                 {localQuestion.type || 'Unknown'}
                             </span>
 
                             {/* Exam Names - Handle Array or String */}
                             {(localQuestion.examNames && localQuestion.examNames.length > 0 ? localQuestion.examNames : localQuestion.examName ? [localQuestion.examName] : []).map((exam: string, i: number) => (
-                                <span key={i} className="bg-indigo-900/40 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                <span key={i} className="bg-fuchsia-900/40 text-fuchsia-300 border border-fuchsia-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                                     {exam}
                                 </span>
                             ))}
 
                             {/* Marks -> Gray Badge */}
                             {localQuestion.marks && (
-                                <span className="bg-gray-800 text-gray-300 border border-gray-600 px-2 py-0.5 rounded text-[10px] font-bold">
+                                <span className="bg-[#1d1535] text-gray-300 border border-[#433666] px-2 py-0.5 rounded text-[10px] font-bold">
                                     {localQuestion.marks} Marks
                                 </span>
                             )}
@@ -836,7 +836,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
 
                         {/* Render Image at Bottom & Inverted */}
                         {localQuestion.image && (
-                            <div className="mt-4 pt-4 border-t border-gray-700 flex justify-center">
+                            <div className="mt-4 pt-4 border-t border-[#352a55] flex justify-center">
                                 <img
                                     src={localQuestion.image}
                                     alt="Question Diagram"
@@ -847,14 +847,14 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
 
                         {/* Answer Segment */}
                         {localQuestion.answer && (
-                            <div className="mt-3 pt-3 border-t border-gray-700">
+                            <div className="mt-3 pt-3 border-t border-[#352a55]">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-1">Answer</span>
                                 <div className="text-emerald-300 text-sm leading-relaxed">
                                     <Latex>{String(localQuestion.answer)}</Latex>
                                 </div>
                                 {/* Answer Image Preview */}
                                 {localQuestion.answerImage && (
-                                    <div className="relative group/aimg mt-2 bg-gray-950 rounded border border-gray-700 overflow-hidden flex justify-center">
+                                    <div className="relative group/aimg mt-2 bg-[#0b0718] rounded border border-[#352a55] overflow-hidden flex justify-center">
                                         <img
                                             src={localQuestion.answerImage}
                                             alt="Answer diagram"
@@ -874,7 +874,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
 
                         {/* Hint Segment */}
                         {localQuestion.hint && (
-                            <div className="mt-3 pt-3 border-t border-gray-700">
+                            <div className="mt-3 pt-3 border-t border-[#352a55]">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-1">Hint</span>
                                 <div className="text-amber-200 text-sm leading-relaxed">
                                     <Latex>{String(localQuestion.hint)}</Latex>
@@ -883,7 +883,7 @@ export default function QuestionRow({ index, question, mode, topics = [], subtop
                         )}
 
                         {/* Explanation Segment — with Answer Image uploader for non-MCQ */}
-                        <div className="mt-3 pt-3 border-t border-gray-700">
+                        <div className="mt-3 pt-3 border-t border-[#352a55]">
                             {localQuestion.type?.toLowerCase() !== 'mcq' && (
                                 <AnswerImageUploader
                                     hasImage={!!localQuestion.answerImage}

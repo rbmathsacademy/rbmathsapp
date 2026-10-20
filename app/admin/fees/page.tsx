@@ -63,7 +63,7 @@ const generateMonthRange = (startYear: number, endYear: number) => {
 
 export default function FeesManagementPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#050b14] flex items-center justify-center text-white">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen sd-bg flex items-center justify-center text-white">Loading...</div>}>
             <FeesManagementContent />
         </Suspense>
     );
@@ -754,14 +754,14 @@ function FeesManagementContent() {
     }, [allRecords]);
 
     return (
-        <div className="min-h-screen bg-[#050b14] p-2 md:p-6 text-slate-200 font-sans max-w-[100vw] overflow-x-hidden">
+        <div className="min-h-screen sd-bg p-2 md:p-6 text-slate-200 font-sans max-w-[100vw] overflow-x-hidden">
             <Toaster position="top-right" />
 
             {/* Mobile Back Button */}
             <div className="md:hidden max-w-7xl mx-auto mb-3">
                 <button
                     onClick={() => window.location.href = '/admin/dashboard'}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back
@@ -773,14 +773,14 @@ function FeesManagementContent() {
                 <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
                     <DollarSign className="h-5 w-5 md:h-6 md:w-6 text-emerald-500" /> Fees Management
                 </h1>
-                <div className="flex gap-1 md:gap-2 bg-slate-900 rounded-lg p-1 border border-white/10 w-full md:w-auto">
-                    <button onClick={() => setActiveTab('entry')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'entry' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                <div className="flex gap-1 md:gap-2 bg-[#140d27] rounded-lg p-1 border border-white/10 w-full md:w-auto">
+                    <button onClick={() => setActiveTab('entry')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'entry' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}`}>
                         <Plus className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> Entry
                     </button>
-                    <button onClick={() => setActiveTab('record')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'record' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <button onClick={() => setActiveTab('record')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'record' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}`}>
                         <CreditCard className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> Grid
                     </button>
-                    <button onClick={() => setActiveTab('history')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'history' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                    <button onClick={() => setActiveTab('history')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'history' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}`}>
                         <History className="h-3 w-3 md:h-4 md:w-4 inline mr-1" /> History
                     </button>
                 </div>
@@ -796,19 +796,19 @@ function FeesManagementContent() {
             {activeTab === 'entry' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="space-y-6">
-                        <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+                        <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6">
                             <h2 className="text-lg font-bold text-white mb-4">Find Student</h2>
                             <div className="space-y-4">
                                 {/* Custom Searchable Combobox */}
                                 <div className="relative group" ref={dropdownRef}>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Search className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                            <Search className="h-5 w-5 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
                                         </div>
                                         <input
                                             type="text"
                                             placeholder="Search Student..."
-                                            className="w-full bg-slate-800/80 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner placeholder:text-slate-500"
+                                            className="w-full bg-[#1d1535]/80 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all shadow-inner placeholder:text-slate-500"
                                             value={entrySearch}
                                             onChange={(e) => handleSearch(e.target.value)}
                                             onFocus={() => setIsDropdownOpen(true)}
@@ -816,7 +816,7 @@ function FeesManagementContent() {
                                     </div>
                                     {/* Dropdown Results */}
                                     {isDropdownOpen && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0d1520] border border-white/10 rounded-xl shadow-2xl max-h-[350px] overflow-y-auto z-50 backdrop-blur-xl ring-1 ring-black/50 custom-scrollbar">
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#110b20] border border-white/10 rounded-xl shadow-2xl max-h-[350px] overflow-y-auto z-50 ring-1 ring-black/50 custom-scrollbar">
                                             {entryStudents.length > 0 ? (
                                                 <div className="p-2 space-y-1">
                                                     {entryStudents.map(s => {
@@ -832,10 +832,10 @@ function FeesManagementContent() {
                                                                 key={`${s._id}-${batchName}`}
                                                                 onClick={(e) => handleStudentSelect(s, batchName, e)}
                                                                 onMouseDown={(e) => e.preventDefault()}
-                                                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800/80 cursor-pointer transition-all group/item border border-transparent hover:border-white/5 active:scale-[0.98]"
+                                                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#1d1535]/80 cursor-pointer transition-all group/item border border-transparent hover:border-white/5 active:scale-[0.98]"
                                                             >
                                                                 {/* Avatar Placeholder */}
-                                                                <div className="h-10 w-10 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm font-bold border border-blue-500/30 group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
+                                                                <div className="h-10 w-10 rounded-full bg-violet-600/20 text-violet-400 flex items-center justify-center text-sm font-bold border border-violet-500/30 group-hover/item:bg-violet-600 group-hover/item:text-white transition-colors">
                                                                     {s.name.substring(0, 2).toUpperCase()}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
@@ -844,12 +844,12 @@ function FeesManagementContent() {
                                                                     </div>
                                                                     <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
                                                                         <span>{s.phoneNumber}</span>
-                                                                        <span className="w-1 h-1 rounded-full bg-slate-600"></span>
-                                                                        <span className="text-blue-400/80">{batchName}</span>
+                                                                        <span className="w-1 h-1 rounded-full bg-[#352a55]"></span>
+                                                                        <span className="text-violet-400/80">{batchName}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div className="opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                                                    <div className="bg-blue-600 p-1 rounded-full">
+                                                                    <div className="bg-violet-600 p-1 rounded-full">
                                                                         <Plus className="h-3 w-3 text-white" />
                                                                     </div>
                                                                 </div>
@@ -873,7 +873,7 @@ function FeesManagementContent() {
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Filter by Batch</label>
                                     <div className="relative">
                                         <select
-                                            className="w-full appearance-none bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-300 focus:text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all cursor-pointer"
+                                            className="w-full appearance-none bg-[#1d1535] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-300 focus:text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all cursor-pointer"
                                             value={entryForm.batch}
                                             onChange={(e) => handleBatchChange(e.target.value)}
                                         >
@@ -896,7 +896,7 @@ function FeesManagementContent() {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-slate-900/40 border border-white/5 rounded-xl overflow-hidden relative">
+                                            <div className="bg-[#140d27]/40 border border-white/5 rounded-xl overflow-hidden relative">
                                                 <div className="max-h-[350px] md:max-h-[450px] overflow-y-auto custom-scrollbar p-2 space-y-1">
                                                     {batchStudents.length === 0 ? (
                                                         <div className="h-24 flex flex-col items-center justify-center text-slate-500 p-4">
@@ -912,20 +912,20 @@ function FeesManagementContent() {
                                                                     onClick={(e) => handleStudentSelect(s, entryForm.batch, e)}
                                                                     className={`group flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border
                                                                         ${isSelected
-                                                                            ? 'bg-blue-600/10 border-blue-500/50 shadow-lg shadow-blue-900/20'
+                                                                            ? 'bg-violet-600/10 border-violet-500/50 shadow-lg shadow-violet-900/20'
                                                                             : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/5'
                                                                         }`}
                                                                 >
                                                                     <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors
                                                                         ${isSelected
-                                                                            ? 'bg-blue-600 text-white shadow-md'
-                                                                            : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-slate-200'
+                                                                            ? 'bg-violet-600 text-white shadow-md'
+                                                                            : 'bg-[#1d1535] text-slate-400 group-hover:bg-[#2a2045] group-hover:text-slate-200'
                                                                         }`}>
                                                                         {s.name.substring(0, 2).toUpperCase()}
                                                                     </div>
 
                                                                     <div className="flex-1 min-w-0">
-                                                                        <div className={`text-sm font-medium truncate transition-colors ${isSelected ? 'text-blue-400' : 'text-slate-300 group-hover:text-white'}`}>
+                                                                        <div className={`text-sm font-medium truncate transition-colors ${isSelected ? 'text-violet-400' : 'text-slate-300 group-hover:text-white'}`}>
                                                                             {s.name}
                                                                         </div>
                                                                         <div className="text-[10px] text-slate-500 truncate">
@@ -934,7 +934,7 @@ function FeesManagementContent() {
                                                                     </div>
 
                                                                     {isSelected && (
-                                                                        <CheckCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                                        <CheckCircle className="h-4 w-4 text-violet-500 flex-shrink-0" />
                                                                     )}
                                                                 </div>
                                                             );
@@ -951,7 +951,7 @@ function FeesManagementContent() {
 
                     <div className="lg:col-span-2">
                         {selectedStudent ? (
-                            <form onSubmit={handleSubmit} className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+                            <form onSubmit={handleSubmit} className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6">
                                 <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
                                     <div>
                                         <h2 className="text-xl font-bold text-white">{selectedStudent.name}</h2>
@@ -967,7 +967,7 @@ function FeesManagementContent() {
                                             <select
                                                 value={entryGridYear}
                                                 onChange={(e) => setEntryGridYear(parseInt(e.target.value))}
-                                                className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-blue-500 transition-all font-bold"
+                                                className="bg-[#1d1535] border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-violet-500 transition-all font-bold"
                                             >
                                                 {[new Date().getFullYear() + 1, new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(y => (
                                                     <option key={y} value={y}>{y}</option>
@@ -996,8 +996,8 @@ function FeesManagementContent() {
                                                        ${isNewAdmission ? 'bg-orange-600 border-orange-400 text-white cursor-not-allowed opacity-100 shadow-md'
                                                             : isExempted ? 'bg-purple-600 border-purple-400 text-white cursor-not-allowed opacity-100 shadow-md'
                                                                 : isPaid ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 cursor-not-allowed'
-                                                                    : isSelected ? 'bg-blue-600 text-white border-blue-500 shadow-lg scale-105'
-                                                                        : 'bg-slate-800 border-white/5 text-slate-400 hover:bg-slate-700'}`}
+                                                                    : isSelected ? 'bg-violet-600 text-white border-violet-500 shadow-lg scale-105'
+                                                                        : 'bg-[#1d1535] border-white/5 text-slate-400 hover:bg-[#2a2045]'}`}
                                                 >
                                                     <span className="text-xs font-bold leading-tight">{m.name}</span>
                                                     {(isNewAdmission || isExempted) && (
@@ -1015,12 +1015,12 @@ function FeesManagementContent() {
                                 <div className="grid grid-cols-2 gap-6 mb-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase">Amount (Per Month)</label>
-                                        <input type="number" required className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-lg font-bold text-white"
+                                        <input type="number" required className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-lg font-bold text-white"
                                             value={entryForm.amount} onChange={(e) => setEntryForm({ ...entryForm, amount: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase">Paid on Month</label>
-                                        <input type="month" required className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-sm text-white"
+                                        <input type="month" required className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-sm text-white"
                                             value={entryForm.paidOnMonth} onChange={(e) => setEntryForm({ ...entryForm, paidOnMonth: e.target.value })} />
                                     </div>
                                 </div>
@@ -1028,14 +1028,14 @@ function FeesManagementContent() {
                                 <div className="space-y-4 mb-6">
                                     <div className="flex gap-4">
                                         {['Offline', 'Online'].map(mode => (
-                                            <label key={mode} className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer ${entryForm.mode === mode ? 'bg-slate-800 border-blue-500 text-white' : 'bg-slate-800/50 border-white/5 text-slate-400'}`}>
+                                            <label key={mode} className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer ${entryForm.mode === mode ? 'bg-[#1d1535] border-violet-500 text-white' : 'bg-[#1d1535]/50 border-white/5 text-slate-400'}`}>
                                                 <input type="radio" name="mode" className="hidden" checked={entryForm.mode === mode} onChange={() => setEntryForm({ ...entryForm, mode: mode as PaymentMode })} />
                                                 {mode}
                                             </label>
                                         ))}
                                     </div>
                                     {entryForm.mode === 'Online' && (
-                                        <div className="flex gap-4 p-4 bg-slate-800/50 rounded-lg border border-white/5 flex-wrap">
+                                        <div className="flex gap-4 p-4 bg-[#1d1535]/50 rounded-lg border border-white/5 flex-wrap">
                                             {['MM', 'RB'].map(r => (
                                                 <label key={r} className="flex items-center gap-2 cursor-pointer group min-w-[60px]">
                                                     <input type="radio" name="receiver" className="accent-purple-500" checked={entryForm.receiver === r} onChange={() => setEntryForm({ ...entryForm, receiver: r as PaymentReceiver })} />
@@ -1048,16 +1048,16 @@ function FeesManagementContent() {
 
                                 <div className="space-y-2 mb-6">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Remarks</label>
-                                    <textarea className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-sm text-white resize-none" rows={2}
+                                    <textarea className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-sm text-white resize-none" rows={2}
                                         value={entryForm.remarks} onChange={(e) => setEntryForm({ ...entryForm, remarks: e.target.value })} />
                                 </div>
 
-                                <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all">
+                                <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all">
                                     {loading ? 'Saving...' : 'Record Payment'}
                                 </button>
                             </form>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-500 bg-slate-900/30 border border-dashed border-white/10 rounded-2xl p-12">
+                            <div className="h-full flex flex-col items-center justify-center text-slate-500 bg-[#140d27]/30 border border-dashed border-white/10 rounded-2xl p-12">
                                 <p>Select a student to begin</p>
                             </div>
                         )}
@@ -1067,28 +1067,28 @@ function FeesManagementContent() {
 
             {activeTab === 'record' && (
                 <div className="space-y-4 h-[calc(100dvh-130px)] md:h-[calc(100vh-100px)] flex flex-col">
-                    <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5 flex flex-col md:flex-row gap-3 items-stretch md:items-end flex-shrink-0">
+                    <div className="bg-[#140d27]/40 p-3 rounded-xl border border-white/5 flex flex-col md:flex-row gap-3 items-stretch md:items-end flex-shrink-0">
                         <div className="space-y-1 w-full md:w-auto">
                             <label className="text-xs font-bold text-slate-500 uppercase">Batch</label>
-                            <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full md:w-48" value={recordFilters.batch} onChange={(e) => setRecordFilters({ ...recordFilters, batch: e.target.value })}>
+                            <select className="bg-[#1d1535] border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full md:w-48" value={recordFilters.batch} onChange={(e) => setRecordFilters({ ...recordFilters, batch: e.target.value })}>
                                 <option value="">-- All Batches --</option>
                                 {batches.map(b => <option key={b} value={b}>{b}</option>)}
                             </select>
                         </div>
                         <div className="space-y-1 flex-1 min-w-[200px]">
                             <label className="text-xs font-bold text-slate-500 uppercase">Search (Phone/Name)</label>
-                            <input type="text" placeholder="Search..." className="w-full bg-slate-800 border-white/10 rounded-lg px-4 py-2 text-sm text-white"
+                            <input type="text" placeholder="Search..." className="w-full bg-[#1d1535] border-white/10 rounded-lg px-4 py-2 text-sm text-white"
                                 value={recordFilters.search} onChange={(e) => setRecordFilters({ ...recordFilters, search: e.target.value })} />
                         </div>
                     </div>
 
-                    <div className="bg-slate-900/60 border border-white/10 rounded-xl overflow-hidden flex-1 relative flex flex-col">
+                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl overflow-hidden flex-1 relative flex flex-col">
                         <div className="flex-1 overflow-auto relative custom-scrollbar" id="grid-container" ref={gridContainerRef}>
                             <table className="w-full text-sm border-collapse relative">
-                                <thead className="bg-[#0d1520] sticky top-0 z-30">
+                                <thead className="bg-[#110b20] sticky top-0 z-30">
                                     <tr className="border-b border-white/10">
-                                        <th className="px-2 md:px-4 py-2 md:py-3 text-left font-bold text-slate-400 uppercase sticky left-0 bg-[#0d1520] z-40 border-r border-white/10 w-[100px] md:w-[200px] min-w-[100px] md:min-w-[200px] shadow-xl">Student</th>
-                                        <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase hidden md:table-cell md:sticky md:left-[200px] bg-[#0d1520] z-30 border-r border-white/10 w-[120px] min-w-[120px] shadow-xl">Batch</th>
+                                        <th className="px-2 md:px-4 py-2 md:py-3 text-left font-bold text-slate-400 uppercase sticky left-0 bg-[#110b20] z-40 border-r border-white/10 w-[100px] md:w-[200px] min-w-[100px] md:min-w-[200px] shadow-xl">Student</th>
+                                        <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase hidden md:table-cell md:sticky md:left-[200px] bg-[#110b20] z-30 border-r border-white/10 w-[120px] min-w-[120px] shadow-xl">Batch</th>
                                         {gridMonths.map(m => (
                                             <th
                                                 key={`${m.year}-${m.monthIndex}`}
@@ -1144,12 +1144,12 @@ function FeesManagementContent() {
                                         })
                                         .map(({ student, batch }) => (
                                             <tr key={`${student._id}-${batch}`} className="hover:bg-white/5 group">
-                                                <td className="px-2 md:px-4 py-2 md:py-3 sticky left-0 bg-[#0d1520] group-hover:bg-[#151e2d] border-r border-white/10 z-30">
+                                                <td className="px-2 md:px-4 py-2 md:py-3 sticky left-0 bg-[#110b20] group-hover:bg-[#150f29] border-r border-white/10 z-30">
                                                     <div className="font-medium text-white text-xs md:text-sm truncate w-[90px] md:w-auto">{student.name}</div>
                                                     <div className="text-[9px] md:text-[10px] text-slate-500 truncate md:block hidden">{student.phoneNumber}</div>
                                                 </td>
-                                                <td className="px-4 py-3 hidden md:table-cell md:sticky md:left-[200px] bg-[#0d1520] group-hover:bg-[#151e2d] border-r border-white/10 z-20">
-                                                    <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-1 rounded">{batch}</span>
+                                                <td className="px-4 py-3 hidden md:table-cell md:sticky md:left-[200px] bg-[#110b20] group-hover:bg-[#150f29] border-r border-white/10 z-20">
+                                                    <span className="text-xs font-mono text-slate-400 bg-[#1d1535] px-2 py-1 rounded">{batch}</span>
                                                 </td>
                                                 {gridMonths.map(m => {
                                                     const recordKey = `${student._id}|${batch.trim()}|${m.year}|${m.monthIndex}`;
@@ -1261,8 +1261,8 @@ function FeesManagementContent() {
 
             {/* Status Modal */}
             {statusModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm" onClick={() => setStatusModalOpen(null)}>
-                    <div className="bg-slate-900 border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in-0 duration-200" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80" onClick={() => setStatusModalOpen(null)}>
+                    <div className="bg-[#140d27] border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in-0 duration-200" onClick={e => e.stopPropagation()}>
                         <div className="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
                         <h3 className="text-lg font-bold text-white mb-4">Set Status for {MONTHS[statusModalOpen.month].name} {statusModalOpen.year}</h3>
                         <div className="space-y-3">
@@ -1274,7 +1274,7 @@ function FeesManagementContent() {
                                 Mark as Exempted
                                 <span className="block text-xs font-normal opacity-70 mt-1">No fees required for this month</span>
                             </button>
-                            <button onClick={() => setStatusModalOpen(null)} className="w-full py-3 bg-slate-800 text-slate-400 hover:bg-slate-700 rounded-xl font-medium">
+                            <button onClick={() => setStatusModalOpen(null)} className="w-full py-3 bg-[#1d1535] text-slate-400 hover:bg-[#2a2045] rounded-xl font-medium">
                                 Cancel
                             </button>
                         </div>
@@ -1284,15 +1284,15 @@ function FeesManagementContent() {
 
             {activeTab === 'history' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900/40 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row flex-wrap gap-4 items-stretch md:items-end">
+                    <div className="bg-[#140d27]/40 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row flex-wrap gap-4 items-stretch md:items-end">
                         <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
                             <div className="space-y-1 relative" ref={monthPickerRef}>
                                 <label className="text-xs font-bold text-slate-500 uppercase">Paid On</label>
                                 <button
                                     type="button"
                                     onClick={() => setMonthPickerOpen(!monthPickerOpen)}
-                                    className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${historyFilters.month
-                                        ? 'border-blue-500/50 text-white'
+                                    className={`w-full bg-[#1d1535] border rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${historyFilters.month
+                                        ? 'border-violet-500/50 text-white'
                                         : 'border-white/10 text-slate-400'
                                         }`}
                                 >
@@ -1305,7 +1305,7 @@ function FeesManagementContent() {
 
                                 {/* Month Picker Dropdown */}
                                 {monthPickerOpen && (
-                                    <div className="absolute top-full left-0 mt-2 w-64 bg-[#0d1520] border border-white/10 rounded-xl shadow-2xl z-50 p-3 animate-in fade-in-0 slide-in-from-top-2 duration-150">
+                                    <div className="absolute top-full left-0 mt-2 w-64 bg-[#110b20] border border-white/10 rounded-xl shadow-2xl z-50 p-3 animate-in fade-in-0 slide-in-from-top-2 duration-150">
                                         {/* Year Navigation */}
                                         <div className="flex items-center justify-between mb-3 px-1">
                                             <button type="button" onClick={() => setMonthPickerYear(y => y - 1)}
@@ -1336,8 +1336,8 @@ function FeesManagementContent() {
                                                             setMonthPickerOpen(false);
                                                         }}
                                                         className={`py-2 rounded-lg text-xs font-bold transition-all ${isActive
-                                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
-                                                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
+                                                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/30'
+                                                            : 'bg-[#1d1535]/80 text-slate-300 hover:bg-[#2a2045] hover:text-white'
                                                             }`}
                                                     >
                                                         {m.name}
@@ -1360,7 +1360,7 @@ function FeesManagementContent() {
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Batch</label>
-                                <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full md:w-32" value={historyFilters.batch} onChange={(e) => setHistoryFilters({ ...historyFilters, batch: e.target.value })}>
+                                <select className="bg-[#1d1535] border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full md:w-32" value={historyFilters.batch} onChange={(e) => setHistoryFilters({ ...historyFilters, batch: e.target.value })}>
                                     <option value="">All</option>
                                     {batches.map(b => <option key={b} value={b}>{b}</option>)}
                                 </select>
@@ -1370,7 +1370,7 @@ function FeesManagementContent() {
                         <div className="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Mode</label>
-                                <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full" value={historyFilters.mode} onChange={(e) => setHistoryFilters({ ...historyFilters, mode: e.target.value })}>
+                                <select className="bg-[#1d1535] border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full" value={historyFilters.mode} onChange={(e) => setHistoryFilters({ ...historyFilters, mode: e.target.value })}>
                                     <option value="">All</option>
                                     <option value="Online">Online</option>
                                     <option value="Offline">Offline</option>
@@ -1379,7 +1379,7 @@ function FeesManagementContent() {
                             {historyFilters.mode === 'Online' && (
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Receiver</label>
-                                    <select className="bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full" value={historyFilters.receiver} onChange={(e) => setHistoryFilters({ ...historyFilters, receiver: e.target.value })}>
+                                    <select className="bg-[#1d1535] border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full" value={historyFilters.receiver} onChange={(e) => setHistoryFilters({ ...historyFilters, receiver: e.target.value })}>
                                         <option value="">All</option>
                                         <option value="MM">MM</option>
                                         <option value="RB">RB</option>
@@ -1390,7 +1390,7 @@ function FeesManagementContent() {
 
                         <div className="space-y-1 flex-1 min-w-[200px]">
                             <label className="text-xs font-bold text-slate-500 uppercase">Search</label>
-                            <input type="text" placeholder="Student Name/Phone..." className="w-full bg-slate-800 border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                            <input type="text" placeholder="Student Name/Phone..." className="w-full bg-[#1d1535] border-white/10 rounded-lg px-3 py-2 text-sm text-white"
                                 value={historyFilters.search} onChange={(e) => setHistoryFilters({ ...historyFilters, search: e.target.value })} />
                         </div>
                         <button onClick={exportHistory} className="px-4 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/20 rounded-lg text-sm font-medium flex items-center justify-center gap-2 w-full md:w-auto">
@@ -1411,9 +1411,9 @@ function FeesManagementContent() {
                         </div>
                     )}
 
-                    <div className="bg-slate-900/60 border border-white/10 rounded-xl overflow-x-auto">
+                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl overflow-x-auto">
                         <table className="w-full text-sm text-left hidden md:table">
-                            <thead className="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-white/10">
+                            <thead className="text-xs text-slate-400 uppercase bg-[#1d1535]/50 border-b border-white/10">
                                 <tr>
                                     <th className="px-6 py-3">Invoice</th>
                                     <th className="px-6 py-3">Student</th>
@@ -1452,7 +1452,7 @@ function FeesManagementContent() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded text-xs ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-700 text-slate-300'}`}>
+                                            <span className={`px-2 py-1 rounded text-xs ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-[#2a2045] text-slate-300'}`}>
                                                 {record.paymentMode} {record.paymentReceiver ? `(${record.paymentReceiver})` : ''}
                                             </span>
                                         </td>
@@ -1465,7 +1465,7 @@ function FeesManagementContent() {
                         {/* Mobile Card View for History */}
                         <div className="md:hidden space-y-4 p-4">
                             {historyRecords.map((record) => (
-                                <div key={record._id} onClick={() => openEditModal(record)} className="bg-slate-800/50 border border-white/5 rounded-xl p-4 space-y-3 cursor-pointer active:scale-98 transition-all">
+                                <div key={record._id} onClick={() => openEditModal(record)} className="bg-[#1d1535]/50 border border-white/5 rounded-xl p-4 space-y-3 cursor-pointer active:scale-98 transition-all">
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <div className="font-bold text-white text-base">
@@ -1479,7 +1479,7 @@ function FeesManagementContent() {
                                     </div>
 
                                     <div className="flex items-center gap-3 text-xs text-slate-500 border-t border-white/5 pt-3">
-                                        <div className="bg-slate-900 px-2 py-1 rounded font-mono text-slate-400">
+                                        <div className="bg-[#140d27] px-2 py-1 rounded font-mono text-slate-400">
                                             {record.invoiceNo}
                                         </div>
                                         <div className="flex-1 text-right">
@@ -1500,7 +1500,7 @@ function FeesManagementContent() {
                                         <div className="text-slate-300">
                                             For <span className="text-white font-medium">{new Date(record.feesMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span>
                                         </div>
-                                        <span className={`px-2 py-1 rounded ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-700 text-slate-300'}`}>
+                                        <span className={`px-2 py-1 rounded ${record.paymentMode === 'Online' ? 'bg-purple-500/10 text-purple-400' : 'bg-[#2a2045] text-slate-300'}`}>
                                             {record.paymentMode} {record.paymentReceiver ? `(${record.paymentReceiver})` : ''}
                                         </span>
                                     </div>
@@ -1514,32 +1514,32 @@ function FeesManagementContent() {
 
 
             {editModalOpen && editingRecord && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80">
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[90svh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2"><Edit2 className="h-5 w-5 text-blue-400" /> Edit Record</h3>
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2"><Edit2 className="h-5 w-5 text-violet-400" /> Edit Record</h3>
                             <button onClick={() => setEditModalOpen(false)}><X className="h-5 w-5 text-slate-400" /></button>
                         </div>
 
                         {/* Invoice No at top */}
-                        <div className="text-center mb-6 bg-slate-800/50 p-2 rounded-lg border border-white/5">
+                        <div className="text-center mb-6 bg-[#1d1535]/50 p-2 rounded-lg border border-white/5">
                             <span className="text-xs text-slate-500 uppercase tracking-widest block mb-1">Invoice Number</span>
                             <span className="text-xl font-mono font-bold text-white tracking-widest">{editingRecord.invoiceNo}</span>
                         </div>
 
                         <div className="space-y-4">
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Amount</label>
-                                    <input type="number" className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white font-bold" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
+                                    <input type="number" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-white font-bold" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Fees Month</label>
-                                    <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
+                                    <input type="month" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-white text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase">Paid On Month</label>
-                                    <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white text-sm" value={editForm.paidOnMonth} onChange={(e) => setEditForm({ ...editForm, paidOnMonth: e.target.value })} />
+                                    <input type="month" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-white text-sm" value={editForm.paidOnMonth} onChange={(e) => setEditForm({ ...editForm, paidOnMonth: e.target.value })} />
                                 </div>
                             </div>
 
@@ -1547,7 +1547,7 @@ function FeesManagementContent() {
                                 <label className="text-xs font-bold text-slate-500 uppercase">Payment Mode</label>
                                 <div className="flex gap-2">
                                     {['Offline', 'Online'].map(mode => (
-                                        <label key={mode} className={`flex-1 text-center py-2 rounded cursor-pointer text-xs font-bold border transition-all ${editForm.mode === mode ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                        <label key={mode} className={`flex-1 text-center py-2 rounded cursor-pointer text-xs font-bold border transition-all ${editForm.mode === mode ? 'bg-violet-600/20 text-violet-400 border-violet-500/30' : 'bg-[#1d1535] border-white/5 text-slate-500'}`}>
                                             <input type="radio" className="hidden" checked={editForm.mode === mode} onChange={() => setEditForm({ ...editForm, mode: mode as PaymentMode })} />
                                             {mode}
                                         </label>
@@ -1560,7 +1560,7 @@ function FeesManagementContent() {
                                     <label className="text-xs font-bold text-slate-500 uppercase">Receiver</label>
                                     <div className="flex gap-2">
                                         {['MM', 'RB'].map(r => (
-                                            <label key={r} className={`flex-1 text-center py-2 rounded cursor-pointer text-xs font-bold border transition-all ${editForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                            <label key={r} className={`flex-1 text-center py-2 rounded cursor-pointer text-xs font-bold border transition-all ${editForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-[#1d1535] border-white/5 text-slate-500'}`}>
                                                 <input type="radio" className="hidden" checked={editForm.receiver === r} onChange={() => setEditForm({ ...editForm, receiver: r as PaymentReceiver })} />
                                                 {r}
                                             </label>
@@ -1571,12 +1571,12 @@ function FeesManagementContent() {
 
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase">Remarks</label>
-                                <textarea className="w-full bg-slate-800 border-white/10 rounded-lg p-3 text-white h-20 resize-none" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} />
+                                <textarea className="w-full bg-[#1d1535] border-white/10 rounded-lg p-3 text-white h-20 resize-none" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} />
                             </div>
 
                             <div className="flex gap-4 pt-4 border-t border-white/5">
                                 <button onClick={handleDeleteRecord} className="px-4 py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold flex items-center gap-2"><Trash2 className="h-4 w-4" /> Delete</button>
-                                <button onClick={handleUpdateRecord} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"><Save className="h-4 w-4" /> Save Changes</button>
+                                <button onClick={handleUpdateRecord} className="flex-1 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"><Save className="h-4 w-4" /> Save Changes</button>
                             </div>
                         </div>
                     </div>
@@ -1584,17 +1584,17 @@ function FeesManagementContent() {
             )}
 
             {editModalOpen && editingRecord && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setEditModalOpen(false)}>
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80" onClick={() => setEditModalOpen(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                         <div className="p-4 md:p-6 border-b border-white/5 flex justify-between items-center shrink-0">
-                            <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2"><Edit2 className="h-4 w-4 md:h-5 md:w-5 text-blue-400" /> Edit Record</h3>
+                            <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2"><Edit2 className="h-4 w-4 md:h-5 md:w-5 text-violet-400" /> Edit Record</h3>
                             <button onClick={() => setEditModalOpen(false)} className="p-1 hover:bg-white/5 rounded-full transition-colors"><X className="h-5 w-5 text-slate-400" /></button>
                         </div>
 
                         <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar">
                             {/* Invoice No at top */}
-                            <div className="text-center mb-4 bg-slate-800/50 p-2 rounded-lg border border-white/5">
+                            <div className="text-center mb-4 bg-[#1d1535]/50 p-2 rounded-lg border border-white/5">
                                 <span className="text-[10px] text-slate-500 uppercase tracking-widest block mb-0.5">Invoice Number</span>
                                 <span className="text-lg md:text-xl font-mono font-bold text-white tracking-widest">{editingRecord.invoiceNo}</span>
                             </div>
@@ -1603,15 +1603,15 @@ function FeesManagementContent() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Amount</label>
-                                        <input type="number" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white font-bold text-sm" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
+                                        <input type="number" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white font-bold text-sm" value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Fees Month</label>
-                                        <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
+                                        <input type="month" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.feesMonth} onChange={(e) => setEditForm({ ...editForm, feesMonth: e.target.value })} />
                                     </div>
                                     <div className="col-span-2 space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Paid On Month</label>
-                                        <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.paidOnMonth} onChange={(e) => setEditForm({ ...editForm, paidOnMonth: e.target.value })} />
+                                        <input type="month" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-xs md:text-sm" value={editForm.paidOnMonth} onChange={(e) => setEditForm({ ...editForm, paidOnMonth: e.target.value })} />
                                     </div>
                                 </div>
 
@@ -1619,7 +1619,7 @@ function FeesManagementContent() {
                                     <label className="text-[10px] font-bold text-slate-500 uppercase">Payment Mode</label>
                                     <div className="flex gap-2">
                                         {['Offline', 'Online'].map(mode => (
-                                            <label key={mode} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${editForm.mode === mode ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                            <label key={mode} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${editForm.mode === mode ? 'bg-violet-600/20 text-violet-400 border-violet-500/30' : 'bg-[#1d1535] border-white/5 text-slate-500'}`}>
                                                 <input type="radio" className="hidden" checked={editForm.mode === mode} onChange={() => setEditForm({ ...editForm, mode: mode as PaymentMode })} />
                                                 {mode}
                                             </label>
@@ -1632,7 +1632,7 @@ function FeesManagementContent() {
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Receiver</label>
                                         <div className="flex gap-2">
                                             {['MM', 'RB'].map(r => (
-                                                <label key={r} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${editForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                                <label key={r} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${editForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-[#1d1535] border-white/5 text-slate-500'}`}>
                                                     <input type="radio" className="hidden" checked={editForm.receiver === r} onChange={() => setEditForm({ ...editForm, receiver: r as PaymentReceiver })} />
                                                     {r}
                                                 </label>
@@ -1643,14 +1643,14 @@ function FeesManagementContent() {
 
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase">Remarks</label>
-                                    <textarea className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm h-16 resize-none" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} />
+                                    <textarea className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm h-16 resize-none" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} />
                                 </div>
                             </div>
                         </div>
 
                         <div className="p-4 md:p-6 border-t border-white/5 shrink-0 flex gap-3">
                             <button onClick={handleDeleteRecord} className="px-3 md:px-4 py-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"><Trash2 className="h-4 w-4" /> Delete</button>
-                            <button onClick={handleUpdateRecord} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs md:text-sm flex items-center justify-center gap-2 transition-colors"><Save className="h-4 w-4" /> Save Changes</button>
+                            <button onClick={handleUpdateRecord} className="flex-1 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold py-2.5 rounded-xl text-xs md:text-sm flex items-center justify-center gap-2 transition-colors"><Save className="h-4 w-4" /> Save Changes</button>
                         </div>
                     </div>
                 </div>
@@ -1658,8 +1658,8 @@ function FeesManagementContent() {
 
             {/* Quick Entry (Ad-hoc) Modal */}
             {showQuickEntry && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowQuickEntry(false)}>
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80" onClick={() => setShowQuickEntry(false)}>
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="p-4 md:p-6 border-b border-white/5 flex justify-between items-center shrink-0">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2"><Plus className="h-5 w-5 text-amber-400" /> Quick Entry (Ad-hoc)</h3>
                             <button onClick={() => setShowQuickEntry(false)} className="p-1 hover:bg-white/5 rounded-full"><X className="h-5 w-5 text-slate-400" /></button>
@@ -1671,7 +1671,7 @@ function FeesManagementContent() {
 
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Student Name *</label>
-                                <input type="text" required className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                <input type="text" required className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm"
                                     placeholder="Enter student name" value={quickEntryForm.studentName}
                                     onChange={e => setQuickEntryForm({ ...quickEntryForm, studentName: e.target.value })} />
                             </div>
@@ -1679,13 +1679,13 @@ function FeesManagementContent() {
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Batch *</label>
                                 <div className="flex gap-2">
-                                    <select className="flex-1 bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                    <select className="flex-1 bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm"
                                         value={quickEntryForm.batch}
                                         onChange={e => setQuickEntryForm({ ...quickEntryForm, batch: e.target.value })}>
                                         <option value="">Select batch...</option>
                                         {batches.map(b => <option key={b} value={b}>{b}</option>)}
                                     </select>
-                                    <input type="text" placeholder="or type..." className="w-32 bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                    <input type="text" placeholder="or type..." className="w-32 bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm"
                                         value={!batches.includes(quickEntryForm.batch) ? quickEntryForm.batch : ''}
                                         onChange={e => setQuickEntryForm({ ...quickEntryForm, batch: e.target.value })} />
                                 </div>
@@ -1694,13 +1694,13 @@ function FeesManagementContent() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase">Amount (₹) *</label>
-                                    <input type="number" required className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm font-bold"
+                                    <input type="number" required className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm font-bold"
                                         value={quickEntryForm.amount}
                                         onChange={e => setQuickEntryForm({ ...quickEntryForm, amount: e.target.value })} />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase">Fees Month *</label>
-                                    <input type="month" required className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                    <input type="month" required className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm"
                                         value={quickEntryForm.feesMonth}
                                         onChange={e => setQuickEntryForm({ ...quickEntryForm, feesMonth: e.target.value })} />
                                 </div>
@@ -1708,7 +1708,7 @@ function FeesManagementContent() {
 
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Paid On Month</label>
-                                <input type="month" className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm"
+                                <input type="month" className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm"
                                     value={quickEntryForm.paidOnMonth}
                                     onChange={e => setQuickEntryForm({ ...quickEntryForm, paidOnMonth: e.target.value })} />
                             </div>
@@ -1717,7 +1717,7 @@ function FeesManagementContent() {
                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Payment Mode</label>
                                 <div className="flex gap-2">
                                     {['Offline', 'Online'].map(mode => (
-                                        <label key={mode} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${quickEntryForm.mode === mode ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                        <label key={mode} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${quickEntryForm.mode === mode ? 'bg-violet-600/20 text-violet-400 border-violet-500/30' : 'bg-[#1d1535] border-white/5 text-slate-500'}`}>
                                             <input type="radio" className="hidden" checked={quickEntryForm.mode === mode}
                                                 onChange={() => setQuickEntryForm({ ...quickEntryForm, mode: mode as PaymentMode })} />
                                             {mode}
@@ -1730,7 +1730,7 @@ function FeesManagementContent() {
                                     <label className="text-[10px] font-bold text-slate-500 uppercase">Receiver</label>
                                     <div className="flex gap-2">
                                         {['MM', 'RB'].map(r => (
-                                            <label key={r} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${quickEntryForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-slate-800 border-white/5 text-slate-500'}`}>
+                                            <label key={r} className={`flex-1 text-center py-2 rounded-lg cursor-pointer text-xs font-bold border transition-all ${quickEntryForm.receiver === r ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-[#1d1535] border-white/5 text-slate-500'}`}>
                                                 <input type="radio" className="hidden" checked={quickEntryForm.receiver === r}
                                                     onChange={() => setQuickEntryForm({ ...quickEntryForm, receiver: r as PaymentReceiver })} />
                                                 {r}
@@ -1742,7 +1742,7 @@ function FeesManagementContent() {
 
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase">Remarks</label>
-                                <textarea className="w-full bg-slate-800 border-white/10 rounded-lg p-2.5 text-white text-sm h-16 resize-none"
+                                <textarea className="w-full bg-[#1d1535] border-white/10 rounded-lg p-2.5 text-white text-sm h-16 resize-none"
                                     value={quickEntryForm.remarks}
                                     onChange={e => setQuickEntryForm({ ...quickEntryForm, remarks: e.target.value })} />
                             </div>
@@ -1758,8 +1758,8 @@ function FeesManagementContent() {
 
             {/* Cell Actions Modal */}
             {cellActionModal && (
-                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm" onClick={() => setCellActionModal(null)}>
-                    <div className="bg-slate-900 border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in-0 duration-200" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80" onClick={() => setCellActionModal(null)}>
+                    <div className="bg-[#140d27] border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in-0 duration-200 max-h-[90svh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <div className="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
 
                         <div className="mb-6">
@@ -1776,15 +1776,15 @@ function FeesManagementContent() {
                                         navigator.clipboard.writeText(cellActionModal.student.phoneNumber);
                                         toast.success('Phone Copied!');
                                         setCellActionModal(null);
-                                    }} className="w-full py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
-                                        <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><User className="h-4 w-4" /></div>
+                                    }} className="w-full py-3.5 px-4 bg-[#1d1535] hover:bg-[#2a2045] text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
+                                        <div className="p-2 bg-violet-500/10 text-violet-400 rounded-lg"><User className="h-4 w-4" /></div>
                                         Copy Phone Number
                                     </button>
 
                                     <button onClick={() => {
                                         copyPendingMessage(cellActionModal.student, cellActionModal.batch, cellActionModal.monthName);
                                         setCellActionModal(null);
-                                    }} className="w-full py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
+                                    }} className="w-full py-3.5 px-4 bg-[#1d1535] hover:bg-[#2a2045] text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
                                         <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><RefreshCw className="h-4 w-4" /></div>
                                         Copy Reminder Message
                                     </button>
@@ -1800,7 +1800,7 @@ function FeesManagementContent() {
                                     month: cellActionModal.month
                                 });
                                 setCellActionModal(null);
-                            }} className="w-full py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
+                            }} className="w-full py-3.5 px-4 bg-[#1d1535] hover:bg-[#2a2045] text-white rounded-xl font-medium flex items-center gap-3 transition-colors">
                                 <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg"><Edit2 className="h-4 w-4" /></div>
                                 Set Status (Admission/Exempt)
                             </button>

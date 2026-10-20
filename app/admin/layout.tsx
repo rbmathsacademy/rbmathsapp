@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { LayoutDashboard, Users, FileText, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, GraduationCap } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
+import '../portal-theme.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -253,9 +254,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                <p className="ml-4 text-gray-400">Loading Admin Portal...</p>
+            <div className="min-h-screen flex items-center justify-center sd-bg text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-fuchsia-400"></div>
+                <p className="ml-4 font-semibold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 to-cyan-300">Loading Admin Portal...</p>
             </div>
         );
     }
@@ -274,26 +275,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     return (
-        <div className="min-h-screen bg-[#050b14] flex font-sans text-slate-200 selection:bg-blue-500/30">
+        <div className="min-h-screen sd-bg flex font-sans text-slate-200 selection:bg-fuchsia-500/30">
+            {/* Static neon grid behind everything (no animation) */}
+            <div className="fixed inset-0 pointer-events-none z-0 sd-grid" />
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+                    className="fixed inset-0 z-30 bg-black/70 md:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0f172a]/80 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 ease-spring ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-                <div className="flex flex-col h-full">
+            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0c0919] border-r border-fuchsia-500/15 shadow-[8px_0_40px_-12px_rgba(168,85,247,0.35)] transition-transform duration-300 ease-spring ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(80%_35%_at_0%_0%,rgba(217,70,239,0.16),transparent_70%),radial-gradient(80%_30%_at_100%_100%,rgba(34,211,238,0.10),transparent_70%)]" />
+                <div className="relative flex flex-col h-full">
                     {/* Sidebar Header */}
-                    <div className="h-20 flex items-center px-8 border-b border-white/5 bg-gradient-to-r from-blue-900/10 to-transparent">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 mr-4">
+                    <div className="h-20 flex items-center px-8 border-b border-white/10">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-fuchsia-500 via-violet-600 to-indigo-600 ring-1 ring-white/20 flex items-center justify-center text-white font-black shadow-lg shadow-fuchsia-500/30 mr-4">
                             A
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white tracking-tight">Admin<span className="text-blue-400">Portal</span></h1>
-                            <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-0.5">RB Maths Question Bank</p>
+                            <h1 className="text-xl font-black text-white tracking-tight">Admin<span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300">Portal</span></h1>
+                            <p className="text-[10px] text-violet-300/60 font-bold tracking-widest uppercase mt-0.5">RB Maths Question Bank</p>
                         </div>
                     </div>
 
@@ -311,12 +315,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     href={item.href}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`group flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 relative overflow-hidden ${isActive
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 translate-x-1'
-                                        : 'text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1'
+                                        ? 'bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 text-white shadow-lg shadow-fuchsia-500/30 translate-x-1'
+                                        : 'text-slate-300 hover:text-white hover:bg-white/5 hover:translate-x-1'
                                         }`}
                                 >
                                     {isActive && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-transparent animate-pulse"></div>
+                                        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-white/80" />
                                     )}
                                     <Icon className={`h-5 w-5 mr-3 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                                     <span className="font-medium relative z-10">{item.name}</span>
@@ -332,11 +336,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </nav>
 
                     {/* Sidebar Footer */}
-                    <div className="p-4 border-t border-white/5 bg-[#0f172a]/50">
-                        <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5">
+                    <div className="p-4 border-t border-white/10">
+                        <div className="relative sd-gborder sd-gborder-soft sd-card bg-[#140d27]/80 rounded-2xl p-4">
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 p-0.5">
-                                    <div className="h-full w-full rounded-full bg-slate-900 flex items-center justify-center">
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-fuchsia-400 via-amber-300 to-cyan-400 p-0.5">
+                                    <div className="h-full w-full rounded-full bg-[#140d27] flex items-center justify-center">
                                         <span className="font-bold text-white text-sm">RB</span>
                                     </div>
                                 </div>
@@ -360,24 +364,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Mobile Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/70 z-40 lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Main Content */}
-            <main className="flex-1 lg:pl-72 transition-all duration-300">
+            <main className="relative flex-1 min-w-0 lg:pl-72 transition-all duration-300">
                 {/* Top Bar (Mobile) */}
-                <div className="h-16 lg:hidden flex items-center justify-between px-4 border-b border-white/5 bg-[#0f172a]/80 backdrop-blur-xl sticky top-0 z-30">
+                <div className="h-16 lg:hidden flex items-center justify-between px-4 sd-header sticky top-0 z-30">
                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">
+                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-fuchsia-500 to-violet-600 ring-1 ring-white/20 flex items-center justify-center text-white font-black shadow-md shadow-fuchsia-500/30">
                             A
                         </div>
-                        <span className="font-bold text-white">Admin Portal</span>
+                        <span className="font-black text-white">Admin<span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300">Portal</span></span>
                     </div>
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="p-2 text-slate-400 hover:text-white transition-colors"
+                        className="p-2 rounded-lg bg-gradient-to-br from-fuchsia-500/20 to-violet-500/20 ring-1 ring-fuchsia-400/30 text-fuchsia-100 active:scale-95 transition-transform"
                     >
                         {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                     </button>

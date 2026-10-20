@@ -112,7 +112,7 @@ export default function FolderSidebar({
     };
 
     return (
-        <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4">
+        <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-white">Folders</h3>
                 <button
@@ -131,7 +131,7 @@ export default function FolderSidebar({
                     onClick={() => onSelectFolder('__none__')}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${selectedFolder === '__none__'
                             ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'text-slate-300 hover:bg-slate-800'
+                            : 'text-slate-300 hover:bg-[#1d1535]'
                         }`}
                 >
                     <FolderIcon className="h-4 w-4 flex-shrink-0" />
@@ -143,7 +143,7 @@ export default function FolderSidebar({
                     onClick={() => onSelectFolder(null)}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg mb-2 transition-colors ${selectedFolder === null
                             ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'text-slate-300 hover:bg-slate-800'
+                            : 'text-slate-300 hover:bg-[#1d1535]'
                         }`}
                 >
                     <FolderIcon className="h-4 w-4 flex-shrink-0" />
@@ -152,7 +152,7 @@ export default function FolderSidebar({
 
             {/* Create New Folder Input */}
             {isCreating && (
-                <div className="mb-2 p-2 bg-slate-800/50 rounded-lg">
+                <div className="mb-2 p-2 bg-[#1d1535]/50 rounded-lg">
                     <input
                         type="text"
                         value={folderName}
@@ -166,7 +166,7 @@ export default function FolderSidebar({
                         }}
                         placeholder="Folder name..."
                         autoFocus
-                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full bg-[#140d27] border border-[#352a55] rounded px-2 py-1 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                     <div className="flex gap-1 mt-1">
                         <button
@@ -180,7 +180,7 @@ export default function FolderSidebar({
                                 setIsCreating(false);
                                 setFolderName('');
                             }}
-                            className="px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded hover:bg-slate-600"
+                            className="px-2 py-1 text-xs bg-[#2a2045] text-slate-300 rounded hover:bg-[#352a55]"
                         >
                             Cancel
                         </button>
@@ -191,7 +191,7 @@ export default function FolderSidebar({
                 {folders.map((folder) => (
                     <div key={folder._id} className="w-full">
                         {isEditing === folder._id ? (
-                            <div className="p-2 bg-slate-800/50 rounded-lg">
+                            <div className="p-2 bg-[#1d1535]/50 rounded-lg">
                                 <input
                                     type="text"
                                     value={folderName}
@@ -204,12 +204,12 @@ export default function FolderSidebar({
                                         }
                                     }}
                                     autoFocus
-                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    className="w-full bg-[#140d27] border border-[#352a55] rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
                                 />
                                 <div className="flex gap-1 mt-1">
                                     <button
                                         onClick={() => renameFolder(folder._id)}
-                                        className="flex-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-500"
+                                        className="flex-1 px-2 py-1 text-xs bg-violet-600 text-white rounded hover:bg-violet-500"
                                     >
                                         Save
                                     </button>
@@ -218,7 +218,7 @@ export default function FolderSidebar({
                                             setIsEditing(null);
                                             setFolderName('');
                                         }}
-                                        className="px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded hover:bg-slate-600"
+                                        className="px-2 py-1 text-xs bg-[#2a2045] text-slate-300 rounded hover:bg-[#352a55]"
                                     >
                                         Cancel
                                     </button>
@@ -228,7 +228,7 @@ export default function FolderSidebar({
                             <div
                                 className={`group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${selectedFolder === folder._id
                                         ? 'bg-emerald-500/20 text-emerald-300'
-                                        : 'text-slate-300 hover:bg-slate-800'
+                                        : 'text-slate-300 hover:bg-[#1d1535]'
                                     }`}
                             >
                                 <button
@@ -244,7 +244,7 @@ export default function FolderSidebar({
                                             setIsEditing(folder._id);
                                             setFolderName(folder.name);
                                         }}
-                                        className="p-1 rounded hover:bg-blue-500/20 text-blue-400"
+                                        className="p-1 rounded hover:bg-violet-500/20 text-violet-400"
                                         title="Rename"
                                     >
                                         <Edit2 className="h-3 w-3" />

@@ -131,7 +131,7 @@ export default function AdminDashboard() {
             value: stats.totalStudents,
             secondaryValue: stats.totalEnrollments,
             icon: Users,
-            gradient: 'from-blue-500 to-cyan-500',
+            gradient: 'from-violet-500 to-cyan-500',
             href: null,
         },
         {
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
 
             {/* Page Header */}
             <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-400">
+                <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-violet-100 to-slate-400">
                     Dashboard
                 </h1>
                 <p className="text-slate-400 text-xs sm:text-sm mt-1">Welcome back! Here's what's happening today.</p>
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
                         <div
                             key={index}
                             onClick={() => isClickable && router.push(stat.href!)}
-                            className={`bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 relative group overflow-hidden ${isClickable
+                            className={`bg-[#140d27]/60 border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 relative group overflow-hidden ${isClickable
                                 ? 'hover:border-white/20 cursor-pointer hover:shadow-lg'
                                 : ''
                                 }`}
@@ -229,7 +229,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
                 {/* Quick Actions - Spans 2 cols */}
-                <div className="lg:col-span-2 bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 h-fit">
+                <div className="relative lg:col-span-2 bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-xl sm:rounded-2xl p-4 sm:p-6 h-fit">
                     <div className="flex items-center justify-between mb-4 sm:mb-6">
                         <h2 className="text-lg sm:text-xl font-bold text-white">Quick Actions</h2>
                     </div>
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                         <button
                             onClick={() => router.push('/admin/online-tests/create')}
-                            className="p-3 bg-slate-800/50 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all text-left group"
+                            className="p-3 bg-[#1d1535]/50 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all text-left group"
                         >
                             <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 mb-1.5 group-hover:scale-110 transition-transform" />
                             <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Create<br/>Test</p>
@@ -245,15 +245,15 @@ export default function AdminDashboard() {
 
                         <button
                             onClick={() => router.push('/admin/assignments/create')}
-                            className="p-3 bg-slate-800/50 hover:bg-blue-500/10 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all text-left group"
+                            className="p-3 bg-[#1d1535]/50 hover:bg-violet-500/10 border border-white/5 hover:border-violet-500/30 rounded-xl transition-all text-left group"
                         >
-                            <PenTool className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mb-1.5 group-hover:scale-110 transition-transform" />
+                            <PenTool className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400 mb-1.5 group-hover:scale-110 transition-transform" />
                             <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Create<br/>Assign.</p>
                         </button>
 
                         <button
                             onClick={() => router.push('/admin/fees?tab=record')}
-                            className="p-3 bg-slate-800/50 hover:bg-purple-500/10 border border-white/5 hover:border-purple-500/30 rounded-xl transition-all text-left group"
+                            className="p-3 bg-[#1d1535]/50 hover:bg-purple-500/10 border border-white/5 hover:border-purple-500/30 rounded-xl transition-all text-left group"
                         >
                             <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 mb-1.5 group-hover:scale-110 transition-transform" />
                             <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Fees<br/>Grid</p>
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
 
                         <button
                             onClick={() => router.push('/admin/questions')}
-                            className="p-3 bg-slate-800/50 hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left group"
+                            className="p-3 bg-[#1d1535]/50 hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left group"
                         >
                             <FileQuestion className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400 mb-1.5 group-hover:scale-110 transition-transform" />
                             <p className="text-[11px] sm:text-sm font-bold text-white leading-tight">Add<br/>Questions</p>
@@ -270,14 +270,14 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Staff Management - Spans 1 col */}
-                <div className="bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col h-full">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col h-full">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                            <Shield className="w-5 h-5 text-indigo-400" /> Staff Access
+                            <Shield className="w-5 h-5 text-fuchsia-400" /> Staff Access
                         </h2>
                         <button
                             onClick={() => setShowAddStaffModal(true)}
-                            className="p-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 transition-colors"
+                            className="p-2 rounded-lg bg-fuchsia-600/20 hover:bg-fuchsia-600/30 text-fuchsia-400 transition-colors"
                         >
                             <UserPlus className="w-4 h-4" />
                         </button>
@@ -316,8 +316,8 @@ export default function AdminDashboard() {
 
             {/* Add Staff Modal */}
             {showAddStaffModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200 max-h-[90svh] overflow-y-auto">
                         <h2 className="text-xl font-bold text-white mb-4">Add Staff Member</h2>
                         <form onSubmit={handleAddStaff} className="space-y-4">
                             <div>
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
                                     required
                                     value={newStaff.name}
                                     onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-violet-500 focus:outline-none"
                                     placeholder="e.g. John Doe"
                                 />
                             </div>
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
                                     required
                                     value={newStaff.phoneNumber}
                                     onChange={e => setNewStaff({ ...newStaff, phoneNumber: e.target.value })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-violet-500 focus:outline-none"
                                     placeholder="e.g. 9876543210"
                                 />
                                 <p className="text-[10px] text-gray-500 mt-1">This will be used as the login password.</p>
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
                                 <button
                                     type="submit"
                                     disabled={addingStaff}
-                                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold disabled:opacity-50 flex justify-center items-center gap-2"
+                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white text-sm font-bold disabled:opacity-50 flex justify-center items-center gap-2"
                                 >
                                     {addingStaff && <Loader2 className="w-4 h-4 animate-spin" />}
                                     Add Member

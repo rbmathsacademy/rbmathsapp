@@ -87,7 +87,7 @@ export default function AutoDebugger({ jsonContent, issues, onAutoFix, onRetry }
     };
 
     return (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+        <div className="bg-[#1d1535] border border-[#352a55] rounded-lg overflow-hidden">
             {/* Header */}
             <div className="bg-red-900/30 border-b border-red-500/30 p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ export default function AutoDebugger({ jsonContent, issues, onAutoFix, onRetry }
                     {onRetry && (
                         <button
                             onClick={onRetry}
-                            className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all"
+                            className="bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all"
                         >
                             <RefreshCw className="h-3 w-3" />
                             Retry Extraction
@@ -182,7 +182,7 @@ export default function AutoDebugger({ jsonContent, issues, onAutoFix, onRetry }
             </div>
 
             {/* Footer Actions */}
-            <div className="bg-gray-900 border-t border-gray-700 p-3 flex justify-between items-center">
+            <div className="bg-[#140d27] border-t border-[#352a55] p-3 flex justify-between items-center">
                 <p className="text-xs text-gray-400">
                     Review and fix issues manually, or use auto-fix for common problems
                 </p>

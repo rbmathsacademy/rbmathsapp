@@ -167,7 +167,7 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
                 onDragLeave={handleDragLeave}
                 className={`
           relative border-2 border-dashed rounded-lg p-8 text-center transition-all
-          ${isDragging ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-500'}
+          ${isDragging ? 'border-violet-500 bg-violet-500/10' : 'border-[#433666] hover:border-gray-500'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
             >
@@ -180,7 +180,7 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
                     disabled={disabled}
                 />
 
-                <Upload className={`h-12 w-12 mx-auto mb-4 ${isDragging ? 'text-blue-400' : 'text-gray-400'}`} />
+                <Upload className={`h-12 w-12 mx-auto mb-4 ${isDragging ? 'text-violet-400' : 'text-gray-400'}`} />
                 <p className="text-white font-medium mb-1">
                     {isDragging ? 'Drop files here' : 'Drag & drop files or click to browse'}
                 </p>
@@ -196,7 +196,7 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
             {uploadedFiles.length > 0 && (
                 <div className="space-y-3">
                     {/* Batch Summary & Actions */}
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div className="bg-[#1d1535]/50 border border-[#352a55] rounded-lg p-3 flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div className="flex items-center gap-4">
                             <div>
                                 <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-0.5">Total Size</p>
@@ -211,7 +211,7 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
                                     )}
                                 </div>
                             </div>
-                            <div className="h-8 w-px bg-gray-700 hidden sm:block"></div>
+                            <div className="h-8 w-px bg-[#2a2045] hidden sm:block"></div>
                             <div className="hidden sm:block">
                                 <p className="text-xs text-gray-400">
                                     {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''} • {readyCount} ready
@@ -235,7 +235,7 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
                     {uploadedFiles.map(file => (
                         <div
                             key={file.id}
-                            className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex items-center gap-3"
+                            className="bg-[#1d1535] border border-[#352a55] rounded-lg p-3 flex items-center gap-3"
                         >
                             <div className="text-gray-400">
                                 {getFileIcon(file.file.type)}
@@ -257,8 +257,8 @@ export default function FileUploadZone({ onFilesReady, maxFiles = 5, disabled = 
 
                             <div className="flex items-center gap-2">
                                 {file.status === 'compressing' && (
-                                    <div className="flex items-center gap-2 text-blue-400 text-xs">
-                                        <div className="animate-spin h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full" />
+                                    <div className="flex items-center gap-2 text-violet-400 text-xs">
+                                        <div className="animate-spin h-4 w-4 border-2 border-violet-400 border-t-transparent rounded-full" />
                                         Compressing...
                                     </div>
                                 )}

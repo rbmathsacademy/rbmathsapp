@@ -639,10 +639,10 @@ export default function AdminAssignmentsPage() {
                                 Back
                             </button>
                         )}
-                        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
+                        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
                             {currentFolder ? (
                                 <>
-                                    <Folder className="w-8 h-8 text-blue-400" />
+                                    <Folder className="w-8 h-8 text-violet-400" />
                                     {currentFolder.name}
                                 </>
                             ) : 'Assignments'}
@@ -660,7 +660,7 @@ export default function AdminAssignmentsPage() {
                     {!currentFolder && (
                         <button
                             onClick={() => setShowCreateFolder(true)}
-                            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#1a1f2e] border border-white/10 hover:border-blue-500/50 hover:text-blue-400 rounded-lg transition-all text-sm sm:text-base flex-1 sm:flex-none justify-center"
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#151029] border border-white/10 hover:border-violet-500/50 hover:text-violet-400 rounded-lg transition-all text-sm sm:text-base flex-1 sm:flex-none justify-center"
                         >
                             <FolderPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                             New Folder
@@ -668,7 +668,7 @@ export default function AdminAssignmentsPage() {
                     )}
                     <button
                         onClick={() => router.push('/admin/assignments/create')}
-                        className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-all text-white font-medium shadow-lg shadow-blue-900/20 text-sm sm:text-base flex-1 sm:flex-none justify-center"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 rounded-lg transition-all text-white font-medium shadow-lg shadow-violet-900/20 text-sm sm:text-base flex-1 sm:flex-none justify-center"
                     >
                         <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                         Create
@@ -678,7 +678,7 @@ export default function AdminAssignmentsPage() {
 
             {loading ? (
                 <div className="flex justify-center p-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
                 </div>
             ) : (
                 <div className="space-y-8">
@@ -689,9 +689,9 @@ export default function AdminAssignmentsPage() {
                                 <div
                                     key={folder._id}
                                     onClick={() => setCurrentFolder(folder)}
-                                    className="bg-[#1a1f2e] border border-white/5 p-3 sm:p-4 rounded-xl cursor-pointer hover:border-blue-500/30 hover:bg-white/5 transition-all group flex items-center gap-3"
+                                    className="bg-[#151029] border border-white/5 p-3 sm:p-4 rounded-xl cursor-pointer hover:border-violet-500/30 hover:bg-white/5 transition-all group flex items-center gap-3"
                                 >
-                                    <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 group-hover:scale-105 transition-all">
+                                    <div className="w-12 h-12 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400 group-hover:bg-violet-500/20 group-hover:scale-105 transition-all">
                                         <Folder className="w-6 h-6 fill-current" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -712,7 +712,7 @@ export default function AdminAssignmentsPage() {
 
                     {/* Assignments List */}
                     {displayedAssignments.length === 0 && displayedFolders.length === 0 ? (
-                        <div className="text-center py-12 bg-[#1a1f2e] rounded-xl border border-white/5">
+                        <div className="text-center py-12 bg-[#151029] rounded-xl border border-white/5">
                             <FileText className="w-16 h-16 mx-auto text-gray-600 mb-4" />
                             <h3 className="text-xl font-medium text-gray-300">No content found</h3>
                             <p className="text-gray-500 mt-2">
@@ -726,7 +726,7 @@ export default function AdminAssignmentsPage() {
                                 const isExpired = new Date() > deadline;
 
                                 return (
-                                    <div key={assignment._id} className="bg-[#1a1f2e] border border-white/5 rounded-xl p-4 sm:p-6 hover:border-blue-500/30 transition-all group relative">
+                                    <div key={assignment._id} className="bg-[#151029] border border-white/5 rounded-xl p-4 sm:p-6 hover:border-violet-500/30 transition-all group relative">
                                         <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                                             <div className="space-y-2 min-w-0 flex-1">
                                                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -734,10 +734,10 @@ export default function AdminAssignmentsPage() {
                                                         <File className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0" /> :
                                                         <List className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
                                                     }
-                                                    <h3 className="text-base sm:text-xl font-semibold text-white group-hover:text-blue-400 transition-colors break-words">
+                                                    <h3 className="text-base sm:text-xl font-semibold text-white group-hover:text-violet-400 transition-colors break-words">
                                                         {assignment.title}
                                                     </h3>
-                                                    <span className="px-2 py-0.5 text-xs rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                                    <span className="px-2 py-0.5 text-xs rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
                                                         {assignment.batch}
                                                     </span>
                                                 </div>
@@ -797,7 +797,7 @@ export default function AdminAssignmentsPage() {
                                                         }
                                                         router.push(`/admin/assignments/${assignment._id}`);
                                                     }}
-                                                    className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-blue-400 transition-colors"
+                                                    className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-violet-400 transition-colors"
                                                     title="View Details"
                                                 >
                                                     <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -821,14 +821,14 @@ export default function AdminAssignmentsPage() {
 
             {/* Create Folder Modal */}
             {showCreateFolder && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-                    <div className="bg-[#1a1f2e] p-5 sm:p-6 rounded-xl border border-white/10 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#151029] p-5 sm:p-6 rounded-xl border border-white/10 w-full max-w-md shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 text-white">Create New Folder</h2>
                         <input
                             value={newFolderName}
                             onChange={(e) => setNewFolderName(e.target.value)}
                             placeholder="Folder Name"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 mb-6 text-white focus:outline-none focus:border-blue-500 placeholder-gray-500"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 mb-6 text-white focus:outline-none focus:border-violet-500 placeholder-gray-500"
                             autoFocus
                         />
                         <div className="flex justify-end gap-3">
@@ -841,7 +841,7 @@ export default function AdminAssignmentsPage() {
                             <button
                                 onClick={handleCreateFolder}
                                 disabled={!newFolderName.trim()}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                                className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
                             >
                                 Create
                             </button>
@@ -852,8 +852,8 @@ export default function AdminAssignmentsPage() {
 
             {/* Move Assignment Modal */}
             {showMoveModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-                    <div className="bg-[#1a1f2e] p-5 sm:p-6 rounded-xl border border-white/10 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#151029] p-5 sm:p-6 rounded-xl border border-white/10 w-full max-w-md shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 text-white">Move Assignment</h2>
                         <p className="text-sm text-gray-400 mb-4">Select destination for <span className="text-white font-medium">"{assignmentToMove?.title}"</span>:</p>
 
@@ -861,7 +861,7 @@ export default function AdminAssignmentsPage() {
                             <button
                                 onClick={() => handleMoveAssignment(null)}
                                 className={`w-full text-left p-3 rounded-lg border flex items-center gap-3 transition-all ${!assignmentToMove?.folderId
-                                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                                    ? 'border-violet-500 bg-violet-500/10 text-violet-400'
                                     : 'border-white/5 hover:bg-white/5 text-gray-300 hover:text-white'
                                     }`}
                             >
@@ -876,7 +876,7 @@ export default function AdminAssignmentsPage() {
                                     key={f._id}
                                     onClick={() => handleMoveAssignment(f._id)}
                                     className={`w-full text-left p-3 rounded-lg border flex items-center gap-3 transition-all ${assignmentToMove?.folderId === f._id
-                                        ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                                        ? 'border-violet-500 bg-violet-500/10 text-violet-400'
                                         : 'border-white/5 hover:bg-white/5 text-gray-300 hover:text-white'
                                         }`}
                                 >
@@ -902,8 +902,8 @@ export default function AdminAssignmentsPage() {
 
             {/* Record Offline Exam Modal */}
             {showOfflineModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-                    <div className="bg-[#0f1115] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#0b0718] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
                         <div className="p-5 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-red-600/20 to-orange-600/20">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <ClipboardEdit className="w-5 h-5 text-orange-400" />
@@ -921,7 +921,7 @@ export default function AdminAssignmentsPage() {
                                 <select
                                     value={offlineSelectedBatch}
                                     onChange={(e) => loadStudentsForBatch(e.target.value)}
-                                    className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50"
+                                    className="w-full bg-[#151029] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500/50"
                                 >
                                     <option value="">-- Select Batch --</option>
                                     {offlineBatches.map(b => <option key={b} value={b}>{b}</option>)}
@@ -939,7 +939,7 @@ export default function AdminAssignmentsPage() {
                                                 value={offlineChapter}
                                                 onChange={(e) => setOfflineChapter(e.target.value)}
                                                 placeholder="e.g. Calculus Ch-3"
-                                                className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500/50 placeholder-gray-600"
+                                                className="w-full bg-[#151029] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500/50 placeholder-gray-600"
                                             />
                                         </div>
                                         <div>
@@ -948,7 +948,7 @@ export default function AdminAssignmentsPage() {
                                                 type="date"
                                                 value={offlineTestDate}
                                                 onChange={(e) => setOfflineTestDate(e.target.value)}
-                                                className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500/50"
+                                                className="w-full bg-[#151029] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500/50"
                                             />
                                         </div>
                                         <div>
@@ -959,7 +959,7 @@ export default function AdminAssignmentsPage() {
                                                 onChange={(e) => setOfflineFullMarks(e.target.value)}
                                                 placeholder="e.g. 50"
                                                 min="1"
-                                                className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500/50 placeholder-gray-600"
+                                                className="w-full bg-[#151029] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-orange-500/50 placeholder-gray-600"
                                             />
                                         </div>
                                     </div>
@@ -970,7 +970,7 @@ export default function AdminAssignmentsPage() {
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                                         </div>
                                     ) : (
-                                        <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
+                                        <div className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden">
                                             <div className="grid grid-cols-[2fr_1fr_1fr] gap-2 p-3 bg-white/5 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                                 <div>Student Name</div>
                                                 <div className="text-center">Marks</div>
@@ -997,7 +997,7 @@ export default function AdminAssignmentsPage() {
                                                                 />
                                                             </div>
                                                             <div className="text-center">
-                                                                <span className={`text-sm font-bold ${typeof pct === 'string' && pct !== '-' ? 'text-blue-400 text-xs' : pct === '-' ? 'text-gray-600' : parseFloat(pct as string) >= 75 ? 'text-green-400' : parseFloat(pct as string) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                                <span className={`text-sm font-bold ${typeof pct === 'string' && pct !== '-' ? 'text-violet-400 text-xs' : pct === '-' ? 'text-gray-600' : parseFloat(pct as string) >= 75 ? 'text-green-400' : parseFloat(pct as string) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
                                                                     {pct}{typeof pct === 'number' || (typeof pct === 'string' && pct !== '-' && !isNaN(parseFloat(pct))) ? '%' : ''}
                                                                 </span>
                                                             </div>
@@ -1043,7 +1043,7 @@ export default function AdminAssignmentsPage() {
                     {showOfflineExams && (
                         <div className="space-y-3">
                             {offlineExams.map(exam => (
-                                <div key={exam._id} className="bg-[#1a1f2e] border border-white/5 rounded-xl p-4 hover:border-orange-500/30 transition-all">
+                                <div key={exam._id} className="bg-[#151029] border border-white/5 rounded-xl p-4 hover:border-orange-500/30 transition-all">
                                     <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                                         <div>
                                             <div className="flex items-center gap-2 flex-wrap">
@@ -1082,8 +1082,8 @@ export default function AdminAssignmentsPage() {
 
             {/* Edit Offline Exam Modal */}
             {editingExam && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-                    <div className="bg-[#0f1115] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#0b0718] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
                         <div className="p-5 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-orange-600/20 to-amber-600/20">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Edit3 className="w-5 h-5 text-amber-400" />
@@ -1099,21 +1099,21 @@ export default function AdminAssignmentsPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Chapter Name</label>
                                     <input type="text" value={editChapter} onChange={(e) => setEditChapter(e.target.value)}
-                                        className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+                                        className="w-full bg-[#151029] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Test Date</label>
                                     <input type="date" value={editTestDate} onChange={(e) => setEditTestDate(e.target.value)}
-                                        className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+                                        className="w-full bg-[#151029] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Full Marks</label>
                                     <input type="number" value={editFullMarks} onChange={(e) => setEditFullMarks(e.target.value)} min="1"
-                                        className="w-full bg-[#1a1f2e] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
+                                        className="w-full bg-[#151029] border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-amber-500/50" />
                                 </div>
                             </div>
 
-                            <div className="bg-[#1a1f2e] border border-white/5 rounded-xl overflow-hidden">
+                            <div className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden">
                                 <div className="grid grid-cols-[2fr_1fr_1fr] gap-2 p-3 bg-white/5 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                     <div>Student Name</div>
                                     <div className="text-center">Marks</div>
@@ -1140,7 +1140,7 @@ export default function AdminAssignmentsPage() {
                                                     />
                                                 </div>
                                                 <div className="text-center">
-                                                    <span className={`text-sm font-bold ${typeof pct === 'string' && pct !== '-' ? 'text-blue-400 text-xs' : pct === '-' ? 'text-gray-600' : parseFloat(pct as string) >= 75 ? 'text-green-400' : parseFloat(pct as string) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                    <span className={`text-sm font-bold ${typeof pct === 'string' && pct !== '-' ? 'text-violet-400 text-xs' : pct === '-' ? 'text-gray-600' : parseFloat(pct as string) >= 75 ? 'text-green-400' : parseFloat(pct as string) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
                                                         {pct}{typeof pct === 'number' || (typeof pct === 'string' && pct !== '-' && !isNaN(parseFloat(pct))) ? '%' : ''}
                                                     </span>
                                                 </div>
@@ -1154,7 +1154,7 @@ export default function AdminAssignmentsPage() {
                         <div className="p-5 border-t border-white/10 flex justify-between items-center bg-black/20">
                             <button
                                 onClick={handleDownloadPDF}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 rounded-lg transition-colors text-sm font-medium"
+                                className="flex items-center gap-2 px-4 py-2 bg-violet-600/20 text-violet-400 border border-violet-500/30 hover:bg-violet-600/30 rounded-lg transition-colors text-sm font-medium"
                             >
                                 <Download className="w-4 h-4" />
                                 Download PDF

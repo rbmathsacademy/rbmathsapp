@@ -119,7 +119,7 @@ export default function AdminLessonPlan() {
 
     const getTypeColor = (type: string) => {
         switch (type) {
-            case 'Class': return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+            case 'Class': return 'bg-violet-500/10 text-violet-400 border-violet-500/30';
             case 'Online': return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
             case 'Offline': return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
             default: return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
@@ -142,8 +142,8 @@ export default function AdminLessonPlan() {
             {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 flex items-center gap-3">
-                        <BookText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
+                    <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-purple-400 flex items-center gap-3">
+                        <BookText className="h-6 w-6 sm:h-8 sm:w-8 text-violet-500" />
                         Lesson Plan Management
                     </h1>
                     <p className="text-slate-400 text-xs sm:text-sm mt-1">Design and schedule the curriculum for each batch</p>
@@ -153,7 +153,7 @@ export default function AdminLessonPlan() {
                     <button
                         onClick={handleSave}
                         disabled={saving || !selectedBatch}
-                        className="flex-1 md:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 md:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-violet-900/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Save Plan
@@ -161,7 +161,7 @@ export default function AdminLessonPlan() {
                     <button
                         onClick={handleAddRow}
                         disabled={!selectedBatch}
-                        className="flex-1 md:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs sm:text-sm font-bold transition-all border border-white/10 flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 md:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-[#1d1535] hover:bg-[#2a2045] text-white text-xs sm:text-sm font-bold transition-all border border-white/10 flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         <Plus className="h-4 w-4 text-emerald-500" />
                         Add Row
@@ -170,7 +170,7 @@ export default function AdminLessonPlan() {
             </div>
 
             {/* Batch Selector */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 sm:p-6">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="w-full md:w-72">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Select Batch</label>
@@ -178,7 +178,7 @@ export default function AdminLessonPlan() {
                             <select
                                 value={selectedBatch}
                                 onChange={(e) => setSelectedBatch(e.target.value)}
-                                className="w-full appearance-none bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all cursor-pointer"
+                                className="w-full appearance-none bg-[#1d1535] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-violet-500/50 outline-none transition-all cursor-pointer"
                             >
                                 <option value="">-- Choose a Batch --</option>
                                 {batches.map(b => <option key={b} value={b}>{b}</option>)}
@@ -187,9 +187,9 @@ export default function AdminLessonPlan() {
                         </div>
                     </div>
                     {selectedBatch && (
-                        <div className="flex-1 flex items-center gap-3 sm:gap-4 text-[10px] sm:text-sm text-slate-400 bg-blue-500/5 border border-blue-500/10 rounded-xl px-3 sm:px-4 py-2 sm:py-3 mt-2 md:mt-0">
-                            <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse shrink-0"></div>
-                            <span>Editing plan for <span className="text-blue-400 font-bold">{selectedBatch}</span></span>
+                        <div className="flex-1 flex items-center gap-3 sm:gap-4 text-[10px] sm:text-sm text-slate-400 bg-violet-500/5 border border-violet-500/10 rounded-xl px-3 sm:px-4 py-2 sm:py-3 mt-2 md:mt-0">
+                            <div className="h-2 w-2 rounded-full bg-violet-500 animate-pulse shrink-0"></div>
+                            <span>Editing plan for <span className="text-violet-400 font-bold">{selectedBatch}</span></span>
                         </div>
                     )}
                 </div>
@@ -197,22 +197,22 @@ export default function AdminLessonPlan() {
 
             {/* Grid UI */}
             {!selectedBatch ? (
-                <div className="bg-slate-900/30 border border-dashed border-white/10 rounded-2xl py-20 text-center">
+                <div className="bg-[#140d27]/30 border border-dashed border-white/10 rounded-2xl py-20 text-center">
                     <BookText className="h-12 w-12 text-slate-700 mx-auto mb-4" />
                     <p className="text-slate-500 font-medium">Please select a batch to start creating a lesson plan</p>
                 </div>
             ) : loading ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-4">
-                    <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                    <Loader2 className="h-8 w-8 text-violet-500 animate-spin" />
                     <p className="text-slate-400 text-sm animate-pulse">Loading batch schedule...</p>
                 </div>
             ) : (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden shadow-2xl">
                     {/* Desktop Table View */}
                     <div className="hidden md:block overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="bg-slate-800/80 border-b border-white/10">
+                                <tr className="bg-[#1d1535]/80 border-b border-white/10">
                                     <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest w-48">Date (DD/MM/YYYY)</th>
                                     <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest w-48">Type</th>
                                     <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">General Plain Text Description</th>
@@ -229,7 +229,7 @@ export default function AdminLessonPlan() {
                                                     type="date"
                                                     value={plan.date}
                                                     onChange={(e) => handleChange(index, 'date', e.target.value)}
-                                                    className="w-full bg-slate-800 border border-white/5 rounded-lg pl-10 pr-3 py-2 text-sm text-white focus:ring-1 focus:ring-blue-500/50 outline-none transition-all"
+                                                    className="w-full bg-[#1d1535] border border-white/5 rounded-lg pl-10 pr-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500/50 outline-none transition-all"
                                                 />
                                             </div>
                                         </td>
@@ -238,7 +238,7 @@ export default function AdminLessonPlan() {
                                                 <select
                                                     value={plan.type}
                                                     onChange={(e) => handleChange(index, 'type', e.target.value as any)}
-                                                    className={`w-full appearance-none bg-slate-800 border-white/5 rounded-lg pl-3 pr-8 py-2 text-sm font-bold outline-none transition-all border ${getTypeColor(plan.type)}`}
+                                                    className={`w-full appearance-none bg-[#1d1535] border-white/5 rounded-lg pl-3 pr-8 py-2 text-sm font-bold outline-none transition-all border ${getTypeColor(plan.type)}`}
                                                 >
                                                     <option value="Class">Class</option>
                                                     <option value="Online">Online Test</option>
@@ -254,7 +254,7 @@ export default function AdminLessonPlan() {
                                                 value={plan.description}
                                                 onChange={(e) => handleChange(index, 'description', e.target.value)}
                                                 placeholder="Enter topic details, class content, or exam syllabus..."
-                                                className="w-full bg-slate-800/50 border border-white/5 rounded-lg px-3 py-2 text-sm text-slate-300 focus:text-white focus:bg-slate-800 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all resize-none min-h-[40px]"
+                                                className="w-full bg-[#1d1535]/50 border border-white/5 rounded-lg px-3 py-2 text-sm text-slate-300 focus:text-white focus:bg-[#1d1535] focus:ring-1 focus:ring-violet-500/50 outline-none transition-all resize-none min-h-[40px]"
                                                 rows={1}
                                             />
                                         </td>
@@ -275,7 +275,7 @@ export default function AdminLessonPlan() {
                     {/* Mobile Card View */}
                     <div className="md:hidden divide-y divide-white/5">
                         {plans.map((plan, index) => (
-                            <div key={plan._id || plan.tempId || index} className="p-3 space-y-3 bg-slate-900/40">
+                            <div key={plan._id || plan.tempId || index} className="p-3 space-y-3 bg-[#140d27]/40">
                                 <div className="flex justify-between items-center">
                                     <div className="flex-1 mr-4">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Date</label>
@@ -285,7 +285,7 @@ export default function AdminLessonPlan() {
                                                 type="date"
                                                 value={plan.date}
                                                 onChange={(e) => handleChange(index, 'date', e.target.value)}
-                                                className="w-full bg-slate-800 border border-white/5 rounded-lg pl-10 pr-3 py-2 text-sm text-white focus:ring-1 focus:ring-blue-500/50 outline-none transition-all"
+                                                className="w-full bg-[#1d1535] border border-white/5 rounded-lg pl-10 pr-3 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500/50 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
@@ -303,7 +303,7 @@ export default function AdminLessonPlan() {
                                         <select
                                             value={plan.type}
                                             onChange={(e) => handleChange(index, 'type', e.target.value as any)}
-                                            className={`w-full appearance-none bg-slate-800 border-white/5 rounded-lg pl-3 pr-8 py-2.5 text-sm font-bold outline-none transition-all border ${getTypeColor(plan.type)}`}
+                                            className={`w-full appearance-none bg-[#1d1535] border-white/5 rounded-lg pl-3 pr-8 py-2.5 text-sm font-bold outline-none transition-all border ${getTypeColor(plan.type)}`}
                                         >
                                             <option value="Class">Class</option>
                                             <option value="Online">Online Test</option>
@@ -321,7 +321,7 @@ export default function AdminLessonPlan() {
                                         value={plan.description}
                                         onChange={(e) => handleChange(index, 'description', e.target.value)}
                                         placeholder="Enter details..."
-                                        className="w-full bg-slate-800/50 border border-white/5 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm text-slate-300 focus:text-white focus:bg-slate-800 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all min-h-[70px]"
+                                        className="w-full bg-[#1d1535]/50 border border-white/5 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm text-slate-300 focus:text-white focus:bg-[#1d1535] focus:ring-1 focus:ring-violet-500/50 outline-none transition-all min-h-[70px]"
                                     />
                                 </div>
                             </div>

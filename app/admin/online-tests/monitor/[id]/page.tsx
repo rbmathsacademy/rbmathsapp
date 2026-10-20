@@ -426,7 +426,7 @@ export default function MonitorTestPage() {
         };
 
         return (
-            <div className="flex flex-col bg-slate-800/50 rounded-xl border border-white/10 p-4 h-full">
+            <div className="flex flex-col bg-[#1d1535]/50 rounded-xl border border-white/10 p-4 h-full">
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="text-sm font-bold text-white">{title} ({targets.length})</h3>
                     <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
@@ -434,23 +434,23 @@ export default function MonitorTestPage() {
                             type="checkbox" 
                             checked={targets.length > 0 && selectedSet.size === targets.length} 
                             onChange={handleSelectAll} 
-                            className="rounded border-white/20 bg-slate-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                            className="rounded border-white/20 bg-[#140d27] text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
                         />
                         Select All
                     </label>
                 </div>
                 
-                <div className="flex-1 min-h-[150px] max-h-[250px] overflow-y-auto custom-scrollbar bg-slate-900/50 rounded-lg p-2 mb-4 border border-white/5 space-y-1">
+                <div className="flex-1 min-h-[150px] max-h-[250px] overflow-y-auto custom-scrollbar bg-[#140d27]/50 rounded-lg p-2 mb-4 border border-white/5 space-y-1">
                     {targets.length === 0 ? (
                         <div className="text-xs text-slate-500 text-center py-4">No students found</div>
                     ) : (
                         targets.map(s => (
-                            <label key={s.phone} className="flex items-center gap-2.5 p-2 rounded hover:bg-slate-800 cursor-pointer transition-colors">
+                            <label key={s.phone} className="flex items-center gap-2.5 p-2 rounded hover:bg-[#1d1535] cursor-pointer transition-colors">
                                 <input 
                                     type="checkbox" 
                                     checked={selectedSet.has(s.phone)} 
                                     onChange={() => handleSelect(s.phone)} 
-                                    className="rounded border-white/20 bg-slate-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                                    className="rounded border-white/20 bg-[#140d27] text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
                                 />
                                 <div>
                                     <div className="text-xs font-medium text-white">{s.name}</div>
@@ -466,7 +466,7 @@ export default function MonitorTestPage() {
                     <textarea 
                         value={message} 
                         onChange={e => setMessage(e.target.value)} 
-                        className="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-lg text-white text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none h-32"
+                        className="w-full px-3 py-2 bg-[#140d27] border border-white/10 rounded-lg text-white text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none h-32"
                     />
                 </div>
                 
@@ -500,8 +500,8 @@ export default function MonitorTestPage() {
 
             {/* Reassign Confirmation Modal */}
             {showReassignModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 rounded-lg bg-amber-500/20">
                                 <RotateCcw className="w-5 h-5 text-amber-400" />
@@ -513,7 +513,7 @@ export default function MonitorTestPage() {
                             The following {selectedStudents.length} student{selectedStudents.length !== 1 ? 's' : ''} will have their attempt <span className="text-red-400 font-bold">permanently deleted</span> so they can retake the test. All other test settings remain unchanged.
                         </p>
 
-                        <div className="bg-slate-900/60 rounded-xl border border-white/5 divide-y divide-white/5 mb-6 max-h-48 overflow-y-auto">
+                        <div className="bg-[#140d27]/60 rounded-xl border border-white/5 divide-y divide-white/5 mb-6 max-h-48 overflow-y-auto">
                             {selectedStudents.map(s => (
                                 <div key={s.phone} className="flex items-center justify-between px-4 py-2.5">
                                     <div>
@@ -551,8 +551,8 @@ export default function MonitorTestPage() {
 
             {/* Custom WhatsApp Modal */}
             {showCustomWAModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-6xl p-6 shadow-2xl animate-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-6xl p-6 shadow-2xl animate-in zoom-in duration-200 max-h-[90vh] flex flex-col">
                         <div className="flex justify-between items-center mb-4 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 rounded-lg bg-emerald-500/20">
@@ -572,7 +572,7 @@ export default function MonitorTestPage() {
                                     <select
                                         value={referenceAssignmentId}
                                         onChange={(e) => setReferenceAssignmentId(e.target.value)}
-                                        className="w-full max-w-md px-3 py-2 bg-slate-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                                        className="w-full max-w-md px-3 py-2 bg-[#1d1535] border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                                     >
                                         {recentAssignments.map(a => (
                                             <option key={a._id} value={a._id}>{a.title} ({a.batch}) - {new Date(a.createdAt).toLocaleDateString()}</option>
@@ -597,17 +597,17 @@ export default function MonitorTestPage() {
 
             {/* Missed Students Reassign Modal */}
             {showMissedModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div className="relative bg-[#140d27] sd-gborder sd-gborder-soft sd-card rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 rounded-lg bg-blue-500/20">
-                                <CalendarClock className="w-5 h-5 text-blue-400" />
+                            <div className="p-2 rounded-lg bg-violet-500/20">
+                                <CalendarClock className="w-5 h-5 text-violet-400" />
                             </div>
                             <h2 className="text-lg font-bold text-white">Reassign Missed Students</h2>
                         </div>
 
                         <p className="text-slate-400 text-sm mb-4">
-                            Set a new time window so that <span className="text-blue-400 font-bold">{notStarted.length} missed student{notStarted.length !== 1 ? 's' : ''}</span> can take this test. The test status will be set back to <span className="text-emerald-400 font-bold">Deployed</span>. Students who already completed are not affected.
+                            Set a new time window so that <span className="text-violet-400 font-bold">{notStarted.length} missed student{notStarted.length !== 1 ? 's' : ''}</span> can take this test. The test status will be set back to <span className="text-emerald-400 font-bold">Deployed</span>. Students who already completed are not affected.
                         </p>
 
                         <div className="space-y-4 mb-6">
@@ -617,7 +617,7 @@ export default function MonitorTestPage() {
                                     type="datetime-local"
                                     value={newStartTime}
                                     onChange={e => setNewStartTime(e.target.value)}
-                                    className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 bg-[#1d1535] border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-transparent"
                                 />
                             </div>
                             <div>
@@ -626,7 +626,7 @@ export default function MonitorTestPage() {
                                     type="datetime-local"
                                     value={newEndTime}
                                     onChange={e => setNewEndTime(e.target.value)}
-                                    className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 bg-[#1d1535] border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -642,7 +642,7 @@ export default function MonitorTestPage() {
                             <button
                                 onClick={handleMissedReassign}
                                 disabled={missedReassigning || !newStartTime || !newEndTime}
-                                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold disabled:opacity-50 flex justify-center items-center gap-2 transition-all"
+                                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white text-sm font-bold disabled:opacity-50 flex justify-center items-center gap-2 transition-all"
                             >
                                 {missedReassigning ? (
                                     <><RefreshCw className="w-4 h-4 animate-spin" /> Updating...</>
@@ -656,7 +656,7 @@ export default function MonitorTestPage() {
             )}
 
             {/* Header */}
-            <div className="bg-slate-900/60 backdrop-blur-sm border-b border-white/10 p-3 sm:p-6">
+            <div className="bg-[#140d27]/60 border-b border-white/10 p-3 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     <button
                         onClick={() => router.push('/admin/online-tests')}
@@ -697,7 +697,7 @@ export default function MonitorTestPage() {
                                     )}
                                     <span className="hidden sm:inline">{downloadingPDF ? 'Generating...' : 'Question Paper'}</span>
                                 </button>
-                                <button onClick={fetchResults} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2 transition-colors text-xs sm:text-sm font-medium">
+                                <button onClick={fetchResults} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white rounded-lg flex items-center gap-2 transition-colors text-xs sm:text-sm font-medium">
                                     <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
                                 </button>
                             </div>
@@ -709,8 +709,8 @@ export default function MonitorTestPage() {
             <div className="max-w-7xl mx-auto p-3 sm:p-6">
                 {/* Top Stats */}
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
-                    <div onClick={() => setActiveTab('all')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-blue-500/30 ${activeTab === 'all' ? 'ring-2 ring-blue-400/60 bg-blue-500/10' : 'bg-slate-800/50 border-white/10'}`}>
-                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-0.5 sm:mb-1" />
+                    <div onClick={() => setActiveTab('all')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-violet-500/30 ${activeTab === 'all' ? 'ring-2 ring-violet-400/60 bg-violet-500/10' : 'bg-[#1d1535]/50 border-white/10'}`}>
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400 mx-auto mb-0.5 sm:mb-1" />
                         <div className="text-lg sm:text-2xl font-bold text-white">{analytics?.totalStudents || 0}</div>
                         <div className="text-[10px] sm:text-xs text-slate-500">Total</div>
                     </div>
@@ -719,9 +719,9 @@ export default function MonitorTestPage() {
                         <div className="text-lg sm:text-2xl font-bold text-emerald-400">{analytics?.completedCount || 0}</div>
                         <div className="text-[10px] sm:text-xs text-slate-500">Done</div>
                     </div>
-                    <div onClick={() => setActiveTab('inProgress')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-blue-500/50 ${activeTab === 'inProgress' ? 'ring-2 ring-blue-500/60 bg-blue-500/15' : 'bg-blue-500/10 border-blue-500/20'}`}>
-                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-0.5 sm:mb-1" />
-                        <div className="text-lg sm:text-2xl font-bold text-blue-400">{analytics?.inProgressCount || 0}</div>
+                    <div onClick={() => setActiveTab('inProgress')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-violet-500/50 ${activeTab === 'inProgress' ? 'ring-2 ring-violet-500/60 bg-violet-500/15' : 'bg-violet-500/10 border-violet-500/20'}`}>
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400 mx-auto mb-0.5 sm:mb-1" />
+                        <div className="text-lg sm:text-2xl font-bold text-violet-400">{analytics?.inProgressCount || 0}</div>
                         <div className="text-[10px] sm:text-xs text-slate-500">Active</div>
                     </div>
                     <div onClick={() => setActiveTab('notStarted')} className={`border rounded-xl p-2.5 sm:p-4 text-center cursor-pointer transition-all hover:ring-1 hover:ring-red-500/50 ${activeTab === 'notStarted' ? 'ring-2 ring-red-500/60 bg-red-500/15' : 'bg-red-500/10 border-red-500/20'}`}>
@@ -737,7 +737,7 @@ export default function MonitorTestPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 bg-slate-800/30 rounded-xl p-1 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-1 bg-[#1d1535]/30 rounded-xl p-1 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
                     {[
                         { key: 'analytics', label: '📊 Analytics', mobileLabel: '📊', show: (analytics?.completedCount || 0) > 0 },
                         { key: 'all', label: `👥 All (${(analytics?.totalStudents || 0)})`, mobileLabel: `👥 ${analytics?.totalStudents || 0}`, show: true },
@@ -750,7 +750,7 @@ export default function MonitorTestPage() {
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key as any)}
                             className={`flex-shrink-0 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all whitespace-nowrap ${activeTab === tab.key
-                                ? 'bg-slate-700 text-white shadow-md'
+                                ? 'bg-[#2a2045] text-white shadow-md'
                                 : 'text-slate-400 hover:text-white'
                                 }`}
                         >
@@ -769,20 +769,20 @@ export default function MonitorTestPage() {
                             <div className="space-y-6">
                                 {/* Performance Summary */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
+                                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Average Score</div>
                                         <div className="text-xl font-bold text-white">{formatScore(analytics.averageScore) ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
                                         <div className="text-xs text-slate-400">{formatScore(analytics.averagePercentage) ?? 0}% avg</div>
                                     </div>
-                                    <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
+                                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Highest Score</div>
                                         <div className="text-xl font-bold text-emerald-400">{formatScore(analytics.highestScore) ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
                                     </div>
-                                    <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
+                                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Lowest Score</div>
                                         <div className="text-xl font-bold text-red-400">{formatScore(analytics.lowestScore) ?? '-'}<span className="text-slate-500 text-sm">/{testInfo?.totalMarks}</span></div>
                                     </div>
-                                    <div className="bg-slate-900/60 border border-white/10 rounded-xl p-4">
+                                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-4">
                                         <div className="text-xs text-slate-500 mb-1">Pass Rate</div>
                                         <div className="text-xl font-bold text-white">{analytics.passRate ?? 0}%</div>
                                         <div className="text-xs text-slate-400">{analytics.passedCount ?? 0} passed / {analytics.failedCount ?? 0} failed</div>
@@ -791,9 +791,9 @@ export default function MonitorTestPage() {
 
                                 {/* Score Distribution */}
                                 {analytics.scoreDistribution && analytics.scoreDistribution.some(d => d.count > 0) && (
-                                    <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6">
+                                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-sm font-bold text-white flex items-center gap-2"><BarChart3 className="h-4 w-4 text-blue-400" /> Score Distribution (%)</h3>
+                                            <h3 className="text-sm font-bold text-white flex items-center gap-2"><BarChart3 className="h-4 w-4 text-violet-400" /> Score Distribution (%)</h3>
                                             <div className="text-xs text-slate-500 flex items-center gap-3">
                                                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500/80"></span> 0-39% (Fail)</span>
                                                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500/80"></span> 40-69% (Avg)</span>
@@ -815,7 +815,7 @@ export default function MonitorTestPage() {
                                                 return (
                                                     <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative z-10 h-full justify-end">
                                                         {bucket.count > 0 && (
-                                                            <span className="text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-slate-800 px-2.5 py-1 rounded shadow-xl border border-white/10 z-20 whitespace-nowrap">
+                                                            <span className="text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-[#1d1535] px-2.5 py-1 rounded shadow-xl border border-white/10 z-20 whitespace-nowrap">
                                                                 {bucket.count} Student{bucket.count !== 1 ? 's' : ''}
                                                             </span>
                                                         )}
@@ -842,13 +842,13 @@ export default function MonitorTestPage() {
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Student Leaderboard */}
                                     {completed.length > 0 && (
-                                        <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6 max-h-[28rem] overflow-y-auto custom-scrollbar">
+                                        <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-6 max-h-[28rem] overflow-y-auto custom-scrollbar">
                                             <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><Trophy className="h-4 w-4 text-amber-400" /> Student Leaderboard</h3>
                                             <div className="space-y-3">
                                                 {[...completed].sort((a, b) => b.score - a.score).map((s, idx) => (
-                                                    <div key={s.phone} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-white/5 hover:bg-slate-800 transition-colors">
+                                                    <div key={s.phone} className="flex items-center justify-between p-3 bg-[#1d1535]/50 rounded-lg border border-white/5 hover:bg-[#1d1535] transition-colors">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${idx === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : idx === 1 ? 'bg-slate-300/20 text-slate-300 border border-slate-300/30' : idx === 2 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-slate-700/50 text-slate-400'}`}>
+                                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${idx === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : idx === 1 ? 'bg-slate-300/20 text-slate-300 border border-slate-300/30' : idx === 2 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-[#2a2045]/50 text-slate-400'}`}>
                                                                 {idx + 1}
                                                             </div>
                                                             <div>
@@ -867,12 +867,12 @@ export default function MonitorTestPage() {
 
                                     {/* Question Difficulty */}
                                     {analytics.questionAnalysis && analytics.questionAnalysis.length > 0 && (
-                                        <div className="bg-slate-900/60 border border-white/10 rounded-xl p-6 max-h-[28rem] overflow-y-auto custom-scrollbar flex flex-col">
+                                        <div className="bg-[#140d27]/60 border border-white/10 rounded-xl p-6 max-h-[28rem] overflow-y-auto custom-scrollbar flex flex-col">
                                             <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><Target className="h-4 w-4 text-orange-400" /> Question Difficulty</h3>
 
-                                            <div className="mb-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                                <p className="text-xs text-blue-200 leading-relaxed">
-                                                    <strong className="text-blue-400">Note:</strong> A lower accuracy percentage indicates the question was generally harder.
+                                            <div className="mb-4 p-3 bg-violet-500/10 rounded-lg border border-violet-500/20">
+                                                <p className="text-xs text-violet-200 leading-relaxed">
+                                                    <strong className="text-violet-400">Note:</strong> A lower accuracy percentage indicates the question was generally harder.
                                                 </p>
                                             </div>
 
@@ -880,7 +880,7 @@ export default function MonitorTestPage() {
                                                 {analytics.questionAnalysis.map((q, i) => (
                                                     <div key={q.questionId} className="flex items-center gap-3 text-xs">
                                                         <span className="w-6 text-slate-500 font-bold text-right shrink-0">Q{i + 1}</span>
-                                                        <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden shrink-0">
+                                                        <div className="flex-1 h-2 bg-[#1d1535] rounded-full overflow-hidden shrink-0">
                                                             <div className={`h-full rounded-full ${q.accuracy >= 70 ? 'bg-emerald-500' : q.accuracy >= 40 ? 'bg-amber-500' : 'bg-red-500'
                                                                 }`} style={{ width: `${q.accuracy}%` }}></div>
                                                         </div>
@@ -902,12 +902,12 @@ export default function MonitorTestPage() {
 
                         {/* All Students Tab */}
                         {activeTab === 'all' && (
-                            <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden">
                                 {/* Desktop Table */}
                                 <div className="hidden sm:block overflow-x-auto">
                                     <table className="w-full">
                                         <thead>
-                                            <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                            <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-[#1d1535]/30">
                                                 <th className="px-4 py-3 font-semibold">#</th>
                                                 <th className="px-4 py-3 font-semibold">Student</th>
                                                 <th className="px-4 py-3 font-semibold">Batch</th>
@@ -935,11 +935,11 @@ export default function MonitorTestPage() {
                                                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s._status === 'completed' ? (
                                                             s.terminationReason ? (
                                                                 (s.terminationReason === 'time_limit' || s.terminationReason === 'server_auto_expired')
-                                                                    ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20'
+                                                                    ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20'
                                                                     : 'bg-red-500/15 text-red-400 border border-red-500/20'
                                                             ) : 'bg-emerald-500/15 text-emerald-300'
                                                         ) :
-                                                            s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-300' :
+                                                            s._status === 'inProgress' ? 'bg-violet-500/15 text-violet-300' :
                                                                 'bg-red-500/15 text-red-300'
                                                             }`}>
                                                             {s._status === 'completed' ? (
@@ -1006,7 +1006,7 @@ export default function MonitorTestPage() {
                                                     <span className="text-white font-bold text-xs">{formatScore(s.score)}<span className="text-slate-500 font-normal">/{testInfo?.totalMarks}</span></span>
                                                 )}
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s._status === 'completed' ? 'bg-emerald-500/15 text-emerald-400' :
-                                                    s._status === 'inProgress' ? 'bg-blue-500/15 text-blue-400' : 'bg-red-500/15 text-red-400'
+                                                    s._status === 'inProgress' ? 'bg-violet-500/15 text-violet-400' : 'bg-red-500/15 text-red-400'
                                                     }`}>
                                                     {s._status === 'completed' ? '✅' : s._status === 'inProgress' ? '⏳' : '❌'}
                                                 </span>
@@ -1034,7 +1034,7 @@ export default function MonitorTestPage() {
                             <div className="space-y-4">
                                 {/* Bulk Reassign Toolbar */}
                                 {completed.length > 0 && (
-                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
+                                    <div className="flex items-center justify-between bg-[#140d27]/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
                                         <div className="flex items-center gap-2 sm:gap-3">
                                             <input
                                                 type="checkbox"
@@ -1060,7 +1060,7 @@ export default function MonitorTestPage() {
                                     </div>
                                 )}
 
-                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden">
                                     {completed.length === 0 ? (
                                         <p className="text-center py-12 text-slate-400">No completed attempts yet</p>
                                     ) : (
@@ -1069,7 +1069,7 @@ export default function MonitorTestPage() {
                                         <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full">
                                                 <thead>
-                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-[#1d1535]/30">
                                                         <th className="px-4 py-3 font-semibold w-10"></th>
                                                         <th className="px-4 py-3 font-semibold">Rank</th>
                                                         <th className="px-4 py-3 font-semibold">Student</th>
@@ -1121,7 +1121,7 @@ export default function MonitorTestPage() {
                                                                     }`}>{formatScore(student.percentage)}%</span>
                                                                 {student.terminationReason && (
                                                                     <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold border ${['time_limit', 'server_auto_expired'].includes(student.terminationReason)
-                                                                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                                                        ? 'bg-violet-500/20 text-violet-400 border-violet-500/30'
                                                                         : 'bg-red-500/20 text-red-400 border-red-500/30'
                                                                         }`}>
                                                                         {['time_limit', 'server_auto_expired'].includes(student.terminationReason) ? 'Time Up' : 'Terminated'}
@@ -1180,7 +1180,7 @@ export default function MonitorTestPage() {
                                                                 i === 0 ? 'bg-amber-500/20 text-amber-400' :
                                                                 i === 1 ? 'bg-slate-400/20 text-slate-300' :
                                                                 i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                                                                'bg-slate-700/50 text-slate-500'
+                                                                'bg-[#2a2045]/50 text-slate-500'
                                                             }`}>{i + 1}</span>
                                                             <p className="text-white font-medium text-sm truncate">{student.name}</p>
                                                         </div>
@@ -1224,7 +1224,7 @@ export default function MonitorTestPage() {
                             <div className="space-y-4">
                                 {/* Force Complete Toolbar */}
                                 {inProgress.length > 0 && (
-                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
+                                    <div className="flex items-center justify-between bg-[#140d27]/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
                                         <div>
                                             <span className="text-xs sm:text-sm text-slate-400">
                                                 {inProgress.length} in progress
@@ -1249,7 +1249,7 @@ export default function MonitorTestPage() {
                                     </div>
                                 )}
 
-                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden">
                                     {inProgress.length === 0 ? (
                                         <p className="text-center py-12 text-slate-400">No students currently taking the test</p>
                                     ) : (
@@ -1258,7 +1258,7 @@ export default function MonitorTestPage() {
                                         <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full">
                                                 <thead>
-                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-[#1d1535]/30">
                                                         <th className="px-4 py-3 font-semibold">Student</th>
                                                         <th className="px-4 py-3 font-semibold">Batch</th>
                                                         <th className="px-4 py-3 font-semibold">Started</th>
@@ -1279,7 +1279,7 @@ export default function MonitorTestPage() {
                                                                 <td className="px-4 py-3 text-slate-400 text-xs">
                                                                     {new Date(s.startedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Kolkata' })}
                                                                 </td>
-                                                                <td className={`px-4 py-3 font-medium text-sm ${isOvertime ? 'text-red-400' : 'text-blue-400'}`}>
+                                                                <td className={`px-4 py-3 font-medium text-sm ${isOvertime ? 'text-red-400' : 'text-violet-400'}`}>
                                                                     {formatTime(s.timeElapsed)}
                                                                     {isOvertime && <span className="ml-1 text-[10px] text-red-500">⚠</span>}
                                                                 </td>
@@ -1311,7 +1311,7 @@ export default function MonitorTestPage() {
                                                                 <p className="text-[10px] text-slate-500">{s.phone}</p>
                                                             </div>
                                                             <div className="flex items-center gap-2 shrink-0">
-                                                                <span className={`font-bold text-sm ${isOvertime ? 'text-red-400' : 'text-blue-400'}`}>
+                                                                <span className={`font-bold text-sm ${isOvertime ? 'text-red-400' : 'text-violet-400'}`}>
                                                                     {formatTime(s.timeElapsed)}
                                                                 </span>
                                                                 {s.warningCount > 0 && (
@@ -1334,7 +1334,7 @@ export default function MonitorTestPage() {
                         {/* Breach Log Tab */}
                         {activeTab === 'breachLog' && (
                             <div className="space-y-4">
-                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden">
                                     {(() => {
                                         const studentsWithWarnings = [...completed, ...inProgress]
                                             .filter((s: any) => s.warningCount > 0)
@@ -1382,7 +1382,7 @@ export default function MonitorTestPage() {
                                                             {/* Violation Type Stats */}
                                                             <div className="flex flex-wrap gap-2 mb-3">
                                                                 {screenAwayCount > 0 && (
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-[11px] font-medium border border-blue-500/20">
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-violet-500/10 text-violet-400 text-[11px] font-medium border border-violet-500/20">
                                                                         📱 Screen Away: {screenAwayCount}
                                                                     </span>
                                                                 )}
@@ -1415,10 +1415,10 @@ export default function MonitorTestPage() {
 
                                                             {/* Detailed Timeline */}
                                                             {(s.violationLog || []).length > 0 && (
-                                                                <div className="bg-slate-800/40 rounded-xl border border-white/5 overflow-hidden">
-                                                                    <table className="w-full">
+                                                                <div className="bg-[#1d1535]/40 rounded-xl border border-white/5 overflow-x-auto">
+                                                                    <table className="w-full min-w-[420px]">
                                                                         <thead>
-                                                                            <tr className="text-left text-[10px] text-slate-500 border-b border-white/5 bg-slate-800/60">
+                                                                            <tr className="text-left text-[10px] text-slate-500 border-b border-white/5 bg-[#1d1535]/60">
                                                                                 <th className="px-3 py-2 font-semibold">#</th>
                                                                                 <th className="px-3 py-2 font-semibold">Type</th>
                                                                                 <th className="px-3 py-2 font-semibold">Time</th>
@@ -1431,7 +1431,7 @@ export default function MonitorTestPage() {
                                                                                     <td className="px-3 py-2 text-slate-500 text-xs">{vi + 1}</td>
                                                                                     <td className="px-3 py-2">
                                                                                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                                                                            v.type === 'screen_away' ? 'bg-blue-500/20 text-blue-400' :
+                                                                                            v.type === 'screen_away' ? 'bg-violet-500/20 text-violet-400' :
                                                                                             v.type === 'google_assistant' ? 'bg-purple-500/20 text-purple-400' :
                                                                                             v.type === 'focus_lost' ? 'bg-orange-500/20 text-orange-400' :
                                                                                             v.type === 'resize_detected' ? 'bg-pink-500/20 text-pink-400' :
@@ -1473,7 +1473,7 @@ export default function MonitorTestPage() {
                             <div className="space-y-4">
                                 {/* Reassign Missed Students Button */}
                                 {notStarted.length > 0 && (
-                                    <div className="flex items-center justify-between bg-slate-900/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
+                                    <div className="flex items-center justify-between bg-[#140d27]/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
                                         <span className="text-xs sm:text-sm text-slate-400">{notStarted.length} missed</span>
                                         <button
                                             onClick={() => {
@@ -1481,7 +1481,7 @@ export default function MonitorTestPage() {
                                                 setNewEndTime('');
                                                 setShowMissedModal(true);
                                             }}
-                                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 text-xs sm:text-sm font-bold transition-all"
+                                            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 text-xs sm:text-sm font-bold transition-all"
                                         >
                                             <CalendarClock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             <span className="hidden sm:inline">Reassign Missed Students</span>
@@ -1491,7 +1491,7 @@ export default function MonitorTestPage() {
                                 )}
 
                                 {notStarted.length > 0 && (
-                                    <div className="bg-slate-900/60 border border-white/10 rounded-xl px-4 py-4 mb-4 mt-4">
+                                    <div className="bg-[#140d27]/60 border border-white/10 rounded-xl px-4 py-4 mb-4 mt-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
                                                 📱 WhatsApp Auto-Sender (Missed Students)
@@ -1500,7 +1500,7 @@ export default function MonitorTestPage() {
                                                 <select 
                                                     value={recipientModeMissed} 
                                                     onChange={e => setRecipientModeMissed(e.target.value as any)}
-                                                    className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-blue-500 cursor-pointer"
+                                                    className="bg-[#1d1535] border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer"
                                                 >
                                                     <option value="student">Send to Student</option>
                                                     <option value="guardian">Send to Guardian</option>
@@ -1510,7 +1510,7 @@ export default function MonitorTestPage() {
                                                         if (selectedMissedPhones.length === notStarted.length) setSelectedMissedPhones([]);
                                                         else setSelectedMissedPhones(notStarted.map((s: any) => s.phone));
                                                     }}
-                                                    className="text-xs text-blue-400 hover:text-blue-300 font-medium bg-blue-500/10 px-2 py-1 rounded transition-colors"
+                                                    className="text-xs text-violet-400 hover:text-violet-300 font-medium bg-violet-500/10 px-2 py-1 rounded transition-colors"
                                                 >
                                                     {selectedMissedPhones.length === notStarted.length ? 'Deselect All' : 'Select All'}
                                                 </button>
@@ -1521,15 +1521,15 @@ export default function MonitorTestPage() {
                                             placeholder="WhatsApp Message..." 
                                             value={whatsappMessageMissed} 
                                             onChange={e => setWhatsappMessageMissed(e.target.value)}
-                                            className="w-full px-4 py-2 mb-3 rounded-xl bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500"
+                                            className="w-full px-4 py-2 mb-3 rounded-xl bg-[#1d1535] border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500"
                                         />
-                                        <button onClick={copyForAutoSenderMissed} disabled={selectedMissedPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                                        <button onClick={copyForAutoSenderMissed} disabled={selectedMissedPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                                             Copy for WhatsApp Auto-Sender ({selectedMissedPhones.length})
                                         </button>
                                     </div>
                                 )}
 
-                                <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
+                                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden">
                                     {notStarted.length === 0 ? (
                                         <p className="text-center py-12 text-emerald-400 font-medium">All students have started the test! 🎉</p>
                                     ) : (
@@ -1538,7 +1538,7 @@ export default function MonitorTestPage() {
                                         <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full">
                                                 <thead>
-                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-slate-800/30">
+                                                    <tr className="text-left text-xs text-slate-400 border-b border-white/10 bg-[#1d1535]/30">
                                                         <th className="px-4 py-3 font-semibold w-10"></th>
                                                         <th className="px-4 py-3 font-semibold">Student</th>
                                                         <th className="px-4 py-3 font-semibold">Batch</th>
@@ -1550,7 +1550,7 @@ export default function MonitorTestPage() {
                                                     {notStarted.map(s => {
                                                         const isSelected = selectedMissedPhones.includes(s.phone);
                                                         return (
-                                                        <tr key={s.phone} className={`border-b border-white/5 hover:bg-white/5 ${isSelected ? 'bg-blue-500/10' : ''}`}>
+                                                        <tr key={s.phone} className={`border-b border-white/5 hover:bg-white/5 ${isSelected ? 'bg-violet-500/10' : ''}`}>
                                                             <td className="px-4 py-3">
                                                                 <input
                                                                     type="checkbox"
@@ -1559,7 +1559,7 @@ export default function MonitorTestPage() {
                                                                         if (e.target.checked) setSelectedMissedPhones(prev => [...prev, s.phone]);
                                                                         else setSelectedMissedPhones(prev => prev.filter(p => p !== s.phone));
                                                                     }}
-                                                                    className="rounded border-white/20 bg-slate-800 text-blue-500 focus:ring-blue-500/20"
+                                                                    className="rounded border-white/20 bg-[#1d1535] text-violet-500 focus:ring-violet-500/20"
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-3">
@@ -1577,7 +1577,7 @@ export default function MonitorTestPage() {
                                                                             navigator.clipboard.writeText(s.phone);
                                                                             toast.success('Phone number copied!');
                                                                         }}
-                                                                        className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                                                                        className="p-1.5 hover:bg-violet-500/20 rounded text-violet-400 hover:text-violet-300 transition-colors"
                                                                         title="Copy Phone Number"
                                                                     >
                                                                         📞
@@ -1607,7 +1607,7 @@ export default function MonitorTestPage() {
                                             {notStarted.map(s => {
                                                 const isSelected = selectedMissedPhones.includes(s.phone);
                                                 return (
-                                                <div key={s.phone} className={`p-3 flex items-center justify-between gap-2 ${isSelected ? 'bg-blue-500/10' : ''}`}>
+                                                <div key={s.phone} className={`p-3 flex items-center justify-between gap-2 ${isSelected ? 'bg-violet-500/10' : ''}`}>
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <input
                                                             type="checkbox"
@@ -1616,7 +1616,7 @@ export default function MonitorTestPage() {
                                                                 if (e.target.checked) setSelectedMissedPhones(prev => [...prev, s.phone]);
                                                                 else setSelectedMissedPhones(prev => prev.filter(p => p !== s.phone));
                                                             }}
-                                                            className="rounded border-white/20 bg-slate-800 text-blue-500 focus:ring-blue-500/20"
+                                                            className="rounded border-white/20 bg-[#1d1535] text-violet-500 focus:ring-violet-500/20"
                                                         />
                                                         <div>
                                                             <p className="text-white font-medium text-sm truncate">{s.name}</p>
@@ -1630,7 +1630,7 @@ export default function MonitorTestPage() {
                                                                 navigator.clipboard.writeText(s.phone);
                                                                 toast.success('Phone copied!');
                                                             }}
-                                                            className="p-1 hover:bg-blue-500/20 rounded text-blue-400"
+                                                            className="p-1 hover:bg-violet-500/20 rounded text-violet-400"
                                                             title="Copy Phone"
                                                         >
                                                             📞
@@ -1663,7 +1663,7 @@ export default function MonitorTestPage() {
             {/* Excluded Students Section */}
             {excludedStudents.length > 0 && (
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 pb-6">
-                    <div className="bg-slate-900/60 border border-orange-500/20 rounded-xl overflow-hidden">
+                    <div className="bg-[#140d27]/60 border border-orange-500/20 rounded-xl overflow-hidden">
                         <button
                             onClick={() => setShowExcluded(!showExcluded)}
                             className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-white/5 transition-colors"

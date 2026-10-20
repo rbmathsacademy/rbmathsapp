@@ -6,9 +6,9 @@ export default function AdminAttendance() {
     return (
         <div className="space-y-6">
             {/* Page Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400">
+                    <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400">
                         Attendance Management
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">Track and manage student attendance</p>
@@ -23,7 +23,6 @@ export default function AdminAttendance() {
             <div className="text-center py-20">
                 <div className="mb-8 flex justify-center">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-500 rounded-full blur-2xl opacity-30 animate-pulse"></div>
                         <div className="relative p-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 shadow-2xl">
                             <Calendar className="h-16 w-16 text-white" />
                         </div>
@@ -35,7 +34,7 @@ export default function AdminAttendance() {
                     <span className="text-sm font-bold text-violet-300">Coming Soon</span>
                 </div>
 
-                <div className="max-w-2xl mx-auto bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+                <div className="relative max-w-2xl mx-auto bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-8">
                     <h3 className="text-xl font-bold text-white mb-4">Upcoming Features:</h3>
                     <ul className="space-y-3 text-slate-300 text-left">
                         <li className="flex items-start gap-3">

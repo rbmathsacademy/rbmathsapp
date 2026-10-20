@@ -396,7 +396,7 @@ export default function DeployTestPage() {
 
             {/* Test Info */}
             {test && (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                     <h2 className="text-xl font-bold text-white mb-2">{test.title}</h2>
                     {test.description && <p className="text-slate-400 text-sm mb-4">{test.description}</p>}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -443,7 +443,7 @@ export default function DeployTestPage() {
 
             {/* Batch Selection - Show if draft OR if deployed but no batches found (repair mode) */}
             {(!test?.status || test.status === 'draft' || (test.status === 'deployed' && (!test.deployment?.batches || test.deployment.batches.length === 0))) ? (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Users className="h-5 w-5 text-emerald-400" />
                         <h2 className="text-xl font-bold text-white">Select Batches</h2>
@@ -459,14 +459,14 @@ export default function DeployTestPage() {
                                     key={batch}
                                     className={`flex items-center gap-3 p-3 md:p-4 rounded-lg cursor-pointer transition-all border ${selectedBatches.includes(batch)
                                         ? 'bg-emerald-500/20 border-emerald-500/50'
-                                        : 'bg-slate-950/50 border-white/5 hover:border-white/20'
+                                        : 'bg-[#0b0718]/50 border-white/5 hover:border-white/20'
                                         }`}
                                 >
                                     <input
                                         type="checkbox"
                                         checked={selectedBatches.includes(batch)}
                                         onChange={() => toggleBatch(batch)}
-                                        className="w-5 h-5 rounded border-slate-600 bg-slate-950 text-emerald-500 focus:ring-emerald-500 flex-shrink-0"
+                                        className="w-5 h-5 rounded border-[#433666] bg-[#0b0718] text-emerald-500 focus:ring-emerald-500 flex-shrink-0"
                                     />
                                     <span className="text-sm font-medium text-slate-300 flex-1 break-words">{batch}</span>
                                 </label>
@@ -475,7 +475,7 @@ export default function DeployTestPage() {
                     )}
                 </div>
             ) : (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Users className="h-5 w-5 text-emerald-400" />
                         <h2 className="text-xl font-bold text-white">Deployed Batches</h2>
@@ -487,7 +487,7 @@ export default function DeployTestPage() {
                             </span>
                         ))}
                     </div>
-                    <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm flex items-start gap-2">
+                    <div className="mt-4 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm flex items-start gap-2">
                         <div className="mt-0.5 min-w-[16px]"><Users className="h-4 w-4" /></div>
                         <p>Batches cannot be changed for a deployed test. To assign to new batches, please duplicate the test.</p>
                     </div>
@@ -496,15 +496,15 @@ export default function DeployTestPage() {
 
             {/* Student Selection - Only show if not deployed */}
             {(!test?.status || test.status === 'draft') && selectedBatches.length > 0 && (
-                <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+                <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <Users className="h-5 w-5 text-blue-400" />
+                        <Users className="h-5 w-5 text-violet-400" />
                         <h2 className="text-xl font-bold text-white">Student Selection</h2>
                     </div>
 
                     {/* Deployment Mode */}
                     <div className="mb-4 space-y-2">
-                        <label className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                        <label className="flex items-center gap-3 p-3 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors">
                             <input
                                 type="radio"
                                 name="deploymentMode"
@@ -516,7 +516,7 @@ export default function DeployTestPage() {
                                 All students in selected batches ({students.length} students)
                             </span>
                         </label>
-                        <label className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-lg cursor-pointer hover:bg-slate-950 transition-colors">
+                        <label className="flex items-center gap-3 p-3 bg-[#0b0718]/50 rounded-lg cursor-pointer hover:bg-[#0b0718] transition-colors">
                             <input
                                 type="radio"
                                 name="deploymentMode"
@@ -544,24 +544,24 @@ export default function DeployTestPage() {
                                     </button>
                                     <button
                                         onClick={deselectAllStudents}
-                                        className="text-xs px-3 py-1.5 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 transition-colors flex-1 sm:flex-none justify-center"
+                                        className="text-xs px-3 py-1.5 bg-[#2a2045] text-slate-300 rounded hover:bg-[#352a55] transition-colors flex-1 sm:flex-none justify-center"
                                     >
                                         Deselect All
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="max-h-64 overflow-y-auto space-y-2 bg-slate-950/30 rounded-lg p-2 md:p-3">
+                            <div className="max-h-64 overflow-y-auto space-y-2 bg-[#0b0718]/30 rounded-lg p-2 md:p-3">
                                 {students.map(student => (
                                     <label
                                         key={student.phoneNumber}
-                                        className="flex items-start gap-3 p-2 hover:bg-slate-800/50 rounded cursor-pointer transition-colors"
+                                        className="flex items-start gap-3 p-2 hover:bg-[#1d1535]/50 rounded cursor-pointer transition-colors"
                                     >
                                         <input
                                             type="checkbox"
                                             checked={selectedStudents.some(s => s.phoneNumber === student.phoneNumber)}
                                             onChange={() => toggleStudent(student)}
-                                            className="w-4 h-4 mt-1 rounded border-slate-600 bg-slate-950 text-blue-500 focus:ring-blue-500 flex-shrink-0"
+                                            className="w-4 h-4 mt-1 rounded border-[#433666] bg-[#0b0718] text-violet-500 focus:ring-violet-500 flex-shrink-0"
                                         />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-300 truncate">{student.studentName}</p>
@@ -576,7 +576,7 @@ export default function DeployTestPage() {
             )}
 
             {/* Schedule */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-4 md:p-6">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-4 md:p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Calendar className="h-5 w-5 text-purple-400" />
                     <h2 className="text-xl font-bold text-white">Schedule</h2>
@@ -590,7 +590,7 @@ export default function DeployTestPage() {
                             value={startTime}
                             onChange={(e) => setStartTime(e.target.value)}
                             disabled={test?.status === 'deployed' && startTime !== ''}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         {test?.status === 'deployed' && startTime !== '' && <p className="text-xs text-slate-500 mt-1">Start time cannot be changed for deployed tests</p>}
                     </div>
@@ -600,7 +600,7 @@ export default function DeployTestPage() {
                             type="datetime-local"
                             value={endTime}
                             onChange={(e) => setEndTime(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                            className="w-full bg-[#0b0718] border border-[#352a55] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                         />
                     </div>
                 </div>
@@ -621,7 +621,7 @@ export default function DeployTestPage() {
             <div className="flex flex-col md:flex-row justify-end gap-3 pb-8">
                 <button
                     onClick={() => router.back()}
-                    className="px-6 py-3 text-slate-400 hover:text-white transition-colors font-medium border border-transparent hover:border-slate-800 rounded-xl"
+                    className="px-6 py-3 text-slate-400 hover:text-white transition-colors font-medium border border-transparent hover:border-[#2a2045] rounded-xl"
                 >
                     Cancel
                 </button>

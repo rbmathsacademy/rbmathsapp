@@ -325,7 +325,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Batch Breakdown Stats */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Batch Completion Rates</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {Object.entries(analytics.batchBreakdown).map(([batch, stats]: [string, any]) => {
@@ -336,10 +336,10 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                     <span className="text-sm font-bold text-white truncate pr-2">{batch}</span>
                                     <span className="text-xs text-slate-400 shrink-0">{stats.responded} / {stats.total}</span>
                                 </div>
-                                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full" style={{ width: `${pct}%` }}></div>
+                                <div className="h-2 w-full bg-[#1d1535] rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full" style={{ width: `${pct}%` }}></div>
                                 </div>
-                                <div className="text-right mt-1 text-[10px] font-bold text-blue-400">{pct}%</div>
+                                <div className="text-right mt-1 text-[10px] font-bold text-violet-400">{pct}%</div>
                             </div>
                         );
                     })}
@@ -348,14 +348,14 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
 
             {/* Per-Question Analytics */}
             <h2 className="text-xl font-black text-white mt-8 mb-4 flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-400" /> Analytics
+                <BarChart3 className="h-5 w-5 text-violet-400" /> Analytics
             </h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {analytics.questionAnalytics.map((qa: any, idx: number) => (
-                    <div key={qa.questionId} className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 flex flex-col h-full">
+                    <div key={qa.questionId} className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6 flex flex-col h-full">
                         <div className="mb-6">
-                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider mb-2 block">Question {idx + 1}</span>
+                            <span className="text-[10px] font-black text-violet-400 uppercase tracking-wider mb-2 block">Question {idx + 1}</span>
                             <h3 className="text-lg font-bold text-white">{qa.text}</h3>
                             <p className="text-xs text-slate-500 mt-1">{qa.totalResponses} responses</p>
                         </div>
@@ -373,9 +373,9 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                                 <span className={`font-bold ${isWinner ? 'text-white' : 'text-slate-300'}`}>{opt}</span>
                                                 <span className="text-slate-400">{count} ({pct}%)</span>
                                             </div>
-                                            <div className="h-8 w-full bg-slate-800/50 rounded-lg overflow-hidden relative">
+                                            <div className="h-8 w-full bg-[#1d1535]/50 rounded-lg overflow-hidden relative">
                                                 <div 
-                                                    className={`absolute top-0 left-0 h-full transition-all duration-1000 ${isWinner ? 'bg-blue-500/40 border-r-2 border-blue-400' : 'bg-slate-700/50'}`}
+                                                    className={`absolute top-0 left-0 h-full transition-all duration-1000 ${isWinner ? 'bg-violet-500/40 border-r-2 border-violet-400' : 'bg-[#2a2045]/50'}`}
                                                     style={{ width: `${pct}%` }}
                                                 ></div>
                                             </div>
@@ -401,7 +401,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                         return (
                                             <div key={ratingVal} className="flex items-center gap-2 text-xs">
                                                 <span className="w-4 text-right text-slate-400">{ratingVal}</span>
-                                                <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
+                                                <div className="flex-1 h-3 bg-[#1d1535] rounded-full overflow-hidden">
                                                     <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }}></div>
                                                 </div>
                                                 <span className="w-8 text-right text-slate-500">{pct}%</span>
@@ -419,7 +419,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                 ) : qa.textAnswers?.map((ans: any, tIdx: number) => (
                                     <div key={tIdx} className="bg-white/5 rounded-xl p-3 flex justify-between items-start gap-4">
                                         <p className="text-sm text-slate-300 flex-1">{ans.text}</p>
-                                        <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-400 min-w-[30px]">{ans.count}</span>
+                                        <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-[#1d1535] text-[10px] font-bold text-slate-400 min-w-[30px]">{ans.count}</span>
                                     </div>
                                 ))}
                             </div>
@@ -429,17 +429,17 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Responses Table */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden mt-8">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl overflow-hidden mt-8">
                 <div className="p-4 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Users className="h-5 w-5 text-blue-400" /> Individual Responses
+                        <Users className="h-5 w-5 text-violet-400" /> Individual Responses
                     </h2>
                     
                     <div className="flex flex-wrap gap-2">
                         <button onClick={() => setShowNotificationModal(true)} className="px-3 py-2 rounded-lg bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 text-xs font-bold border border-orange-500/20 transition-colors flex items-center gap-1.5">
                             <Bell className="h-3.5 w-3.5" /> Push Notification
                         </button>
-                        <button onClick={openDeployModal} className="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-bold border border-blue-500/20 transition-colors flex items-center gap-1.5">
+                        <button onClick={openDeployModal} className="px-3 py-2 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 text-xs font-bold border border-violet-500/20 transition-colors flex items-center gap-1.5">
                             <Send className="h-3.5 w-3.5" /> Deploy Test ({filteredResponses.length})
                         </button>
                         <button onClick={copyTSV} className="px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold border border-emerald-500/20 transition-colors flex items-center gap-1.5">
@@ -456,12 +456,12 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
                             type="text" placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
                         />
                     </div>
                     <select
                         value={batchFilter} onChange={e => setBatchFilter(e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500"
+                        className="px-3 py-2 rounded-lg bg-[#1d1535] border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500"
                     >
                         <option value="">All Batches</option>
                         {Object.keys(analytics.batchBreakdown).map(b => <option key={b} value={b}>{b}</option>)}
@@ -478,11 +478,11 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                     aLabel = q.options[parseInt(f.answer)] ?? f.answer;
                                 }
                                 return (
-                                    <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs font-medium">
+                                    <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-medium">
                                         <span className="text-slate-400 font-normal">{qLabel}:</span> {aLabel}
                                         <button
                                             onClick={() => setActiveFilters(prev => prev.filter((_, i) => i !== idx))}
-                                            className="ml-0.5 text-blue-400 hover:text-white transition-colors"
+                                            className="ml-0.5 text-violet-400 hover:text-white transition-colors"
                                             title="Remove filter"
                                         >
                                             <X className="h-3 w-3" />
@@ -492,7 +492,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                             })}
                             <button
                                 onClick={() => setActiveFilters([])}
-                                className="px-2.5 py-1 rounded-lg bg-slate-700 text-slate-400 hover:text-white text-xs transition-colors"
+                                className="px-2.5 py-1 rounded-lg bg-[#2a2045] text-slate-400 hover:text-white text-xs transition-colors"
                             >
                                 Clear all
                             </button>
@@ -504,7 +504,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                         <select
                             value={pendingQuestionId}
                             onChange={e => { setPendingQuestionId(e.target.value); setPendingAnswer(''); }}
-                            className="px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500 max-w-xs truncate"
+                            className="px-3 py-2 rounded-lg bg-[#1d1535] border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500 max-w-xs truncate"
                         >
                             <option value="">+ Add Question Filter</option>
                             {survey.questions.map((q: any) => <option key={q.id} value={q.id}>{q.text}</option>)}
@@ -514,7 +514,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                             <select
                                 value={pendingAnswer}
                                 onChange={e => setPendingAnswer(e.target.value)}
-                                className="px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500 max-w-xs truncate"
+                                className="px-3 py-2 rounded-lg bg-[#1d1535] border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500 max-w-xs truncate"
                             >
                                 <option value="">Select Answer…</option>
                                 {(() => {
@@ -540,7 +540,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                     setPendingQuestionId('');
                                     setPendingAnswer('');
                                 }}
-                                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors flex items-center gap-1"
+                                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white text-xs font-bold transition-colors flex items-center gap-1"
                             >
                                 <Plus className="h-3 w-3" /> Apply Filter
                             </button>
@@ -602,7 +602,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Excluded Students */}
-            <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 mt-8">
+            <div className="relative bg-[#140d27]/60 sd-gborder sd-gborder-soft sd-card rounded-2xl p-6 mt-8">
                 <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     <UserX className="h-5 w-5 text-red-400" /> Excluded Students
                 </h2>
@@ -631,7 +631,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                                 if (e.target.checked) setExcludePhones(prev => [...prev, s.phone]);
                                                 else setExcludePhones(prev => prev.filter(p => p !== s.phone));
                                             }}
-                                            className="rounded border-white/20 bg-slate-800 text-red-500 focus:ring-red-500/20"
+                                            className="rounded border-white/20 bg-[#1d1535] text-red-500 focus:ring-red-500/20"
                                         />
                                         <div>
                                             <div className="text-sm font-bold text-slate-300">{s.name}</div>
@@ -655,7 +655,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                 <select 
                                     value={recipientModePending} 
                                     onChange={e => setRecipientModePending(e.target.value as any)}
-                                    className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-blue-500 cursor-pointer"
+                                    className="bg-[#1d1535] border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer"
                                 >
                                     <option value="student">Send to Student</option>
                                     <option value="guardian">Send to Guardian</option>
@@ -665,7 +665,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                         if (selectedPendingPhones.length === pendingStudents.length) setSelectedPendingPhones([]);
                                         else setSelectedPendingPhones(pendingStudents.map((s: any) => s.phone));
                                     }}
-                                    className="text-xs text-blue-400 hover:text-blue-300 font-medium bg-blue-500/10 px-2 py-1 rounded transition-colors"
+                                    className="text-xs text-violet-400 hover:text-violet-300 font-medium bg-violet-500/10 px-2 py-1 rounded transition-colors"
                                 >
                                     {selectedPendingPhones.length === pendingStudents.length ? 'Deselect All' : 'Select All'}
                                 </button>
@@ -677,7 +677,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                             ) : pendingStudents.map((s: any) => {
                                 const isSelected = selectedPendingPhones.includes(s.phone);
                                 return (
-                                    <label key={s.phone} className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-blue-500/10 border border-blue-500/20' : 'hover:bg-white/5 border border-transparent'}`}>
+                                    <label key={s.phone} className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-violet-500/10 border border-violet-500/20' : 'hover:bg-white/5 border border-transparent'}`}>
                                         <input 
                                             type="checkbox" 
                                             checked={isSelected}
@@ -685,7 +685,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                                 if (e.target.checked) setSelectedPendingPhones(prev => [...prev, s.phone]);
                                                 else setSelectedPendingPhones(prev => prev.filter(p => p !== s.phone));
                                             }}
-                                            className="rounded border-white/20 bg-slate-800 text-blue-500 focus:ring-blue-500/20"
+                                            className="rounded border-white/20 bg-[#1d1535] text-violet-500 focus:ring-violet-500/20"
                                         />
                                         <div>
                                             <div className="text-sm font-bold text-slate-300">{s.name}</div>
@@ -700,9 +700,9 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                             placeholder="WhatsApp Message..." 
                             value={whatsappMessage} 
                             onChange={e => setWhatsappMessage(e.target.value)}
-                            className="w-full px-4 py-2 mb-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-blue-500"
+                            className="w-full px-4 py-2 mb-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500"
                         />
-                        <button onClick={copyForAutoSender} disabled={selectedPendingPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                        <button onClick={copyForAutoSender} disabled={selectedPendingPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                             Copy for WhatsApp Auto-Sender ({selectedPendingPhones.length})
                         </button>
                     </div>
@@ -724,11 +724,11 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
 
             {/* Deploy Modal */}
             {showDeployModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-xl shadow-2xl flex flex-col">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="relative bg-[#140d27] rounded-2xl sd-gborder sd-gborder-soft sd-card w-full max-w-xl shadow-2xl flex flex-col max-h-[90svh] overflow-y-auto">
                         <div className="p-6 border-b border-white/10 flex justify-between items-center">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Send className="h-5 w-5 text-blue-400" /> Deploy Test to {filteredResponses.length} Students
+                                <Send className="h-5 w-5 text-violet-400" /> Deploy Test to {filteredResponses.length} Students
                             </h3>
                             <button onClick={() => setShowDeployModal(false)} className="text-slate-400 hover:text-white transition-colors">
                                 <X className="h-6 w-6" />
@@ -755,7 +755,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                                 </div>
                                                 <button
                                                     onClick={() => handleDeployExisting(t._id)}
-                                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition-colors"
+                                                    className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white text-sm font-bold rounded-lg transition-colors"
                                                 >
                                                     Select
                                                 </button>
@@ -772,7 +772,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
             {/* Notification Modal */}
             {showNotificationModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                    <div className="relative bg-[#151029] sd-gborder sd-gborder-soft sd-card rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Bell className="h-5 w-5 text-orange-400" /> Push Notification to {filteredResponses.length} Students
@@ -790,7 +790,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                     value={notifHeader}
                                     onChange={(e) => setNotifHeader(e.target.value)}
                                     placeholder="e.g. Important Update for Tomorrow"
-                                    className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-orange-500 focus:outline-none"
+                                    className="w-full bg-[#0b0718] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-orange-500 focus:outline-none"
                                 />
                             </div>
 
@@ -801,7 +801,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                     onChange={(e) => setNotifBody(e.target.value)}
                                     placeholder="Enter the main message details here..."
                                     rows={4}
-                                    className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-orange-500 focus:outline-none"
+                                    className="w-full bg-[#0b0718] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-orange-500 focus:outline-none"
                                 />
                             </div>
 
@@ -812,7 +812,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                         type="datetime-local"
                                         value={notifStartDate}
                                         onChange={(e) => setNotifStartDate(e.target.value)}
-                                        className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                                        className="w-full bg-[#0b0718] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none"
                                     />
                                     <p className="text-[10px] text-gray-500 mt-1">Leave blank to show immediately</p>
                                 </div>
@@ -822,7 +822,7 @@ export default function SurveyMonitorPage({ params }: { params: Promise<{ id: st
                                         type="datetime-local"
                                         value={notifEndDate}
                                         onChange={(e) => setNotifEndDate(e.target.value)}
-                                        className="w-full bg-[#0a0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none"
+                                        className="w-full bg-[#0b0718] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none"
                                     />
                                 </div>
                             </div>
