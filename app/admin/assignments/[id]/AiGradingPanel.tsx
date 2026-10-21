@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { Sparkles, Download, Copy, ChevronDown, ChevronUp, ExternalLink, Upload, CheckCircle2, AlertTriangle, Loader2, FileText, Wrench, Braces } from 'lucide-react';
 import PaperKeySection from './PaperKeySection';
 import {
-    buildGradingPrompt, buildFixupRequest, parseAiGradingReply,
+    buildGradingPrompt, buildFixupRequest, parseAiGradingReply, questionKey,
     submissionCode, assignmentCode, GRADING_RESPONSE_SCHEMA,
     type ParsedAiReply, type PaperKeyQuestion, type TaxonomyTopic,
 } from '@/lib/aiGrading';
@@ -388,14 +388,20 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
     const keyTotal = replyKey?.questions.length || 0;
     const keyWarnings = (r: (typeof matched)[number]): string[] => {
         if (!keyTotal || r.review.unreadable) return [];
+        const out: string[] = [];
         const sum = r.review.correct + r.review.incorrect + r.review.skippedOrIncomplete;
-        return sum !== keyTotal ? [`Counts add up to ${sum}, but the saved question list has ${keyTotal} questions.`] : [];
+        if (sum !== keyTotal) out.push(`Counts add up to ${sum}, but the saved question list has ${keyTotal} questions.`);
+        const keys = new Set(replyKey!.questions.map(q => questionKey(q.question)));
+        const wrong = r.review.feedback.filter(f => !keys.has(questionKey(f.question))).map(f => f.question);
+        if (wrong.length) out.push(`Feedback for ${wrong.join(', ')} does not match any question in the saved list (e.g. "1" instead of "B1") - that feedback would not be linked to a topic.`);
+        return out;
     };
     const fixup = parsed
         ? buildFixupRequest({
             parsed: { ...parsed, results: matched },
             expected: replyBatch ? replyBatch.students.map(s => ({ code: s.code, name: ascii(s.name) })) : [],
             keyTotal: keyTotal || undefined,
+            keyLabels: replyKey?.questions.map(q => q.question) || [],
         })
         : '';
 

@@ -7,7 +7,7 @@ import type { WeaknessReport, StudentWeakness } from '@/lib/weakness/types';
 import { generateWeaknessPDF, buildAIExport } from './generateWeaknessPDF';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
-import { ERROR_TYPE_LABEL, type ErrorType } from '@/lib/aiGrading';
+import { ERROR_TYPE_LABEL, questionLabel, type ErrorType } from '@/lib/aiGrading';
 import type { WeaknessEntry } from '@/lib/weakness/types';
 
 const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
@@ -26,7 +26,7 @@ function MistakeList({ w }: { w: WeaknessEntry }) {
         <ul className="mt-2 space-y-1.5">
             {w.mistakes.map((m, i) => (
                 <li key={i} className="text-[11px] leading-relaxed text-violet-100/75 border-l-2 border-fuchsia-400/40 pl-2">
-                    <span className="font-bold text-white/80">{m.assignment.split('||')[0].trim()} · Q{m.question}</span>
+                    <span className="font-bold text-white/80">{m.assignment.split('||')[0].trim()} · {questionLabel(m.question)}</span>
                     {m.errorType && m.errorType !== 'NOT_ATTEMPTED' && <span className="ml-1 text-fuchsia-300">[{errLabel(m.errorType)}]</span>}
                     {' '}<Latex>{m.comment}</Latex>
                 </li>

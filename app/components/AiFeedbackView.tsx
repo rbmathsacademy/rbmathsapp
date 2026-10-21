@@ -2,7 +2,7 @@
 
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
-import { ERROR_TYPE_LABEL, type AiReview } from '@/lib/aiGrading';
+import { ERROR_TYPE_LABEL, questionLabel, type AiReview } from '@/lib/aiGrading';
 
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
     INCORRECT: { label: 'Incorrect', cls: 'bg-rose-500/15 text-rose-300 border-rose-400/40' },
@@ -46,7 +46,7 @@ export default function AiFeedbackView({ review }: { review: AiReview }) {
                         return (
                             <div key={i} className="rounded-xl bg-white/[0.04] border border-white/[0.07] p-3">
                                 <div className="flex items-center gap-2 mb-1.5">
-                                    <span className="text-xs font-black text-white">Q{f.question.replace(/^Q\s*/i, '')}</span>
+                                    <span className="text-xs font-black text-white">{questionLabel(f.question)}</span>
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${st.cls}`}>{st.label}</span>
                                     {f.errorType && f.errorType !== 'NOT_ATTEMPTED' && f.errorType !== 'OTHER' && (
                                         <span className="text-[10px] text-violet-200/60">{ERROR_TYPE_LABEL[f.errorType]}</span>

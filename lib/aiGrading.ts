@@ -27,11 +27,25 @@ export interface AiFeedbackItem {
 export interface QuestionTopic { question: string; topic: string; subtopic: string }
 export interface TaxonomyTopic { topic: string; subtopics: string[] }
 
-/** "Q 6(b)" / "6b" / "6" -> "6": questions are matched on their main number. */
+/**
+ * Matching key of a question label. Sub-parts are dropped so "Q 6(b)" / "6b" / "6" -> "6", but a
+ * section prefix is kept, because papers often restart numbering per section:
+ * "A1" / "A-1" / "Sec A Q1" -> "a1", "B1(ii)" -> "b1", "Ex 2.1" / "2.1(a)" -> "ex2.1" / "2.1".
+ */
 export function questionKey(q: string): string {
-    const s = String(q || '').trim().replace(/^q(uestion)?\.?\s*/i, '');
-    const m = s.match(/^(\d+)/);
-    return m ? m[1] : s.toLowerCase().replace(/\s+/g, '');
+    let s = String(q || '').trim().toLowerCase();
+    s = s.replace(/^(?:section|sec\.?|part)\s*([a-z])\b[\s,:.\-]*/, '$1 ');  // "Section B Q3" -> "b q3"
+    s = s.replace(/\b(?:question|que|qn|q)\.?\s*(?=\d)/g, '');               // drop "Q"/"Question" before a number
+    s = s.replace(/\s+/g, '');
+    s = s.replace(/([a-z])[.\-_:]+(?=\d)/g, '$1');                        // "a-1" / "a.1" -> "a1"
+    s = s.replace(/(\d)(?:\([a-z0-9]+\)|\.?[a-z]|\.?[ivx]+\b)+$/, '$1');   // "6(b)", "6b", "6.ii", "6(a)(i)" -> "6"
+    return s;
+}
+
+/** Display form: "Q4", "Q7(b)", but "A1" / "Ex2.1" as they are (no "QA1"). */
+export function questionLabel(q: string): string {
+    const s = String(q || '').trim().replace(/^q(uestion)?\.?\s*(?=\d)/i, '');
+    return /^\d/.test(s) ? `Q${s}` : s;
 }
 
 export type QuestionOutcome = 'CORRECT' | FeedbackStatus;
@@ -127,13 +141,14 @@ export function buildGradingPrompt(opts: {
             : `- The first page(s) are the QUESTION PAPER. There is no solution guide: solve the questions yourself to check the students' work.`;
     const keySection = keyQs ? `
 FIXED QUESTION LIST (prepared by the teacher - use it exactly)
-- The paper has exactly ${keyQs.length} questions, so "totalQuestions" is ${keyQs.length} for every student. Use exactly these question numbers.
+- The paper has exactly ${keyQs.length} questions, so "totalQuestions" is ${keyQs.length} for every student. Use exactly these question labels${keyQs.some(q => /[a-z]/i.test(questionKey(q.question))) ? ' (the letter / section prefix is part of the label - e.g. A1 and B1 are different questions)' : ''}.
 - Copy this list into "questions" unchanged (question, topic, subtopic).
 - "Key" is the expected final answer. Accept any equivalent form and any valid method. Only if you are certain a key is wrong, judge that question by correct mathematics.
-${keyQs.map(q => `Q${q.question} | ${q.topic} > ${q.subtopic || '-'} | Key: ${q.answer || '(see solutions)'}`).join('\n')}
+${keyQs.map(q => `${questionLabel(q.question)} | ${q.topic} > ${q.subtopic || '-'} | Key: ${q.answer || '(see solutions)'}`).join('\n')}
 ` : `
 TOPIC MAP OF THE QUESTION PAPER (same for every student)
 - In "questions", list EVERY question of the paper once, with the "topic" (chapter) and "subtopic" (the specific kind of problem) it tests.
+- Every question needs a UNIQUE label. If the numbering restarts in different sections, parts or exercises (e.g. Section A Q1-10 and Section B Q1-10), put the section letter / exercise number in front: "A1", "A2" ... "B1", "B2", or "Ex1.3". Use the same labels in "feedback".
 - Prefer these topic and sub-topic names from the teacher's question bank, copied exactly; only invent a short, standard name when none fits:
 ${names}
 `;
@@ -148,7 +163,7 @@ ${list}
 - Every student above HAS a separator page and answer pages in the file. Read EVERY page of the file before you answer; do not report a student's work as missing - find their separator page and check the pages after it. Only use "unreadable" when the pages really cannot be read.
 
 HOW TO CHECK EACH QUESTION
-1. Count each numbered question of the question paper as ONE question (sub-parts like (a), (b) belong to their question). Use the same total for every student.
+1. Count each numbered question of the question paper as ONE question (sub-parts like (a), (b) belong to their question). Use the same total for every student. If the numbering restarts in different sections or exercises, the section is part of the question label (A1 and B1 are different questions).
 2. Classify every question for every student into exactly one of:
    - correct: the approach is valid and the final answer is right;
    - incorrect: attempted and finished, but the method or the final answer is wrong, including partly correct work (use status INCORRECT or PARTIAL);
@@ -163,7 +178,7 @@ GRADE (use exactly these words)
 - "SATISFACTORY": anything else.
 
 FEEDBACK FOR THE STUDENT (it will be shown to the student)
-- Add one feedback item for every question that is INCORRECT, PARTIAL, INCOMPLETE or SKIPPED, using the question number exactly as printed in the question paper (e.g. "4" or "7(b)").
+- Add one feedback item for every question that is INCORRECT, PARTIAL, INCOMPLETE or SKIPPED, using exactly the same question label as in "questions" (e.g. "4", "7(b)", or "B3" when sections restart their numbering).
 - For INCORRECT / PARTIAL / INCOMPLETE: say specifically where it went wrong or what is missing and how to fix it (the mistaken step, the misused formula, the sign error ...). Be kind, specific and brief (1-3 sentences). Do not just write the whole solution.
 - For SKIPPED: a short line such as "Not attempted - revise ... and try it."
 - "summary": 1-2 encouraging sentences on the overall work.
@@ -336,7 +351,11 @@ export function parseAiGradingReply(raw: string): ParsedAiReply {
         for (const q of data.questions) {
             const question = String(q?.question ?? q?.q ?? '').trim();
             const topic = stripCitations(String(q?.topic ?? '')).trim();
-            if (!question || !topic || seen.has(questionKey(question))) continue;
+            if (!question || !topic) continue;
+            if (seen.has(questionKey(question))) {
+                out.warnings.push(`Question "${question}" appears twice in the topic map - the numbering probably restarts in sections, so feedback for one of them would land on the other. Use "Copy fix-up request" to ask for unique labels (A1, B1 ...).`);
+                continue;
+            }
             seen.add(questionKey(question));
             out.questions.push({ question, topic, subtopic: stripCitations(String(q?.subtopic ?? q?.subTopic ?? '')).trim() });
         }
@@ -421,6 +440,7 @@ The attached PDF is the QUESTION PAPER of "${title}"${board ? ` (${board} board)
 
 TASK
 1. List EVERY question of the paper exactly once, in order, using the question numbers as printed. Count each numbered question as ONE question; sub-parts (a), (b) ... belong to their question.
+   Every question needs a UNIQUE label. If the numbering restarts in different sections, parts or exercises (e.g. Section A Q1-10 and Section B Q1-10), put the section letter / exercise number in front: "A1" ... "A10", "B1" ... "B10", or "Ex2.1". Never list two questions with the same label.
 2. For each question give the "topic" (chapter) and "subtopic" (the specific kind of problem it tests). Prefer these names from the teacher's question bank, copied exactly; only invent a short, standard name when none fits:
 ${names}
 3. Solve each question carefully and give the expected FINAL answer in "answer" (for sub-parts: "(a) ...; (b) ..."; for proofs: one line on the key step or identity to use). Double-check every answer.
@@ -459,18 +479,22 @@ export function parsePaperKeyReply(raw: string): ParsedPaperKey {
     const list = Array.isArray(data) ? data : data?.questions;
     if (!Array.isArray(list) || list.length === 0) { out.errors.push('The JSON has no "questions" list.'); return out; }
     const seen = new Set<string>();
+    const duplicates: string[] = [];
     for (const q of list) {
         const question = String(q?.question ?? '').trim().replace(/^q(uestion)?\.?\s*/i, '');
         const topic = stripCitations(String(q?.topic ?? ''));
         if (!question) continue;
         const k = questionKey(question);
-        if (seen.has(k)) { out.warnings.push(`Question ${question} is listed twice; only the first is kept.`); continue; }
+        if (seen.has(k)) { duplicates.push(question); continue; }
         seen.add(k);
         if (!topic) out.warnings.push(`Question ${question} has no topic.`);
         out.questions.push({ question, topic, subtopic: stripCitations(String(q?.subtopic ?? q?.subTopic ?? '')), answer: stripCitations(String(q?.answer ?? q?.key ?? '')) });
     }
+    if (duplicates.length) {
+        out.warnings.push(`Question label(s) ${Array.from(new Set(duplicates)).join(', ')} appear more than once - the paper probably restarts its numbering in sections, and only the first of each is kept. Ask the AI in the same chat: "Give every question a unique label with its section letter, e.g. A1 ... A10, B1 ... B10, and return the full JSON again", then paste the new reply.`);
+    }
     const total = toInt(data?.totalQuestions);
-    if (total && total !== out.questions.length) out.warnings.push(`The reply says the paper has ${total} questions but lists ${out.questions.length}.`);
+    if (total && total !== out.questions.length) out.warnings.push(`The reply says the paper has ${total} questions but ${duplicates.length ? 'only' : ''} ${out.questions.length} could be kept.`);
     // Numbered papers: point out gaps such as 1-24 then 26
     const nums = out.questions.map(q => Number(questionKey(q.question))).filter(n => Number.isFinite(n));
     if (nums.length === out.questions.length && nums.length > 0) {
@@ -509,8 +533,11 @@ export function buildFixupRequest(opts: {
     expected?: PromptStudent[];
     /** Number of questions in the paper when a fixed question list exists. */
     keyTotal?: number;
+    /** Labels of the fixed question list (to catch feedback written against the wrong label, e.g. "1" for "B1"). */
+    keyLabels?: string[];
 }): string {
-    const { parsed, expected = [], keyTotal } = opts;
+    const { parsed, expected = [], keyTotal, keyLabels = [] } = opts;
+    const keyKeys = new Set(keyLabels.map(questionKey));
     const items: string[] = [];
 
     if (parsed.errors.length && parsed.results.length === 0) {
@@ -529,12 +556,19 @@ export function buildFixupRequest(opts: {
 
     const total = keyTotal || parsed.totalQuestions || 0;
     if (!keyTotal && total > 0 && parsed.questions.length !== total) {
-        const listed = new Set(parsed.questions.map(q => questionKey(q.question)));
+        const listedKeys = parsed.questions.map(q => questionKey(q.question));
+        const plainNumbers = listedKeys.length > 0 && listedKeys.every(k => /^\d+$/.test(k));
+        const listed = new Set(listedKeys);
         const missingNums: number[] = [];
-        for (let i = 1; i <= total; i++) if (!listed.has(String(i))) missingNums.push(i);
-        items.push(missingNums.length && missingNums.length <= total
+        if (plainNumbers) for (let i = 1; i <= total; i++) if (!listed.has(String(i))) missingNums.push(i);
+        items.push(plainNumbers && missingNums.length
             ? `The "questions" array lists ${parsed.questions.length} questions but the paper has ${total}. Add Q${compactRanges(missingNums)} with their topic and subtopic.`
-            : `The "questions" array must list every question of the paper exactly once (${total} in total).`);
+            : `The "questions" array lists ${parsed.questions.length} questions but the paper has ${total}. List every question of the paper exactly once with a unique label (use the section letter, e.g. A1, B1, when numbering restarts).`);
+    }
+    if (!keyTotal && parsed.questions.length) {
+        const keys = parsed.questions.map(q => questionKey(q.question));
+        const dup = keys.filter((k, i) => keys.indexOf(k) !== i);
+        if (dup.length) items.push(`Some questions share a label (${Array.from(new Set(dup)).join(', ')}). The numbering seems to restart in sections: give every question a unique label with its section letter (A1 ... A10, B1 ... B10) in "questions" and in every "feedback".`);
     }
     if (keyTotal && parsed.totalQuestions && parsed.totalQuestions !== keyTotal) {
         items.push(`The paper has exactly ${keyTotal} questions (see the FIXED QUESTION LIST); set "totalQuestions" to ${keyTotal} and count against that list.`);
@@ -549,7 +583,11 @@ export function buildFixupRequest(opts: {
         if (t && sum !== t) items.push(`${who}: correct ${correct} + incorrect ${incorrect} + skipped/incomplete ${skipped} = ${sum}, but the paper has ${t} questions. Recount this student.`);
         const notedKeys = Array.from(new Set(r.review.feedback.map(f => questionKey(f.question))));
         if (incorrect + skipped > notedKeys.length) {
-            items.push(`${who}: you counted ${incorrect} incorrect and ${skipped} skipped/incomplete (${incorrect + skipped} in total) but gave feedback only for ${notedKeys.length ? `Q${notedKeys.join(', Q')}` : 'no questions'}. Add one feedback item (with status, errorType and comment) for EVERY other question that is not fully correct.`);
+            items.push(`${who}: you counted ${incorrect} incorrect and ${skipped} skipped/incomplete (${incorrect + skipped} in total) but gave feedback only for ${notedKeys.length ? r.review.feedback.map(f => questionLabel(f.question)).filter((v, i, a) => a.indexOf(v) === i).join(', ') : 'no questions'}. Add one feedback item (with status, errorType and comment) for EVERY other question that is not fully correct.`);
+        }
+        if (keyKeys.size) {
+            const wrong = r.review.feedback.filter(f => !keyKeys.has(questionKey(f.question))).map(f => f.question);
+            if (wrong.length) items.push(`${who}: feedback uses question labels that are not in the FIXED QUESTION LIST (${wrong.join(', ')}). Use exactly the labels of that list (${keyLabels.slice(0, 6).join(', ')}${keyLabels.length > 6 ? ' ...' : ''}).`);
         }
     }
 

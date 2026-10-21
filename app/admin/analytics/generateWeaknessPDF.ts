@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { WeaknessReport, StudentWeakness, WeaknessEntry } from '@/lib/weakness/types';
+import { questionLabel } from '@/lib/aiGrading';
 
 type RGB = [number, number, number];
 const C = {
@@ -212,7 +213,7 @@ function drawStudent(doc: jsPDF, s: StudentWeakness, batch: string): number {
         autoTable(doc, {
             startY: y,
             head: [['Area', 'Homework / Q', 'Teacher\'s note']],
-            body: notes.map(({ w, m }) => [clean(`${w.topic} > ${w.category}`), clean(`${m.assignment.split('||')[0].trim()} / Q${m.question}`), latexToPlain(m.comment)]),
+            body: notes.map(({ w, m }) => [clean(`${w.topic} > ${w.category}`), clean(`${m.assignment.split('||')[0].trim()} / ${questionLabel(m.question)}`), latexToPlain(m.comment)]),
             theme: 'grid',
             margin: { left: MARGIN, right: MARGIN },
             styles: { fontSize: 7.5, cellPadding: 1.8, textColor: C.dark, lineColor: C.light, lineWidth: 0.2 },
