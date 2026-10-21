@@ -7,6 +7,7 @@ import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useStudentProfile } from '../StudentProfileContext';
 import BatchTabSwitcher from '../../components/BatchTabSwitcher';
+import CompressPdfModal from './CompressPdfModal';
 import AiFeedbackView, { AiScoreChips } from '@/app/components/AiFeedbackView';
 import type { AiReview } from '@/lib/aiGrading';
 
@@ -43,6 +44,8 @@ export default function StudentAssignmentsPage() {
     const [loading, setLoading] = useState(true);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
     const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
+    // A picked PDF over 3 MB: offer to compress it on the device before the normal upload
+    const [compressFor, setCompressFor] = useState<{ assignment: Assignment; file: File } | null>(null);
     const { profile, loading: profileLoading, updateProfile } = useStudentProfile();
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
     // Difference between the server clock and this device's clock (ms). Phones
@@ -114,9 +117,8 @@ export default function StudentAssignmentsPage() {
         }
 
         if (file.size > 3 * 1024 * 1024) {
-            toast.error('File too large (Max 3MB).', { duration: 5000 });
             e.target.value = '';
-            setShowUploadErrorModal(true);
+            setCompressFor({ assignment, file });
             return;
         }
 
@@ -326,6 +328,20 @@ export default function StudentAssignmentsPage() {
     return (
         <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto min-h-screen sd-bg text-gray-200 relative overflow-x-hidden">
             <Toaster position="top-center" />
+
+            {/* Over 3 MB: compress on the device, then hand the smaller file to the normal upload */}
+            {compressFor && (
+                <CompressPdfModal
+                    file={compressFor.file}
+                    onClose={() => setCompressFor(null)}
+                    onUpload={(compressed) => {
+                        const { assignment } = compressFor;
+                        setCompressFor(null);
+                        // Same path as picking the file: handleFileUpload runs all its usual checks and upload
+                        handleFileUpload(assignment, { target: { files: [compressed], value: '' } } as unknown as React.ChangeEvent<HTMLInputElement>);
+                    }}
+                />
+            )}
 
             {/* Upload Error Modal */}
             {showUploadErrorModal && (
