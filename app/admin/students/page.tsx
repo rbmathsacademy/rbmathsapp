@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { swrJson } from '@/lib/adminCache';
 import { Users, Plus, Search, Trash2, Edit3, X, Upload, ChevronLeft, ChevronRight, Phone, Shield, CheckSquare, Square, RefreshCw, Archive, RotateCcw, Clock, AlertTriangle, Infinity } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import DirectorySelect from './components/DirectorySelect';
@@ -110,6 +111,7 @@ export default function AdminStudents() {
 
     useEffect(() => { fetchDirectories(); }, [fetchDirectories]);
 
+    const studentsSeq = useRef(0);
     const fetchStudents = useCallback(async () => {
         setLoading(true);
         try {
@@ -121,12 +123,15 @@ export default function AdminStudents() {
             if (modeFilter)   params.set('mode', modeFilter);
             if (guardianFilter === 'missing') params.set('missingGuardian', 'true');
 
-            const res = await fetch(`/api/admin/students?${params}`, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to fetch');
-            const data = await res.json();
-            setStudents(data.students);
-            setTotal(data.total);
-            setTotalPages(data.totalPages);
+            // Cached page shows instantly; the fresh one replaces it (only if still the latest request)
+            const seq = ++studentsSeq.current;
+            await swrJson<any>(`/api/admin/students?${params}`, (data) => {
+                if (seq !== studentsSeq.current) return;
+                setStudents(data.students);
+                setTotal(data.total);
+                setTotalPages(data.totalPages);
+                setLoading(false);
+            });
         } catch (error) {
             toast.error('Failed to fetch students');
         } finally {
@@ -136,11 +141,7 @@ export default function AdminStudents() {
 
     const fetchBatches = async () => {
         try {
-            const res = await fetch('/api/admin/fees/batches');
-            if (res.ok) {
-                const data = await res.json();
-                setBatches(data.batches || []);
-            }
+            await swrJson<any>('/api/admin/fees/batches', (data) => setBatches(data.batches || []));
         } catch { }
     };
 

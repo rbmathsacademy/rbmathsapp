@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { swrJson } from '@/lib/adminCache';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, Send, FileText, Clock, Users, Search, Filter, FolderInput, Eye } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
@@ -10,7 +11,8 @@ interface OnlineTest {
     _id: string;
     title: string;
     description: string;
-    questions: any[];
+    questions?: any[]; // not sent by the list API (only questionCount)
+    questionCount?: number;
     status: 'draft' | 'deployed' | 'completed';
     totalMarks: number;
     folderId?: string | null;
@@ -94,36 +96,24 @@ export default function OnlineTestsPage() {
                 url += '?' + params.toString();
             }
 
-            console.log('🔍 Fetching tests - Selected folder:', selectedFolder, 'URL:', url);
-
-            const res = await fetch(url, {
-                headers: { 'X-User-Email': userEmail! }
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                console.log('📦 Fetched', data.length, 'tests');
+            // Cached list shows instantly; the fresh one replaces it (only if this is still the latest request)
+            const seq = ++testsSeq.current;
+            await swrJson<OnlineTest[]>(url, (data) => {
+                if (seq !== testsSeq.current) return;
                 setTests(data);
-            } else {
-                toast.error('Failed to load tests');
-            }
+                setLoading(false);
+            }, { headers: { 'X-User-Email': userEmail! } });
         } catch (error) {
             toast.error('Error loading tests');
         } finally {
             setLoading(false);
         }
     };
+    const testsSeq = useRef(0);
 
     const fetchFolders = async () => {
         try {
-            const res = await fetch('/api/admin/online-tests/folders', {
-                headers: { 'X-User-Email': userEmail! }
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setFolders(data);
-            }
+            await swrJson<Folder[]>('/api/admin/online-tests/folders', setFolders, { headers: { 'X-User-Email': userEmail! } });
         } catch (error) {
             console.error('Error loading folders:', error);
         }
@@ -476,7 +466,7 @@ export default function OnlineTestsPage() {
                                                 <FileText className="h-4 w-4 text-slate-400" />
                                                 <span className="text-xs text-slate-400">Questions</span>
                                             </div>
-                                            <p className="text-xl font-bold text-white">{test.questions?.length || 0}</p>
+                                            <p className="text-xl font-bold text-white">{test.questionCount ?? test.questions?.length ?? 0}</p>
                                         </div>
                                         <div className="bg-white/5 rounded-lg p-3">
                                             <div className="flex items-center gap-2 mb-1">

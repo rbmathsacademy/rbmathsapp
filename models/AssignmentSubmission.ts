@@ -37,6 +37,11 @@ const AssignmentSubmissionSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
+// Lookups are always "submissions of this assignment" (lists, counts, AI import) or "this student's
+// submission", so both are indexed; without these every lookup scanned the whole collection.
+AssignmentSubmissionSchema.index({ assignment: 1, student: 1 });
+AssignmentSubmissionSchema.index({ student: 1 });
+
 // Force recompilation
 if (mongoose.models.AssignmentSubmission) {
     delete mongoose.models.AssignmentSubmission;

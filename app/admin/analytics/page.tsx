@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Users,
     Search,
@@ -21,6 +21,7 @@ import {
     ChevronUp
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import { swrJson } from '@/lib/adminCache';
 import { generateBatchPDF } from './generateBatchPDF';
 import AnomalyDetectionPanel from './AnomalyDetectionPanel';
 import SchoolPerformancePanel from './SchoolPerformancePanel';
@@ -98,25 +99,27 @@ export default function AnalyticsPage() {
 
     // Fetch Batches
     useEffect(() => {
-        fetch('/api/admin/courses')
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setBatches(data);
-            })
-            .catch(err => toast.error('Failed to load batches'));
+        swrJson<any>('/api/admin/courses', data => { if (Array.isArray(data)) setBatches(data); })
+            .catch(() => toast.error('Failed to load batches'));
+        // Come back to the batch that was open last time
+        try { const b = sessionStorage.getItem('analytics_batch'); if (b) setSelectedBatch(b); } catch { }
     }, []);
+    useEffect(() => {
+        try { if (selectedBatch) sessionStorage.setItem('analytics_batch', selectedBatch); } catch { }
+    }, [selectedBatch]);
 
     // Fetch Analytics when batch changes
+    const selectedBatchRef = useRef(selectedBatch);
+    selectedBatchRef.current = selectedBatch;
     useEffect(() => {
         if (!selectedBatch) return;
 
         const fetchAnalytics = async () => {
             setLoading(true);
-            try {
-                const res = await fetch(`/api/admin/analytics/batch?batch=${encodeURIComponent(selectedBatch)}`);
-                const result = await res.json();
-
-                if (!res.ok) throw new Error(result.error);
+            const forBatch = selectedBatch;
+            // Cached analytics show instantly; the fresh copy replaces it
+            const apply = (result: any) => {
+                if (forBatch !== selectedBatchRef.current) return; // the batch was changed meanwhile
 
                 // Merge test/assignment data
                 const enrichedAnalytics = result.analytics.map((student: any) => ({
@@ -147,6 +150,10 @@ export default function AnalyticsPage() {
                 result.tests.sort((a: any, b: any) => new Date(b.deployment?.startTime || 0).getTime() - new Date(a.deployment?.startTime || 0).getTime());
 
                 setData({ ...result, analytics: enrichedAnalytics });
+                setLoading(false);
+            };
+            try {
+                await swrJson<any>(`/api/admin/analytics/batch?batch=${encodeURIComponent(forBatch)}`, apply);
             } catch (error: any) {
                 toast.error(error.message || 'Failed to load analytics');
             } finally {

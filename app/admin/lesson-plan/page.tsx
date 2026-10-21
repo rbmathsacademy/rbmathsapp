@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { swrJson } from '@/lib/adminCache';
 import {
     BookText, Plus, Trash2, Save, Calendar as CalendarIcon,
     ChevronDown, GraduationCap, Laptop, ClipboardList, Loader2
@@ -36,9 +37,7 @@ export default function AdminLessonPlan() {
 
     const fetchBatches = async () => {
         try {
-            const res = await fetch('/api/admin/fees/batches');
-            const data = await res.json();
-            if (data.batches) setBatches(data.batches);
+            await swrJson<any>('/api/admin/fees/batches', (data) => { if (data.batches) setBatches(data.batches); });
         } catch (e) {
             console.error('Error fetching batches:', e);
             toast.error('Failed to load batches');

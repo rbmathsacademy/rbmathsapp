@@ -71,8 +71,14 @@ export async function GET(
             }
         }
 
-        // Get all attempts for this test
-        const attempts = await StudentTestAttempt.find({ testId });
+        // Get all attempts for this test. Finished attempts are loaded without their embedded
+        // question-paper snapshot (only answers and scores are used here); the few still in
+        // progress are loaded in full because the auto-cleanup below may need to grade them.
+        const [finishedAttempts, openAttempts] = await Promise.all([
+            StudentTestAttempt.find({ testId, status: { $ne: 'in_progress' } }).select('-questions'),
+            StudentTestAttempt.find({ testId, status: 'in_progress' }),
+        ]);
+        const attempts = [...finishedAttempts, ...openAttempts];
 
         // --- Lazy auto-cleanup: complete expired in_progress attempts ---
         const now = new Date();

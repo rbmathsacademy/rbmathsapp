@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { swrJson } from '@/lib/adminCache';
 import { Users, FileQuestion, ClipboardCheck, LayoutDashboard, CreditCard, PenTool, Shield, UserPlus, Trash2, Loader2, Phone, MessageCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -40,34 +41,31 @@ export default function AdminDashboard() {
 
     const fetchDashboard = async () => {
         try {
-            const res = await fetch('/api/admin/dashboard');
-            
-            let unreadCount = 0;
-            try {
-                const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
-                const headers: Record<string, string> = {};
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-                
-                const chatRes = await fetch('/api/chat/batches', { headers });
-                if (chatRes.ok) {
-                    const chatData = await chatRes.json();
-                    unreadCount = chatData.batches?.filter((b: any) => b.hasUnread).length || 0;
-                }
-            } catch (e) {
-                console.error('Error fetching chat stats', e);
-            }
+            const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
 
-            if (res.ok) {
-                const data = await res.json();
+            // Both requests run in parallel; cached copies show instantly, fresh ones replace them
+            let unreadCount = 0;
+            let dash: any = null;
+            const show = () => {
+                if (!dash) return;
                 setStats({
-                    totalStudents: data.totalStudents,
-                    totalEnrollments: data.totalEnrollments ?? data.totalStudents,
-                    totalQuestions: data.totalQuestions,
-                    activeTests: data.activeTests,
+                    totalStudents: dash.totalStudents,
+                    totalEnrollments: dash.totalEnrollments ?? dash.totalStudents,
+                    totalQuestions: dash.totalQuestions,
+                    activeTests: dash.activeTests,
                     unreadChats: unreadCount,
                 });
-                setStaffList(data.staff || []);
-            }
+                setStaffList(dash.staff || []);
+                setLoading(false);
+                setStaffLoading(false);
+            };
+            await Promise.all([
+                swrJson<any>('/api/admin/dashboard', d => { dash = d; show(); }),
+                swrJson<any>('/api/chat/batches', d => { unreadCount = d.batches?.filter((b: any) => b.hasUnread).length || 0; show(); }, { headers })
+                    .catch(e => console.error('Error fetching chat stats', e)),
+            ]);
         } catch (error) {
             console.error('Error fetching dashboard:', error);
         } finally {

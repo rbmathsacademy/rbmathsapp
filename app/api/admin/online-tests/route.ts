@@ -48,9 +48,25 @@ export async function GET(request: NextRequest) {
 
         console.log('🔍 GET /api/admin/online-tests - Query:', JSON.stringify(query));
 
-        const tests = await OnlineTest.find(query).sort({ createdAt: -1 });
-
-        console.log('📦 Found', tests.length, 'tests');
+        // The list only needs each test's details, not its question paper (which can be ~200 KB
+        // per test with images and solutions), so the papers are left out and only counted.
+        const tests = await OnlineTest.find(query)
+            .select('-questions -boardQuestionSets')
+            .sort({ createdAt: -1 })
+            .lean();
+        if (tests.length > 0) {
+            const counts = await OnlineTest.aggregate([
+                { $match: { _id: { $in: tests.map((t: any) => t._id) } } },
+                {
+                    $project: {
+                        questionCount: { $size: { $ifNull: ['$questions', []] } },
+                        boardSetCount: { $size: { $ifNull: [{ $arrayElemAt: ['$boardQuestionSets.questions', 0] }, []] } },
+                    },
+                },
+            ]);
+            const byId = new Map(counts.map((c: any) => [c._id.toString(), c.questionCount || c.boardSetCount || 0]));
+            tests.forEach((t: any) => { t.questionCount = byId.get(t._id.toString()) || 0; });
+        }
 
         return NextResponse.json(tests);
     } catch (error: any) {

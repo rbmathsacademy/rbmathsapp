@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { swrJson } from '@/lib/adminCache';
 import { useRouter } from 'next/navigation';
 import { Plus, Eye, Trash2, FileText, List, Clock, AlertTriangle, CheckCircle, File, Folder, FolderPlus, ArrowLeft, ArrowUpRight, ClipboardEdit, Save, X, Edit3, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -92,8 +93,8 @@ export default function AdminAssignmentsPage() {
 
     const fetchData = async () => {
         try {
-            const res = await fetch('/api/admin/assignments');
-            const data = await res.json();
+            // Cached list shows instantly, then the fresh one replaces it
+            await swrJson<any>('/api/admin/assignments', (data) => {
             if (data.assignments) {
                 setAssignments(data.assignments);
                 const loadedFolders: AssignmentFolder[] = data.folders || [];
@@ -110,7 +111,9 @@ export default function AdminAssignmentsPage() {
                         sessionStorage.removeItem('assignments_currentFolder');
                     }
                 } catch { }
+                setLoading(false);
             }
+            });
         } catch (error) {
             toast.error('Failed to load data');
         } finally {
@@ -120,9 +123,7 @@ export default function AdminAssignmentsPage() {
 
     const fetchOfflineExams = async () => {
         try {
-            const res = await fetch('/api/admin/offline-exams');
-            const data = await res.json();
-            if (data.exams) setOfflineExams(data.exams);
+            await swrJson<any>('/api/admin/offline-exams', (data) => { if (data.exams) setOfflineExams(data.exams); });
         } catch { }
     };
 
@@ -134,9 +135,7 @@ export default function AdminAssignmentsPage() {
         setOfflineTestDate('');
         setOfflineFullMarks('');
         try {
-            const res = await fetch('/api/admin/courses');
-            const data = await res.json();
-            if (Array.isArray(data)) setOfflineBatches(data);
+            await swrJson<any>('/api/admin/courses', (data) => { if (Array.isArray(data)) setOfflineBatches(data); });
         } catch {
             toast.error('Failed to load batches');
         }

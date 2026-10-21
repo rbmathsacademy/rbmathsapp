@@ -40,6 +40,9 @@ const StudentTestAttemptSchema = new mongoose.Schema({
 // Index for faster queries
 StudentTestAttemptSchema.index({ testId: 1, studentPhone: 1 }, { unique: true });
 StudentTestAttemptSchema.index({ testId: 1, status: 1 });
+// "Covering" index: attempt documents are large (they embed the question paper), but analytics only
+// needs these few fields, so MongoDB can answer straight from this index without reading any document.
+StudentTestAttemptSchema.index({ testId: 1, studentPhone: 1, status: 1, score: 1, percentage: 1, submittedAt: 1, _id: 1 });
 
 // Prevent model overwrite in dev
 if (process.env.NODE_ENV === 'development') {

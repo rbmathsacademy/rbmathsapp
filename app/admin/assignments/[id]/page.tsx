@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, User, Pen, X, Save, Trash2, Filter, ChevronDown, ChevronUp, Plus, Search, UserMinus, UserPlus } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import { swrJson } from '@/lib/adminCache';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 import AiGradingPanel from './AiGradingPanel';
@@ -142,8 +143,8 @@ export default function AssignmentDetailsPage() {
 
     const fetchDetails = async () => {
         try {
-            const res = await fetch(`/api/admin/assignments/${params.id}`);
-            const data = await res.json();
+            // Cached copy shows instantly; the fresh one replaces it
+            await swrJson<any>(`/api/admin/assignments/${params.id}`, (data) => {
             if (data.assignment) {
                 setAssignment(data.assignment);
                 // Sort students alphabetically by name
@@ -176,9 +177,11 @@ export default function AssignmentDetailsPage() {
                 const c = data.assignment.cooldownDuration || 0;
                 const end = new Date(new Date(data.assignment.deadline).getTime() + c * 60000);
                 setEditCooldownEndTime(toISTString(end));
+                setLoading(false);
             } else {
                 toast.error('Assignment not found');
             }
+            });
         } catch (error) {
             toast.error('Failed to load details');
         } finally {

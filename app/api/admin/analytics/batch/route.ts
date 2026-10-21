@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
             // usually compares against the batch highest.
             studentPhone: { $in: studentPhones }
         })
-            .select('testId studentPhone score percentage status submittedAt')
+            .select('-_id testId studentPhone score percentage status submittedAt') // answered from the covering index
             .lean();
 
         // Calculate Highest Score and Average Score for each test (within this batch)

@@ -46,6 +46,7 @@ export async function GET(req: Request) {
         const query: any = {};
         if (batch) query.batch = batch;
 
+        const foldersPromise = AssignmentFolder.find({}).sort({ createdAt: -1 }).lean(); // in parallel
         const assignments = await Assignment.find(query).sort({ createdAt: -1 }).lean();
 
         // Pre-fetch students per batch with join dates for accurate missed/pending/new-admission counts
@@ -57,9 +58,20 @@ export async function GET(req: Request) {
 
         const now = new Date();
 
+        // All submissions of these assignments in ONE query (was one query per assignment)
+        const allSubmissions = await AssignmentSubmission.find(
+            { assignment: { $in: assignments.map((a: any) => a._id) } },
+            'assignment submittedAt student status',
+        ).lean();
+        const submissionsByAssignment = new Map<string, any[]>();
+        for (const s of allSubmissions as any[]) {
+            const k = s.assignment.toString();
+            (submissionsByAssignment.get(k) || submissionsByAssignment.set(k, []).get(k)!).push(s);
+        }
+
         // Attach full stats to each assignment
-        const assignmentsWithStats = await Promise.all(assignments.map(async (a: any) => {
-            const submissions = await AssignmentSubmission.find({ assignment: a._id }, 'submittedAt student status');
+        const assignmentsWithStats = assignments.map((a: any) => {
+            const submissions = submissionsByAssignment.get(a._id.toString()) || [];
             const submissionCount = submissions.length;
             const correctedCount = submissions.filter((s: any) => s.status === 'CORRECTED').length;
             const batchStudents = batchStudentsMap[a.batch] || [];
@@ -107,9 +119,9 @@ export async function GET(req: Request) {
             });
 
             return { ...a, submissionCount, correctedCount, lateCount, missedCount, pendingCount, newAdmissionCount, totalStudents };
-        }));
+        });
 
-        const folders = await AssignmentFolder.find({}).sort({ createdAt: -1 }).lean();
+        const folders = await foldersPromise;
 
         return NextResponse.json({ assignments: assignmentsWithStats, folders });
     } catch (error: any) {

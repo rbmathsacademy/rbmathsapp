@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { LayoutDashboard, Users, FileText, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, GraduationCap } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 import '../portal-theme.css';
+import { clearAdminCache } from '@/lib/adminCache';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -161,6 +162,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, [user, pathname]);
 
     const handleLogout = () => {
+        clearAdminCache();
         localStorage.removeItem('user');
         localStorage.removeItem('adminSessionStart');
         router.push('/admin/login');

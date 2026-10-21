@@ -5,6 +5,7 @@ import { Download, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle } from
 import { toast } from 'react-hot-toast';
 import type { WeaknessReport, StudentWeakness } from '@/lib/weakness/types';
 import { generateWeaknessPDF, buildAIExport } from './generateWeaknessPDF';
+import { readAdminCache, writeAdminCache } from '@/lib/adminCache';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 import { ERROR_TYPE_LABEL, questionLabel, type ErrorType } from '@/lib/aiGrading';
@@ -68,7 +69,7 @@ export default function StudentWeaknessPanel({ batch }: { batch: string }) {
                 setReport(json.report);
                 setPending(json.progress.pending);
                 setTotal(json.progress.totalAttempts);
-                if (json.progress.pending <= 0) break;
+                if (json.progress.pending <= 0) { writeAdminCache(`weakness:${batch}`, json.report); break; }
             }
         } catch (e: any) {
             if (id === runId.current) setError(e.message || 'Failed to analyse');
@@ -78,7 +79,8 @@ export default function StudentWeaknessPanel({ batch }: { batch: string }) {
     };
 
     useEffect(() => {
-        setReport(null);
+        // Last finished report for this batch shows instantly while the fresh analysis runs
+        setReport(readAdminCache<WeaknessReport>(`weakness:${batch}`)?.data || null);
         load();
         return () => { runId.current++; };
         // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { swrJson } from '@/lib/adminCache';
 import {
     DollarSign, Search,
     Plus, CheckCircle, User, ChevronDown,
@@ -232,11 +233,7 @@ function FeesManagementContent() {
     const fetchBatches = async () => {
         try {
             console.log('Fetching batches...');
-            const res = await fetch('/api/admin/fees/batches');
-            if (!res.ok) throw new Error(`Failed to fetch batches: ${res.status}`);
-            const data = await res.json();
-            console.log('Batches fetched:', data.batches);
-            if (data.batches) setBatches(data.batches);
+            await swrJson<any>('/api/admin/fees/batches', (data) => { if (data.batches) setBatches(data.batches); });
         } catch (e) { console.error('Error fetching batches:', e); }
     };
 
@@ -285,9 +282,8 @@ function FeesManagementContent() {
             // Grid needs all records for the selected batch
             params.append('limit', '5000');
 
-            const res = await fetch(`/api/admin/fees?${params.toString()}`, { cache: 'no-store' });
-            const data = await res.json();
-            if (data.records) setAllRecords(data.records);
+            // Cached grid shows instantly; the fresh records replace it
+            await swrJson<any>(`/api/admin/fees?${params.toString()}`, (data) => { if (data.records) { setAllRecords(data.records); setLoading(false); } });
         } catch (e) { toast.error('Failed to load records'); }
         setLoading(false);
     };

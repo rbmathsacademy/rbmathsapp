@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Users, Trophy, Clock, XCircle, X, MessageSquare, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert, UserMinus, UserPlus, User, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import { swrJson } from '@/lib/adminCache';
 import SubmissionReviewModal from '../components/SubmissionReviewModal';
 import { openQuestionPaperPrint } from '../components/openQuestionPaperPrint';
 
@@ -205,11 +206,8 @@ export default function MonitorTestPage() {
     const fetchResults = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/admin/online-tests/${testId}/results`, {
-                headers: { 'X-User-Email': userEmail! }
-            });
-            if (res.ok) {
-                const data = await res.json();
+            // Cached results show instantly; the fresh ones replace them
+            await swrJson<any>(`/api/admin/online-tests/${testId}/results`, (data, fromCache) => {
                 setTestInfo(data.test);
                 setAnalytics(data.analytics);
                 setCompleted(data.completed);
@@ -220,10 +218,9 @@ export default function MonitorTestPage() {
                 if (data.recentAssignments && data.recentAssignments.length > 0 && !referenceAssignmentId) {
                     setReferenceAssignmentId(data.recentAssignments[0]._id);
                 }
-                setSelectedPhones(new Set()); // Clear selection on refresh
-            } else {
-                toast.error('Failed to load test results');
-            }
+                if (!fromCache) setSelectedPhones(new Set()); // Clear selection on refresh
+                setLoading(false);
+            }, { headers: { 'X-User-Email': userEmail! } });
         } catch {
             toast.error('Error loading results');
         } finally {

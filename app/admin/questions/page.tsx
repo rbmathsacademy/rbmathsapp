@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, Plus, FileJson, FileText, Trash2, Download, Save, X, Printer, Edit, Upload, Copy, ExternalLink, RefreshCw, Check, ChevronDown, ToggleLeft, ToggleRight, GraduationCap, ArrowLeft, ArrowRightCircle, Search, BarChart2, Pencil } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { swrJson } from '@/lib/adminCache';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/katex.min.css';
 import Link from 'next/link';
@@ -530,11 +531,8 @@ export default function QuestionBank() {
             if (typeof window !== 'undefined' && localStorage.getItem('globalAdminActive') === 'true') {
                 headers['X-Global-Admin-Key'] = 'globaladmin_25';
             }
-            const res = await fetch('/api/admin/questions/filters', { headers });
-            if (res.ok) {
-                const data = await res.json();
-                setServerFilters(data);
-            }
+            // Cached filters show instantly; the fresh ones replace them
+            await swrJson<any>('/api/admin/questions/filters', (data) => { setServerFilters(data); setFiltersLoading(false); }, { headers });
         } catch (error) {
             console.error('[FILTERS] Error:', error);
         } finally {
@@ -543,6 +541,7 @@ export default function QuestionBank() {
     };
 
     // Fetch questions with server-side filters (on-demand)
+    const questionsSeq = useRef(0);
     const fetchQuestions = async (email: string, filters?: { topics?: string[]; subtopics?: string[]; exams?: string[]; batches?: string[]; types?: string[]; search?: string }) => {
         setLoading(true);
         try {
@@ -572,16 +571,17 @@ export default function QuestionBank() {
             }
 
             const url = `/api/admin/questions${params.toString() ? '?' + params.toString() : ''}`;
-            const questionsRes = await fetch(url, { headers, cache: 'no-store' });
-
-            if (questionsRes.ok) {
-                const data = await questionsRes.json();
-                const sorted = data.sort((a: any, b: any) => {
+            // Cached questions show instantly; the fresh list replaces them (only if still the latest request)
+            const seq = ++questionsSeq.current;
+            await swrJson<any[]>(url, (data) => {
+                if (seq !== questionsSeq.current || !Array.isArray(data)) return;
+                const sorted = data.slice().sort((a: any, b: any) => {
                     if (a.order !== b.order) return a.order - b.order;
                     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 });
                 setQuestions(sorted);
-            }
+                setLoading(false);
+            }, { headers });
         } catch (error) {
             console.error(error);
         } finally {

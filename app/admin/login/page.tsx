@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { clearAdminCache } from '@/lib/adminCache';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ShieldCheck, Lock, Mail, ArrowRight, Eye, EyeOff, Maximize2, Minimize2 } from 'lucide-react';
@@ -69,6 +70,7 @@ export default function AdminLogin() {
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('adminSessionStart', Date.now().toString());
             localStorage.setItem('adminToken', data.token); // Store token for admin-specific API calls
+            clearAdminCache(); // never show a previous admin's cached pages
 
             // Handle "Remember Me" functionality
             if (rememberMe) {
