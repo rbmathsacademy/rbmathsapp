@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import { getAdminPayload } from '@/lib/adminAuth';
-import { computeGrade, submissionCode, type AiReview, type Grade } from '@/lib/aiGrading';
+import { computeGrade, stripCitations, submissionCode, type AiReview, type Grade } from '@/lib/aiGrading';
 
 const GRADES: Grade[] = ['GOOD', 'SATISFACTORY', 'POOR'];
 
@@ -16,12 +16,12 @@ function sanitizeReview(rv: Partial<AiReview> | undefined) {
         incorrect: Math.max(0, Math.round(Number(r.incorrect) || 0)),
         skippedOrIncomplete: Math.max(0, Math.round(Number(r.skippedOrIncomplete) || 0)),
         unreadable: !!r.unreadable,
-        unreadableNote: String(r.unreadableNote || '').slice(0, 1000),
-        summary: String(r.summary || '').slice(0, 2000),
+        unreadableNote: stripCitations(String(r.unreadableNote || '')).slice(0, 1000),
+        summary: stripCitations(String(r.summary || '')).slice(0, 2000),
         feedback: (Array.isArray(r.feedback) ? r.feedback : []).slice(0, 100).map((f: any) => ({
             question: String(f?.question || '').slice(0, 40),
             status: ['INCORRECT', 'PARTIAL', 'INCOMPLETE', 'SKIPPED'].includes(f?.status) ? f.status : 'INCORRECT',
-            comment: String(f?.comment || '').slice(0, 2000),
+            comment: stripCitations(String(f?.comment || '')).slice(0, 2000),
         })),
         aiGrade: r.aiGrade ? String(r.aiGrade).slice(0, 20) : null,
         importedAt: new Date(),

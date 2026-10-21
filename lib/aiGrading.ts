@@ -94,6 +94,7 @@ FEEDBACK FOR THE STUDENT (it will be shown to the student)
 - For SKIPPED: a short line such as "Not attempted - revise ... and try it."
 - "summary": 1-2 encouraging sentences on the overall work.
 - Write ALL mathematics in LaTeX between single dollar signs, e.g. $\\\\int x^2\\\\,dx = \\\\frac{x^3}{3} + C$. Never use $$ ... $$, Markdown or line breaks inside the text.
+- Do NOT add citations or source markers such as [cite: 7], [cite_start] or page references anywhere in the text; the student only sees your sentences.
 
 OUTPUT
 Reply with ONLY one JSON code block, no other text, in exactly this shape:
@@ -128,6 +129,19 @@ Rules for the JSON:
 }
 
 // ---------------------------------------------------------------- parsing the AI's reply
+
+/**
+ * Removes the source markers the Gemini app adds when answering about an uploaded file, e.g.
+ * "[cite: 7]", "[cite: 9, 10]", "[cite_start]", "[source: 3]", "【5†source】". They point at chunks
+ * of the uploaded PDF and mean nothing to a student.
+ */
+export function stripCitations(text: string): string {
+    return (text || '')
+        .replace(/\s*\[(?:cite|source|citation)s?(?:_start|_end)?(?:\s*:\s*[\d\s,\-–]*)?\]/gi, '')
+        .replace(/\s*【[^】]*】/g, '')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim();
+}
 
 // LaTeX commands that begin with a letter that is ALSO a JSON escape (\n \t \b \f \r). When an AI
 // forgets to double the backslash, "\frac" would silently become a form feed + "rac", so these
@@ -242,15 +256,15 @@ export function parseAiGradingReply(raw: string): ParsedAiReply {
             .map((f: any) => ({
                 question: String(f.question ?? '').trim(),
                 status: STATUS_ALIASES[String(f.status ?? '').trim().toUpperCase()] || 'INCORRECT',
-                comment: String(f.comment ?? '').trim(),
+                comment: stripCitations(String(f.comment ?? '')),
             })) : [];
 
         const review: AiReview = {
             totalQuestions: total,
             correct, incorrect, skippedOrIncomplete: skipped,
             unreadable,
-            unreadableNote: String(r.unreadableNote ?? '').trim(),
-            summary: String(r.summary ?? '').trim(),
+            unreadableNote: stripCitations(String(r.unreadableNote ?? '')),
+            summary: stripCitations(String(r.summary ?? '')),
             feedback,
             aiGrade,
         };
