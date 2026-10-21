@@ -186,7 +186,12 @@ Reply with ONLY one JSON code block, no other text, in exactly this shape:
 Rules for the JSON:
 - One object in "results" for EVERY student listed above (all ${students.length}), even if their pages are missing (then mark unreadable).
 - "code" and "name" must be copied exactly from the list above (same spelling, character by character).
-- It must be valid JSON: inside strings write every LaTeX backslash doubled (\\\\frac, \\\\sqrt, \\\\int), and use only straight double quotes for JSON keys and strings.`;
+- It must be valid JSON: inside strings write every LaTeX backslash doubled (\\\\frac, \\\\sqrt, \\\\int), and use only straight double quotes for JSON keys and strings.
+
+SELF-CHECK BEFORE YOU ANSWER (fix the JSON until all of these are true)
+- "questions" has exactly "totalQuestions" entries - one for every question of the paper, none left out.
+- For every student: correct + incorrect + skippedOrIncomplete = totalQuestions.
+- For every student: "feedback" has one item for EACH question that is not fully correct, so the number of feedback items is at least incorrect + skippedOrIncomplete. Never summarise several questions in one item and never leave a wrong or skipped question without its item.`;
 }
 
 // ---------------------------------------------------------------- parsing the AI's reply
@@ -256,6 +261,8 @@ export interface ParsedAiReply {
     questions: QuestionTopic[];
     results: ParsedAiResult[];
     errors: string[];
+    /** Problems with the reply as a whole (e.g. topic map shorter than the paper). */
+    warnings: string[];
 }
 
 const toInt = (v: any) => {
@@ -284,7 +291,7 @@ const STATUS_ALIASES: Record<string, FeedbackStatus> = {
 
 /** Parse and validate the JSON the admin pasted from the AI chat. Never throws. */
 export function parseAiGradingReply(raw: string): ParsedAiReply {
-    const out: ParsedAiReply = { assignmentCode: null, totalQuestions: 0, questions: [], results: [], errors: [] };
+    const out: ParsedAiReply = { assignmentCode: null, totalQuestions: 0, questions: [], results: [], errors: [], warnings: [] };
     if (!raw || !raw.trim()) { out.errors.push('Nothing was pasted.'); return out; }
 
     const text = extractJsonText(raw);
@@ -357,11 +364,20 @@ export function parseAiGradingReply(raw: string): ParsedAiReply {
         if (!unreadable && aiGrade && aiGrade !== computedGrade) {
             warnings.push(`AI said ${aiGrade}; by the rule the counts give ${computedGrade} (the portal uses ${computedGrade}).`);
         }
-        if (!unreadable && incorrect + skipped > 0 && feedback.length === 0) warnings.push('No question-wise feedback was given.');
+        if (!unreadable && incorrect + skipped > 0) {
+            const noted = new Set(feedback.map(f => questionKey(f.question))).size;
+            if (noted === 0) warnings.push('No question-wise feedback was given.');
+            else if (noted < incorrect + skipped) warnings.push(`Only ${noted} of the ${incorrect + skipped} wrong/skipped questions have a note, so the topic-wise analysis for this student is approximate. Ask the AI to "add a feedback item for every question that is not fully correct".`);
+        }
 
         out.results.push({ code, name: String(r.name ?? '').trim(), review, computedGrade, warnings });
     });
 
     if (out.results.length === 0 && out.errors.length === 0) out.errors.push('The "results" list is empty.');
+    const paperTotal = out.totalQuestions || Math.max(0, ...out.results.map(r => r.review.totalQuestions));
+    if (out.questions.length > 0 && paperTotal > 0 && out.questions.length !== paperTotal) {
+        const gap = paperTotal - out.questions.length;
+        out.warnings.push(`The topic map lists ${out.questions.length} questions but the paper has ${paperTotal}${gap > 0 ? `, so ${gap} question(s) have no topic` : ''}. Ask the AI to "list every question of the paper in the questions array" and paste the corrected reply.`);
+    }
     return out;
 }

@@ -95,10 +95,28 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
 
         const outcomes = questionOutcomes(map, rv.feedback || []);
         const quality = (sub.quality === 'GOOD' || sub.quality === 'SATISFACTORY' || sub.quality === 'POOR') ? (sub.quality as AssignmentQuality) : null;
+
+        // A question with no feedback note is only "correct" if the notes cover every mistake. When
+        // the AI left mistakes un-noted (or the topic map is shorter than the paper), the student's
+        // remaining correct answers are shared out evenly over the un-noted questions instead, so a
+        // topic never looks better than the student's actual counts.
+        const unnoted = outcomes.filter(o => o.outcome === 'CORRECT').length;
+        const notedSkips = outcomes.filter(o => o.outcome === 'SKIPPED' || o.outcome === 'INCOMPLETE').length;
+        const fullyNoted = unnoted <= rv.correct;
+        const creditPerUnnoted = unnoted > 0 ? Math.max(0, Math.min(1, rv.correct / unnoted)) : 0;
+        const skipPerUnnoted = unnoted > 0 && !fullyNoted
+            ? Math.min(1 - creditPerUnnoted, Math.max(0, rv.skippedOrIncomplete - notedSkips) / unnoted)
+            : 0;
+
         (homeworkByStudent.get(st.id) || homeworkByStudent.set(st.id, []).get(st.id)!).push({
             title: a.title, deadline: iso(a.deadline) || '', grade: quality,
             totalQuestions: rv.totalQuestions || map.length, correct: rv.correct, incorrect: rv.incorrect, skippedOrIncomplete: rv.skippedOrIncomplete,
-            questions: outcomes.map(o => ({ question: o.question, topic: o.topic, subtopic: o.subtopic, outcome: o.outcome, errorType: o.errorType || null, comment: o.comment || undefined })),
+            questions: outcomes.map(o => ({
+                question: o.question, topic: o.topic, subtopic: o.subtopic,
+                // NOT_NOTED: no note from the checker, and the counts show not all such questions were right
+                outcome: o.outcome === 'CORRECT' && !fullyNoted ? 'NOT_NOTED' : o.outcome,
+                errorType: o.errorType || null, comment: o.comment || undefined,
+            })),
         });
 
         const groups = new Map<string, Row>();
@@ -111,7 +129,7 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
                 n: 0, c: 0, k: 0, src: 'hw', notes: [], errs: [],
             }).get(key)!;
             row.n++;
-            if (o.outcome === 'CORRECT') row.c++;
+            if (o.outcome === 'CORRECT') { row.c += fullyNoted ? 1 : creditPerUnnoted; row.k += skipPerUnnoted; }
             else if (o.outcome === 'PARTIAL') row.c += 0.5;
             if (o.outcome === 'SKIPPED' || o.outcome === 'INCOMPLETE') row.k++;
             if (o.outcome !== 'CORRECT') {
@@ -347,11 +365,11 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         const errorProfile: Record<string, number> = {};
         let hwQuestions = 0, hwCorrect = 0;
         for (const h of homeworkChecks) {
+            // Totals from the student's own counts (always complete), not from the per-question notes
+            hwQuestions += h.totalQuestions;
+            hwCorrect += h.correct;
             for (const q of h.questions) {
-                hwQuestions++;
-                if (q.outcome === 'CORRECT') hwCorrect++;
-                else if (q.outcome === 'PARTIAL') hwCorrect += 0.5;
-                if (q.outcome !== 'CORRECT' && q.errorType) errorProfile[q.errorType] = (errorProfile[q.errorType] || 0) + 1;
+                if (q.outcome !== 'CORRECT' && q.outcome !== 'NOT_NOTED' && q.errorType) errorProfile[q.errorType] = (errorProfile[q.errorType] || 0) + 1;
             }
         }
         const rawBreakdown: StudentWeakness['rawBreakdown'] = [];

@@ -523,9 +523,15 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                                 )}
                                 {parsed.results.length > 0 && (
                                     parsed.questions.length > 0 ? (
-                                        <p className="text-xs text-lime-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                                            Topic map for {parsed.questions.length} questions ({Array.from(new Set(parsed.questions.map(q => q.topic))).join(', ')}) - used in the student weakness analysis.
-                                        </p>
+                                        <>
+                                            <p className={`text-xs flex items-start gap-1.5 ${parsed.warnings.length ? 'text-amber-200' : 'text-lime-300'}`}>
+                                                {parsed.warnings.length ? <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
+                                                Topic map for {parsed.questions.length} questions ({Array.from(new Set(parsed.questions.map(q => q.topic))).join(', ')}) - used in the student weakness analysis.
+                                            </p>
+                                            {parsed.warnings.map((w, i) => (
+                                                <p key={i} className="text-xs text-amber-200 flex items-start gap-1.5 pl-5">{w}</p>
+                                            ))}
+                                        </>
                                     ) : (
                                         <p className="text-xs text-amber-200 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                             No topic map ("questions") in this reply, so this homework can only be used by its grade in the weakness analysis. Copy a fresh prompt to get one.
