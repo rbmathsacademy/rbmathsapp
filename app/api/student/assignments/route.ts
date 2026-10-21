@@ -136,6 +136,8 @@ export async function GET(req: NextRequest) {
                 submissionLink: submission?.link,
                 correctionStatus: submission?.status || 'PENDING',
                 quality: submission?.quality || null,
+                // AI checker's question-wise feedback, shown once the copy is marked corrected
+                aiReview: submission?.status === 'CORRECTED' && submission?.aiReview && !submission.aiReview.unreadable ? submission.aiReview : null,
                 content: safeContent,
                 boardWise: isBoardWise,
                 score: submission?.score ?? null,

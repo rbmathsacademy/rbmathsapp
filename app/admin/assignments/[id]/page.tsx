@@ -8,6 +8,10 @@ import { ArrowLeft, Clock, FileText, ExternalLink, CheckCircle, AlertTriangle, U
 import { toast, Toaster } from 'react-hot-toast';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
+import AiGradingPanel from './AiGradingPanel';
+import AiReviewEditor from './AiReviewEditor';
+import AiFeedbackView, { AiScoreChips } from '@/app/components/AiFeedbackView';
+import type { AiReview } from '@/lib/aiGrading';
 
 interface StudentSubmission {
     _id: string | null; // submission ID if exists
@@ -28,6 +32,7 @@ interface StudentSubmission {
     overrideOnTime?: boolean;
     score?: number | null;
     totalQuestions?: number | null;
+    aiReview?: AiReview | null;
 }
 
 interface Assignment {
@@ -78,6 +83,12 @@ export default function AssignmentDetailsPage() {
     const [editScheduledFor, setEditScheduledFor] = useState(''); // Optional scheduled open time
     const [editCooldown, setEditCooldown] = useState(0);
     const [editCooldownEndTime, setEditCooldownEndTime] = useState('');
+
+    // AI feedback viewer
+    const [feedbackFor, setFeedbackFor] = useState<StudentSubmission | null>(null);
+    const [feedbackEditing, setFeedbackEditing] = useState(false);
+    const openFeedback = (s: StudentSubmission, edit = false) => { setFeedbackFor(s); setFeedbackEditing(edit || !s.aiReview); };
+    const closeFeedback = () => { setFeedbackFor(null); setFeedbackEditing(false); };
 
     // Filter State
     const [correctionFilter, setCorrectionFilter] = useState<'ALL' | 'CORRECTED' | 'NOT_CORRECTED'>('ALL');
@@ -590,6 +601,11 @@ export default function AssignmentDetailsPage() {
 
 
 
+            {/* AI checking: merged PDFs for Gemini + JSON import */}
+            {assignment.type === 'PDF' && (
+                <AiGradingPanel assignment={assignment} students={students} onImported={fetchDetails} />
+            )}
+
             {/* Submissions List */}
             <div className="bg-[#151029] border border-white/5 rounded-xl overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-white/5">
@@ -737,7 +753,7 @@ export default function AssignmentDetailsPage() {
                                 filteredStudents.map(student => {
                                     const isSelected = selectedPhones.includes(student.student._id);
                                     return (
-                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''}`}>
+                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
                                             <td className="p-4">
                                                 <input
@@ -851,6 +867,16 @@ export default function AssignmentDetailsPage() {
                                                             <option value="POOR">Poor</option>
                                                         </select>
                                                     )}
+                                                    {student.aiReview ? (
+                                                        <button onClick={() => openFeedback(student)} className="flex flex-col items-center gap-1 group" title="View / edit feedback">
+                                                            {student.aiReview.unreadable
+                                                                ? <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-400/15 text-amber-200 border-amber-300/40">⚠ Unreadable - check</span>
+                                                                : <AiScoreChips review={student.aiReview} compact />}
+                                                            <span className="text-[10px] font-bold text-fuchsia-300 group-hover:underline">Feedback</span>
+                                                        </button>
+                                                    ) : (
+                                                        <button onClick={() => openFeedback(student, true)} className="text-[10px] font-bold text-violet-300/70 hover:text-fuchsia-300">+ Add feedback</button>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <span className="text-gray-600 text-xs">-</span>
@@ -944,7 +970,7 @@ export default function AssignmentDetailsPage() {
                         filteredStudents.map(student => {
                             const isSelected = selectedPhones.includes(student.student.phoneNumber);
                             return (
-                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''}`}>
+                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
@@ -1017,6 +1043,17 @@ export default function AssignmentDetailsPage() {
                                     )}
                                 </div>
 
+                                {student._id && !student.aiReview && (
+                                    <button onClick={() => openFeedback(student, true)} className="text-[10px] font-bold text-violet-300/70">+ Add feedback</button>
+                                )}
+                                {student.aiReview && (
+                                    <button onClick={() => openFeedback(student)} className="w-full flex items-center justify-between gap-2 rounded-lg bg-white/[0.04] border border-white/[0.07] px-2.5 py-1.5">
+                                        {student.aiReview.unreadable
+                                            ? <span className="text-[10px] font-bold text-amber-200">⚠ Unreadable - check manually</span>
+                                            : <AiScoreChips review={student.aiReview} compact />}
+                                        <span className="text-[10px] font-bold text-fuchsia-300">Feedback ›</span>
+                                    </button>
+                                )}
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-3">
                                         {student.submittedAt && (
@@ -1536,6 +1573,53 @@ export default function AssignmentDetailsPage() {
                                 ))
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* AI feedback viewer */}
+            {feedbackFor && feedbackFor._id && (
+                <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={closeFeedback}>
+                    <div className="relative sd-gborder bg-[#140d27] w-full sm:max-w-2xl max-h-[90svh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-4 sm:p-6" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                            <div className="min-w-0">
+                                <h3 className="text-lg font-black sd-title truncate">{feedbackFor.student.name}</h3>
+                                <p className="text-xs text-violet-200/60">
+                                    {feedbackEditing ? 'Editing feedback' : 'Feedback'}{feedbackFor.quality ? <> · grade <span className="font-bold text-white">{feedbackFor.quality}</span></> : null}
+                                    {feedbackFor.aiReview?.aiGrade && feedbackFor.aiReview.aiGrade !== feedbackFor.quality ? <> (AI said {feedbackFor.aiReview.aiGrade})</> : null}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                                {!feedbackEditing && (
+                                    <button onClick={() => setFeedbackEditing(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-bold">
+                                        <Pen className="w-3.5 h-3.5" /> Edit
+                                    </button>
+                                )}
+                                <button onClick={closeFeedback} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+                            </div>
+                        </div>
+                        {feedbackEditing ? (
+                            <AiReviewEditor
+                                assignmentId={assignment._id}
+                                submissionId={feedbackFor._id}
+                                review={feedbackFor.aiReview}
+                                currentQuality={feedbackFor.quality}
+                                onCancel={() => (feedbackFor.aiReview ? setFeedbackEditing(false) : closeFeedback())}
+                                onSaved={({ status, quality, aiReview }) => {
+                                    const upd = { ...feedbackFor, status, quality, aiReview };
+                                    setStudents(prev => prev.map(s => (s._id === feedbackFor._id ? upd : s)));
+                                    setFeedbackFor(upd);
+                                    setFeedbackEditing(false);
+                                }}
+                            />
+                        ) : feedbackFor.aiReview ? (
+                            <AiFeedbackView review={feedbackFor.aiReview} />
+                        ) : null}
+                        {feedbackFor.link && (
+                            <a href={feedbackFor.link} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-fuchsia-300 hover:underline">
+                                Open the answer sheet <ExternalLink className="w-3 h-3" />
+                            </a>
+                        )}
                     </div>
                 </div>
             )}

@@ -7,6 +7,8 @@ import { toast, Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useStudentProfile } from '../StudentProfileContext';
 import BatchTabSwitcher from '../../components/BatchTabSwitcher';
+import AiFeedbackView, { AiScoreChips } from '@/app/components/AiFeedbackView';
+import type { AiReview } from '@/lib/aiGrading';
 
 const FREE_BATCH_LOWER = 'class xi (free batch) 2026-27';
 
@@ -28,6 +30,7 @@ interface Assignment {
     boardWise?: boolean;
     score?: number | null;
     totalQuestions?: number | null;
+    aiReview?: AiReview | null; // question-wise feedback once the copy is checked
 }
 
 type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
@@ -513,6 +516,7 @@ function AssignmentCard({
     const isLateSubmitted = assignment.status === 'LATE_SUBMITTED';
 
     const [timeLeft, setTimeLeft] = useState('');
+    const [showFeedback, setShowFeedback] = useState(false);
 
     useEffect(() => {
         if (isSubmitted || isClosed) return;
@@ -620,6 +624,21 @@ function AssignmentCard({
                     <Clock className="w-3.5 h-3.5" />
                     <span>Due: {deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })} at {deadlineDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                 </div>
+
+                {/* Checked copy: score + question-wise feedback */}
+                {isSubmitted && assignment.correctionStatus === 'CORRECTED' && assignment.aiReview && (
+                    <div className="mb-4 rounded-xl bg-white/[0.04] border border-white/[0.07] overflow-hidden">
+                        <button onClick={() => setShowFeedback(v => !v)} className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left">
+                            <AiScoreChips review={assignment.aiReview} compact />
+                            <span className="text-[11px] font-bold text-fuchsia-300 shrink-0">{showFeedback ? 'Hide feedback' : 'View feedback'}</span>
+                        </button>
+                        {showFeedback && (
+                            <div className="px-3 pb-3 border-t border-white/[0.07] pt-3">
+                                <AiFeedbackView review={assignment.aiReview} />
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Late Warning */}
                 {isLateAllowed && (
