@@ -552,7 +552,21 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                                                     </p>
                                                     <p className="text-[11px] text-violet-200/50 truncate">{b.students.map(s => s.name).join(', ')}</p>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2 sm:flex">
+                                                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+                                                    {(() => {
+                                                        // Is this paper's answer key (step 0) already set up?
+                                                        const k = keyFor(b.board);
+                                                        const n = k?.questions.length || 0;
+                                                        const sol = !!k?.solutionsUrl;
+                                                        return (
+                                                            <span
+                                                                title={n || sol ? `Key ready${n ? `: ${n} questions with answers` : ''}${sol ? ', plus your solutions PDF' : ''}` : 'No answer key yet - prepare the paper in step 0 for more reliable checking'}
+                                                                className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[10px] font-black whitespace-nowrap ${n || sol ? 'bg-lime-400/15 text-lime-300 border-lime-300/40' : 'bg-amber-400/10 text-amber-200 border-amber-300/30'}`}>
+                                                                {n || sol ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                                                                {n || sol ? `Key ✓${n ? ` ${n} Q` : ''}${sol ? ' + solutions' : ''}` : 'No key'}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                     <button onClick={() => buildBatch(b)} disabled={st.status === 'building'}
                                                         className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white text-xs font-bold disabled:opacity-60 active:scale-95 transition-transform">
                                                         {st.status === 'building' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}

@@ -99,12 +99,24 @@ function PaperCard({ assignmentId, title, paper, multi, current, taxonomy, onSav
     };
 
     const list = parsed?.questions.length ? parsed.questions : showList ? current?.questions || [] : [];
+    const ready = count > 0 || !!current?.solutionsUrl;
 
     return (
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.07] p-3 space-y-3">
+        <div className={`rounded-xl p-3 space-y-3 border transition-colors ${ready
+            ? 'bg-lime-400/[0.07] border-lime-300/50 shadow-[0_0_0_1px_rgba(163,230,53,0.15),0_10px_30px_-18px_rgba(132,204,22,0.6)]'
+            : 'bg-white/[0.04] border-white/[0.07]'}`}>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white">{multi ? paper.label : 'Question list & answer key'}</p>
+                    <p className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+                        {multi ? paper.label : 'Question list & answer key'}
+                        {ready ? (
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-lime-400/20 text-lime-200 border border-lime-300/40">
+                                ✓ KEY SET{count ? ` · ${count} Q` : ''}{current?.solutionsUrl ? ' · SOLUTIONS PDF' : ''}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-200 border border-amber-300/30">NOT SET</span>
+                        )}
+                    </p>
                     {count > 0 ? (
                         <button onClick={() => setShowList(v => !v)} className="text-[11px] text-lime-300 flex items-center gap-1">
                             <CheckCircle2 className="h-3.5 w-3.5" /> Saved: {count} questions ({Array.from(new Set(current!.questions.map(q => q.topic))).join(', ')})
