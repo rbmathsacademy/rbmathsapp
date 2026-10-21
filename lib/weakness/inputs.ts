@@ -19,6 +19,8 @@ export interface AssignmentInput {
     id: string; title: string; deadline: Date | string; excluded?: string[];
     /** Topic / sub-topic of each question, from the AI checker (empty when the homework was never AI-checked). */
     questionMap?: QuestionTopic[];
+    /** Teacher-approved question list per board ("" = whole assignment); preferred over questionMap. */
+    questionMapByBoard?: Record<string, QuestionTopic[]>;
 }
 export interface SubmissionReviewInput {
     totalQuestions: number; correct: number; incorrect: number; skippedOrIncomplete: number;

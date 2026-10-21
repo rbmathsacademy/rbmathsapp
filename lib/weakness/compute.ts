@@ -89,7 +89,9 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         const a = assignmentById.get(sub.assignmentId);
         const st = studentById.get(sub.studentId);
         const rv = sub.review;
-        const map = a?.questionMap || [];
+        // The prepared paper key for the student's board, else the whole paper's key, else the AI's map
+        const byBoard = a?.questionMapByBoard || {};
+        const map = (st?.board && byBoard[st.board]?.length ? byBoard[st.board] : null) || byBoard['']?.length && byBoard[''] || a?.questionMap || [];
         if (!a || !st || !rv || rv.unreadable || sub.status !== 'CORRECTED' || map.length === 0) continue;
         aiChecked.add(a.id + SEP + st.id);
 

@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         ];
 
         // Assignments and teacher ratings
-        const assignments = await Assignment.find({ batch }).select('title deadline excludedStudents aiQuestionMap').lean();
+        const assignments = await Assignment.find({ batch }).select('title deadline excludedStudents aiQuestionMap paperKeys').lean();
         const submissions = await AssignmentSubmission.find({
             assignment: { $in: assignments.map((a: any) => a._id) },
             student: { $in: students.map((s: any) => s._id) },
@@ -107,6 +107,9 @@ export async function GET(request: NextRequest) {
             assignments: assignments.map((a: any) => ({
                 id: a._id.toString(), title: a.title, deadline: a.deadline, excluded: a.excludedStudents || [],
                 questionMap: (a.aiQuestionMap || []).map((q: any) => ({ question: q.question, topic: q.topic, subtopic: q.subtopic })),
+                questionMapByBoard: Object.fromEntries((a.paperKeys || [])
+                    .filter((k: any) => (k.questions || []).length > 0)
+                    .map((k: any) => [k.board || '', k.questions.map((q: any) => ({ question: q.question, topic: q.topic, subtopic: q.subtopic }))])),
             })),
             submissions: submissions.map((s: any) => ({
                 assignmentId: s.assignment.toString(), studentId: s.student.toString(), status: s.status, quality: s.quality, isLate: s.isLate, submittedAt: s.submittedAt,

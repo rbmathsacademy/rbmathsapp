@@ -79,6 +79,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                 subtopic: String(q?.subtopic || '').slice(0, 160),
             })).filter((q: any) => q.question && q.topic);
             if (map.length > 0) {
+                // Only kept as a fallback; a prepared paper key (paperKeys) takes precedence in the analysis
                 await Assignment.updateOne({ _id: id }, { $set: { aiQuestionMap: map } });
                 mappedQuestions = map.length;
             }

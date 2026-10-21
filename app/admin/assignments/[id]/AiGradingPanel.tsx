@@ -3,8 +3,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib';
 import { toast } from 'react-hot-toast';
-import { Sparkles, Download, Copy, ChevronDown, ChevronUp, ExternalLink, Upload, CheckCircle2, AlertTriangle, Loader2, FileText } from 'lucide-react';
-import { buildGradingPrompt, parseAiGradingReply, submissionCode, assignmentCode, type ParsedAiReply, type TaxonomyTopic } from '@/lib/aiGrading';
+import { Sparkles, Download, Copy, ChevronDown, ChevronUp, ExternalLink, Upload, CheckCircle2, AlertTriangle, Loader2, FileText, Wrench, Braces } from 'lucide-react';
+import PaperKeySection from './PaperKeySection';
+import {
+    buildGradingPrompt, buildFixupRequest, parseAiGradingReply,
+    submissionCode, assignmentCode, GRADING_RESPONSE_SCHEMA,
+    type ParsedAiReply, type PaperKeyQuestion, type TaxonomyTopic,
+} from '@/lib/aiGrading';
+
+const AI_STUDIO_URL = 'https://aistudio.google.com/prompts/new_chat';
+
+async function copyText(text: string, okMsg: string) {
+    try {
+        await navigator.clipboard.writeText(text);
+        toast.success(okMsg);
+    } catch {
+        toast.error('Could not copy to clipboard');
+    }
+}
 
 // Students per merged PDF. Real answer sheets run 9-14 pages, so 10 students is ~100+ pages;
 // 5 gives the AI a lighter read when accuracy matters more than the number of chats.
@@ -25,7 +41,11 @@ interface PanelAssignment {
     content: any;
     boardWise?: boolean;
     boardContent?: Record<string, string>;
+    paperKeys?: PaperKey[];
 }
+
+/** The prepared question list / answer key of one paper ("" board = not board-wise). */
+interface PaperKey { board: string; questions: PaperKeyQuestion[]; solutionsUrl?: string; savedAt?: string }
 
 interface Batch {
     key: string;
@@ -138,6 +158,18 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
     const [parsed, setParsed] = useState<ParsedAiReply | null>(null);
     const [saving, setSaving] = useState(false);
 
+    // ------------------------------------------------------------- step 0: prepared paper keys
+    const [keys, setKeys] = useState<PaperKey[]>(assignment.paperKeys || []);
+    useEffect(() => { setKeys(assignment.paperKeys || []); }, [assignment.paperKeys]);
+    const keyFor = (board: string | null): PaperKey | null => {
+        const k = keys.find(x => (x.board || '') === (assignment.boardWise ? (board || '') : ''));
+        return k && (k.questions.length > 0 || k.solutionsUrl) ? k : null;
+    };
+    // One paper per board for board-wise assignments, otherwise a single paper
+    const papers: { board: string; label: string; url: string | null }[] = assignment.boardWise
+        ? Object.entries(assignment.boardContent || {}).filter(([, u]) => !!u).map(([b, u]) => ({ board: b, label: `${b} paper`, url: u }))
+        : [{ board: '', label: 'Question paper', url: typeof assignment.content === 'string' && assignment.content.startsWith('http') ? assignment.content : null }];
+
     const submitted = useMemo(() => students
         .filter(s => s._id && s.link)
         .map(s => ({ ...s, _id: s._id as string, link: s.link as string }))
@@ -203,6 +235,22 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
             const paper = await PDFDocument.load(paperBytes, { ignoreEncryption: true });
             (await out.copyPages(paper, paper.getPageIndices())).forEach(p => out.addPage(p));
 
+            // 1b. The teacher's own solutions, when a Drive link was saved for this paper
+            const key = keyFor(b.board);
+            if (key?.solutionsUrl) {
+                setBS(b.key, { status: 'building', progress: "Teacher's solutions..." });
+                try {
+                    const sol = await PDFDocument.load(await fetchDrivePdf(key.solutionsUrl), { ignoreEncryption: true });
+                    const sep = out.addPage([595.28, 841.89]);
+                    sep.drawRectangle({ x: 0, y: 841.89 - 150, width: sep.getWidth(), height: 150, color: rgb(0.05, 0.4, 0.25) });
+                    drawCentered(sep, "TEACHER'S SOLUTIONS", 841.89 - 80, 30, fonts.bold, rgb(1, 1, 1));
+                    drawCentered(sep, 'Answer key for checking - this is NOT a student submission.', 500, 15, fonts.reg);
+                    (await out.copyPages(sol, sol.getPageIndices())).forEach(p => out.addPage(p));
+                } catch (e: any) {
+                    problems.push(`Teacher's solutions could not be added (${e.message}). The prompt still mentions them - remove the solutions link in step 0 or fix its sharing`);
+                }
+            }
+
             // 2. Download the submissions (3 at a time) ...
             const files: (ArrayBuffer | null)[] = new Array(b.students.length).fill(null);
             let done = 0;
@@ -252,6 +300,7 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
     };
 
     const copyPrompt = async (b: Batch) => {
+        const key = keyFor(b.board);
         const text = buildGradingPrompt({
             assignmentId: assignment._id,
             title: assignment.title,
@@ -260,13 +309,9 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
             batchCount: batches.length,
             students: b.students.map(s => ({ code: s.code, name: ascii(s.name) })),
             taxonomy: taxonomy || [],
+            paperKey: key ? { questions: key.questions, hasSolutionsPdf: !!key.solutionsUrl } : null,
         });
-        try {
-            await navigator.clipboard.writeText(text);
-            toast.success(`Prompt for batch ${b.no} copied`);
-        } catch {
-            toast.error('Could not copy to clipboard');
-        }
+        await copyText(text, `Prompt for batch ${b.no} copied${key?.questions.length ? ' (with the saved question list)' : ''}`);
     };
 
     // ------------------------------------------------------------- import
@@ -323,6 +368,37 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
     const codesHere = parsed ? parsed.results.filter(r => codeToStudent.has(r.code)).length : 0;
     const wrongAssignment = labelDiffers && codesHere < Math.ceil((parsed?.results.length || 0) / 2);
 
+    // The batch this reply belongs to = the one sharing most student codes with it
+    const replyBatch = useMemo(() => {
+        if (!matched.length) return null;
+        const codes = new Set(matched.map(r => r.code));
+        let best: Batch | null = null, bestHits = 0;
+        for (const b of batches) {
+            const hits = b.students.filter(s => codes.has(s.code)).length;
+            if (hits > bestHits) { best = b; bestHits = hits; }
+        }
+        return best;
+    }, [matched, batches]);
+    // Saved question list for that paper: fixes the question count and the topics
+    const replyKey = useMemo(() => {
+        const board = replyBatch?.board ?? (matched[0] ? codeToStudent.get(matched[0].code)?.student.board || null : null);
+        return keyFor(board);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [replyBatch, matched, keys]);
+    const keyTotal = replyKey?.questions.length || 0;
+    const keyWarnings = (r: (typeof matched)[number]): string[] => {
+        if (!keyTotal || r.review.unreadable) return [];
+        const sum = r.review.correct + r.review.incorrect + r.review.skippedOrIncomplete;
+        return sum !== keyTotal ? [`Counts add up to ${sum}, but the saved question list has ${keyTotal} questions.`] : [];
+    };
+    const fixup = parsed
+        ? buildFixupRequest({
+            parsed: { ...parsed, results: matched },
+            expected: replyBatch ? replyBatch.students.map(s => ({ code: s.code, name: ascii(s.name) })) : [],
+            keyTotal: keyTotal || undefined,
+        })
+        : '';
+
     const save = async () => {
         if (!parsed || matched.length === 0) return;
         if (wrongAssignment && !confirm(`This reply is labelled for assignment ${parsed.assignmentCode}, but this is ${assignmentCode(assignment._id)}. Save anyway?`)) return;
@@ -331,7 +407,11 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
             const res = await fetch(`/api/admin/assignments/${assignment._id}/ai-grades`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...authHeaders() },
-                body: JSON.stringify({ results: matched.map(r => ({ code: r.code, review: r.review })), questions: parsed.questions }),
+                body: JSON.stringify({
+                    results: matched.map(r => ({ code: r.code, review: keyTotal ? { ...r.review, totalQuestions: keyTotal } : r.review })),
+                    // With a saved question list the topics come from it, so the reply's own map is not stored
+                    questions: keyTotal ? [] : parsed.questions,
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed');
@@ -371,6 +451,9 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
 
             {open && (
                 <div className="border-t border-white/10 p-4 sm:p-5 space-y-6">
+                    {/* STEP 0 */}
+                    <PaperKeySection assignmentId={assignment._id} title={assignment.title} papers={papers} keys={keys} taxonomy={taxonomy || []} onSaved={setKeys} />
+
                     {/* STEP 1 */}
                     <section className="space-y-3">
                         <h3 className="text-sm font-black text-white">1 · Choose the submissions</h3>
@@ -435,10 +518,17 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                             </div>
                         </div>
                         <p className="text-[11px] sm:text-xs text-violet-200/60 leading-relaxed">
-                            Each PDF = the question paper, then up to {batchSize} answer sheets, each behind a page showing the student&apos;s CODE.
-                            In <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 underline inline-flex items-center gap-0.5">Gemini <ExternalLink className="h-3 w-3" /></a>
-                            {' '}start a new chat for each batch: attach the PDF, paste that batch&apos;s prompt, send, then copy the JSON reply into step 3.
+                            Each PDF = the question paper{papers.some(p => keyFor(p.board || null)?.solutionsUrl) ? ', your solutions' : ''}, then up to {batchSize} answer sheets, each behind a page showing the student&apos;s CODE.
+                            In <a href={AI_STUDIO_URL} target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 underline inline-flex items-center gap-0.5">Google AI Studio <ExternalLink className="h-3 w-3" /></a>
+                            {' '}(best: a Pro model, temperature 0) start a new chat for each batch: attach the PDF, paste that batch&apos;s prompt, send, then copy the JSON reply into step 3.
                         </p>
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-violet-200/60">
+                            <button onClick={() => copyText(JSON.stringify(GRADING_RESPONSE_SCHEMA, null, 2), 'Schema copied - paste it in AI Studio: Run settings > Structured output > Edit')}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold">
+                                <Braces className="h-3.5 w-3.5" /> Copy response schema
+                            </button>
+                            <span>Optional: in AI Studio turn on <b>Structured output</b> (Run settings), click <b>Edit</b> and paste it once - replies then always come back as complete, valid JSON.</span>
+                        </div>
                         {batches.length === 0 ? (
                             <p className="text-sm text-violet-200/50 py-3">No submissions selected.</p>
                         ) : (
@@ -522,7 +612,11 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                                     </p>
                                 )}
                                 {parsed.results.length > 0 && (
-                                    parsed.questions.length > 0 ? (
+                                    keyTotal > 0 ? (
+                                        <p className="text-xs text-lime-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                            Using the saved question list ({keyTotal} questions{replyBatch?.board ? `, ${replyBatch.board}` : ''}) for topics - used in the student weakness analysis.
+                                        </p>
+                                    ) : parsed.questions.length > 0 ? (
                                         <>
                                             <p className={`text-xs flex items-start gap-1.5 ${parsed.warnings.length ? 'text-amber-200' : 'text-lime-300'}`}>
                                                 {parsed.warnings.length ? <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
@@ -551,7 +645,7 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                                                 <div key={r.code} className="p-3 flex flex-col sm:flex-row sm:items-center gap-2 bg-white/[0.02]">
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-bold text-white truncate">{s.student.name} <span className="text-[10px] font-mono text-violet-200/50">{r.code}</span></p>
-                                                        {r.warnings.map((w, i) => <p key={i} className="text-[11px] text-amber-200">{w}</p>)}
+                                                        {[...keyWarnings(r), ...r.warnings.filter(w => !(keyTotal && w.startsWith('Counts add up to')))].map((w, i) => <p key={i} className="text-[11px] text-amber-200">{w}</p>)}
                                                         {r.review.unreadable && <p className="text-[11px] text-amber-200">Unreadable{r.review.unreadableNote ? `: ${r.review.unreadableNote}` : ''} - will stay unchecked for you to check manually</p>}
                                                     </div>
                                                     <div className="flex items-center gap-2 shrink-0">
@@ -566,11 +660,23 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                                         })}
                                     </div>
                                 )}
+                                {fixup && (
+                                    <div className="rounded-xl bg-amber-400/[0.07] border border-amber-300/25 p-3 space-y-2">
+                                        <p className="text-xs text-amber-100">
+                                            The reply has gaps. Copy this request, paste it into the <b>same</b> chat, then paste the corrected reply here.
+                                        </p>
+                                        <pre className="text-[11px] text-amber-50/80 whitespace-pre-wrap font-sans max-h-32 overflow-y-auto">{fixup}</pre>
+                                        <button onClick={() => copyText(fixup, 'Fix-up request copied - paste it into the same chat')}
+                                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/90 hover:bg-amber-400 text-black text-xs font-black active:scale-95 transition-transform">
+                                            <Wrench className="h-3.5 w-3.5" /> Copy fix-up request
+                                        </button>
+                                    </div>
+                                )}
                                 {matched.length > 0 && (
                                     <button onClick={save} disabled={saving}
                                         className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-lime-500 to-emerald-600 text-white text-sm font-black shadow-lg shadow-lime-500/20 disabled:opacity-60 active:scale-95 transition-transform">
                                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                                        Save {matched.length} result{matched.length === 1 ? '' : 's'}
+                                        Save {matched.length} result{matched.length === 1 ? '' : 's'}{fixup ? ' anyway' : ''}
                                     </button>
                                 )}
                             </div>

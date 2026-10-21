@@ -33,6 +33,23 @@ const AssignmentSchema = new mongoose.Schema({
         topic: { type: String, default: '' },
         subtopic: { type: String, default: '' },
     }],
+    // "Prepare paper": the teacher-approved question list of each paper (one entry per board for
+    // board-wise assignments, board "" otherwise) with topic, sub-topic and expected answer, plus an
+    // optional Drive link to the teacher's own solutions PDF. Batch prompts and PDFs use it, and
+    // the weakness analysis prefers it over the AI's per-batch topic map.
+    paperKeys: [{
+        _id: false,
+        board: { type: String, default: '' },
+        questions: [{
+            _id: false,
+            question: { type: String, default: '' },
+            topic: { type: String, default: '' },
+            subtopic: { type: String, default: '' },
+            answer: { type: String, default: '' },
+        }],
+        solutionsUrl: { type: String, default: '' },
+        savedAt: { type: Date, default: Date.now },
+    }],
     createdAt: { type: Date, default: Date.now }
 });
 
