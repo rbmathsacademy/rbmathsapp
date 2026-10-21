@@ -70,8 +70,9 @@ THE ATTACHED PDF
 - File: "${title}"${board ? ` (${board} board)` : ''}, batch ${batchNo} of ${batchCount}.
 - The first page(s) are the QUESTION PAPER. There is no solution guide: solve the questions yourself to check the students' work.
 - Then come the students' answer sheets (photos of handwritten pages). Each student's work begins right after a separator page titled "STUDENT SUBMISSION" that shows the student's CODE and name. Everything after that page, up to the next separator page or the final "END OF BATCH" page, belongs to that student only.
-- This batch contains exactly ${students.length} student(s):
+- This batch contains exactly ${students.length} student(s), in this order:
 ${list}
+- Every student above HAS a separator page and answer pages in the file. Read EVERY page of the file before you answer; do not report a student's work as missing - find their separator page and check the pages after it. Only use "unreadable" when the pages really cannot be read.
 
 HOW TO CHECK EACH QUESTION
 1. Count each numbered question of the question paper as ONE question (sub-parts like (a), (b) belong to their question). Use the same total for every student.
@@ -124,7 +125,7 @@ Reply with ONLY one JSON code block, no other text, in exactly this shape:
 \`\`\`
 Rules for the JSON:
 - One object in "results" for EVERY student listed above (all ${students.length}), even if their pages are missing (then mark unreadable).
-- "code" must be copied exactly from the separator page.
+- "code" and "name" must be copied exactly from the list above (same spelling, character by character).
 - It must be valid JSON: inside strings write every LaTeX backslash doubled (\\\\frac, \\\\sqrt, \\\\int), and use only straight double quotes for JSON keys and strings.`;
 }
 

@@ -263,8 +263,42 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
         setParsed(text.trim() ? parseAiGradingReply(text) : null);
     };
 
-    const matched = parsed ? parsed.results.filter(r => codeToStudent.has(r.code)) : [];
-    const unknownCodes = parsed ? parsed.results.filter(r => !codeToStudent.has(r.code)).map(r => r.code) : [];
+    // Match each result to a student. The AI sometimes misreads a code on the separator page
+    // (seen: 4EFC32 -> 4EFC3A) while getting the name right, so the name is checked too:
+    // a name that matches exactly one submitted student wins over a wrong or mismatching code.
+    const { matched, unknownCodes } = useMemo(() => {
+        const norm = (n: string) => ascii(n).toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+        const byName = (aiName: string) => {
+            const n = norm(aiName);
+            if (!n) return null;
+            let hits = submitted.filter(s => norm(s.student.name) === n);
+            if (hits.length === 0) hits = submitted.filter(s => { const p = norm(s.student.name); return p.startsWith(n) || n.startsWith(p); });
+            return hits.length === 1 ? hits[0] : null;
+        };
+        const out: NonNullable<typeof parsed>['results'] = [];
+        const unknown: string[] = [];
+        const used = new Set<string>();
+        for (const r of parsed?.results || []) {
+            const byCode = codeToStudent.get(r.code) || null;
+            const named = byName(r.name);
+            let pick = byCode;
+            const extra: string[] = [];
+            if (named && (!byCode || byCode._id !== named._id)) {
+                pick = named;
+                extra.push(byCode
+                    ? `Code ${r.code} belongs to ${byCode.student.name}, but the AI named ${r.name}; matched by name.`
+                    : `Code ${r.code} was misread; matched by name to ${submissionCode(named._id)}.`);
+            } else if (byCode && r.name && !named && norm(r.name) && norm(byCode.student.name) !== norm(r.name)) {
+                extra.push(`The AI wrote the name "${r.name}" for this code. Please double-check.`);
+            }
+            if (!pick) { unknown.push(`${r.code}${r.name ? ` (${r.name})` : ''}`); continue; }
+            const code = submissionCode(pick._id);
+            if (used.has(code)) { extra.push('This student appears twice in the reply; only the first result is used.'); continue; }
+            used.add(code);
+            out.push({ ...r, code, warnings: [...extra, ...r.warnings] });
+        }
+        return { matched: out, unknownCodes: unknown };
+    }, [parsed, codeToStudent, submitted]);
     const wrongAssignment = !!(parsed?.assignmentCode && parsed.assignmentCode !== assignmentCode(assignment._id));
 
     const save = async () => {
