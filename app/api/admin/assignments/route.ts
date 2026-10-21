@@ -59,8 +59,9 @@ export async function GET(req: Request) {
 
         // Attach full stats to each assignment
         const assignmentsWithStats = await Promise.all(assignments.map(async (a: any) => {
-            const submissions = await AssignmentSubmission.find({ assignment: a._id }, 'submittedAt student');
+            const submissions = await AssignmentSubmission.find({ assignment: a._id }, 'submittedAt student status');
             const submissionCount = submissions.length;
+            const correctedCount = submissions.filter((s: any) => s.status === 'CORRECTED').length;
             const batchStudents = batchStudentsMap[a.batch] || [];
             const totalStudents = batchStudents.length;
 
@@ -105,7 +106,7 @@ export async function GET(req: Request) {
                 }
             });
 
-            return { ...a, submissionCount, lateCount, missedCount, pendingCount, newAdmissionCount, totalStudents };
+            return { ...a, submissionCount, correctedCount, lateCount, missedCount, pendingCount, newAdmissionCount, totalStudents };
         }));
 
         const folders = await AssignmentFolder.find({}).sort({ createdAt: -1 }).lean();

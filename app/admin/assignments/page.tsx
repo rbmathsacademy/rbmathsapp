@@ -15,6 +15,7 @@ interface Assignment {
     batch: string;
     deadline: string;
     submissionCount: number;
+    correctedCount?: number;
     lateCount: number;
     missedCount: number;
     pendingCount: number;
@@ -776,6 +777,19 @@ export default function AdminAssignmentsPage() {
                                                         <div className="flex items-center gap-1.5 text-teal-400">
                                                             <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center text-[10px] font-bold">🆕</span>
                                                             <span>{assignment.newAdmissionCount} New Admission</span>
+                                                        </div>
+                                                    )}
+                                                    {/* Checking progress of the submitted copies */}
+                                                    {assignment.submissionCount > 0 && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="px-2 py-0.5 rounded-lg font-bold text-[11px] sm:text-xs bg-lime-400/15 text-lime-300 border border-lime-300/30">
+                                                                {assignment.correctedCount ?? 0} Corrected
+                                                            </span>
+                                                            {assignment.submissionCount - (assignment.correctedCount ?? 0) > 0 && (
+                                                                <span className="px-2 py-0.5 rounded-lg font-bold text-[11px] sm:text-xs bg-amber-400/15 text-amber-300 border border-amber-300/30">
+                                                                    {assignment.submissionCount - (assignment.correctedCount ?? 0)} Uncorrected
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
