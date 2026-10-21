@@ -4,7 +4,7 @@ import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 import DeletedStudent from '@/models/DeletedStudent';
 
-const ARCHIVE_DAYS = 100;
+import { archiveDates } from '@/lib/studentPurge';
 
 export async function POST(req: NextRequest) {
     try {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         }
 
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + ARCHIVE_DAYS * 24 * 60 * 60 * 1000);
+        const { purgeAt, expiresAt } = archiveDates(now);
 
         // 2. For each student, find guardian and create archive record
         const archiveDocs = [];
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
                 studentData: student,
                 guardianData: guardian || null,
                 deletedAt: now,
+                purgeAt,
                 expiresAt
             });
 

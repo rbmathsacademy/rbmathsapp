@@ -5,7 +5,7 @@ import User from '@/models/User';
 import DeletedStudent from '@/models/DeletedStudent';
 import { registerDirectoryEntry } from '@/lib/schoolCollegeDirectory';
 
-const ARCHIVE_DAYS = 100;
+import { archiveDates } from '@/lib/studentPurge';
 
 // PUT - Update student details
 export async function PUT(
@@ -93,13 +93,14 @@ export async function DELETE(
 
         // 3. Archive into DeletedStudent
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + ARCHIVE_DAYS * 24 * 60 * 60 * 1000);
+        const { purgeAt, expiresAt } = archiveDates(now);
 
         await DeletedStudent.create({
             originalId: (student as any)._id,
             studentData: student,
             guardianData: guardian || null,
             deletedAt: now,
+            purgeAt,
             expiresAt
         });
 

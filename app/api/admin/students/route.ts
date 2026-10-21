@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { registerDirectoryEntry } from '@/lib/schoolCollegeDirectory';
+import { purgeDueArchives } from '@/lib/studentPurge';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
     try {
         await dbConnect();
+        // Recycle-bin students past their 100 days: purge their records after this response
+        after(() => purgeDueArchives().catch(err => console.error('[studentPurge]', err)));
         const { searchParams } = new URL(req.url);
         const batch = searchParams.get('batch');
         const search = searchParams.get('search');

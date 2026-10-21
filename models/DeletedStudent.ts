@@ -19,6 +19,14 @@ const DeletedStudentSchema = new mongoose.Schema({
         default: Date.now,
         required: true
     },
+    // When the student's test attempts, homework submissions and survey responses are purged
+    // (deletedAt + 100 days; see lib/studentPurge.ts). Fee records are never purged.
+    purgeAt: {
+        type: Date,
+        default: null,
+        index: true
+    },
+    // TTL safety net, set a few weeks after purgeAt so the portal purges the records first
     expiresAt: {
         type: Date,
         required: true,
