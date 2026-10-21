@@ -25,6 +25,14 @@ const AssignmentSchema = new mongoose.Schema({
         default: {}
     },
     excludedStudents: [{ type: String }], // Phone numbers of students excluded from this assignment
+    // Topic / sub-topic of each question in the paper, from the AI checker's reply. Lets each
+    // student's question-wise result feed the weakness analysis alongside online tests.
+    aiQuestionMap: [{
+        _id: false,
+        question: { type: String, default: '' },
+        topic: { type: String, default: '' },
+        subtopic: { type: String, default: '' },
+    }],
     createdAt: { type: Date, default: Date.now }
 });
 

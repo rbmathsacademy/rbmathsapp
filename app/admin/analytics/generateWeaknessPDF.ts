@@ -51,8 +51,39 @@ function footer(doc: jsPDF, page: number, pageH: number) {
     doc.text(`Page ${page}`, PAGE_W - MARGIN, y + 5, { align: 'right' });
 }
 
+/** Inline LaTeX from the AI checker's notes, flattened to readable plain text for the PDF fonts. */
+function latexToPlain(t: string): string {
+    let s = (t || '').replace(/\$/g, '');
+    for (let i = 0; i < 3; i++) {
+        s = s.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)')
+            .replace(/\\sqrt\[([^\]]*)\]\{([^{}]*)\}/g, '$1-root($2)')
+            .replace(/\\sqrt\{([^{}]*)\}/g, 'sqrt($1)')
+            .replace(/\\(?:text|textbf|mathrm|mathbf|operatorname)\{([^{}]*)\}/g, '$1');
+    }
+    const words: Record<string, string> = {
+        times: 'x', cdot: '.', div: '/', pm: '+/-', le: '<=', leq: '<=', ge: '>=', geq: '>=', ne: '!=', neq: '!=', infty: 'infinity',
+        to: '->', rightarrow: '->', Rightarrow: '=>', implies: '=>', circ: ' deg', degree: ' deg', pi: 'pi', theta: 'theta', alpha: 'alpha',
+        beta: 'beta', gamma: 'gamma', lambda: 'lambda', int: 'integral ', sum: 'sum ', lim: 'lim', left: '', right: '', quad: ' ', ',': ' ',
+    };
+    s = s.replace(/\\([A-Za-z]+|,)/g, (_, w) => (w in words ? words[w] : w))
+        .replace(/\^\{([^{}]*)\}/g, '^($1)').replace(/_\{([^{}]*)\}/g, '_$1')
+        .replace(/[{}]/g, '').replace(/\s+/g, ' ');
+    return clean(s);
+}
+
+const ERROR_ADVICE: Record<string, string> = {
+    CONCEPT: 'The idea itself is not yet clear - go back to the theory and worked examples before practising.',
+    METHOD: 'Picks an unsuitable method - practise choosing the right approach for each type of question.',
+    FORMULA: 'Formulas/identities are being misremembered - make a formula sheet and revise it daily.',
+    CALCULATION: 'The method is right but calculation slips cost marks - slow down and re-check each step.',
+    SIGN: 'Sign errors cost marks - check the signs at every step.',
+    INCOMPLETE_STEPS: 'Leaves working unfinished - complete every step and write the final answer clearly.',
+};
+
 function advice(w: WeaknessEntry): string {
     if (w.source === 'assignments') return 'Assignments on this topic were rated poorly by the teacher. Revise the basics and redo the assignment carefully.';
+    const top = Object.entries(w.errorTypes || {}).filter(([e]) => e in ERROR_ADVICE).sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1] >= 2) return ERROR_ADVICE[top[0]];
     if (w.level === 'Critical') return 'Needs focused re-teaching of this area and regular practice until it is secure.';
     if (w.level === 'Weak') return 'Revise the concepts and practise more questions of this type.';
     return 'Keep an eye on it - a little extra practice should fix it.';
@@ -104,7 +135,14 @@ function drawStudent(doc: jsPDF, s: StudentWeakness, batch: string): number {
         ? 'No clear weak areas were found in the tests and assignments so far. Keep up the good work.'
         : `${s.weaknesses.length} area${s.weaknesses.length > 1 ? 's' : ''} need attention` +
         (crit ? ` (${crit} critical)` : '') + '. The list below shows the topic and the exact sub-topic where the student repeatedly loses marks.' +
-        (a.rated ? ` Assignments rated so far: ${a.good} good, ${a.satisfactory} satisfactory, ${a.poor} poor.` : '');
+        (a.rated ? ` Assignments rated so far: ${a.good} good, ${a.satisfactory} satisfactory, ${a.poor} poor.` : '') +
+        (() => {
+            const hw = s.overall.homework;
+            if (!hw || hw.checked === 0) return '';
+            const top = Object.entries(hw.errorProfile).filter(([e]) => e !== 'NOT_ATTEMPTED').sort((x, z) => z[1] - x[1]).slice(0, 2)
+                .map(([e]) => ({ CONCEPT: 'gaps in concepts', METHOD: 'choice of method', FORMULA: 'formulas', CALCULATION: 'calculation slips', SIGN: 'sign errors', INCOMPLETE_STEPS: 'unfinished working', OTHER: 'other errors' } as Record<string, string>)[e] || e);
+            return ` In ${hw.checked} checked homework${hw.checked > 1 ? 's' : ''} (${hw.accuracy ?? '-'}% of questions correct)${top.length ? `, most marks were lost to ${top.join(' and ')}` : ''}.`;
+        })();
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...C.dark);
@@ -132,9 +170,13 @@ function drawStudent(doc: jsPDF, s: StudentWeakness, batch: string): number {
         byTopic.forEach((list, topic) => {
             body.push([{ content: clean(topic), colSpan: 5, styles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: C.navy } }]);
             list.forEach(w => {
+                const n1 = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
+                const parts: string[] = [];
+                if (w.fromTests && w.fromTests.questions > 0) parts.push(`Tests: ${n1(w.fromTests.correct)}/${w.fromTests.questions} correct`);
+                if (w.fromHomework && w.fromHomework.questions > 0) parts.push(`Homework: ${n1(w.fromHomework.correct)}/${w.fromHomework.questions} correct`);
                 const evidence = w.source === 'assignments'
                     ? `${w.assignmentCount} assignment(s), avg ${w.assignmentAvg ?? '-'}/100`
-                    : `${w.correct}/${w.questions} correct in ${w.testsAppeared} test(s)` + (w.batchAccuracy != null ? `; batch ${w.batchAccuracy}%` : '');
+                    : (parts.length ? parts.join('; ') : `${n1(w.correct)}/${w.questions} correct in ${w.testsAppeared} test(s)`) + (w.batchAccuracy != null ? `; batch ${w.batchAccuracy}%` : '');
                 body.push([
                     clean(w.category),
                     { content: LEVEL[w.level].label, styles: { textColor: LEVEL[w.level].fg, fillColor: LEVEL[w.level].bg, fontStyle: 'bold', halign: 'center' } },
@@ -157,6 +199,27 @@ function drawStudent(doc: jsPDF, s: StudentWeakness, batch: string): number {
         y = (doc as any).lastAutoTable.finalY + 6;
     } else {
         y += 2;
+    }
+
+    // What went wrong in checked homework (the AI checker's notes, most useful first)
+    const notes = s.weaknesses.flatMap(w => (w.mistakes || []).filter(m => m.outcome !== 'SKIPPED').map(m => ({ w, m }))).slice(0, 10);
+    if (notes.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(...C.navy);
+        doc.text('What went wrong in the homework', MARGIN, y);
+        y += 3;
+        autoTable(doc, {
+            startY: y,
+            head: [['Area', 'Homework / Q', 'Teacher\'s note']],
+            body: notes.map(({ w, m }) => [clean(`${w.topic} > ${w.category}`), clean(`${m.assignment.split('||')[0].trim()} / Q${m.question}`), latexToPlain(m.comment)]),
+            theme: 'grid',
+            margin: { left: MARGIN, right: MARGIN },
+            styles: { fontSize: 7.5, cellPadding: 1.8, textColor: C.dark, lineColor: C.light, lineWidth: 0.2 },
+            headStyles: { fillColor: C.navy, textColor: C.white, fontSize: 8 },
+            columnStyles: { 0: { cellWidth: 42 }, 1: { cellWidth: 34 } },
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
     }
 
     // Strengths
@@ -327,8 +390,11 @@ export function buildAIExport(report: WeaknessReport, onlyStudentId?: string): s
         .sort((a, b) => a.name.localeCompare(b.name));
     const instructions = [
         'You are helping a maths teacher prepare learning-gap reports for students\' guardians.',
-        'DATA: the JSON below has one object per student. "rawBreakdown" lists every topic/sub-topic exactly as named in the online tests with counts (served, correct, skipped). "weaknesses" is the system\'s own pre-computed shortlist (level Critical/Weak/Watch). "assignments" lists each assignment title with its rating (GOOD / SATISFACTORY / POOR) or state (AWAITING_REVIEW / MISSED / PENDING).',
-        'TASKS: (1) Group look-alike sub-topic names (spelling or wording variants of the same idea) under suitable headings within each topic. (2) Read each assignment title to decide which topic it is about, then treat its rating as evidence for that topic: GOOD = strength, SATISFACTORY = acceptable, POOR = weakness. (3) For every student write a short, kind, guardian-friendly summary: strengths, then the topic >> sub-topic areas that need work (with accuracy and how consistent the pattern is), then 2-3 practical suggestions. (4) Keep students in alphabetical order and produce a contents list with student names first. Do not invent data that is not in the JSON; ignore topics with very few questions.',
+        'DATA: the JSON below has one object per student, combining two kinds of evidence:',
+        '  (a) ONLINE TESTS - "rawBreakdown" lists every topic/sub-topic with counts (served, correct, skipped) from tests and checked homework together; "tests" lists each test score.',
+        '  (b) AI-CHECKED HOMEWORK - "checkedHomework" lists each handwritten homework that was checked question by question: every question has its topic, sub-topic, outcome (CORRECT / INCORRECT / PARTIAL / INCOMPLETE / SKIPPED), the kind of mistake ("errorType": CONCEPT, METHOD, FORMULA, CALCULATION, SIGN, INCOMPLETE_STEPS, NOT_ATTEMPTED, OTHER) and the checker\'s note (inline LaTeX in $...$). "overall.homework.errorProfile" counts the kinds of mistakes.',
+        '  "weaknesses" is the system\'s own pre-computed shortlist (level Critical/Weak/Watch, "source" tests/homework/mixed, the split of evidence, and sample mistake notes). "assignments" lists every assignment with its grade; those with "aiChecked": false were only graded overall, so use the topic named in the title and treat GOOD = strength, SATISFACTORY = acceptable, POOR = weakness.',
+        'TASKS: (1) Group look-alike sub-topic names (spelling or wording variants of the same idea) under suitable headings within each topic, across tests and homework. (2) Correlate the two sources for each topic >> sub-topic: weak in both = a real gap; fine in tests but weak in written homework = working/presentation problems; fine in homework but weak in tests = speed or recall under pressure. (3) Use the error types and notes to explain HOW the student goes wrong (e.g. mostly calculation slips vs not understanding the concept) and give specific, practical advice for each. (4) For every student write a kind, guardian-friendly report: strengths, then the topic >> sub-topic areas that need work with the evidence, the typical mistakes, then 2-3 practical suggestions. (5) Keep students in alphabetical order and produce a contents list with student names first. Do not invent data that is not in the JSON; ignore areas with very little evidence. Convert any LaTeX into readable maths.',
         'OUTPUT: a clean document (or HTML) that can be turned into a PDF and shared with guardians. Do not include phone numbers.',
     ].join('\n');
     const payload = {
@@ -341,9 +407,17 @@ export function buildAIExport(report: WeaknessReport, onlyStudentId?: string): s
                 topic: w.topic, subtopicHeading: w.category, level: w.level, accuracyPct: w.accuracy, batchAccuracyPct: w.batchAccuracy,
                 questions: w.questions, correct: w.correct, testsAppeared: w.testsAppeared, testsWeak: w.testsWeak,
                 assignmentAvg: w.assignmentAvg, source: w.source, rawSubtopicNames: w.rawSubtopics.map(r => r.subtopic),
+                fromTests: w.fromTests, fromHomework: w.fromHomework, errorTypes: w.errorTypes,
+                reasons: w.reasons,
+                mistakeNotes: (w.mistakes || []).map(m => ({ homework: m.assignment, question: m.question, outcome: m.outcome, errorType: m.errorType, note: m.comment })),
             })),
             strengths: s.strengths,
-            assignments: s.assignments.map(a => ({ title: a.title, state: a.state, quality: a.quality, late: a.isLate, matchedTopic: a.topic })),
+            assignments: s.assignments.map(a => ({ title: a.title, state: a.state, quality: a.quality, late: a.isLate, matchedTopic: a.topic, aiChecked: !!a.aiChecked })),
+            checkedHomework: (s.homeworkChecks || []).map(h => ({
+                title: h.title, deadline: h.deadline, grade: h.grade,
+                totalQuestions: h.totalQuestions, correct: h.correct, incorrect: h.incorrect, skippedOrIncomplete: h.skippedOrIncomplete,
+                questions: h.questions.map(q => ({ q: q.question, topic: q.topic, subtopic: q.subtopic, outcome: q.outcome, ...(q.errorType ? { errorType: q.errorType } : {}), ...(q.comment ? { note: q.comment } : {}) })),
+            })),
             tests: s.tests,
             rawBreakdown: s.rawBreakdown,
         })),

@@ -93,19 +93,29 @@ export async function GET(request: NextRequest) {
         ];
 
         // Assignments and teacher ratings
-        const assignments = await Assignment.find({ batch }).select('title deadline excludedStudents').lean();
+        const assignments = await Assignment.find({ batch }).select('title deadline excludedStudents aiQuestionMap').lean();
         const submissions = await AssignmentSubmission.find({
             assignment: { $in: assignments.map((a: any) => a._id) },
             student: { $in: students.map((s: any) => s._id) },
-        }).select('assignment student status isLate submittedAt quality').lean();
+        }).select('assignment student status isLate submittedAt quality aiReview').lean();
 
         const report = computeWeaknessReport({
             batch,
             students: students.map((s: any) => ({ id: s._id.toString(), name: s.name, phoneNumber: s.phoneNumber, schoolName: s.schoolName, board: s.board, createdAt: s.createdAt })),
             tests: tests.map((t: any) => ({ id: t._id.toString(), title: t.title, date: t.deployment?.startTime })),
             attempts,
-            assignments: assignments.map((a: any) => ({ id: a._id.toString(), title: a.title, deadline: a.deadline, excluded: a.excludedStudents || [] })),
-            submissions: submissions.map((s: any) => ({ assignmentId: s.assignment.toString(), studentId: s.student.toString(), status: s.status, quality: s.quality, isLate: s.isLate, submittedAt: s.submittedAt })),
+            assignments: assignments.map((a: any) => ({
+                id: a._id.toString(), title: a.title, deadline: a.deadline, excluded: a.excludedStudents || [],
+                questionMap: (a.aiQuestionMap || []).map((q: any) => ({ question: q.question, topic: q.topic, subtopic: q.subtopic })),
+            })),
+            submissions: submissions.map((s: any) => ({
+                assignmentId: s.assignment.toString(), studentId: s.student.toString(), status: s.status, quality: s.quality, isLate: s.isLate, submittedAt: s.submittedAt,
+                review: s.aiReview ? {
+                    totalQuestions: s.aiReview.totalQuestions, correct: s.aiReview.correct, incorrect: s.aiReview.incorrect,
+                    skippedOrIncomplete: s.aiReview.skippedOrIncomplete, unreadable: s.aiReview.unreadable,
+                    feedback: (s.aiReview.feedback || []).map((f: any) => ({ question: f.question, status: f.status, comment: f.comment, errorType: f.errorType || undefined })),
+                } : null,
+            })),
         });
 
         return NextResponse.json({

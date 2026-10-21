@@ -5,6 +5,35 @@ import { Download, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle } from
 import { toast } from 'react-hot-toast';
 import type { WeaknessReport, StudentWeakness } from '@/lib/weakness/types';
 import { generateWeaknessPDF, buildAIExport } from './generateWeaknessPDF';
+import Latex from 'react-latex-next';
+import 'katex/dist/katex.min.css';
+import { ERROR_TYPE_LABEL, type ErrorType } from '@/lib/aiGrading';
+import type { WeaknessEntry } from '@/lib/weakness/types';
+
+const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
+    online: { label: 'Tests', cls: 'text-sky-200 bg-sky-400/10 border-sky-300/25' },
+    homework: { label: 'Homework', cls: 'text-fuchsia-200 bg-fuchsia-400/10 border-fuchsia-300/25' },
+    mixed: { label: 'Tests + Homework', cls: 'text-amber-200 bg-amber-400/10 border-amber-300/25' },
+    assignments: { label: 'Homework grade', cls: 'text-slate-300 bg-white/5 border-white/15' },
+};
+
+const errLabel = (e: string) => ERROR_TYPE_LABEL[e as ErrorType] || e;
+
+/** The AI checker's notes on this student's homework mistakes in one weak area. */
+function MistakeList({ w }: { w: WeaknessEntry }) {
+    if (!w.mistakes || w.mistakes.length === 0) return null;
+    return (
+        <ul className="mt-2 space-y-1.5">
+            {w.mistakes.map((m, i) => (
+                <li key={i} className="text-[11px] leading-relaxed text-violet-100/75 border-l-2 border-fuchsia-400/40 pl-2">
+                    <span className="font-bold text-white/80">{m.assignment.split('||')[0].trim()} · Q{m.question}</span>
+                    {m.errorType && m.errorType !== 'NOT_ATTEMPTED' && <span className="ml-1 text-fuchsia-300">[{errLabel(m.errorType)}]</span>}
+                    {' '}<Latex>{m.comment}</Latex>
+                </li>
+            ))}
+        </ul>
+    );
+}
 
 const LEVEL_STYLE: Record<string, string> = {
     Critical: 'bg-rose-500/15 text-rose-300 border-rose-400/40',
@@ -169,6 +198,21 @@ export default function StudentWeaknessPanel({ batch }: { batch: string }) {
                                                     <Copy className="w-3.5 h-3.5" /> Copy JSON
                                                 </button>
                                             </div>
+                                            {s.overall.homework && s.overall.homework.checked > 0 && (
+                                                <div className="rounded-xl bg-fuchsia-500/[0.06] border border-fuchsia-400/20 p-3 space-y-1.5">
+                                                    <p className="text-xs text-fuchsia-100">
+                                                        <span className="font-bold">AI-checked homework:</span> {s.overall.homework.checked} · {s.overall.homework.questions} questions · accuracy {s.overall.homework.accuracy ?? '-'}%
+                                                    </p>
+                                                    {Object.keys(s.overall.homework.errorProfile).length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            <span className="text-[11px] text-violet-200/60">Mistake pattern:</span>
+                                                            {Object.entries(s.overall.homework.errorProfile).sort((a, b) => b[1] - a[1]).map(([e, n]) => (
+                                                                <span key={e} className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-white/15 bg-white/5 text-slate-200">{errLabel(e)} ×{n}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                             {s.weaknesses.length > 0 ? (
                                                 <>
                                                     {/* Phones: one card per weak area */}
@@ -180,7 +224,10 @@ export default function StudentWeaknessPanel({ batch }: { batch: string }) {
                                                                         <p className="text-[10px] uppercase tracking-wider font-bold text-violet-200/50 truncate">{w.topic}</p>
                                                                         <p className="text-sm font-bold text-white leading-snug">{w.category}</p>
                                                                     </div>
-                                                                    <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded border ${LEVEL_STYLE[w.level]}`}>{w.level}</span>
+                                                                    <div className="shrink-0 flex flex-col items-end gap-1">
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${LEVEL_STYLE[w.level]}`}>{w.level}</span>
+                                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${SOURCE_BADGE[w.source]?.cls || ''}`}>{SOURCE_BADGE[w.source]?.label}</span>
+                                                                    </div>
                                                                 </div>
                                                                 {w.source !== 'assignments' && (
                                                                     <div className="mt-2 space-y-1">
@@ -203,6 +250,7 @@ export default function StudentWeaknessPanel({ batch }: { batch: string }) {
                                                                     </div>
                                                                 )}
                                                                 {w.reasons.length > 0 && <p className="mt-2 text-[11px] text-violet-100/60 leading-relaxed">{w.reasons.join('; ')}</p>}
+                                                                <MistakeList w={w} />
                                                             </div>
                                                         ))}
                                                     </div>
@@ -222,10 +270,13 @@ export default function StudentWeaknessPanel({ batch }: { batch: string }) {
                                                                 {s.weaknesses.map((w, i) => (
                                                                     <tr key={i}>
                                                                         <td className="py-2 pr-3 text-gray-200"><span className="text-violet-200/50">{w.topic} &gt;&gt;</span> {w.category}</td>
-                                                                        <td className="py-2 pr-3"><span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${LEVEL_STYLE[w.level]}`}>{w.level}</span></td>
+                                                                        <td className="py-2 pr-3 align-top">
+                                                                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${LEVEL_STYLE[w.level]}`}>{w.level}</span>
+                                                                            <span className={`mt-1 block w-fit text-[9px] font-bold px-1.5 py-0.5 rounded border ${SOURCE_BADGE[w.source]?.cls || ''}`}>{SOURCE_BADGE[w.source]?.label}</span>
+                                                                        </td>
                                                                         <td className="py-2 pr-3 text-gray-200 font-bold">{w.source === 'assignments' ? '-' : `${w.accuracy}%`}</td>
                                                                         <td className="py-2 pr-3 text-cyan-200/70">{w.batchAccuracy != null ? `${w.batchAccuracy}%` : '-'}</td>
-                                                                        <td className="py-2 text-xs text-violet-100/60">{w.reasons.join('; ')}</td>
+                                                                        <td className="py-2 text-xs text-violet-100/60">{w.reasons.join('; ')}<MistakeList w={w} /></td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>

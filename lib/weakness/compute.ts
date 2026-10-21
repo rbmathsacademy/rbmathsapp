@@ -2,9 +2,10 @@ import { assignmentLabel, matchTopic, sameHeading, type TopicCandidate } from '.
 import type { AttemptStats, ComputeInput, StudentInput } from './inputs';
 import { canonicalSubtopic, cleanTopicName, topicFromTestTitle } from './taxonomy';
 import type {
-    AssignmentQuality, RawSubtopicStat, ScoringConfig, StrengthEntry, StudentAssignmentRow,
+    AssignmentQuality, HomeworkCheck, MistakeNote, RawSubtopicStat, ScoringConfig, StrengthEntry, StudentAssignmentRow,
     StudentWeakness, WeaknessEntry, WeaknessLevel, WeaknessReport,
 } from './types';
+import { ERROR_TYPE_LABEL, questionOutcomes, type ErrorType } from '../aiGrading';
 
 export const DEFAULT_SCORING: ScoringConfig = {
     minQuestions: 5, // a topic needs at least this many questions before it can be called a weakness...
@@ -28,12 +29,17 @@ interface Acc {
     served: number;
     correct: number;
     skipped: number;
-    perTest: Map<string, { served: number; correct: number }>;
+    perTest: Map<string, { served: number; correct: number }>; // keyed by test id, or "hw:<assignment id>" for homework
     raw: Map<string, RawSubtopicStat>;
+    tServed: number; tCorrect: number; // online tests
+    hServed: number; hCorrect: number; // AI-checked homework
+    errors: Map<string, number>;
+    notes: MistakeNote[];
 }
 
 const SEP = '\u0001';
 const pct = (n: number, d: number) => (d > 0 ? Math.round((100 * n) / d) : 0);
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1)); // partly-correct answers count as half
 const iso = (d?: Date | string | null) => (d ? new Date(d).toISOString() : null);
 
 function levelFor(score: number, accuracy: number, questions: number, c: ScoringConfig): WeaknessLevel | null {
@@ -45,7 +51,12 @@ function levelFor(score: number, accuracy: number, questions: number, c: Scoring
     return null;
 }
 
-interface Row { phone: string; testId: string; topic: string; rawSub: string; category: string; n: number; c: number; k: number }
+interface Row {
+    phone: string; testId: string; topic: string; rawSub: string; category: string; n: number; c: number; k: number;
+    src: 'test' | 'hw';
+    notes?: MistakeNote[];
+    errs?: string[];
+}
 
 export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
     const config = input.config || DEFAULT_SCORING;
@@ -65,8 +76,50 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         if (typeof a.percentage === 'number') allPercentages.push(a.percentage);
         for (const g of a.groups) {
             const topic = cleanTopicName(g.t) || topicFromTestTitle(test.title);
-            rows.push({ phone: a.studentPhone, testId: a.testId, topic, rawSub: g.s, category: canonicalSubtopic(topic, g.s), n: g.n, c: g.c, k: g.k });
+            rows.push({ phone: a.studentPhone, testId: a.testId, topic, rawSub: g.s, category: canonicalSubtopic(topic, g.s), n: g.n, c: g.c, k: g.k, src: 'test' });
         }
+    }
+
+    // ── pass 1b: AI-checked homework, question by question (same topic/sub-topic rows as tests) ──
+    const studentById = new Map(input.students.map(s => [s.id, s]));
+    const assignmentById = new Map(input.assignments.map(a => [a.id, a]));
+    const homeworkByStudent = new Map<string, HomeworkCheck[]>();
+    const aiChecked = new Set<string>(); // assignmentId \1 studentId analysed at question level
+    for (const sub of input.submissions) {
+        const a = assignmentById.get(sub.assignmentId);
+        const st = studentById.get(sub.studentId);
+        const rv = sub.review;
+        const map = a?.questionMap || [];
+        if (!a || !st || !rv || rv.unreadable || sub.status !== 'CORRECTED' || map.length === 0) continue;
+        aiChecked.add(a.id + SEP + st.id);
+
+        const outcomes = questionOutcomes(map, rv.feedback || []);
+        const quality = (sub.quality === 'GOOD' || sub.quality === 'SATISFACTORY' || sub.quality === 'POOR') ? (sub.quality as AssignmentQuality) : null;
+        (homeworkByStudent.get(st.id) || homeworkByStudent.set(st.id, []).get(st.id)!).push({
+            title: a.title, deadline: iso(a.deadline) || '', grade: quality,
+            totalQuestions: rv.totalQuestions || map.length, correct: rv.correct, incorrect: rv.incorrect, skippedOrIncomplete: rv.skippedOrIncomplete,
+            questions: outcomes.map(o => ({ question: o.question, topic: o.topic, subtopic: o.subtopic, outcome: o.outcome, errorType: o.errorType || null, comment: o.comment || undefined })),
+        });
+
+        const groups = new Map<string, Row>();
+        for (const o of outcomes) {
+            const topic = cleanTopicName(o.topic) || o.topic.trim();
+            const rawSub = (o.subtopic || '').trim();
+            const key = topic + SEP + rawSub;
+            const row = groups.get(key) || groups.set(key, {
+                phone: st.phoneNumber, testId: 'hw:' + a.id, topic, rawSub, category: canonicalSubtopic(topic, rawSub),
+                n: 0, c: 0, k: 0, src: 'hw', notes: [], errs: [],
+            }).get(key)!;
+            row.n++;
+            if (o.outcome === 'CORRECT') row.c++;
+            else if (o.outcome === 'PARTIAL') row.c += 0.5;
+            if (o.outcome === 'SKIPPED' || o.outcome === 'INCOMPLETE') row.k++;
+            if (o.outcome !== 'CORRECT') {
+                if (o.errorType) row.errs!.push(o.errorType);
+                if (o.comment) row.notes!.push({ assignment: a.title, question: o.question, outcome: o.outcome, errorType: o.errorType || null, comment: o.comment });
+            }
+        }
+        groups.forEach(r => rows.push(r));
     }
 
     // ── pass 2: merge look-alike headings inside each topic ("Substitution" / "Integration by Substitution") ──
@@ -105,8 +158,18 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         const category = headingMap.get(r.topic + SEP + r.category) || r.category;
         const key = r.topic + SEP + category;
         const accs = accByStudent.get(r.phone) || accByStudent.set(r.phone, new Map()).get(r.phone)!;
-        const acc = accs.get(key) || accs.set(key, { topic: r.topic, category, served: 0, correct: 0, skipped: 0, perTest: new Map(), raw: new Map() }).get(key)!;
+        const acc = accs.get(key) || accs.set(key, {
+            topic: r.topic, category, served: 0, correct: 0, skipped: 0, perTest: new Map(), raw: new Map(),
+            tServed: 0, tCorrect: 0, hServed: 0, hCorrect: 0, errors: new Map(), notes: [],
+        }).get(key)!;
         acc.served += r.n; acc.correct += r.c; acc.skipped += r.k;
+        if (r.src === 'hw') {
+            acc.hServed += r.n; acc.hCorrect += r.c;
+            (r.errs || []).forEach(e => acc.errors.set(e, (acc.errors.get(e) || 0) + 1));
+            acc.notes.push(...(r.notes || []));
+        } else {
+            acc.tServed += r.n; acc.tCorrect += r.c;
+        }
         const pt = acc.perTest.get(r.testId) || acc.perTest.set(r.testId, { served: 0, correct: 0 }).get(r.testId)!;
         pt.served += r.n; pt.correct += r.c;
         const rawKey = r.rawSub || '(no sub-topic)';
@@ -153,6 +216,7 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
             assignmentRows.push({
                 title: a.title, topicLabel: label, topic: label ? matchTopic(label, candidates) : null,
                 deadline: deadline.toISOString(), state, quality, isLate: !!sub?.isLate, submittedAt: iso(sub?.submittedAt),
+                aiChecked: aiChecked.has(a.id + SEP + student.id),
             });
         }
         const rated = assignmentRows.filter(r => r.state === 'RATED');
@@ -168,6 +232,7 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         };
         const ratingsByTopic = new Map<string, { points: number[]; poor: number }>();
         for (const r of rated) {
+            if (r.aiChecked) continue; // already counted question by question; the grade-by-title fallback is only for unchecked ones
             const t = r.topic || r.topicLabel;
             if (!t) continue;
             const e = ratingsByTopic.get(t) || ratingsByTopic.set(t, { points: [], poor: 0 }).get(t)!;
@@ -188,12 +253,16 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
             const accuracy = pct(acc.correct, acc.served);
             const batchAccuracy = batchAccuracyOf(key);
             const testsAppeared = acc.perTest.size;
+            const testCount = Array.from(acc.perTest.keys()).filter(k => !k.startsWith('hw:')).length;
+            const hwCount = testsAppeared - testCount;
             const enough = acc.served >= config.minQuestions && (testsAppeared >= config.minTestsAppeared || acc.served >= config.orMinQuestions);
 
             if (enough && accuracy >= 80 && acc.served >= 6 && (batchAccuracy === null || accuracy >= batchAccuracy)) {
                 strengths.push({ topic: acc.topic, category: acc.category, questions: acc.served, accuracy, batchAccuracy });
             }
-            if (!enough) continue;
+            // Checked homework is detailed evidence: clear trouble there is never diluted away by tests
+            const hwTrouble = acc.hServed >= 4 && pct(acc.hCorrect, acc.hServed) < config.levels.weak.accuracyBelow;
+            if (!enough && !hwTrouble) continue;
 
             let testsWeak = 0;
             acc.perTest.forEach(t => { if (t.served > 0 && pct(t.correct, t.served) < config.perTestWeakBelow) testsWeak++; });
@@ -205,25 +274,52 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
             if (asg && asg.avg < config.assignmentPenaltyStartsBelow) {
                 penalty = Math.min(config.assignmentPenaltyMax, ((config.assignmentPenaltyStartsBelow - asg.avg) / 40) * config.assignmentPenaltyMax);
             }
+            // Agreement between the two kinds of evidence makes a weakness more certain
+            const tAcc = acc.tServed >= 3 ? pct(acc.tCorrect, acc.tServed) : null;
+            const hAcc = acc.hServed >= 3 ? pct(acc.hCorrect, acc.hServed) : null;
+            const bothWeak = tAcc !== null && hAcc !== null && tAcc < 60 && hAcc < 60;
+            if (bothWeak) score += 8;
             score = Math.min(100, score + penalty);
 
-            const level = levelFor(score, accuracy, acc.served, config);
+            let level = enough ? levelFor(score, accuracy, acc.served, config) : null;
+            const hwOnlyFlag = !level && hwTrouble;
+            if (hwOnlyFlag) level = 'Watch';
             if (!level) continue;
 
-            const reasons = [`Answered ${acc.correct} of ${acc.served} questions correctly (${accuracy}%) across ${testsAppeared} test${testsAppeared === 1 ? '' : 's'}`];
+            const where = [testCount ? `${testCount} test${testCount === 1 ? '' : 's'}` : '', hwCount ? `${hwCount} checked homework${hwCount === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ');
+            const reasons = [`Answered ${fmt(acc.correct)} of ${acc.served} questions correctly (${accuracy}%) across ${where}`];
+            if (acc.tServed > 0 && acc.hServed > 0) reasons.push(`Online tests: ${fmt(acc.tCorrect)}/${acc.tServed} correct; homework: ${fmt(acc.hCorrect)}/${acc.hServed} correct`);
+            if (hwOnlyFlag) reasons.push(`In checked homework only ${fmt(acc.hCorrect)} of ${acc.hServed} questions were right - worth watching`);
+            if (bothWeak) reasons.push('Weak both in online tests and in checked homework - a consistent gap');
+            else if (tAcc !== null && hAcc !== null && tAcc >= 70 && hAcc < 60) reasons.push('Fine in tests but makes mistakes in written homework (working / presentation)');
+            else if (tAcc !== null && hAcc !== null && hAcc >= 70 && tAcc < 60) reasons.push('Manages in homework but not under test conditions (speed / recall)');
             if (batchAccuracy !== null) reasons.push(`Batch average on this area is ${batchAccuracy}%`);
-            if (testsWeak > 0) reasons.push(`Scored below ${config.perTestWeakBelow}% here in ${testsWeak} of ${testsAppeared} tests`);
+            if (testsWeak > 0) reasons.push(`Scored below ${config.perTestWeakBelow}% here in ${testsWeak} of ${testsAppeared} papers`);
+            const errorEntries = Array.from(acc.errors.entries()).filter(([e]) => e !== 'NOT_ATTEMPTED').sort((a, b) => b[1] - a[1]);
+            const errTotal = errorEntries.reduce((s, [, n]) => s + n, 0);
+            if (errorEntries.length > 0 && errTotal >= 2) {
+                const [top, n] = errorEntries[0];
+                reasons.push(`Most common mistake here: ${(ERROR_TYPE_LABEL[top as ErrorType] || top).toLowerCase()} (${n} of ${errTotal})`);
+            }
             if (acc.skipped > 0 && acc.skipped / acc.served >= 0.25) reasons.push(`Left ${acc.skipped} of ${acc.served} questions unanswered`);
             if (asg && penalty > 0) reasons.push(`Assignments on this topic average ${asg.avg}/100 by teacher rating`);
 
             weaknesses.push({
-                topic: acc.topic, category: acc.category, source: 'online',
+                topic: acc.topic, category: acc.category,
+                source: acc.tServed > 0 && acc.hServed > 0 ? 'mixed' : acc.hServed > 0 ? 'homework' : 'online',
                 questions: acc.served, correct: acc.correct, skipped: acc.skipped, accuracy, batchAccuracy,
                 testsAppeared, testsWeak,
                 assignmentAvg: asg ? asg.avg : null, assignmentCount: asg ? asg.n : 0,
                 score: Math.round(score), level,
                 rawSubtopics: Array.from(acc.raw.values()).sort((a, b) => b.served - a.served),
                 reasons,
+                fromTests: { questions: acc.tServed, correct: acc.tCorrect },
+                fromHomework: { questions: acc.hServed, correct: acc.hCorrect, assignments: hwCount },
+                errorTypes: Object.fromEntries(acc.errors),
+                mistakes: acc.notes
+                    .slice()
+                    .sort((a, b) => (a.outcome === 'SKIPPED' ? 1 : 0) - (b.outcome === 'SKIPPED' ? 1 : 0))
+                    .slice(0, 6),
             });
         }
 
@@ -247,6 +343,17 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         strengths.sort((a, b) => b.accuracy - a.accuracy || b.questions - a.questions);
 
         const pcts = attempts.map(a => a.percentage).filter((p): p is number => typeof p === 'number');
+        const homeworkChecks = (homeworkByStudent.get(student.id) || []).sort((a, b) => b.deadline.localeCompare(a.deadline));
+        const errorProfile: Record<string, number> = {};
+        let hwQuestions = 0, hwCorrect = 0;
+        for (const h of homeworkChecks) {
+            for (const q of h.questions) {
+                hwQuestions++;
+                if (q.outcome === 'CORRECT') hwCorrect++;
+                else if (q.outcome === 'PARTIAL') hwCorrect += 0.5;
+                if (q.outcome !== 'CORRECT' && q.errorType) errorProfile[q.errorType] = (errorProfile[q.errorType] || 0) + 1;
+            }
+        }
         const rawBreakdown: StudentWeakness['rawBreakdown'] = [];
         accs.forEach(acc => acc.raw.forEach(r => rawBreakdown.push({ topic: acc.topic, subtopic: r.subtopic, category: acc.category, served: r.served, correct: r.correct, skipped: r.skipped })));
         rawBreakdown.sort((a, b) => a.topic.localeCompare(b.topic) || a.subtopic.localeCompare(b.subtopic));
@@ -260,6 +367,7 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
                 questionsServed: served,
                 accuracy: served > 0 ? pct(correct, served) : null,
                 assignments: assignmentStats,
+                homework: { checked: homeworkChecks.length, questions: hwQuestions, correct: hwCorrect, accuracy: hwQuestions ? pct(hwCorrect, hwQuestions) : null, errorProfile },
             },
             weaknesses,
             strengths: strengths.slice(0, 6),
@@ -268,6 +376,7 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
                 .map(a => ({ title: testById.get(a.testId)?.title || '', date: iso(testById.get(a.testId)?.date), percentage: typeof a.percentage === 'number' ? a.percentage : null }))
                 .sort((a, b) => (a.date || '').localeCompare(b.date || '')),
             rawBreakdown,
+            homeworkChecks,
         };
     });
 
@@ -278,7 +387,9 @@ export function computeWeaknessReport(input: ComputeInput): WeaknessReport {
         config,
         students,
         notes: [
-            'Only completed online-test attempts are used. Teacher-graded (descriptive) questions are excluded because they have no automatic right/wrong.',
+            'Evidence comes from completed online-test attempts and from AI-checked homework (question by question, mapped to topic and sub-topic). Teacher-graded (descriptive) online-test questions are excluded.',
+            'In checked homework a partly correct answer counts as half; skipped or unfinished questions count as not correct.',
+            'Homework that was graded without the AI check is used only through its overall grade (topic taken from the assignment title).',
             'Questions left unanswered count as not correct.',
             'Sub-topic names stored in older tests are mapped onto the current question-bank headings; look-alike headings within a topic are merged, and names that cannot be mapped are shown as they were stored.',
         ],

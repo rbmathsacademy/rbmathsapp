@@ -8,10 +8,55 @@
 export type FeedbackStatus = 'INCORRECT' | 'PARTIAL' | 'INCOMPLETE' | 'SKIPPED';
 export type Grade = 'GOOD' | 'SATISFACTORY' | 'POOR';
 
+/** What kind of mistake it was - used to find each student's error pattern. */
+export type ErrorType = 'CONCEPT' | 'METHOD' | 'FORMULA' | 'CALCULATION' | 'SIGN' | 'INCOMPLETE_STEPS' | 'NOT_ATTEMPTED' | 'OTHER';
+export const ERROR_TYPES: ErrorType[] = ['CONCEPT', 'METHOD', 'FORMULA', 'CALCULATION', 'SIGN', 'INCOMPLETE_STEPS', 'NOT_ATTEMPTED', 'OTHER'];
+export const ERROR_TYPE_LABEL: Record<ErrorType, string> = {
+    CONCEPT: 'Concept gap', METHOD: 'Wrong method', FORMULA: 'Formula/identity error', CALCULATION: 'Calculation slip',
+    SIGN: 'Sign error', INCOMPLETE_STEPS: 'Incomplete working', NOT_ATTEMPTED: 'Not attempted', OTHER: 'Other',
+};
+
 export interface AiFeedbackItem {
     question: string;
     status: FeedbackStatus;
     comment: string;
+    errorType?: ErrorType;
+}
+
+/** Which topic / sub-topic each question of the paper belongs to (same for every student). */
+export interface QuestionTopic { question: string; topic: string; subtopic: string }
+export interface TaxonomyTopic { topic: string; subtopics: string[] }
+
+/** "Q 6(b)" / "6b" / "6" -> "6": questions are matched on their main number. */
+export function questionKey(q: string): string {
+    const s = String(q || '').trim().replace(/^q(uestion)?\.?\s*/i, '');
+    const m = s.match(/^(\d+)/);
+    return m ? m[1] : s.toLowerCase().replace(/\s+/g, '');
+}
+
+export type QuestionOutcome = 'CORRECT' | FeedbackStatus;
+
+/**
+ * Per-question result for one student: questions with no feedback item are correct; several
+ * items for one main question (6(a), 6(b)) collapse to the worst of them.
+ */
+export function questionOutcomes(map: QuestionTopic[], feedback: AiFeedbackItem[]) {
+    const rank: Record<string, number> = { INCORRECT: 4, PARTIAL: 3, INCOMPLETE: 2, SKIPPED: 1 };
+    const byKey = new Map<string, AiFeedbackItem[]>();
+    for (const f of feedback || []) {
+        const k = questionKey(f.question);
+        (byKey.get(k) || byKey.set(k, []).get(k)!).push(f);
+    }
+    return map.map(q => {
+        const items = byKey.get(questionKey(q.question)) || [];
+        const worst = items.slice().sort((a, b) => (rank[b.status] || 0) - (rank[a.status] || 0))[0];
+        return {
+            question: q.question, topic: q.topic, subtopic: q.subtopic,
+            outcome: (worst ? worst.status : 'CORRECT') as QuestionOutcome,
+            errorType: worst?.errorType,
+            comment: items.map(i => i.comment).filter(Boolean).join(' '),
+        };
+    });
 }
 
 export interface AiReview {
@@ -61,9 +106,14 @@ export function buildGradingPrompt(opts: {
     batchNo: number;
     batchCount: number;
     students: PromptStudent[];
+    /** Topic / sub-topic names used in this batch's question bank, so the AI reuses them. */
+    taxonomy?: TaxonomyTopic[];
 }): string {
-    const { assignmentId, title, board, batchNo, batchCount, students } = opts;
+    const { assignmentId, title, board, batchNo, batchCount, students, taxonomy = [] } = opts;
     const list = students.map((s, i) => `${i + 1}. CODE ${s.code} - ${s.name}`).join('\n');
+    const names = taxonomy.length
+        ? taxonomy.map(t => `- ${t.topic}: ${t.subtopics.length ? t.subtopics.join('; ') : '(no sub-topics yet)'}`).join('\n')
+        : '(none available - use standard textbook chapter and sub-topic names)';
     return `You are an experienced and fair mathematics teacher checking handwritten homework.
 
 THE ATTACHED PDF
@@ -96,6 +146,12 @@ FEEDBACK FOR THE STUDENT (it will be shown to the student)
 - "summary": 1-2 encouraging sentences on the overall work.
 - Write ALL mathematics in LaTeX between single dollar signs, e.g. $\\\\int x^2\\\\,dx = \\\\frac{x^3}{3} + C$. Never use $$ ... $$, Markdown or line breaks inside the text.
 - Do NOT add citations or source markers such as [cite: 7], [cite_start] or page references anywhere in the text; the student only sees your sentences.
+- Give every feedback item an "errorType", the main kind of mistake: "CONCEPT" (does not understand the idea), "METHOD" (wrong or unsuitable approach), "FORMULA" (wrong formula or identity), "CALCULATION" (arithmetic or algebra slip), "SIGN" (sign error), "INCOMPLETE_STEPS" (right idea but working left unfinished or unjustified), "NOT_ATTEMPTED" (skipped), or "OTHER".
+
+TOPIC MAP OF THE QUESTION PAPER (same for every student)
+- In "questions", list EVERY question of the paper once, with the "topic" (chapter) and "subtopic" (the specific kind of problem) it tests.
+- Prefer these topic and sub-topic names from the teacher's question bank, copied exactly; only invent a short, standard name when none fits:
+${names}
 
 OUTPUT
 Reply with ONLY one JSON code block, no other text, in exactly this shape:
@@ -103,6 +159,10 @@ Reply with ONLY one JSON code block, no other text, in exactly this shape:
 {
   "assignmentCode": "${assignmentCode(assignmentId)}",
   "totalQuestions": 10,
+  "questions": [
+    { "question": "1", "topic": "Trigonometric Functions", "subtopic": "Multiple and sub-multiple angles" },
+    { "question": "2", "topic": "Trigonometric Functions", "subtopic": "Conditional identities" }
+  ],
   "results": [
     {
       "code": "ABC123",
@@ -115,9 +175,9 @@ Reply with ONLY one JSON code block, no other text, in exactly this shape:
       "grade": "SATISFACTORY",
       "summary": "Good effort overall ...",
       "feedback": [
-        { "question": "3", "status": "INCORRECT", "comment": "The derivative of $\\\\tan x$ is $\\\\sec^2 x$, not $\\\\sec x$; recheck step 2." },
-        { "question": "6(b)", "status": "PARTIAL", "comment": "..." },
-        { "question": "9", "status": "SKIPPED", "comment": "Not attempted ..." }
+        { "question": "3", "status": "INCORRECT", "errorType": "FORMULA", "comment": "The derivative of $\\\\tan x$ is $\\\\sec^2 x$, not $\\\\sec x$; recheck step 2." },
+        { "question": "6(b)", "status": "PARTIAL", "errorType": "CALCULATION", "comment": "..." },
+        { "question": "9", "status": "SKIPPED", "errorType": "NOT_ATTEMPTED", "comment": "Not attempted ..." }
       ]
     }
   ]
@@ -193,6 +253,7 @@ export interface ParsedAiResult {
 export interface ParsedAiReply {
     assignmentCode: string | null;
     totalQuestions: number;
+    questions: QuestionTopic[];
     results: ParsedAiResult[];
     errors: string[];
 }
@@ -201,6 +262,18 @@ const toInt = (v: any) => {
     const n = Math.round(Number(v));
     return Number.isFinite(n) && n >= 0 ? n : 0;
 };
+
+function normErrorType(v: any, status: any): ErrorType {
+    const t = String(v ?? '').trim().toUpperCase().replace(/[\s-]+/g, '_');
+    if ((ERROR_TYPES as string[]).includes(t)) return t as ErrorType;
+    if (/CALC|ARITH|ALGEBRA/.test(t)) return 'CALCULATION';
+    if (/CONCEPT/.test(t)) return 'CONCEPT';
+    if (/FORMULA|IDENTITY/.test(t)) return 'FORMULA';
+    if (/INCOMPLETE|UNFINISHED|STEP/.test(t)) return 'INCOMPLETE_STEPS';
+    const st = String(status ?? '').toUpperCase();
+    if (/SKIP|NOT.?ATTEMPT/.test(t) || st === 'SKIPPED' || st === 'NOT_ATTEMPTED') return 'NOT_ATTEMPTED';
+    return 'OTHER';
+}
 
 const STATUS_ALIASES: Record<string, FeedbackStatus> = {
     INCORRECT: 'INCORRECT', WRONG: 'INCORRECT', ERROR: 'INCORRECT',
@@ -211,7 +284,7 @@ const STATUS_ALIASES: Record<string, FeedbackStatus> = {
 
 /** Parse and validate the JSON the admin pasted from the AI chat. Never throws. */
 export function parseAiGradingReply(raw: string): ParsedAiReply {
-    const out: ParsedAiReply = { assignmentCode: null, totalQuestions: 0, results: [], errors: [] };
+    const out: ParsedAiReply = { assignmentCode: null, totalQuestions: 0, questions: [], results: [], errors: [] };
     if (!raw || !raw.trim()) { out.errors.push('Nothing was pasted.'); return out; }
 
     const text = extractJsonText(raw);
@@ -233,6 +306,16 @@ export function parseAiGradingReply(raw: string): ParsedAiReply {
 
     out.assignmentCode = data.assignmentCode ? String(data.assignmentCode).trim().toUpperCase() : null;
     out.totalQuestions = toInt(data.totalQuestions);
+    if (Array.isArray(data.questions)) {
+        const seen = new Set<string>();
+        for (const q of data.questions) {
+            const question = String(q?.question ?? q?.q ?? '').trim();
+            const topic = stripCitations(String(q?.topic ?? '')).trim();
+            if (!question || !topic || seen.has(questionKey(question))) continue;
+            seen.add(questionKey(question));
+            out.questions.push({ question, topic, subtopic: stripCitations(String(q?.subtopic ?? q?.subTopic ?? '')).trim() });
+        }
+    }
 
     data.results.forEach((r: any, i: number) => {
         const warnings: string[] = [];
@@ -258,6 +341,7 @@ export function parseAiGradingReply(raw: string): ParsedAiReply {
                 question: String(f.question ?? '').trim(),
                 status: STATUS_ALIASES[String(f.status ?? '').trim().toUpperCase()] || 'INCORRECT',
                 comment: stripCitations(String(f.comment ?? '')),
+                errorType: normErrorType(f.errorType, f.status),
             })) : [];
 
         const review: AiReview = {

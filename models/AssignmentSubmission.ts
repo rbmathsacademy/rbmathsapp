@@ -28,6 +28,7 @@ const AssignmentSubmissionSchema = new mongoose.Schema({
                 question: { type: String, default: '' },
                 status: { type: String, enum: ['INCORRECT', 'PARTIAL', 'INCOMPLETE', 'SKIPPED'], default: 'INCORRECT' },
                 comment: { type: String, default: '' },
+                errorType: { type: String, default: null }, // CONCEPT / METHOD / FORMULA / CALCULATION / SIGN / INCOMPLETE_STEPS / NOT_ATTEMPTED / OTHER
             }],
             aiGrade: { type: String, default: null }, // what the AI itself said (the saved grade is recomputed by the portal)
             importedAt: { type: Date, default: Date.now },

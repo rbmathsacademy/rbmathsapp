@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib';
 import { toast } from 'react-hot-toast';
 import { Sparkles, Download, Copy, ChevronDown, ChevronUp, ExternalLink, Upload, CheckCircle2, AlertTriangle, Loader2, FileText } from 'lucide-react';
-import { buildGradingPrompt, parseAiGradingReply, submissionCode, assignmentCode, type ParsedAiReply } from '@/lib/aiGrading';
+import { buildGradingPrompt, parseAiGradingReply, submissionCode, assignmentCode, type ParsedAiReply, type TaxonomyTopic } from '@/lib/aiGrading';
 
 // Students per merged PDF. Real answer sheets run 9-14 pages, so 10 students is ~100+ pages;
 // 5 gives the AI a lighter read when accuracy matters more than the number of chats.
@@ -21,6 +21,7 @@ interface PanelStudent {
 interface PanelAssignment {
     _id: string;
     title: string;
+    batch?: string;
     content: any;
     boardWise?: boolean;
     boardContent?: Record<string, string>;
@@ -116,6 +117,22 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
     const [batchState, setBatchState] = useState<Record<string, BatchState>>({});
     const paperCache = useRef<Map<string, ArrayBuffer>>(new Map());
     const [paperOverride, setPaperOverride] = useState<Record<string, { name: string; bytes: ArrayBuffer }>>({});
+
+    // The batch's question-bank topic / sub-topic names, given to the AI so its topic map of the
+    // paper uses the same names as the online tests (loaded once, when the panel is opened).
+    const [taxonomy, setTaxonomy] = useState<TaxonomyTopic[] | null>(null);
+    useEffect(() => {
+        if (!open || taxonomy || !assignment.batch) return;
+        let email = '';
+        try { email = JSON.parse(localStorage.getItem('user') || '{}').email || ''; } catch { }
+        fetch(`/api/admin/questions/taxonomy?batch=${encodeURIComponent(assignment.batch)}`, { headers: { 'X-User-Email': email }, cache: 'no-store' })
+            .then(r => (r.ok ? r.json() : { topics: [] }))
+            .then(d => setTaxonomy((d.topics || []).map((t: TaxonomyTopic) => ({
+                topic: t.topic,
+                subtopics: (t.subtopics || []).filter(s => !/practi[cs]e/i.test(s)), // never offer "Practice ..." headings
+            }))))
+            .catch(() => setTaxonomy([]));
+    }, [open, taxonomy, assignment.batch]);
 
     const [pasted, setPasted] = useState('');
     const [parsed, setParsed] = useState<ParsedAiReply | null>(null);
@@ -242,6 +259,7 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
             batchNo: b.no,
             batchCount: batches.length,
             students: b.students.map(s => ({ code: s.code, name: ascii(s.name) })),
+            taxonomy: taxonomy || [],
         });
         try {
             await navigator.clipboard.writeText(text);
@@ -299,7 +317,11 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
         }
         return { matched: out, unknownCodes: unknown };
     }, [parsed, codeToStudent, submitted]);
-    const wrongAssignment = !!(parsed?.assignmentCode && parsed.assignmentCode !== assignmentCode(assignment._id));
+    // Gemini sometimes invents its own label for the assignment (e.g. "SL10OCT") instead of copying
+    // the code. That only matters when the student codes don't belong to this assignment either.
+    const labelDiffers = !!(parsed?.assignmentCode && parsed.assignmentCode !== assignmentCode(assignment._id));
+    const codesHere = parsed ? parsed.results.filter(r => codeToStudent.has(r.code)).length : 0;
+    const wrongAssignment = labelDiffers && codesHere < Math.ceil((parsed?.results.length || 0) / 2);
 
     const save = async () => {
         if (!parsed || matched.length === 0) return;
@@ -309,7 +331,7 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
             const res = await fetch(`/api/admin/assignments/${assignment._id}/ai-grades`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...authHeaders() },
-                body: JSON.stringify({ results: matched.map(r => ({ code: r.code, review: r.review })) }),
+                body: JSON.stringify({ results: matched.map(r => ({ code: r.code, review: r.review })), questions: parsed.questions }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed');
@@ -491,10 +513,24 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                                 {parsed.errors.map((e, i) => (
                                     <p key={i} className="text-xs text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />{e}</p>
                                 ))}
+                                {labelDiffers && !wrongAssignment && (
+                                    <p className="text-[11px] text-violet-200/60">The AI wrote its own assignment label ({parsed.assignmentCode}), but the student codes belong to this assignment, so it is safe to save.</p>
+                                )}
                                 {wrongAssignment && (
                                     <p className="text-xs text-amber-200 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                                        This reply says assignment {parsed.assignmentCode}, but this page is {assignmentCode(assignment._id)}. Check you pasted the right reply.
+                                        This reply says assignment {parsed.assignmentCode}, but this page is {assignmentCode(assignment._id)}, and most student codes are not from this assignment. Check you pasted the right reply.
                                     </p>
+                                )}
+                                {parsed.results.length > 0 && (
+                                    parsed.questions.length > 0 ? (
+                                        <p className="text-xs text-lime-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                            Topic map for {parsed.questions.length} questions ({Array.from(new Set(parsed.questions.map(q => q.topic))).join(', ')}) - used in the student weakness analysis.
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-amber-200 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                            No topic map ("questions") in this reply, so this homework can only be used by its grade in the weakness analysis. Copy a fresh prompt to get one.
+                                        </p>
+                                    )
                                 )}
                                 {unknownCodes.length > 0 && (
                                     <p className="text-xs text-amber-200 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />

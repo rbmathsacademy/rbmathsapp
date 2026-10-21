@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Latex from 'react-latex-next';
 import { toast } from 'react-hot-toast';
 import { Plus, Trash2, Loader2, Save } from 'lucide-react';
-import { computeGrade, type AiReview, type AiFeedbackItem, type FeedbackStatus } from '@/lib/aiGrading';
+import { computeGrade, ERROR_TYPES, ERROR_TYPE_LABEL, type AiReview, type AiFeedbackItem, type ErrorType, type FeedbackStatus } from '@/lib/aiGrading';
 
 const STATUSES: { value: FeedbackStatus; label: string }[] = [
     { value: 'INCORRECT', label: 'Incorrect' },
@@ -125,8 +125,12 @@ export default function AiReviewEditor({ assignmentId, submissionId, review, cur
                     <div key={i} className="rounded-xl bg-white/[0.04] border border-white/[0.07] p-3 space-y-2">
                         <div className="flex items-center gap-2">
                             <input value={f.question} onChange={e => setItem(i, { question: e.target.value })} placeholder="Q no." className={`${input} w-20 shrink-0`} />
-                            <select value={f.status} onChange={e => setItem(i, { status: e.target.value as FeedbackStatus })} className={`${input} flex-1`}>
+                            <select value={f.status} onChange={e => setItem(i, { status: e.target.value as FeedbackStatus })} className={`${input} flex-1 min-w-0`}>
                                 {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                            </select>
+                            <select value={f.errorType || ''} onChange={e => setItem(i, { errorType: (e.target.value || undefined) as ErrorType | undefined })} className={`${input} flex-1 min-w-0`} title="Kind of mistake">
+                                <option value="">Kind of mistake...</option>
+                                {ERROR_TYPES.map(t => <option key={t} value={t}>{ERROR_TYPE_LABEL[t]}</option>)}
                             </select>
                             <button onClick={() => set('feedback', r.feedback.filter((_, j) => j !== i))} title="Remove"
                                 className="p-2 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 shrink-0"><Trash2 className="h-4 w-4" /></button>

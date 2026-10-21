@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
+import Assignment from '@/models/Assignment';
 import { getAdminPayload } from '@/lib/adminAuth';
-import { computeGrade, stripCitations, submissionCode, type AiReview, type Grade } from '@/lib/aiGrading';
+import { computeGrade, stripCitations, submissionCode, ERROR_TYPES, type AiReview, type Grade } from '@/lib/aiGrading';
 
 const GRADES: Grade[] = ['GOOD', 'SATISFACTORY', 'POOR'];
 
@@ -22,6 +23,7 @@ function sanitizeReview(rv: Partial<AiReview> | undefined) {
             question: String(f?.question || '').slice(0, 40),
             status: ['INCORRECT', 'PARTIAL', 'INCOMPLETE', 'SKIPPED'].includes(f?.status) ? f.status : 'INCORRECT',
             comment: stripCitations(String(f?.comment || '')).slice(0, 2000),
+            errorType: ERROR_TYPES.includes(f?.errorType) ? f.errorType : null,
         })),
         aiGrade: r.aiGrade ? String(r.aiGrade).slice(0, 20) : null,
         importedAt: new Date(),
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     try {
         const { id } = await params;
         if (!mongoose.isValidObjectId(id)) return NextResponse.json({ error: 'Invalid assignment id' }, { status: 400 });
-        const { results } = await req.json();
+        const { results, questions } = await req.json();
         if (!Array.isArray(results) || results.length === 0) return NextResponse.json({ error: 'No results to save' }, { status: 400 });
 
         await dbConnect();
@@ -68,7 +70,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
         if (ops.length > 0) await AssignmentSubmission.bulkWrite(ops, { ordered: false });
 
-        return NextResponse.json({ success: true, graded, flagged, unknown });
+        // The paper's question -> topic/sub-topic map (same for every batch of this assignment)
+        let mappedQuestions = 0;
+        if (Array.isArray(questions) && questions.length > 0) {
+            const map = questions.slice(0, 200).map((q: any) => ({
+                question: String(q?.question || '').slice(0, 40),
+                topic: String(q?.topic || '').slice(0, 120),
+                subtopic: String(q?.subtopic || '').slice(0, 160),
+            })).filter((q: any) => q.question && q.topic);
+            if (map.length > 0) {
+                await Assignment.updateOne({ _id: id }, { $set: { aiQuestionMap: map } });
+                mappedQuestions = map.length;
+            }
+        }
+
+        return NextResponse.json({ success: true, graded, flagged, unknown, mappedQuestions });
     } catch (error: any) {
         console.error('[ai-grades] import failed:', error);
         return NextResponse.json({ error: error.message || 'Failed to save' }, { status: 500 });
