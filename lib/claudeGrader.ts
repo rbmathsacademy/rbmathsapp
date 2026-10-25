@@ -48,7 +48,7 @@ export function usageFrom(u: any): Usage {
 
 /** Sonnet 5.5 list prices per million tokens (1-hour cache writes); Message Batches are half price. */
 export function costUSD(u: Usage, batch: boolean): number {
-    const full = (u.input * 2 + u.output * 10 + u.cacheRead * 0.2 + u.cacheWrite * 4) / 1e6;
+    const full = (u.input * 2 + u.output * 10 + u.cacheRead * 0.1 + u.cacheWrite * 4) / 1e6;
     return +(batch ? full / 2 : full).toFixed(5);
 }
 
