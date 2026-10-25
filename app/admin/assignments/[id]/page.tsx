@@ -180,10 +180,13 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
     const [whatsappMessage, setWhatsappMessage] = useState('You have missed or have pending assignment submission!');
     const [recipientMode, setRecipientMode] = useState<'student' | 'guardian'>('student');
 
-    const [warnMessage, setWarnMessage] = useState('Your homework needs attention. Please read the feedback in the portal, correct your work, then delete your submission and re-upload the updated version before the deadline.');
+    const [warnMessage, setWarnMessage] = useState('');
+    useEffect(() => {
+        if (assignment?.title) setWarnMessage(`Your assignment named "${String(assignment.title).split('||')[0].trim()}" needs attention. Please read the feedback in the portal, correct your work, then delete your submission and re-upload the updated version.`);
+    }, [assignment?._id]);
     const [warnSelected, setWarnSelected] = useState<string[]>([]);
     const copyWarningList = () => {
-        const list = students.filter(s => s.warning && warnSelected.includes(s.student._id));
+        const list = students.filter(s => s.warning && !s.rejection && warnSelected.includes(s.student._id));
         if (list.length === 0) return toast.error('Select at least one student');
         if (!warnMessage.trim()) return toast.error('Message cannot be empty');
         const phones = list.map(s => recipientMode === 'guardian' ? s.student.guardianPhone : (s.student.alternativePhone || s.student.phoneNumber)).filter(Boolean);
@@ -534,7 +537,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
         // Correction filter
         if (correctionFilter === 'CORRECTED' && s.status !== 'CORRECTED') return false;
         if (correctionFilter === 'NOT_CORRECTED' && s.status === 'CORRECTED') return false;
-        if (correctionFilter === 'WARNING' && !s.warning) return false;
+        if (correctionFilter === 'WARNING' && !(s.warning && !s.rejection)) return false;
         if (correctionFilter === 'REJECTED' && !s.rejection) return false;
 
         // Submission filter
@@ -727,9 +730,9 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                         <div className="flex items-center gap-1.5 text-purple-400 border-l border-white/10 pl-4">
                             No. of Corrected: {students.filter(s => s.status === 'CORRECTED').length}
                         </div>
-                        {students.some(s => s.warning) && (
+                        {students.some(s => s.warning && !s.rejection) && (
                             <button onClick={() => setCorrectionFilter('WARNING')} className="flex items-center gap-1.5 text-amber-300 font-bold border-l border-white/10 pl-4 hover:underline">
-                                ⚠ Warning: {students.filter(s => s.warning).length}
+                                ⚠ Warning: {students.filter(s => s.warning && !s.rejection).length}
                             </button>
                         )}
                         {students.some(s => s.rejection) && (
@@ -749,7 +752,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                 <option value="ALL">All Corrections</option>
                                 <option value="CORRECTED">Corrected</option>
                                 <option value="NOT_CORRECTED">Not Corrected</option>
-                                <option value="WARNING">⚠ Warning ({students.filter(s => s.warning).length})</option>
+                                <option value="WARNING">⚠ Warning ({students.filter(s => s.warning && !s.rejection).length})</option>
                                 <option value="REJECTED">Rejected ({students.filter(s => s.rejection).length})</option>
                             </select>
                         </div>
@@ -822,10 +825,10 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                     </div>
                 )}
 
-                {correctionFilter === 'WARNING' && students.some(s => s.warning) && (
+                {correctionFilter === 'WARNING' && students.some(s => s.warning && !s.rejection) && (
                     <div className="bg-[#140d27]/60 border-b border-rose-400/20 px-4 sm:px-6 py-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">📱 WhatsApp Auto-Sender - warning list ({students.filter(s => s.warning).length})</h3>
+                            <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">📱 WhatsApp Auto-Sender - warning list ({students.filter(s => s.warning && !s.rejection).length})</h3>
                             <select value={recipientMode} onChange={e => setRecipientMode(e.target.value as any)}
                                 className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer">
                                 <option value="student">Send to Student</option>
@@ -833,7 +836,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                             </select>
                         </div>
                         {(() => {
-                            const wl = students.filter(s => s.warning);
+                            const wl = students.filter(s => s.warning && !s.rejection);
                             const allOn = wl.length > 0 && wl.every(s => warnSelected.includes(s.student._id));
                             return (
                                 <div className="mb-3 rounded-xl border border-white/10 bg-black/20">
@@ -888,7 +891,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                 filteredStudents.map(student => {
                                     const isSelected = selectedPhones.includes(student.student._id);
                                     return (
-                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.warning ? 'shadow-[inset_4px_0_0_rgba(251,191,36,0.95),0_0_24px_-6px_rgba(251,191,36,0.55)] bg-amber-400/[0.10]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
+                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.warning ? 'shadow-[inset_4px_0_0_rgba(251,191,36,0.95),0_0_24px_-6px_rgba(251,191,36,0.55)] bg-amber-400/[0.10]' : student.status === 'CORRECTED' ? 'shadow-[inset_4px_0_0_rgba(74,222,128,0.95),0_0_22px_-8px_rgba(74,222,128,0.5)] bg-green-400/[0.06]' : '') : ''}`}>
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
                                             <td className="p-4">
                                                 <input
@@ -1002,7 +1005,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                             <option value="POOR">Poor</option>
                                                         </select>
                                                     )}
-                                                    {student.warning && (
+                                                    {student.warning && !student.rejection && (
                                                         <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.5)]" title="More wrong + skipped questions than the warning limit">⚠ {student.warning.count} / limit {student.warning.limit}</span>
                                                     )}
                                                     {student.rejection && (
@@ -1036,7 +1039,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                             View <ExternalLink className="w-3 h-3" />
                                                         </a>
                                                     )}
-                                                    {student.status === 'CORRECTED' && (
+                                                    {(student.rejection || student.warning) && (
                                                         student.rejection ? (
                                                             <button onClick={() => undoReject(student)} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-white/10 hover:bg-white/15 text-white" title="Remove the rejection">Undo reject</button>
                                                         ) : (
@@ -1118,7 +1121,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                         filteredStudents.map(student => {
                             const isSelected = selectedPhones.includes(student.student.phoneNumber);
                             return (
-                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.warning ? 'shadow-[inset_4px_0_0_rgba(251,191,36,0.95),0_0_24px_-6px_rgba(251,191,36,0.55)] bg-amber-400/[0.10]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
+                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.warning ? 'shadow-[inset_4px_0_0_rgba(251,191,36,0.95),0_0_24px_-6px_rgba(251,191,36,0.55)] bg-amber-400/[0.10]' : student.status === 'CORRECTED' ? 'shadow-[inset_4px_0_0_rgba(74,222,128,0.95),0_0_22px_-8px_rgba(74,222,128,0.5)] bg-green-400/[0.06]' : '') : ''}`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
@@ -1193,7 +1196,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
 
                                 {(student.warning || student.rejection) && (
                                     <div className="flex flex-wrap gap-1.5">
-                                        {student.warning && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.5)]">⚠ {student.warning.count} / limit {student.warning.limit}</span>}
+                                        {student.warning && !student.rejection && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.5)]">⚠ {student.warning.count} / limit {student.warning.limit}</span>}
                                         {student.rejection && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40">↩ Rejected</span>}
                                     </div>
                                 )}
@@ -1259,7 +1262,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                     View <ExternalLink className="w-3 h-3" />
                                                 </a>
                                             )}
-                                                    {student.status === 'CORRECTED' && (
+                                                    {(student.rejection || student.warning) && (
                                                         student.rejection ? (
                                                             <button onClick={() => undoReject(student)} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 bg-white/10 hover:bg-white/15 text-white" title="Remove the rejection">Undo reject</button>
                                                         ) : (
@@ -1793,11 +1796,11 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                         )}
                         {!feedbackEditing && (
                             <div className="mt-4 pt-4 border-t border-white/10">
-                                {feedbackFor.rejection ? (
+                                {(feedbackFor.rejection || feedbackFor.warning) && (feedbackFor.rejection ? (
                                     <button onClick={() => undoReject(feedbackFor)} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-bold">Undo reject (keep this submission)</button>
                                 ) : (
                                     <button onClick={() => rejectSubmission(feedbackFor)} className="px-3 py-2 rounded-lg bg-rose-500/90 hover:bg-rose-400 text-white text-xs font-black">↩ Reject - ask the student to redo</button>
-                                )}
+                                ))}
                                 {feedbackFor.aiReview && (
                                     <button onClick={() => deleteWholeFeedback(feedbackFor)} className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 text-rose-300 hover:bg-rose-500/20 text-xs font-bold">🗑 Delete all feedback (make ungraded)</button>
                                 )}

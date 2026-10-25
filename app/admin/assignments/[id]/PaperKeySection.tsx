@@ -39,10 +39,19 @@ export default function PaperKeySection({ assignmentId, title, papers, keys, tax
     taxonomy: TaxonomyTopic[];
     onSaved: (keys: PaperKey[]) => void;
 }) {
+    // Once every paper (all boards) has its answers saved, the section stays folded and green
+    const allSaved = papers.length > 0 && papers.every(p => (keys.find(k => (k.board || '') === p.board)?.questions.length || 0) > 0);
+    const [expanded, setExpanded] = useState(!allSaved);
     return (
-        <section className="space-y-3">
+        <section className={`space-y-3 ${allSaved ? 'rounded-xl border border-lime-400/40 bg-lime-400/[0.05] p-3 shadow-[0_0_22px_-10px_rgba(163,230,53,0.6)]' : ''}`}>
+            <button type="button" onClick={() => setExpanded(v => !v)} className="w-full flex items-center justify-between gap-2 text-left">
+                <span className={`text-sm font-black flex items-center gap-2 ${allSaved ? 'text-lime-300' : 'text-white'}`}>
+                    {allSaved ? <CheckCircle2 className="h-4 w-4" /> : <KeyRound className="h-4 w-4 text-amber-300" />} 0 · Prepare the paper (once per paper){allSaved ? ' - done' : ''}
+                </span>
+                {allSaved && <span className="text-[11px] font-bold text-lime-300 shrink-0">{expanded ? 'Hide' : 'Show / edit'}</span>}
+            </button>
+            {expanded && <>
             <div>
-                <h3 className="text-sm font-black text-white flex items-center gap-2"><KeyRound className="h-4 w-4 text-amber-300" /> 0 · Prepare the paper (once per paper)</h3>
                 <p className="text-[11px] sm:text-xs text-violet-200/60 leading-relaxed mt-1">
                     Gives every batch the same fixed question list, topics and answer key, so the AI checks against a key instead of solving everything itself.
                     In <a href={AI_STUDIO_URL} target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 underline inline-flex items-center gap-0.5">AI Studio <ExternalLink className="h-3 w-3" /></a>{' '}
@@ -54,6 +63,7 @@ export default function PaperKeySection({ assignmentId, title, papers, keys, tax
                 <PaperCard key={p.board || 'ALL'} assignmentId={assignmentId} title={title} paper={p} multi={papers.length > 1}
                     current={keys.find(k => (k.board || '') === p.board) || null} taxonomy={taxonomy} onSaved={onSaved} />
             ))}
+            </>}
         </section>
     );
 }
