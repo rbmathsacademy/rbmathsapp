@@ -5,7 +5,8 @@ import AssignmentSubmission from '@/models/AssignmentSubmission';
 import Assignment from '@/models/Assignment';
 import { getAdminPayload } from '@/lib/adminAuth';
 import { submissionCode } from '@/lib/aiGrading';
-import { saveReviews } from '@/lib/aiGradeSave';
+import { saveReviews, retractWarningPopups } from '@/lib/aiGradeSave';
+import BatchStudent from '@/models/BatchStudent';
 
 /**
  * POST /api/admin/assignments/[id]/ai-grades
@@ -55,6 +56,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     } catch (error: any) {
         console.error('[ai-grades] import failed:', error);
         return NextResponse.json({ error: error.message || 'Failed to save' }, { status: 500 });
+    }
+}
+
+/**
+ * DELETE /api/admin/assignments/[id]/ai-grades
+ * Body: { submissionId } - removes the whole review: the copy goes back to "not checked" (no counts,
+ * grade, feedback or warning), the student's warning popup is withdrawn.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const admin = await getAdminPayload(req);
+    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+        const { id } = await params;
+        const { submissionId } = await req.json();
+        if (!mongoose.isValidObjectId(id) || !mongoose.isValidObjectId(submissionId)) {
+            return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+        }
+        await dbConnect();
+        const sub = await AssignmentSubmission.findOneAndUpdate(
+            { _id: submissionId, assignment: id },
+            { $set: { status: 'PENDING', quality: null, aiReview: null, warning: null, warningNotifiedAt: null } },
+        ).select('student warningNotifiedAt').lean() as any;
+        if (!sub) return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+        const student = await BatchStudent.findById(sub.student).select('phoneNumber').lean() as any;
+        if (student?.phoneNumber) await retractWarningPopups(id, [student.phoneNumber]);
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('[ai-grades] delete failed:', error);
+        return NextResponse.json({ error: error.message || 'Failed to delete' }, { status: 500 });
     }
 }
 

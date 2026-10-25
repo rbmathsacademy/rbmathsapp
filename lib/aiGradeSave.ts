@@ -70,7 +70,7 @@ const titleHead = (t: string) => String(t || 'Homework').split('||')[0].trim();
 const WARNING_TITLE = '⚠ Homework needs your attention';
 
 /** Withdraw the warning popup(s) of one student for one assignment (the warning no longer applies). */
-async function retractWarningPopups(assignmentId: string, phones: string[]) {
+export async function retractWarningPopups(assignmentId: string, phones: string[]) {
     if (phones.length === 0) return;
     await Notification.deleteMany({
         assignmentId, title: WARNING_TITLE, oncePerStudent: true,

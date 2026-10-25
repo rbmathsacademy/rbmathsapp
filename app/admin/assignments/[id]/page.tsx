@@ -139,6 +139,21 @@ export default function AssignmentDetailsPage() {
             toast.success('Feedback deleted - counts and grade updated');
         } catch (e: any) { toast.error(e.message || 'Could not delete'); }
     };
+    const deleteWholeFeedback = async (s: StudentSubmission) => {
+        if (!window.confirm(`Delete ALL feedback for ${s.student.name}?
+
+The copy goes back to "not checked": counts, grade and warning are removed and the student no longer sees any feedback.`)) return;
+        try {
+            let auth: Record<string, string> = {};
+            try { const t = localStorage.getItem('adminToken'); if (t) auth = { Authorization: `Bearer ${t}` }; } catch { }
+            const res = await fetch(`/api/admin/assignments/${assignment?._id}/ai-grades`, { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ submissionId: s._id }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed');
+            setStudents(prev => prev.map(x => (x._id === s._id ? { ...x, status: 'PENDING', quality: null, aiReview: null, warning: null } : x)));
+            closeFeedback();
+            toast.success('Feedback deleted - the copy is ungraded again');
+        } catch (e: any) { toast.error(e.message || 'Could not delete'); }
+    };
     const openFeedback = (s: StudentSubmission, edit = false) => { setFeedbackFor(s); setFeedbackEditing(edit || !s.aiReview); };
     const closeFeedback = () => { setFeedbackFor(null); setFeedbackEditing(false); };
 
@@ -1768,6 +1783,9 @@ export default function AssignmentDetailsPage() {
                                     <button onClick={() => undoReject(feedbackFor)} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-bold">Undo reject (keep this submission)</button>
                                 ) : (
                                     <button onClick={() => rejectSubmission(feedbackFor)} className="px-3 py-2 rounded-lg bg-rose-500/90 hover:bg-rose-400 text-white text-xs font-black">↩ Reject - ask the student to redo</button>
+                                )}
+                                {feedbackFor.aiReview && (
+                                    <button onClick={() => deleteWholeFeedback(feedbackFor)} className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 text-rose-300 hover:bg-rose-500/20 text-xs font-bold">🗑 Delete all feedback (make ungraded)</button>
                                 )}
                                 <p className="mt-1.5 text-[11px] text-violet-200/50">Rejecting turns this assignment red for the student, who must follow the feedback, delete the submission and upload it again (allowed even after the deadline).</p>
                             </div>
