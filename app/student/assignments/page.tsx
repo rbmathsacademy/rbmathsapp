@@ -567,7 +567,7 @@ function AssignmentCard({
     const deadlineDate = new Date(assignment.deadline);
 
     return (
-        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${redoFlag ? 'ring-2 ring-rose-500/70 shadow-[0_0_28px_-4px_rgba(244,63,94,0.6)]' : isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
+        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${(assignment.rejection || assignment.redoRequested) ? 'ring-2 ring-rose-500/70 shadow-[0_0_28px_-4px_rgba(244,63,94,0.6)]' : assignment.warning ? 'ring-2 ring-amber-400/70 shadow-[0_0_28px_-4px_rgba(251,191,36,0.6)]' : isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
             isSubmitted ? 'ring-1 ring-lime-400/25' :
                 isClosed ? 'ring-1 ring-red-500/10 opacity-70' :
                     'sd-gborder shadow-[0_12px_30px_-16px_rgba(217,70,239,0.55)]'
@@ -662,8 +662,8 @@ function AssignmentCard({
                     </div>
                 )}
                 {assignment.warning && isSubmitted && !assignment.rejection && (
-                    <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-100">
-                        <p className="font-black text-rose-300 mb-1">⚠ Needs your attention</p>
+                    <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100">
+                        <p className="font-black text-amber-300 mb-1">⚠ Needs your attention</p>
                         <p>Implement the feedback below, then delete this submission and re-upload the updated version within the deadline.</p>
                     </div>
                 )}

@@ -36,18 +36,18 @@ export default function WarningLimitBar({ assignmentId, initial, onChanged }: { 
     };
 
     return (
-        <section className="rounded-xl border border-rose-400/20 bg-rose-500/[0.04] p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <section className="rounded-xl border border-amber-400/20 bg-amber-500/[0.04] p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2 text-sm font-black text-white">
-                <ShieldAlert className="h-4 w-4 text-rose-300" /> Warning limit
+                <ShieldAlert className="h-4 w-4 text-amber-300" /> Warning limit
             </div>
             <label className="flex items-center gap-2 text-[11px] sm:text-xs text-violet-200/70">
                 Flag a graded student with more than
                 <input type="number" min={0} max={500} value={value} onChange={e => setValue(e.target.value)} placeholder="off"
-                    className="w-16 bg-[#0b0718] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:outline-none focus:border-rose-400/60" />
+                    className="w-16 bg-[#0b0718] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:outline-none focus:border-amber-400/60" />
                 wrong + skipped questions
             </label>
             <button onClick={save} disabled={busy || !dirty}
-                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-400 text-white text-xs font-black disabled:opacity-40 active:scale-95 transition-transform sm:ml-auto">
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/90 hover:bg-amber-400 text-white text-xs font-black disabled:opacity-40 active:scale-95 transition-transform sm:ml-auto">
                 {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Save
             </button>
         </section>

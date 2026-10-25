@@ -728,7 +728,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                             No. of Corrected: {students.filter(s => s.status === 'CORRECTED').length}
                         </div>
                         {students.some(s => s.warning) && (
-                            <button onClick={() => setCorrectionFilter('WARNING')} className="flex items-center gap-1.5 text-rose-300 font-bold border-l border-white/10 pl-4 hover:underline">
+                            <button onClick={() => setCorrectionFilter('WARNING')} className="flex items-center gap-1.5 text-amber-300 font-bold border-l border-white/10 pl-4 hover:underline">
                                 ⚠ Warning: {students.filter(s => s.warning).length}
                             </button>
                         )}
@@ -825,7 +825,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                 {correctionFilter === 'WARNING' && students.some(s => s.warning) && (
                     <div className="bg-[#140d27]/60 border-b border-rose-400/20 px-4 sm:px-6 py-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-bold text-rose-200 flex items-center gap-2">📱 WhatsApp Auto-Sender - warning list ({students.filter(s => s.warning).length})</h3>
+                            <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">📱 WhatsApp Auto-Sender - warning list ({students.filter(s => s.warning).length})</h3>
                             <select value={recipientMode} onChange={e => setRecipientMode(e.target.value as any)}
                                 className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer">
                                 <option value="student">Send to Student</option>
@@ -847,7 +847,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                 <input type="checkbox" checked={warnSelected.includes(s.student._id)}
                                                     onChange={() => setWarnSelected(p => p.includes(s.student._id) ? p.filter(x => x !== s.student._id) : [...p, s.student._id])} />
                                                 <span className="flex-1">{s.student.name}</span>
-                                                <span className="text-[11px] text-rose-300">⚠ {s.warning!.count}</span>
+                                                <span className="text-[11px] text-amber-300">⚠ {s.warning!.count}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -856,7 +856,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                         })()}
                         <textarea rows={3} placeholder="Write your message..." value={warnMessage} onChange={e => setWarnMessage(e.target.value)}
                             className="w-full px-4 py-2 mb-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500" />
-                        <button onClick={copyWarningList} disabled={warnSelected.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:from-rose-500 hover:to-fuchsia-500 text-white font-bold text-sm transition-colors disabled:opacity-50">
+                        <button onClick={copyWarningList} disabled={warnSelected.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-sm transition-colors disabled:opacity-50">
                             Copy for WhatsApp Auto-Sender ({warnSelected.length})
                         </button>
                     </div>
@@ -888,7 +888,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                 filteredStudents.map(student => {
                                     const isSelected = selectedPhones.includes(student.student._id);
                                     return (
-                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.warning ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.55)] bg-rose-500/[0.04]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
+                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.warning ? 'shadow-[inset_4px_0_0_rgba(251,191,36,0.95),0_0_24px_-6px_rgba(251,191,36,0.55)] bg-amber-400/[0.10]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
                                             <td className="p-4">
                                                 <input
@@ -1003,7 +1003,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                         </select>
                                                     )}
                                                     {student.warning && (
-                                                        <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/20 text-rose-200 border-rose-400/50 shadow-[0_0_12px_rgba(244,63,94,0.5)]" title="More wrong + skipped questions than the warning limit">⚠ {student.warning.count} / limit {student.warning.limit}</span>
+                                                        <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.5)]" title="More wrong + skipped questions than the warning limit">⚠ {student.warning.count} / limit {student.warning.limit}</span>
                                                     )}
                                                     {student.rejection && (
                                                         <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40" title={student.rejection.reason || 'Rejected - the student must redo it'}>↩ Rejected</span>
@@ -1118,7 +1118,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                         filteredStudents.map(student => {
                             const isSelected = selectedPhones.includes(student.student.phoneNumber);
                             return (
-                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.warning ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.55)] bg-rose-500/[0.04]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
+                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.warning ? 'shadow-[inset_4px_0_0_rgba(251,191,36,0.95),0_0_24px_-6px_rgba(251,191,36,0.55)] bg-amber-400/[0.10]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
@@ -1193,7 +1193,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
 
                                 {(student.warning || student.rejection) && (
                                     <div className="flex flex-wrap gap-1.5">
-                                        {student.warning && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/20 text-rose-200 border-rose-400/50 shadow-[0_0_12px_rgba(244,63,94,0.5)]">⚠ {student.warning.count} / limit {student.warning.limit}</span>}
+                                        {student.warning && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.5)]">⚠ {student.warning.count} / limit {student.warning.limit}</span>}
                                         {student.rejection && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40">↩ Rejected</span>}
                                     </div>
                                 )}
@@ -1760,7 +1760,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                             </div>
                         </div>
                         {feedbackFor.warning && (
-                            <div className="mb-3 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200 shadow-[0_0_20px_-6px_rgba(244,63,94,0.6)]">
+                            <div className="mb-3 rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200 shadow-[0_0_20px_-6px_rgba(251,191,36,0.6)]">
                                 ⚠ <b>{feedbackFor.warning.count}</b> wrong/skipped questions - above the warning limit of {feedbackFor.warning.limit}. The student has been warned.
                             </div>
                         )}
