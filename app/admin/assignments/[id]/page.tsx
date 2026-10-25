@@ -184,14 +184,18 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
     useEffect(() => {
         if (assignment?.title) setWarnMessage(`Your assignment named "${String(assignment.title).split('||')[0].trim()}" needs attention. Please read the feedback in the portal, correct your work, then delete your submission and re-upload the updated version.`);
     }, [assignment?._id]);
-    const [warnSelected, setWarnSelected] = useState<string[]>([]);
+    const [warnSelectedW, setWarnSelectedW] = useState<string[]>([]);
+    const [rejMessage, setRejMessage] = useState('Why have you not submitted the updated assignment even after the previous reminder');
+    const [rejSelected, setRejSelected] = useState<string[]>([]);
     const copyWarningList = () => {
-        const list = students.filter(s => s.warning && !s.rejection && warnSelected.includes(s.student._id));
+        const rej = correctionFilter === 'REJECTED';
+        const message = rej ? rejMessage : warnMessage;
+        const list = students.filter(s => (rej ? !!s.rejection : (s.warning && !s.rejection)) && (rej ? rejSelected : warnSelectedW).includes(s.student._id));
         if (list.length === 0) return toast.error('Select at least one student');
-        if (!warnMessage.trim()) return toast.error('Message cannot be empty');
+        if (!message.trim()) return toast.error('Message cannot be empty');
         const phones = list.map(s => recipientMode === 'guardian' ? s.student.guardianPhone : (s.student.alternativePhone || s.student.phoneNumber)).filter(Boolean);
         if (phones.length === 0) return toast.error('No valid phone numbers found for the selected mode');
-        navigator.clipboard.writeText(`WHATSAPP_BULK|||${warnMessage}|||${phones.join(',')}`);
+        navigator.clipboard.writeText(`WHATSAPP_BULK|||${message}|||${phones.join(',')}`);
         toast.success(`Copied ${phones.length} number(s)! Open WhatsApp Web and press F9`);
     };
 
@@ -825,10 +829,10 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                     </div>
                 )}
 
-                {correctionFilter === 'WARNING' && students.some(s => s.warning && !s.rejection) && (
-                    <div className="bg-[#140d27]/60 border-b border-rose-400/20 px-4 sm:px-6 py-4">
+                {((correctionFilter === 'WARNING' && students.some(s => s.warning && !s.rejection)) || (correctionFilter === 'REJECTED' && students.some(s => s.rejection))) && (
+                    <div className={`bg-[#140d27]/60 border-b px-4 sm:px-6 py-4 ${correctionFilter === 'REJECTED' ? 'border-rose-400/20' : 'border-amber-400/20'}`}>
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">📱 WhatsApp Auto-Sender - warning list ({students.filter(s => s.warning && !s.rejection).length})</h3>
+                            <h3 className={`text-sm font-bold flex items-center gap-2 ${correctionFilter === 'REJECTED' ? 'text-rose-200' : 'text-amber-200'}`}>📱 WhatsApp Auto-Sender - {correctionFilter === 'REJECTED' ? `rejected list (${students.filter(s => s.rejection).length})` : `warning list (${students.filter(s => s.warning && !s.rejection).length})`}</h3>
                             <select value={recipientMode} onChange={e => setRecipientMode(e.target.value as any)}
                                 className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer">
                                 <option value="student">Send to Student</option>
@@ -836,7 +840,10 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                             </select>
                         </div>
                         {(() => {
-                            const wl = students.filter(s => s.warning && !s.rejection);
+                            const rej = correctionFilter === 'REJECTED';
+                            const wl = students.filter(s => rej ? !!s.rejection : (s.warning && !s.rejection));
+                            const warnSelected = rej ? rejSelected : warnSelectedW;
+                            const setWarnSelected = rej ? setRejSelected : setWarnSelectedW;
                             const allOn = wl.length > 0 && wl.every(s => warnSelected.includes(s.student._id));
                             return (
                                 <div className="mb-3 rounded-xl border border-white/10 bg-black/20">
@@ -850,17 +857,17 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                 <input type="checkbox" checked={warnSelected.includes(s.student._id)}
                                                     onChange={() => setWarnSelected(p => p.includes(s.student._id) ? p.filter(x => x !== s.student._id) : [...p, s.student._id])} />
                                                 <span className="flex-1">{s.student.name}</span>
-                                                <span className="text-[11px] text-amber-300">⚠ {s.warning!.count}</span>
+                                                {rej ? <span className="text-[11px] text-rose-300">↩ Rejected</span> : <span className="text-[11px] text-amber-300">⚠ {s.warning!.count}</span>}
                                             </label>
                                         ))}
                                     </div>
                                 </div>
                             );
                         })()}
-                        <textarea rows={3} placeholder="Write your message..." value={warnMessage} onChange={e => setWarnMessage(e.target.value)}
+                        <textarea rows={3} placeholder="Write your message..." value={correctionFilter === 'REJECTED' ? rejMessage : warnMessage} onChange={e => (correctionFilter === 'REJECTED' ? setRejMessage : setWarnMessage)(e.target.value)}
                             className="w-full px-4 py-2 mb-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500" />
-                        <button onClick={copyWarningList} disabled={warnSelected.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-sm transition-colors disabled:opacity-50">
-                            Copy for WhatsApp Auto-Sender ({warnSelected.length})
+                        <button onClick={copyWarningList} disabled={(correctionFilter === 'REJECTED' ? rejSelected : warnSelectedW).length === 0} className={`w-full px-4 py-2.5 rounded-xl bg-gradient-to-r text-white font-bold text-sm transition-colors disabled:opacity-50 ${correctionFilter === 'REJECTED' ? 'from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600' : 'from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500'}`}>
+                            Copy for WhatsApp Auto-Sender ({(correctionFilter === 'REJECTED' ? rejSelected : warnSelectedW).length})
                         </button>
                     </div>
                 )}
