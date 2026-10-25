@@ -24,6 +24,8 @@ const NotificationSchema = new mongoose.Schema({
     
     // Tracking who has read broadcast notifications
     readBy: [{ type: String }], // Array of student phone numbers
+    // When true, a popup is shown to each student only until they dismiss it (used for personal warnings)
+    oncePerStudent: { type: Boolean, default: false },
     
     // Backward compatibility
     assignmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment' },

@@ -71,11 +71,14 @@ export async function POST(req: NextRequest) {
 
         let isLate = false;
 
-        if (now > cooldownEndDate) {
+        // The teacher asked for a redo: accepted even after the deadline, and not counted as late
+        const redoAllowed = (assignment.redoAllowed || []).includes(student._id.toString());
+
+        if (now > cooldownEndDate && !redoAllowed) {
             return NextResponse.json({ error: 'Submission deadline has passed. No more submissions allowed.' }, { status: 403 });
         }
 
-        if (now > deadline) {
+        if (now > deadline && !redoAllowed) {
             isLate = true;
         }
 
@@ -87,6 +90,11 @@ export async function POST(req: NextRequest) {
             submittedAt: now,
             isLate
         });
+
+        // A redo was handed in: the permission has been used (this is now a normal, fresh submission)
+        if (redoAllowed) {
+            await Assignment.updateOne({ _id: assignmentId }, { $pull: { redoAllowed: student._id.toString() } });
+        }
 
         return NextResponse.json({ success: true, submission });
 

@@ -49,7 +49,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         const deadline = new Date(assignment.deadline);
         const cooldownEnd = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
 
-        if (now > cooldownEnd) {
+        // A submission the teacher rejected may always be deleted, so the student can redo it
+        const existing = await AssignmentSubmission.findOne({ assignment: assignmentId, student: student._id }).select('rejection').lean() as any;
+        if (now > cooldownEnd && !existing?.rejection) {
             return NextResponse.json({
                 error: 'Cannot delete submission — the submission deadline has passed.'
             }, { status: 403 });

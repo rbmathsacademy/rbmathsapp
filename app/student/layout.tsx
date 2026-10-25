@@ -100,7 +100,16 @@ function NotificationGate({ children }: { children: React.ReactNode }) {
             {activeNotif && !notifLoading && (
                 <NotificationPopupModal 
                     notification={activeNotif} 
-                    onComplete={() => setNotifications(prev => prev.slice(1))} 
+                    onComplete={() => {
+                        // Personal popups (warnings, redo requests) are shown once: tell the server it was read
+                        if (activeNotif?.oncePerStudent) {
+                            fetch('/api/student/notifications/read', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ notificationId: activeNotif._id }),
+                            }).catch(() => { });
+                        }
+                        setNotifications(prev => prev.slice(1));
+                    }}
                 />
             )}
             {children}

@@ -32,6 +32,9 @@ interface Assignment {
     score?: number | null;
     totalQuestions?: number | null;
     aiReview?: AiReview | null; // question-wise feedback once the copy is checked
+    redoRequested?: boolean;
+    rejection?: { at: string; reason?: string } | null;
+    warning?: { count: number; limit: number } | null;
 }
 
 type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
@@ -532,7 +535,9 @@ function AssignmentCard({
     const isLateSubmitted = assignment.status === 'LATE_SUBMITTED';
 
     const [timeLeft, setTimeLeft] = useState('');
-    const [showFeedback, setShowFeedback] = useState(false);
+    const [showFeedback, setShowFeedback] = useState(!!(assignment.rejection || assignment.warning));
+    const redoFlag = !!(assignment.rejection || assignment.redoRequested || assignment.warning);
+    const canDelete = !!assignment.rejection || new Date() <= new Date(assignment.cooldownEndDate);
 
     useEffect(() => {
         if (isSubmitted || isClosed) return;
@@ -562,7 +567,7 @@ function AssignmentCard({
     const deadlineDate = new Date(assignment.deadline);
 
     return (
-        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
+        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${redoFlag ? 'ring-2 ring-rose-500/70 shadow-[0_0_28px_-4px_rgba(244,63,94,0.6)]' : isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
             isSubmitted ? 'ring-1 ring-lime-400/25' :
                 isClosed ? 'ring-1 ring-red-500/10 opacity-70' :
                     'sd-gborder shadow-[0_12px_30px_-16px_rgba(217,70,239,0.55)]'
@@ -621,7 +626,10 @@ function AssignmentCard({
                             Missed
                         </span>
                     )}
-                    {!isSubmitted && !isClosed && (
+                    {assignment.redoRequested && !isSubmitted && (
+                        <span className="px-3 py-1 rounded-lg bg-rose-500/15 text-rose-300 text-xs font-bold ring-1 ring-rose-400/30">Redo requested</span>
+                    )}
+                    {!isSubmitted && !isClosed && !assignment.redoRequested && (
                         <div className="text-right">
                             <p className="text-[10px] text-gray-500 mb-0.5">
                                 {isLateAllowed ? 'Cooldown Remaining' : 'Time Remaining'}
@@ -640,6 +648,25 @@ function AssignmentCard({
                     <Clock className="w-3.5 h-3.5" />
                     <span>Due: {deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })} at {deadlineDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>
                 </div>
+
+                {assignment.rejection && isSubmitted && (
+                    <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-100 shadow-[0_0_20px_-6px_rgba(244,63,94,0.6)]">
+                        <p className="font-black text-rose-300 mb-1">↩ Please redo this assignment</p>
+                        <p>Your teacher has asked you to redo it. Read the feedback below, correct your work, then <b>delete this submission</b> and upload the corrected PDF again.</p>
+                        {assignment.rejection.reason && <p className="mt-1.5 italic">Teacher's note: "{assignment.rejection.reason}"</p>}
+                    </div>
+                )}
+                {assignment.redoRequested && !isSubmitted && (
+                    <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-100">
+                        Your teacher asked you to redo this assignment. Upload your corrected PDF below - it will be checked again.
+                    </div>
+                )}
+                {assignment.warning && isSubmitted && !assignment.rejection && (
+                    <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-100">
+                        <p className="font-black text-rose-300 mb-1">⚠ Needs your attention</p>
+                        <p><b>{assignment.warning.count}</b> questions were wrong or skipped (the limit is {assignment.warning.limit}). Please go through the feedback below carefully.</p>
+                    </div>
+                )}
 
                 {/* Checked copy: score + question-wise feedback */}
                 {isSubmitted && assignment.correctionStatus === 'CORRECTED' && assignment.aiReview && (
@@ -698,13 +725,13 @@ function AssignmentCard({
                         {assignment.type !== 'INTERACTIVE' && (
                         <button
                             onClick={onDelete}
-                            disabled={new Date() > new Date(assignment.cooldownEndDate)}
+                            disabled={!canDelete}
                             className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-colors border flex items-center justify-center gap-1.5 ${
-                                new Date() > new Date(assignment.cooldownEndDate)
+                                !canDelete
                                     ? 'bg-[#1d1535]/50 text-gray-600 border-[#352a55] cursor-not-allowed'
                                     : 'bg-red-600/20 text-red-400 hover:bg-red-600/30 border-red-500/30'
                             }`}
-                            title={new Date() > new Date(assignment.cooldownEndDate) ? 'Deadline passed — cannot delete' : 'Delete your submission'}
+                            title={!canDelete ? 'Deadline passed — cannot delete' : 'Delete your submission'}
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                             Delete

@@ -79,10 +79,14 @@ export async function GET(req: NextRequest) {
             const scheduledFor = a.scheduledFor ? new Date(a.scheduledFor) : null;
 
             let status = 'PENDING';
+            // The teacher asked this student to redo the assignment (reject): upload is open again, even after the deadline
+            const redoRequested = !submission && (a.redoAllowed || []).includes(student._id.toString());
 
             if (submission) {
                 const isLateDynamically = submission.overrideOnTime ? false : (new Date(submission.submittedAt).getTime() > deadline.getTime());
                 status = isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED';
+            } else if (redoRequested) {
+                status = 'PENDING';
             } else if (scheduledFor && now < scheduledFor) {
                 // Assignment is scheduled for a future time — not yet open
                 status = 'SCHEDULED';
@@ -136,6 +140,9 @@ export async function GET(req: NextRequest) {
                 submissionLink: submission?.link,
                 correctionStatus: submission?.status || 'PENDING',
                 quality: submission?.quality || null,
+                redoRequested,
+                rejection: submission?.rejection ? { at: submission.rejection.at, reason: submission.rejection.reason || '' } : null,
+                warning: submission?.warning ? { count: submission.warning.count, limit: submission.warning.limit } : null,
                 // AI checker's question-wise feedback, shown once the copy is marked corrected
                 aiReview: submission?.status === 'CORRECTED' && submission?.aiReview && !submission.aiReview.unreadable ? submission.aiReview : null,
                 content: safeContent,

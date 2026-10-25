@@ -25,6 +25,11 @@ const AssignmentSchema = new mongoose.Schema({
         default: {}
     },
     excludedStudents: [{ type: String }], // Phone numbers of students excluded from this assignment
+    // Flag graded students with more than this many (wrong + skipped) questions; null = no limit
+    warningLimit: { type: Number, default: null },
+    // Students (BatchStudent ids) who were asked to redo this assignment: they may delete and
+    // upload again even after the deadline. Removed again once they have uploaded.
+    redoAllowed: [{ type: String }],
     // Topic / sub-topic of each question in the paper, from the AI checker's reply. Lets each
     // student's question-wise result feed the weakness analysis alongside online tests.
     aiQuestionMap: [{

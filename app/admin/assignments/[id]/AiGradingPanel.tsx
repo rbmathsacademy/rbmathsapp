@@ -5,6 +5,8 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib';
 import { toast } from 'react-hot-toast';
 import { Sparkles, Download, Copy, ChevronDown, ChevronUp, ExternalLink, Upload, CheckCircle2, AlertTriangle, Loader2, FileText, Wrench, Braces } from 'lucide-react';
 import PaperKeySection from './PaperKeySection';
+import WarningLimitBar from './WarningLimitBar';
+import ClaudeGradingSection from './ClaudeGradingSection';
 import {
     buildGradingPrompt, buildFixupRequest, parseAiGradingReply, questionKey,
     submissionCode, assignmentCode, GRADING_RESPONSE_SCHEMA,
@@ -41,6 +43,7 @@ interface PanelAssignment {
     content: any;
     boardWise?: boolean;
     boardContent?: Record<string, string>;
+    warningLimit?: number | null;
     paperKeys?: PaperKey[];
 }
 
@@ -457,6 +460,9 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
 
             {open && (
                 <div className="border-t border-white/10 p-4 sm:p-5 space-y-6">
+                    {/* Warning limit: applies to every graded copy, however it was graded */}
+                    <WarningLimitBar assignmentId={assignment._id} initial={assignment.warningLimit} onChanged={onImported} />
+
                     {/* STEP 0 */}
                     <PaperKeySection assignmentId={assignment._id} title={assignment.title} papers={papers} keys={keys} taxonomy={taxonomy || []} onSaved={setKeys} />
 
@@ -702,6 +708,13 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                             </div>
                         )}
                     </section>
+
+                    {/* NEW: Claude API grading (password protected), next to - not instead of - the manual steps above */}
+                    <ClaudeGradingSection
+                        assignmentId={assignment._id}
+                        targets={selected.map(s => ({ _id: s._id, name: s.student.name, board: s.student.board, status: s.status }))}
+                        onChanged={onImported}
+                    />
                 </div>
             )}
         </div>

@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
         const query = {
             type: 'popup',
             $and: [
+                { $or: [{ oncePerStudent: { $ne: true } }, { readBy: { $nin: [cleanPhone, phoneNumber] } }] },
                 { $or: [{ startDate: null }, { startDate: { $exists: false } }, { startDate: { $lte: now } }] },
                 { $or: [{ endDate: null }, { endDate: { $exists: false } }, { endDate: { $gte: actualNow } }] }
             ],

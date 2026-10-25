@@ -34,6 +34,8 @@ interface StudentSubmission {
     score?: number | null;
     totalQuestions?: number | null;
     aiReview?: AiReview | null;
+    warning?: { count: number; limit: number } | null;
+    rejection?: { at: string; reason?: string; by?: string } | null;
 }
 
 interface Assignment {
@@ -48,6 +50,7 @@ interface Assignment {
     folderId?: string;
     boardWise?: boolean;
     boardContent?: Record<string, string>;
+    warningLimit?: number | null;
 }
 
 // Timezone helpers: interpret/format datetime-local strings as Indian Standard Time (IST)
@@ -88,11 +91,36 @@ export default function AssignmentDetailsPage() {
     // AI feedback viewer
     const [feedbackFor, setFeedbackFor] = useState<StudentSubmission | null>(null);
     const [feedbackEditing, setFeedbackEditing] = useState(false);
+    const patchStudent = (submissionId: string, patch: Partial<StudentSubmission>) => {
+        setStudents(prev => prev.map(s => (s._id === submissionId ? { ...s, ...patch } : s)));
+        setFeedbackFor(prev => (prev && prev._id === submissionId ? { ...prev, ...patch } : prev));
+    };
+    const rejectSubmission = async (s: StudentSubmission) => {
+        if (!s._id) return;
+        const reason = window.prompt(`Reject ${s.student.name}'s submission?\n\nOptional note for the student (e.g. "Show full working for Q3-Q6"):`, '');
+        if (reason === null) return; // cancelled
+        try {
+            const res = await fetch(`/api/admin/assignments/submission/${s._id}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed');
+            patchStudent(s._id, { rejection: data.rejection });
+            toast.success('Rejected - the student has been asked to redo it');
+        } catch (e: any) { toast.error(e.message || 'Could not reject'); }
+    };
+    const undoReject = async (s: StudentSubmission) => {
+        if (!s._id) return;
+        try {
+            const res = await fetch(`/api/admin/assignments/submission/${s._id}/reject`, { method: 'DELETE' });
+            if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+            patchStudent(s._id, { rejection: null });
+            toast.success('Rejection removed');
+        } catch (e: any) { toast.error(e.message || 'Could not undo'); }
+    };
     const openFeedback = (s: StudentSubmission, edit = false) => { setFeedbackFor(s); setFeedbackEditing(edit || !s.aiReview); };
     const closeFeedback = () => { setFeedbackFor(null); setFeedbackEditing(false); };
 
     // Filter State
-    const [correctionFilter, setCorrectionFilter] = useState<'ALL' | 'CORRECTED' | 'NOT_CORRECTED'>('ALL');
+    const [correctionFilter, setCorrectionFilter] = useState<'ALL' | 'CORRECTED' | 'NOT_CORRECTED' | 'WARNING' | 'REJECTED'>('ALL');
     const [submissionFilter, setSubmissionFilter] = useState<'ALL' | 'ON_TIME' | 'LATE' | 'PENDING' | 'MISSED' | 'NEW_ADMISSION'>('ALL');
 
     // Question Viewer / Manager State
@@ -456,6 +484,8 @@ export default function AssignmentDetailsPage() {
         // Correction filter
         if (correctionFilter === 'CORRECTED' && s.status !== 'CORRECTED') return false;
         if (correctionFilter === 'NOT_CORRECTED' && s.status === 'CORRECTED') return false;
+        if (correctionFilter === 'WARNING' && !s.warning) return false;
+        if (correctionFilter === 'REJECTED' && !s.rejection) return false;
 
         // Submission filter
         if (submissionFilter === 'ON_TIME' && s.submissionStatus !== 'SUBMITTED') return false;
@@ -647,6 +677,16 @@ export default function AssignmentDetailsPage() {
                         <div className="flex items-center gap-1.5 text-purple-400 border-l border-white/10 pl-4">
                             No. of Corrected: {students.filter(s => s.status === 'CORRECTED').length}
                         </div>
+                        {students.some(s => s.warning) && (
+                            <button onClick={() => setCorrectionFilter('WARNING')} className="flex items-center gap-1.5 text-rose-300 font-bold border-l border-white/10 pl-4 hover:underline">
+                                ⚠ Warning: {students.filter(s => s.warning).length}
+                            </button>
+                        )}
+                        {students.some(s => s.rejection) && (
+                            <button onClick={() => setCorrectionFilter('REJECTED')} className="flex items-center gap-1.5 text-rose-300/80 font-bold border-l border-white/10 pl-4 hover:underline">
+                                Rejected: {students.filter(s => s.rejection).length}
+                            </button>
+                        )}
                     </div>
                     <div className="flex flex-wrap gap-2 sm:gap-3 mt-3">
                         <div className="flex items-center gap-1.5">
@@ -659,6 +699,8 @@ export default function AssignmentDetailsPage() {
                                 <option value="ALL">All Corrections</option>
                                 <option value="CORRECTED">Corrected</option>
                                 <option value="NOT_CORRECTED">Not Corrected</option>
+                                <option value="WARNING">⚠ Warning ({students.filter(s => s.warning).length})</option>
+                                <option value="REJECTED">Rejected ({students.filter(s => s.rejection).length})</option>
                             </select>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -756,7 +798,7 @@ export default function AssignmentDetailsPage() {
                                 filteredStudents.map(student => {
                                     const isSelected = selectedPhones.includes(student.student._id);
                                     return (
-                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
+                                    <tr key={student.student._id} className={`hover:bg-white/5 transition-colors ${isSelected ? 'bg-violet-500/10' : ''} ${student._id ? (student.warning ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.55)] bg-rose-500/[0.04]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
                                             <td className="p-4">
                                                 <input
@@ -870,6 +912,12 @@ export default function AssignmentDetailsPage() {
                                                             <option value="POOR">Poor</option>
                                                         </select>
                                                     )}
+                                                    {student.warning && (
+                                                        <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/20 text-rose-200 border-rose-400/50 shadow-[0_0_12px_rgba(244,63,94,0.5)]" title="More wrong + skipped questions than the warning limit">⚠ {student.warning.count} / limit {student.warning.limit}</span>
+                                                    )}
+                                                    {student.rejection && (
+                                                        <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40" title={student.rejection.reason || 'Rejected - the student must redo it'}>↩ Rejected</span>
+                                                    )}
                                                     {student.aiReview ? (
                                                         <button onClick={() => openFeedback(student)} className="flex flex-col items-center gap-1 group" title="View / edit feedback">
                                                             {student.aiReview.unreadable
@@ -973,7 +1021,7 @@ export default function AssignmentDetailsPage() {
                         filteredStudents.map(student => {
                             const isSelected = selectedPhones.includes(student.student.phoneNumber);
                             return (
-                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
+                            <div key={student.student._id} className={`p-4 space-y-3 ${isSelected ? 'bg-violet-500/5' : ''} ${student._id ? (student.warning ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.95),0_0_24px_-6px_rgba(244,63,94,0.55)] bg-rose-500/[0.08]' : student.rejection ? 'shadow-[inset_4px_0_0_rgba(244,63,94,0.55)] bg-rose-500/[0.04]' : student.status === 'CORRECTED' ? 'shadow-[inset_3px_0_0_rgba(163,230,53,0.7)]' : 'shadow-[inset_3px_0_0_rgba(251,191,36,0.7)] bg-amber-400/[0.03]') : ''}`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
                                         {(submissionFilter === 'PENDING' || submissionFilter === 'MISSED') && (
@@ -1046,6 +1094,12 @@ export default function AssignmentDetailsPage() {
                                     )}
                                 </div>
 
+                                {(student.warning || student.rejection) && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {student.warning && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/20 text-rose-200 border-rose-400/50 shadow-[0_0_12px_rgba(244,63,94,0.5)]">⚠ {student.warning.count} / limit {student.warning.limit}</span>}
+                                        {student.rejection && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40">↩ Rejected</span>}
+                                    </div>
+                                )}
                                 {student._id && !student.aiReview && (
                                     <button onClick={() => openFeedback(student, true)} className="text-[10px] font-bold text-violet-300/70">+ Add feedback</button>
                                 )}
@@ -1601,6 +1655,16 @@ export default function AssignmentDetailsPage() {
                                 <button onClick={closeFeedback} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
                             </div>
                         </div>
+                        {feedbackFor.warning && (
+                            <div className="mb-3 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200 shadow-[0_0_20px_-6px_rgba(244,63,94,0.6)]">
+                                ⚠ <b>{feedbackFor.warning.count}</b> wrong/skipped questions - above the warning limit of {feedbackFor.warning.limit}. The student has been warned.
+                            </div>
+                        )}
+                        {feedbackFor.rejection && (
+                            <div className="mb-3 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                                ↩ <b>Rejected</b>{feedbackFor.rejection.reason ? <> - "{feedbackFor.rejection.reason}"</> : null}. The student has been asked to redo it.
+                            </div>
+                        )}
                         {feedbackEditing ? (
                             <AiReviewEditor
                                 assignmentId={assignment._id}
@@ -1622,6 +1686,16 @@ export default function AssignmentDetailsPage() {
                             <a href={feedbackFor.link} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-fuchsia-300 hover:underline">
                                 Open the answer sheet <ExternalLink className="w-3 h-3" />
                             </a>
+                        )}
+                        {!feedbackEditing && (
+                            <div className="mt-4 pt-4 border-t border-white/10">
+                                {feedbackFor.rejection ? (
+                                    <button onClick={() => undoReject(feedbackFor)} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-bold">Undo reject (keep this submission)</button>
+                                ) : (
+                                    <button onClick={() => rejectSubmission(feedbackFor)} className="px-3 py-2 rounded-lg bg-rose-500/90 hover:bg-rose-400 text-white text-xs font-black">↩ Reject - ask the student to redo</button>
+                                )}
+                                <p className="mt-1.5 text-[11px] text-violet-200/50">Rejecting turns this assignment red for the student, who must follow the feedback, delete the submission and upload it again (allowed even after the deadline).</p>
+                            </div>
                         )}
                     </div>
                 </div>

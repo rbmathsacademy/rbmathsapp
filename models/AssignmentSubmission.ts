@@ -31,7 +31,28 @@ const AssignmentSubmissionSchema = new mongoose.Schema({
                 errorType: { type: String, default: null }, // CONCEPT / METHOD / FORMULA / CALCULATION / SIGN / INCOMPLETE_STEPS / NOT_ATTEMPTED / OTHER
             }],
             aiGrade: { type: String, default: null }, // what the AI itself said (the saved grade is recomputed by the portal)
+            source: { type: String, default: null }, // 'gemini-chat' | 'claude-api' (null for older reviews)
+            model: { type: String, default: null }, // e.g. claude-sonnet-5-5
             importedAt: { type: Date, default: Date.now },
+        }, { _id: false }),
+        default: null,
+    },
+    // Set by the shared save step when wrong + skipped questions exceed the assignment's warning limit
+    warning: {
+        type: new mongoose.Schema({
+            count: { type: Number, default: 0 },
+            limit: { type: Number, default: 0 },
+            at: { type: Date, default: Date.now },
+        }, { _id: false }),
+        default: null,
+    },
+    warningNotifiedAt: { type: Date, default: null }, // the student was told once; never repeated for this submission
+    // Teacher rejected this submission: the student must follow the feedback, delete it and upload again
+    rejection: {
+        type: new mongoose.Schema({
+            at: { type: Date, default: Date.now },
+            reason: { type: String, default: '' },
+            by: { type: String, default: '' },
         }, { _id: false }),
         default: null,
     },
