@@ -17,8 +17,8 @@ import { ERROR_TYPES, stripCitations, questionLabel, type AiReview, type PaperKe
  */
 export const CLAUDE_MODEL = 'claude-sonnet-5-5';
 export type Effort = 'low' | 'medium' | 'high';
-export const DEFAULT_EFFORT: Effort = 'medium';
-const MAX_TOKENS = 16000;
+export const DEFAULT_EFFORT: Effort = 'high';
+const MAX_TOKENS = 32000;
 
 export function claudeConfigured(): boolean {
     return !!process.env.ANTHROPIC_API_KEY;
@@ -99,10 +99,12 @@ The paper has exactly ${key.length} questions.
 ${list}
 
 HOW TO CHECK
+0. Work carefully. For EVERY question: find that student's answer on the sheet, read it properly, work the question out yourself, and compare your result with the key. Only then decide. Do not judge from a quick glance.
 1. Put every question of the list into exactly one group: correct; incorrect (status INCORRECT, or PARTIAL when partly right); skipped or incomplete (status SKIPPED, or INCOMPLETE when left unfinished). So correct + incorrect + skippedOrIncomplete = ${key.length}.
 2. Be open to different methods. Any valid method, order of steps or notation is fine; judge the approach and the final answer, not the style. An equivalent form of the key's answer is correct.
 3. "Key" is the expected final answer. Only if you are certain a key is wrong, judge that question by correct mathematics.
-4. If the handwriting or photos are too unclear to judge, or the pages are not this assignment, set unreadable to true and say why in unreadableNote; still fill in the counts for whatever you could read.
+4. A correct answer must NEVER be marked incorrect or partly correct. Mark INCORRECT only when you have confirmed that the student's final answer really differs from the correct answer (not just from the key's wording). Mark PARTIAL only when part of a multi-part question is clearly right and part is clearly wrong. Equivalent forms (simplified or unsimplified, different but equal expressions, +C, reordered terms, decimals vs fractions) are correct. Do not deduct for neat presentation, missing units that the question did not ask for, or a different valid method. If you are unsure whether you read a character or number correctly, re-read that line before deciding; when the work is legible and reaches the right answer, it is correct.
+5. If the handwriting or photos are too unclear to judge, or the pages are not this assignment, set unreadable to true and say why in unreadableNote; still fill in the counts for whatever you could read.
 
 FEEDBACK (the student will read it)
 - Give one feedback item for EVERY question that is not fully correct (at least incorrect + skippedOrIncomplete items), with the label exactly as in the list.
@@ -135,6 +137,7 @@ export function buildGradingParams(i: GradingInputs): any {
         model: CLAUDE_MODEL,
         max_tokens: MAX_TOKENS,
         system: [{ type: 'text', text: i.system }],
+        thinking: { type: 'adaptive' },
         output_config: { effort: i.effort || DEFAULT_EFFORT, format: { type: 'json_schema', schema: RESULT_SCHEMA } },
         messages: [{
             role: 'user',
