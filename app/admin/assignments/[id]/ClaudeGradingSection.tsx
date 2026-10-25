@@ -42,13 +42,8 @@ export default function ClaudeGradingSection({ assignmentId, targets, onChanged 
     const alive = useRef(true);
     useEffect(() => () => { alive.current = false; }, []);
 
-    // Restore a still-valid unlock for this browser session
-    useEffect(() => {
-        try {
-            const raw = sessionStorage.getItem(KEY);
-            if (raw) { const u = JSON.parse(raw); if (u.expiresAt > Date.now()) setUnlock(u); else sessionStorage.removeItem(KEY); }
-        } catch { }
-    }, []);
+    // The unlock lives in memory only: closing/reloading the page (or a new login) always asks for the password again
+    useEffect(() => { try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); } catch { } }, []);
 
     const headers = useCallback((): Record<string, string> => ({ 'Content-Type': 'application/json', ...adminAuth(), 'x-claude-unlock': unlock?.token || '' }), [unlock]);
     const lock = useCallback(() => { try { sessionStorage.removeItem(KEY); } catch { } setUnlock(null); setStatus(null); setLog(null); }, []);
@@ -68,7 +63,6 @@ export default function ClaudeGradingSection({ assignmentId, targets, onChanged 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Wrong password');
             const u = { token: data.token, expiresAt: data.expiresAt };
-            sessionStorage.setItem(KEY, JSON.stringify(u));
             setUnlock(u); setPw(''); setShowPw(false);
             if (data.configured === false) toast.error('The Claude API key is not set on the server yet (ANTHROPIC_API_KEY).');
         } catch (e: any) { toast.error(e.message || 'Could not unlock'); }

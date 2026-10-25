@@ -664,7 +664,7 @@ function AssignmentCard({
                 {assignment.warning && isSubmitted && !assignment.rejection && (
                     <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-100">
                         <p className="font-black text-rose-300 mb-1">⚠ Needs your attention</p>
-                        <p><b>{assignment.warning.count}</b> questions were wrong or skipped (the limit is {assignment.warning.limit}). Please go through the feedback below carefully.</p>
+                        <p>Implement the feedback below, then delete this submission and re-upload the updated version within the deadline.</p>
                     </div>
                 )}
 

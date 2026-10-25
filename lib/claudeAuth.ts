@@ -5,7 +5,7 @@ import { getAdminPayload } from '@/lib/adminAuth';
 
 /**
  * Password protection for the Claude grading features (batch grading, "Grade now", the log).
- * The password is checked ON THE SERVER; a correct password returns a signed 12-hour unlock token
+ * The password is checked ON THE SERVER; a correct password returns a signed 2-hour unlock token
  * that the browser keeps for the session and sends with every Claude request. Without a valid
  * token (and a signed-in admin) every Claude route refuses, so hiding a button in the page is never
  * the only protection. The password can be changed with the CLAUDE_FEATURE_PASSWORD environment
@@ -25,9 +25,9 @@ export async function issueUnlockToken(adminEmail: string): Promise<{ token: str
     const token = await new SignJWT({ scope: 'claude-grading', email: adminEmail.toLowerCase() })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('12h')
+        .setExpirationTime('2h')
         .sign(secret);
-    return { token, expiresAt: Date.now() + 12 * 60 * 60 * 1000 };
+    return { token, expiresAt: Date.now() + 2 * 60 * 60 * 1000 };
 }
 
 /**

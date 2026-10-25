@@ -3,7 +3,7 @@ import { getAdminPayload } from '@/lib/adminAuth';
 import { issueUnlockToken, passwordMatches } from '@/lib/claudeAuth';
 import { claudeConfigured } from '@/lib/claudeGrader';
 
-/** POST { password } -> a 12-hour unlock token for the Claude grading features (checked on the server). */
+/** POST { password } -> a 2-hour unlock token for the Claude grading features (checked on the server). */
 export async function POST(req: NextRequest) {
     const admin = await getAdminPayload(req);
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

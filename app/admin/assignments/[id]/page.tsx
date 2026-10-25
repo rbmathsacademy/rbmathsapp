@@ -142,6 +142,17 @@ export default function AssignmentDetailsPage() {
     const [whatsappMessage, setWhatsappMessage] = useState('You have missed or have pending assignment submission!');
     const [recipientMode, setRecipientMode] = useState<'student' | 'guardian'>('student');
 
+    const [warnMessage, setWarnMessage] = useState('Your homework needs attention. Please read the feedback in the portal, correct your work, then delete your submission and re-upload the updated version before the deadline.');
+    const copyWarningList = () => {
+        const list = students.filter(s => s.warning);
+        if (list.length === 0) return toast.error('No students in the warning list');
+        if (!warnMessage.trim()) return toast.error('Message cannot be empty');
+        const phones = list.map(s => recipientMode === 'guardian' ? s.student.guardianPhone : (s.student.alternativePhone || s.student.phoneNumber)).filter(Boolean);
+        if (phones.length === 0) return toast.error('No valid phone numbers found for the selected mode');
+        navigator.clipboard.writeText(`WHATSAPP_BULK|||${warnMessage}|||${phones.join(',')}`);
+        toast.success(`Copied ${phones.length} number(s)! Open WhatsApp Web and press F9`);
+    };
+
     const copyForAutoSender = () => {
         if (selectedPhones.length === 0) return toast.error('No students selected');
         if (!whatsappMessage) return toast.error('Message cannot be empty');
@@ -768,6 +779,24 @@ export default function AssignmentDetailsPage() {
                         />
                         <button onClick={copyForAutoSender} disabled={selectedPhones.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                             Copy for WhatsApp Auto-Sender ({selectedPhones.length})
+                        </button>
+                    </div>
+                )}
+
+                {correctionFilter === 'WARNING' && students.some(s => s.warning) && (
+                    <div className="bg-[#140d27]/60 border-b border-rose-400/20 px-4 sm:px-6 py-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-bold text-rose-200 flex items-center gap-2">📱 WhatsApp Auto-Sender - warning list ({students.filter(s => s.warning).length})</h3>
+                            <select value={recipientMode} onChange={e => setRecipientMode(e.target.value as any)}
+                                className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-violet-500 cursor-pointer">
+                                <option value="student">Send to Student</option>
+                                <option value="guardian">Send to Guardian</option>
+                            </select>
+                        </div>
+                        <textarea rows={3} placeholder="Write your message..." value={warnMessage} onChange={e => setWarnMessage(e.target.value)}
+                            className="w-full px-4 py-2 mb-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500" />
+                        <button onClick={copyWarningList} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:from-rose-500 hover:to-fuchsia-500 text-white font-bold text-sm transition-colors">
+                            Copy for WhatsApp Auto-Sender
                         </button>
                     </div>
                 )}
