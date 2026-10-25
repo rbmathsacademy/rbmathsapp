@@ -116,6 +116,29 @@ export default function AssignmentDetailsPage() {
             toast.success('Rejection removed');
         } catch (e: any) { toast.error(e.message || 'Could not undo'); }
     };
+    const deleteFeedbackItem = async (s: StudentSubmission, index: number) => {
+        const rv = s.aiReview;
+        const item = rv?.feedback[index];
+        if (!rv || !item) return;
+        if (!window.confirm(`Delete the feedback for ${item.question}? The counts and grade will be recalculated and the student will see the update.`)) return;
+        // the question no longer counts as a mistake: take it off the matching count and add it to "correct"
+        let { incorrect, skippedOrIncomplete } = rv;
+        const wrong = item.status === 'INCORRECT' || item.status === 'PARTIAL';
+        if (wrong ? incorrect > 0 : skippedOrIncomplete === 0) incorrect = Math.max(0, incorrect - 1);
+        else skippedOrIncomplete = Math.max(0, skippedOrIncomplete - 1);
+        const review = { ...rv, correct: rv.correct + 1, incorrect, skippedOrIncomplete, feedback: rv.feedback.filter((_, i) => i !== index) };
+        try {
+            let auth: Record<string, string> = {};
+            try { const t = localStorage.getItem('adminToken'); if (t) auth = { Authorization: `Bearer ${t}` }; } catch { }
+            const res = await fetch(`/api/admin/assignments/${assignment?._id}/ai-grades`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ submissionId: s._id, review, grade: 'AUTO' }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed');
+            const upd = { ...s, status: data.status, quality: data.quality, aiReview: data.aiReview, warning: data.warning || null };
+            setStudents(prev => prev.map(x => (x._id === s._id ? upd : x)));
+            setFeedbackFor(upd);
+            toast.success('Feedback deleted - counts and grade updated');
+        } catch (e: any) { toast.error(e.message || 'Could not delete'); }
+    };
     const openFeedback = (s: StudentSubmission, edit = false) => { setFeedbackFor(s); setFeedbackEditing(edit || !s.aiReview); };
     const closeFeedback = () => { setFeedbackFor(null); setFeedbackEditing(false); };
 
@@ -1732,7 +1755,7 @@ export default function AssignmentDetailsPage() {
                                 }}
                             />
                         ) : feedbackFor.aiReview ? (
-                            <AiFeedbackView review={feedbackFor.aiReview} />
+                            <AiFeedbackView review={feedbackFor.aiReview} onDeleteItem={i => deleteFeedbackItem(feedbackFor, i)} />
                         ) : null}
                         {feedbackFor.link && (
                             <a href={feedbackFor.link} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-fuchsia-300 hover:underline">

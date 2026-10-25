@@ -25,7 +25,7 @@ export function AiScoreChips({ review, compact = false }: { review: AiReview; co
 }
 
 /** Full question-wise feedback (comments may contain inline LaTeX in $...$). */
-export default function AiFeedbackView({ review }: { review: AiReview }) {
+export default function AiFeedbackView({ review, onDeleteItem }: { review: AiReview; onDeleteItem?: (index: number) => void }) {
     return (
         <div className="space-y-3">
             <AiScoreChips review={review} />
@@ -50,6 +50,9 @@ export default function AiFeedbackView({ review }: { review: AiReview }) {
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${st.cls}`}>{st.label}</span>
                                     {f.errorType && f.errorType !== 'NOT_ATTEMPTED' && f.errorType !== 'OTHER' && (
                                         <span className="text-[10px] text-violet-200/60">{ERROR_TYPE_LABEL[f.errorType]}</span>
+                                    )}
+                                    {onDeleteItem && (
+                                        <button onClick={() => onDeleteItem(i)} title="Delete this feedback" className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded border border-rose-400/40 text-rose-300 hover:bg-rose-500/20">🗑 Delete</button>
                                     )}
                                 </div>
                                 {f.comment && (
