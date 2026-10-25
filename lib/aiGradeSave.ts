@@ -67,9 +67,20 @@ export interface SaveResult {
 
 const titleHead = (t: string) => String(t || 'Homework').split('||')[0].trim();
 
+const WARNING_TITLE = '⚠ Homework needs your attention';
+
+/** Withdraw the warning popup(s) of one student for one assignment (the warning no longer applies). */
+async function retractWarningPopups(assignmentId: string, phones: string[]) {
+    if (phones.length === 0) return;
+    await Notification.deleteMany({
+        assignmentId, title: WARNING_TITLE, oncePerStudent: true,
+        $or: phones.map(p => ({ 'targetStudents.phoneNumber': p })),
+    }).catch(e => console.error('[aiGradeSave] retract failed:', e));
+}
+
 function warningNotification(assignment: any, student: any, count: number, limit: number) {
     return {
-        title: '⚠ Homework needs your attention',
+        title: WARNING_TITLE,
         message: `"${titleHead(assignment.title)}": ${count} question${count === 1 ? ' was' : 's were'} wrong or skipped (the limit set by your teacher is ${limit}).\n\nPlease open Assignments → Completed and study the feedback carefully.`,
         type: 'popup',
         oncePerStudent: true,
@@ -98,6 +109,7 @@ export async function saveReviews(assignmentId: string, items: SaveItem[], opts:
     const ops: any[] = [];
     const logs: any[] = [];
     const notifications: any[] = [];
+    const retractPhones: string[] = [];
 
     for (const item of items) {
         const sub = subById.get(item.submissionId);
@@ -116,11 +128,13 @@ export async function saveReviews(assignmentId: string, items: SaveItem[], opts:
         const warning = warn ? { count: wrongPlusSkipped, limit: limit as number, at: unchanged ? sub.warning.at : new Date() } : null;
         const student = studentById.get(sub.student.toString());
         const notify = warn && !sub.warningNotifiedAt && !!student?.phoneNumber;
+        const retract = !warn && !!sub.warningNotifiedAt;
+        if (retract && student?.phoneNumber) retractPhones.push(student.phoneNumber);
 
         ops.push({
             updateOne: {
                 filter: { _id: item.submissionId, assignment: assignmentId },
-                update: { $set: { aiReview: { ...review, source: reviewSource, model: reviewModel }, ...fields, warning, ...(notify ? { warningNotifiedAt: new Date() } : {}) } },
+                update: { $set: { aiReview: { ...review, source: reviewSource, model: reviewModel }, ...fields, warning, ...(notify ? { warningNotifiedAt: new Date() } : {}), ...(retract ? { warningNotifiedAt: null } : {}) } },
             },
         });
         if (notify) notifications.push(warningNotification(assignment, student, wrongPlusSkipped, limit as number));
@@ -146,6 +160,7 @@ export async function saveReviews(assignmentId: string, items: SaveItem[], opts:
     }
 
     if (ops.length > 0) await AssignmentSubmission.bulkWrite(ops, { ordered: false });
+    await retractWarningPopups(assignmentId, retractPhones);
     if (notifications.length > 0) await Notification.insertMany(notifications).catch(e => console.error('[aiGradeSave] notification failed:', e));
     if (logs.length > 0) await GradingLog.insertMany(logs).catch(e => console.error('[aiGradeSave] log failed:', e));
     return result;
@@ -182,6 +197,7 @@ export async function recheckWarnings(assignmentId: string): Promise<{ warned: n
 
     const ops: any[] = [];
     const notifications: any[] = [];
+    const retractPhones: string[] = [];
     for (const sub of subs) {
         const count = (sub.aiReview.incorrect || 0) + (sub.aiReview.skippedOrIncomplete || 0);
         const warn = limit !== null && count > limit;
@@ -191,12 +207,15 @@ export async function recheckWarnings(assignmentId: string): Promise<{ warned: n
             const notify = !sub.warningNotifiedAt && !!student?.phoneNumber;
             ops.push({ updateOne: { filter: { _id: sub._id }, update: { $set: { warning: { count, limit, at: sub.warning?.at || new Date() }, ...(notify ? { warningNotifiedAt: new Date() } : {}) } } } });
             if (notify) { notifications.push(warningNotification(assignment, student, count, limit as number)); out.notified++; }
-        } else if (sub.warning) {
-            out.cleared++;
-            ops.push({ updateOne: { filter: { _id: sub._id }, update: { $set: { warning: null } } } });
+        } else if (sub.warning || sub.warningNotifiedAt) {
+            if (sub.warning) out.cleared++;
+            const st = studentById.get(sub.student.toString());
+            if (sub.warningNotifiedAt && st?.phoneNumber) retractPhones.push(st.phoneNumber);
+            ops.push({ updateOne: { filter: { _id: sub._id }, update: { $set: { warning: null, warningNotifiedAt: null } } } });
         }
     }
     if (ops.length > 0) await AssignmentSubmission.bulkWrite(ops, { ordered: false });
+    await retractWarningPopups(assignmentId, retractPhones);
     if (notifications.length > 0) await Notification.insertMany(notifications).catch(e => console.error('[recheckWarnings] notification failed:', e));
     return out;
 }

@@ -73,7 +73,7 @@ function NotificationGate({ children }: { children: React.ReactNode }) {
 
     const fetchNotifications = async () => {
         try {
-            const res = await fetch('/api/student/notifications');
+            const res = await fetch('/api/student/notifications', { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 setNotifications(data || []);
