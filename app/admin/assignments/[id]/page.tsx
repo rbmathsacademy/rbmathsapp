@@ -1036,6 +1036,13 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                             View <ExternalLink className="w-3 h-3" />
                                                         </a>
                                                     )}
+                                                    {student.status === 'CORRECTED' && (
+                                                        student.rejection ? (
+                                                            <button onClick={() => undoReject(student)} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-white/10 hover:bg-white/15 text-white" title="Remove the rejection">Undo reject</button>
+                                                        ) : (
+                                                            <button onClick={() => rejectSubmission(student)} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-rose-500/90 hover:bg-rose-400 text-white" title="Ask the student to redo and re-upload">↩ Reject</button>
+                                                        )
+                                                    )}
                                                     <button
                                                         onClick={() => handleDeleteSubmission(student._id!)}
                                                         className="inline-flex items-center justify-center w-7 h-7 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors border border-red-500/20"
@@ -1252,6 +1259,13 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                     View <ExternalLink className="w-3 h-3" />
                                                 </a>
                                             )}
+                                                    {student.status === 'CORRECTED' && (
+                                                        student.rejection ? (
+                                                            <button onClick={() => undoReject(student)} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 bg-white/10 hover:bg-white/15 text-white" title="Remove the rejection">Undo reject</button>
+                                                        ) : (
+                                                            <button onClick={() => rejectSubmission(student)} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 bg-rose-500/90 hover:bg-rose-400 text-white" title="Ask the student to redo and re-upload">↩ Reject</button>
+                                                        )
+                                                    )}
                                             <button
                                                 onClick={() => handleDeleteSubmission(student._id!)}
                                                 className="inline-flex items-center justify-center w-6 h-6 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 flex-shrink-0"
