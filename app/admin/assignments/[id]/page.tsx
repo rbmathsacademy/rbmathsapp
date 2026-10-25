@@ -143,9 +143,10 @@ export default function AssignmentDetailsPage() {
     const [recipientMode, setRecipientMode] = useState<'student' | 'guardian'>('student');
 
     const [warnMessage, setWarnMessage] = useState('Your homework needs attention. Please read the feedback in the portal, correct your work, then delete your submission and re-upload the updated version before the deadline.');
+    const [warnSelected, setWarnSelected] = useState<string[]>([]);
     const copyWarningList = () => {
-        const list = students.filter(s => s.warning);
-        if (list.length === 0) return toast.error('No students in the warning list');
+        const list = students.filter(s => s.warning && warnSelected.includes(s.student._id));
+        if (list.length === 0) return toast.error('Select at least one student');
         if (!warnMessage.trim()) return toast.error('Message cannot be empty');
         const phones = list.map(s => recipientMode === 'guardian' ? s.student.guardianPhone : (s.student.alternativePhone || s.student.phoneNumber)).filter(Boolean);
         if (phones.length === 0) return toast.error('No valid phone numbers found for the selected mode');
@@ -793,10 +794,32 @@ export default function AssignmentDetailsPage() {
                                 <option value="guardian">Send to Guardian</option>
                             </select>
                         </div>
+                        {(() => {
+                            const wl = students.filter(s => s.warning);
+                            const allOn = wl.length > 0 && wl.every(s => warnSelected.includes(s.student._id));
+                            return (
+                                <div className="mb-3 rounded-xl border border-white/10 bg-black/20">
+                                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 text-xs">
+                                        <span className="text-violet-200/70">{warnSelected.filter(id => wl.some(s => s.student._id === id)).length} of {wl.length} selected</span>
+                                        <button onClick={() => setWarnSelected(allOn ? [] : wl.map(s => s.student._id))} className="text-violet-300 font-bold bg-violet-500/10 px-2 py-1 rounded">{allOn ? 'Deselect All' : 'Select All'}</button>
+                                    </div>
+                                    <div className="max-h-48 overflow-y-auto divide-y divide-white/5">
+                                        {wl.map(s => (
+                                            <label key={s.student._id} className="flex items-center gap-3 px-3 py-2 text-sm text-white cursor-pointer hover:bg-white/5">
+                                                <input type="checkbox" checked={warnSelected.includes(s.student._id)}
+                                                    onChange={() => setWarnSelected(p => p.includes(s.student._id) ? p.filter(x => x !== s.student._id) : [...p, s.student._id])} />
+                                                <span className="flex-1">{s.student.name}</span>
+                                                <span className="text-[11px] text-rose-300">⚠ {s.warning!.count}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                         <textarea rows={3} placeholder="Write your message..." value={warnMessage} onChange={e => setWarnMessage(e.target.value)}
                             className="w-full px-4 py-2 mb-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500" />
-                        <button onClick={copyWarningList} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:from-rose-500 hover:to-fuchsia-500 text-white font-bold text-sm transition-colors">
-                            Copy for WhatsApp Auto-Sender
+                        <button onClick={copyWarningList} disabled={warnSelected.length === 0} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:from-rose-500 hover:to-fuchsia-500 text-white font-bold text-sm transition-colors disabled:opacity-50">
+                            Copy for WhatsApp Auto-Sender ({warnSelected.length})
                         </button>
                     </div>
                 )}
