@@ -70,14 +70,38 @@ const authHeaders = (): Record<string, string> => {
 // jsPDF/pdf-lib standard fonts only cover basic Latin
 const ascii = (s: string) => (s || '').normalize('NFKD').replace(/[^\x20-\x7E]/g, '').trim();
 
+// Direct download from Google Drive (restricted API key), so the files do not pass through the server
+const DRIVE_KEY = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_KEY || '';
+const driveCache = new Map<string, ArrayBuffer>(); // each file is downloaded once per page visit
+
+async function fetchDriveDirect(url: string): Promise<ArrayBuffer | null> {
+    if (!DRIVE_KEY) return null;
+    const id = url.match(/\/d\/([^/?#]+)/)?.[1] || url.match(/[?&]id=([^&#]+)/)?.[1];
+    if (!id) return null;
+    try {
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media&supportsAllDrives=true&key=${DRIVE_KEY}`);
+        if (!res.ok) return null;
+        const buf = await res.arrayBuffer();
+        const head = new TextDecoder().decode(new Uint8Array(buf.slice(0, 1024)));
+        return head.includes('%PDF') ? buf : null;
+    } catch { return null; }
+}
+
 async function fetchDrivePdf(url: string): Promise<ArrayBuffer> {
+    const cached = driveCache.get(url);
+    if (cached) return cached.slice(0);
+    const direct = await fetchDriveDirect(url);
+    if (direct) { driveCache.set(url, direct); return direct.slice(0); }
+    // fallback: through the server (Drive refused the direct download)
     const res = await fetch(`/api/admin/assignments/drive-file?url=${encodeURIComponent(url)}`, { headers: authHeaders() });
     if (!res.ok) {
         let msg = `HTTP ${res.status}`;
         try { msg = (await res.json()).error || msg; } catch { }
         throw new Error(msg);
     }
-    return res.arrayBuffer();
+    const buf = await res.arrayBuffer();
+    driveCache.set(url, buf);
+    return buf.slice(0);
 }
 
 function drawCentered(page: any, text: string, y: number, size: number, font: PDFFont, color = rgb(0.07, 0.09, 0.15)) {
