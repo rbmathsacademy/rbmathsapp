@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
 
     try {
         await dbConnect();
+        await Notification.deleteMany({ endDate: { $lt: new Date() } }).catch(() => { }); // safety net next to the TTL index
         const notifications = await Notification.find({ 
             $or: [
                 { type: 'popup' },

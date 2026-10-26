@@ -32,4 +32,7 @@ const NotificationSchema = new mongoose.Schema({
     isRead: { type: Boolean, default: false },
 }, { timestamps: true });
 
+// Expired notifications (endDate passed) are removed from the database automatically (MongoDB TTL index, checked about once a minute)
+NotificationSchema.index({ endDate: 1 }, { expireAfterSeconds: 0 });
+
 export default mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);

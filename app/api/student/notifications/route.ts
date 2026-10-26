@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
         const courses = payload.courses as string[] || [];
         
         await dbConnect();
+        Notification.deleteMany({ endDate: { $lt: new Date() } }).catch(() => { }); // expired ones vanish from the database
         
         // Add 5 minutes of clock skew buffer for newly created notifications
         const now = new Date(Date.now() + 5 * 60 * 1000);
