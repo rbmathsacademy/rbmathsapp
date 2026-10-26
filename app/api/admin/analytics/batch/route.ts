@@ -1,4 +1,5 @@
 
+import { isOutOfScope } from '@/lib/assignmentScope';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 
         // 3. Fetch Assignments for Batch
         const assignments = await Assignment.find({ batch })
-            .select('title deadline createdAt excludedStudents')
+            .select('title deadline createdAt excludedStudents targetStudents')
             .sort({ deadline: -1 })
             .lean();
 
@@ -166,8 +167,7 @@ export async function GET(request: NextRequest) {
             // Assignment Analytics — filter out assignments where this student is excluded
             const studentSubmissions = submissions.filter((s: any) => s.student.toString() === student._id.toString());
             const studentAssignments = assignments.filter((a: any) => {
-                const excluded: string[] = (a as any).excludedStudents || [];
-                return !excluded.includes(student.phoneNumber);
+                return !isOutOfScope(a as any, student.phoneNumber);
             });
             const assignmentStatuses = studentAssignments.map((assignment: any) => {
                 const submission = studentSubmissions.find((s: any) => s.assignment.toString() === assignment._id.toString());

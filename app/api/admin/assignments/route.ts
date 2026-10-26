@@ -6,6 +6,7 @@ import AssignmentSubmission from '@/models/AssignmentSubmission';
 import BatchStudent from '@/models/BatchStudent';
 import Question from '@/models/Question';
 import AssignmentFolder from '@/models/AssignmentFolder';
+import { isOutOfScope, isTargeted } from '@/lib/assignmentScope';
 
 export async function POST(req: Request) {
     try {
@@ -20,8 +21,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing content for assignment' }, { status: 400 });
         }
 
+        const { removeFromAssignmentId, ...rest } = body;
         const createData: any = {
-            ...body,
+            ...rest,
+            targetStudents: Array.isArray(body.targetStudents) ? body.targetStudents.map((p: any) => String(p)).filter(Boolean) : [],
             deadline: new Date(body.deadline),
             scheduledFor: body.scheduledFor ? new Date(body.scheduledFor) : null,
             folderId: body.folderId || null,
@@ -29,6 +32,11 @@ export async function POST(req: Request) {
         };
 
         const assignment = await Assignment.create(createData);
+
+        // Special version for some students: take them out of the regular assignment so it does not show as Missed there
+        if (removeFromAssignmentId && createData.targetStudents.length > 0) {
+            await Assignment.updateOne({ _id: removeFromAssignmentId }, { $addToSet: { excludedStudents: { $each: createData.targetStudents } } });
+        }
 
         return NextResponse.json({ success: true, assignment });
     } catch (error: any) {
@@ -75,7 +83,7 @@ export async function GET(req: Request) {
             const submissionCount = submissions.length;
             const correctedCount = submissions.filter((s: any) => s.status === 'CORRECTED').length;
             const batchStudents = batchStudentsMap[a.batch] || [];
-            const totalStudents = batchStudents.length;
+            const totalStudents = isTargeted(a) ? batchStudents.filter((s: any) => !isOutOfScope({ targetStudents: a.targetStudents }, s.phoneNumber)).length : batchStudents.length;
 
             const deadline = new Date(a.deadline);
             const deadlineTime = deadline.getTime();
@@ -92,8 +100,6 @@ export async function GET(req: Request) {
             });
 
             const submittedStudentIds = new Set(submissions.map((s: any) => s.student.toString()));
-            const excludedPhones: string[] = a.excludedStudents || [];
-            const excludedSet = new Set(excludedPhones);
 
             // Three mutually-exclusive non-submitter buckets:
             // NEW_ADMISSION: joined AFTER deadline (regardless of cooldown)
@@ -106,7 +112,7 @@ export async function GET(req: Request) {
 
             batchStudents.forEach((student: any) => {
                 if (submittedStudentIds.has(student._id.toString())) return; // submitted
-                if (excludedSet.has(student.phoneNumber)) return; // excluded
+                if (isOutOfScope(a, student.phoneNumber)) return; // excluded or not selected
 
                 const studentJoinDate = new Date(student.createdAt);
                 if (studentJoinDate > deadline) {

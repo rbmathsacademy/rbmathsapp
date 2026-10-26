@@ -1,3 +1,4 @@
+import { isOutOfScope } from '@/lib/assignmentScope';
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
@@ -65,8 +66,7 @@ export async function GET(
         }
 
         // 4. Check if excluded
-        const excludedStudents: string[] = assignment.excludedStudents || [];
-        if (excludedStudents.includes(phoneNumber)) {
+        if (isOutOfScope(assignment, phoneNumber)) {
             return NextResponse.json({ error: 'You are excluded from this assignment' }, { status: 403 });
         }
 

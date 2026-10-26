@@ -23,11 +23,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         const allStudents = await BatchStudent.find({ courses: assignment.batch }).lean();
         const excludedPhones: string[] = (assignment as any).excludedStudents || [];
         const excludedSet = new Set(excludedPhones);
+        const targeted = ((assignment as any).targetStudents || []).length > 0;
+        const targetSet = new Set<string>((assignment as any).targetStudents || []);
+        // Students of the batch who were not selected for this (targeted) assignment
+        const notSelectedList = targeted
+            ? allStudents.filter((s: any) => !targetSet.has(s.phoneNumber)).map((s: any) => ({ _id: s._id, name: s.name, phoneNumber: s.phoneNumber, board: s.board || null }))
+            : [];
 
         // Separate active vs excluded students
-        const students = allStudents.filter((s: any) => !excludedSet.has(s.phoneNumber));
+        const students = allStudents.filter((s: any) => !excludedSet.has(s.phoneNumber) && (!targeted || targetSet.has(s.phoneNumber)));
         const excludedStudentsList = allStudents
-            .filter((s: any) => excludedSet.has(s.phoneNumber))
+            .filter((s: any) => excludedSet.has(s.phoneNumber) && (!targeted || targetSet.has(s.phoneNumber)))
             .map((s: any) => ({ _id: s._id, name: s.name, phoneNumber: s.phoneNumber, board: s.board || null }));
 
         const now = new Date();
@@ -132,7 +138,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             assignmentData.boardContent = bc;
         }
 
-        return NextResponse.json({ assignment: assignmentData, studentList, assignmentQuestions, excludedStudents: excludedStudentsList });
+        return NextResponse.json({ assignment: assignmentData, studentList, assignmentQuestions, notSelectedStudents: notSelectedList, excludedStudents: excludedStudentsList });
     } catch (error: any) {
         console.error('Assignment detail error:', error);
         return NextResponse.json({ error: error.message || 'Failed to fetch assignment details' }, { status: 500 });

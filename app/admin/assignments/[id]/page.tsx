@@ -77,6 +77,18 @@ export default function AssignmentDetailsPage() {
     const [loading, setLoading] = useState(true);
 
     // Excluded Students State
+    const [notSelected, setNotSelected] = useState<{ _id: string; name: string; phoneNumber: string; board?: string | null }[]>([]);
+    const [showNotSelected, setShowNotSelected] = useState(false);
+    const addToSelection = async (phone: string, name: string) => {
+        try {
+            let auth: Record<string, string> = {};
+            try { const t = localStorage.getItem('adminToken'); if (t) auth = { Authorization: `Bearer ${t}` }; } catch { }
+            const res = await fetch(`/api/admin/assignments/${assignment?._id}/targets`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ add: [phone] }) });
+            if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+            toast.success(`${name} added to this assignment`);
+            fetchDetails();
+        } catch (e: any) { toast.error(e.message || 'Could not add'); }
+    };
     const [excludedStudents, setExcludedStudents] = useState<{_id: string; name: string; phoneNumber: string; board?: string | null}[]>([]);
     const [showExcluded, setShowExcluded] = useState(false);
 
@@ -238,6 +250,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                 );
                 setStudents(sortedStudents);
                 setExcludedStudents(data.excludedStudents || []);
+                setNotSelected(data.notSelectedStudents || []);
 
                 // Set assignment questions
                 if (data.assignmentQuestions) {
@@ -1340,6 +1353,26 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                     )}
                 </div>
             </div>
+
+            {/* Students of the batch who were not selected for this assignment */}
+            {notSelected.length > 0 && (
+                <div className="bg-[#151029] border border-violet-500/20 rounded-xl mt-6 overflow-hidden">
+                    <button onClick={() => setShowNotSelected(v => !v)} className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-white/5 transition-colors">
+                        <span className="text-sm font-semibold text-violet-300">This assignment is for selected students only - {notSelected.length} other batch student{notSelected.length === 1 ? '' : 's'} not included</span>
+                        {showNotSelected ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    {showNotSelected && (
+                        <div className="border-t border-white/5 divide-y divide-white/5 max-h-72 overflow-y-auto">
+                            {notSelected.map(ns => (
+                                <div key={ns.phoneNumber} className="flex items-center justify-between px-4 sm:px-5 py-2.5">
+                                    <p className="text-sm text-white">{ns.name}{ns.board ? <span className="ml-2 text-[10px] text-violet-300/60">{ns.board}</span> : null}</p>
+                                    <button onClick={() => addToSelection(ns.phoneNumber, ns.name)} className="px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 rounded-lg text-green-400 text-xs font-bold">Add</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Excluded Students Section */}
             {excludedStudents.length > 0 && (

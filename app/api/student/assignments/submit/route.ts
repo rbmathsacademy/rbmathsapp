@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
+import { isOutOfScope } from '@/lib/assignmentScope';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -48,6 +49,10 @@ export async function POST(req: NextRequest) {
         const assignment = await Assignment.findById(assignmentId);
         if (!assignment) {
             return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+        }
+
+        if (isOutOfScope(assignment as any, phoneNumber)) {
+            return NextResponse.json({ error: 'This assignment is not for you.' }, { status: 403 });
         }
 
         // Check if already submitted

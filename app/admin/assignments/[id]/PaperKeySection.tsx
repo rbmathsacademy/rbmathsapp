@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Latex from 'react-latex-next';
 import { toast } from 'react-hot-toast';
-import { KeyRound, Copy, Braces, ExternalLink, Loader2, Save, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, Link2 } from 'lucide-react';
+import KeyTableEditor from './KeyTableEditor';
+import { KeyRound, Pencil, Copy, Braces, ExternalLink, Loader2, Save, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, Link2 } from 'lucide-react';
 import {
     buildPreparePaperPrompt, parsePaperKeyReply, PAPER_KEY_RESPONSE_SCHEMA,
     type ParsedPaperKey, type PaperKeyQuestion, type TaxonomyTopic,
@@ -61,17 +62,20 @@ export default function PaperKeySection({ assignmentId, title, papers, keys, tax
             {papers.length === 0 && <p className="text-xs text-violet-200/50">No question paper link on this assignment.</p>}
             {papers.map(p => (
                 <PaperCard key={p.board || 'ALL'} assignmentId={assignmentId} title={title} paper={p} multi={papers.length > 1}
-                    current={keys.find(k => (k.board || '') === p.board) || null} taxonomy={taxonomy} onSaved={onSaved} />
+                    current={keys.find(k => (k.board || '') === p.board) || null} taxonomy={taxonomy} onSaved={onSaved}
+                    others={papers.filter(o => o.board !== p.board).map(o => ({ label: o.label, questions: keys.find(k => (k.board || '') === o.board)?.questions || [] })).filter(o => o.questions.length > 0)} />
             ))}
             </>}
         </section>
     );
 }
 
-function PaperCard({ assignmentId, title, paper, multi, current, taxonomy, onSaved }: {
+function PaperCard({ assignmentId, title, paper, multi, current, taxonomy, onSaved, others }: {
     assignmentId: string; title: string; paper: PaperInfo; multi: boolean;
     current: PaperKey | null; taxonomy: TaxonomyTopic[]; onSaved: (keys: PaperKey[]) => void;
+    others: { label: string; questions: PaperKeyQuestion[] }[];
 }) {
+    const [editing, setEditing] = useState(false);
     const [pasted, setPasted] = useState('');
     const [parsed, setParsed] = useState<ParsedPaperKey | null>(null);
     const [saving, setSaving] = useState(false);
@@ -143,6 +147,10 @@ function PaperCard({ assignmentId, title, paper, multi, current, taxonomy, onSav
                             <ExternalLink className="h-3.5 w-3.5" /> Paper
                         </a>
                     )}
+                    <button onClick={() => setEditing(true)} title="Type or correct the topics and answers yourself"
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-bold">
+                        <Pencil className="h-3.5 w-3.5" /> {count ? 'Edit' : 'Enter manually'}
+                    </button>
                     <button onClick={() => copyText(buildPreparePaperPrompt({ title, board: paper.board || null, taxonomy }), 'Prepare-paper prompt copied')}
                         className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold active:scale-95 transition-transform">
                         <Copy className="h-3.5 w-3.5" /> Prompt
@@ -155,14 +163,19 @@ function PaperCard({ assignmentId, title, paper, multi, current, taxonomy, onSav
                 </div>
             </div>
 
-            <textarea
+            {editing && (
+                <KeyTableEditor initial={parsed?.questions.length ? parsed.questions : current?.questions || []} taxonomy={taxonomy} copySources={others} saving={saving}
+                    onCancel={() => setEditing(false)}
+                    onSave={async rows => { if (await put({ questions: rows }, `Answer key saved (${rows.length} questions)`)) { setEditing(false); setPasted(''); setParsed(null); } }} />
+            )}
+            {!editing && <textarea
                 value={pasted}
                 onChange={e => { setPasted(e.target.value); setParsed(e.target.value.trim() ? parsePaperKeyReply(e.target.value) : null); }}
                 placeholder={count ? 'Paste a new reply to replace the saved list' : "Paste the AI's JSON reply (the question list)"}
                 rows={3}
                 className="w-full bg-[#0b0718] border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-400/50"
-            />
-            {parsed && (
+            />}
+            {parsed && !editing && (
                 <div className="space-y-1">
                     {parsed.errors.map((e, i) => <p key={i} className="text-xs text-rose-300 flex gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />{e}</p>)}
                     {parsed.warnings.map((w, i) => <p key={i} className="text-xs text-amber-200 flex gap-1.5"><AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />{w}</p>)}
@@ -172,7 +185,7 @@ function PaperCard({ assignmentId, title, paper, multi, current, taxonomy, onSav
                 </div>
             )}
 
-            {list.length > 0 && (
+            {list.length > 0 && !editing && (
                 <div className="max-h-72 overflow-y-auto rounded-lg border border-white/10 divide-y divide-white/5">
                     {list.map((q, i) => (
                         <div key={i} className="px-3 py-2 text-xs flex gap-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import TargetStudentsPicker from './TargetStudentsPicker';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, FileText, List, Save, X, CheckCircle, Shuffle, Layers } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
@@ -60,6 +61,10 @@ export default function CreateAssignmentPage() {
 
     // Batches from DB
     const [batches, setBatches] = useState<string[]>([]);
+    // Whole batch (default) or only some students; optionally take them out of an existing assignment
+    const [scope, setScope] = useState<'ALL' | 'SELECTED'>('ALL');
+    const [targetPhones, setTargetPhones] = useState<string[]>([]);
+    const [removeFromId, setRemoveFromId] = useState('');
 
     useEffect(() => {
         // Fetch batches from courses API (returns string array of unique batch names)
@@ -227,6 +232,8 @@ export default function CreateAssignmentPage() {
         if (!title.trim()) { toast.error('Please enter a title'); return; }
         if (!batch) { toast.error('Please select a batch'); return; }
         if (!deadline) { toast.error('Please set a deadline'); return; }
+        const targeted = scope === 'SELECTED' && (type === 'PDF' || type === 'BOARD_PDF');
+        if (targeted && targetPhones.length === 0) { toast.error('Select at least one student, or choose Whole batch'); return; }
         if (type === 'PDF' && !pdfFile) { toast.error('Please upload a PDF'); return; }
         if (type === 'BOARD_PDF') {
             const missing = boards.filter(b => !boardPdfFiles[b]);
@@ -366,7 +373,9 @@ export default function CreateAssignmentPage() {
                     content: contentStringOrArray,
                     randomCount: (type === 'QUESTIONS' && randomDeploy) ? randomCount : 0,
                     boardWise: isBoardWise,
-                    boardContent: isBoardWise ? boardContentMap : undefined
+                    boardContent: isBoardWise ? boardContentMap : undefined,
+                    targetStudents: targeted ? targetPhones : [],
+                    removeFromAssignmentId: targeted && removeFromId ? removeFromId : undefined,
                 })
             });
 
@@ -444,6 +453,11 @@ export default function CreateAssignmentPage() {
                                 {batches.map(b => <option key={b} value={b}>{b}</option>)}
                             </select>
                         </div>
+
+                        {(type === 'PDF' || type === 'BOARD_PDF') && (
+                            <TargetStudentsPicker batch={batch} scope={scope} onScope={s => { setScope(s); if (s === 'ALL') { setTargetPhones([]); setRemoveFromId(''); } }}
+                                phones={targetPhones} onPhones={setTargetPhones} removeFrom={removeFromId} onRemoveFrom={setRemoveFromId} />
+                        )}
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Submission Deadline *</label>

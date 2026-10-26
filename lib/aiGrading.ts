@@ -142,7 +142,7 @@ export function buildGradingPrompt(opts: {
     const keySection = keyQs ? `
 FIXED QUESTION LIST (prepared by the teacher - use it exactly)
 - The paper has exactly ${keyQs.length} questions, so "totalQuestions" is ${keyQs.length} for every student. Use exactly these question labels${keyQs.some(q => /[a-z]/i.test(questionKey(q.question))) ? ' (the letter / section prefix is part of the label - e.g. A1 and B1 are different questions)' : ''}.
-- Copy this list into "questions" unchanged (question, topic, subtopic).
+- Topics and sub-topics are already saved by the teacher: do NOT include a "questions" list in your reply.
 - "Key" is the expected final answer. Accept any equivalent form and any valid method. Only if you are certain a key is wrong, judge that question by correct mathematics.
 ${keyQs.map(q => `${questionLabel(q.question)} | ${q.topic} > ${q.subtopic || '-'} | Key: ${q.answer || '(see solutions)'}`).join('\n')}
 ` : `
@@ -191,11 +191,11 @@ Reply with ONLY one JSON code block, no other text, in exactly this shape:
 \`\`\`json
 {
   "assignmentCode": "${assignmentCode(assignmentId)}",
-  "totalQuestions": 10,
+  "totalQuestions": ${keyQs ? keyQs.length : 10},${keyQs ? '' : `
   "questions": [
     { "question": "1", "topic": "Trigonometric Functions", "subtopic": "Multiple and sub-multiple angles" },
     { "question": "2", "topic": "Trigonometric Functions", "subtopic": "Conditional identities" }
-  ],
+  ],`}
   "results": [
     {
       "code": "ABC123",
@@ -222,8 +222,7 @@ Rules for the JSON:
 - It must be valid JSON: inside strings write every LaTeX backslash doubled (\\\\frac, \\\\sqrt, \\\\int), and use only straight double quotes for JSON keys and strings.
 
 SELF-CHECK BEFORE YOU ANSWER (fix the JSON until all of these are true)
-- "questions" has exactly "totalQuestions" entries - one for every question of the paper, none left out.
-- For every student: correct + incorrect + skippedOrIncomplete = totalQuestions.
+${keyQs ? '' : '- "questions" has exactly "totalQuestions" entries - one for every question of the paper, none left out.\n'}- For every student: correct + incorrect + skippedOrIncomplete = totalQuestions.
 - For every student: "feedback" has one item for EACH question that is not fully correct, so the number of feedback items is at least incorrect + skippedOrIncomplete. Never summarise several questions in one item and never leave a wrong or skipped question without its item.`;
 }
 
@@ -647,6 +646,13 @@ export const GRADING_RESPONSE_SCHEMA = {
         },
     },
     required: ['assignmentCode', 'totalQuestions', 'questions', 'results'],
+};
+
+/** Same as above for papers with a saved key: the AI no longer lists questions / topics. */
+export const GRADING_RESPONSE_SCHEMA_WITH_KEY = {
+    ...GRADING_RESPONSE_SCHEMA,
+    properties: Object.fromEntries(Object.entries(GRADING_RESPONSE_SCHEMA.properties).filter(([k]) => k !== 'questions')),
+    required: GRADING_RESPONSE_SCHEMA.required.filter(k => k !== 'questions'),
 };
 
 /** Paste into AI Studio's Structured output for the "Prepare paper" chat. */

@@ -1,3 +1,4 @@
+import { isOutOfScope } from '@/lib/assignmentScope';
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
@@ -50,10 +51,7 @@ export async function GET(req: NextRequest) {
         }).sort({ deadline: -1 }).lean();
 
         // Filter out assignments where this student is excluded
-        const assignments = allAssignments.filter((a: any) => {
-            const excluded: string[] = a.excludedStudents || [];
-            return !excluded.includes(phoneNumber);
-        });
+        const assignments = allAssignments.filter((a: any) => !isOutOfScope(a, phoneNumber));
 
         // 4. Find Submissions by this student
         const submissions = await AssignmentSubmission.find({

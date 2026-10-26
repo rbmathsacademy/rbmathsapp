@@ -9,7 +9,7 @@ import WarningLimitBar from './WarningLimitBar';
 import ClaudeGradingSection from './ClaudeGradingSection';
 import {
     buildGradingPrompt, buildFixupRequest, parseAiGradingReply, questionKey,
-    submissionCode, assignmentCode, GRADING_RESPONSE_SCHEMA,
+    submissionCode, assignmentCode, GRADING_RESPONSE_SCHEMA, GRADING_RESPONSE_SCHEMA_WITH_KEY,
     type ParsedAiReply, type PaperKeyQuestion, type TaxonomyTopic,
 } from '@/lib/aiGrading';
 
@@ -559,7 +559,7 @@ export default function AiGradingPanel({ assignment, students, onImported }: { a
                             {' '}(best: a Pro model, temperature 0) start a new chat for each batch: attach the PDF, paste that batch&apos;s prompt, send, then copy the JSON reply into step 3.
                         </p>
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-violet-200/60">
-                            <button onClick={() => copyText(JSON.stringify(GRADING_RESPONSE_SCHEMA, null, 2), 'Schema copied - paste it in AI Studio: Run settings > Structured output > Edit')}
+                            <button onClick={() => copyText(JSON.stringify(papers.length > 0 && papers.every(p => (keyFor(p.board || null)?.questions.length || 0) > 0) ? GRADING_RESPONSE_SCHEMA_WITH_KEY : GRADING_RESPONSE_SCHEMA, null, 2), 'Schema copied - paste it in AI Studio: Run settings > Structured output > Edit')}
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold">
                                 <Braces className="h-3.5 w-3.5" /> Copy response schema
                             </button>

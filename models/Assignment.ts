@@ -25,6 +25,8 @@ const AssignmentSchema = new mongoose.Schema({
         default: {}
     },
     excludedStudents: [{ type: String }], // Phone numbers of students excluded from this assignment
+    // When not empty, the assignment is only for these students (phone numbers), not the whole batch
+    targetStudents: [{ type: String }],
     // Flag graded students with more than this many (wrong + skipped) questions; null = no limit
     warningLimit: { type: Number, default: null },
     // Students (BatchStudent ids) who were asked to redo this assignment: they may delete and
