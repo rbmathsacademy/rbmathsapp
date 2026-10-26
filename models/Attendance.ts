@@ -1,21 +1,18 @@
 import mongoose from 'mongoose';
 
+/** One class-day of attendance for a batch. Every student of the batch at the time of saving has a record. */
 const AttendanceSchema = new mongoose.Schema({
-    date: { type: String, required: true }, // YYYY-MM-DD
-    teacherName: { type: String, required: true },
-    teacherEmail: { type: String },
-    department: { type: String, required: true },
-    year: { type: String, required: true },
-    course_code: { type: String, required: true },
-    timeSlot: { type: String, required: true },
-    presentStudentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }],
-    absentStudentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }],
-    createdAt: { type: Date, default: Date.now }
-});
+    batch: { type: String, required: true, index: true },
+    date: { type: String, required: true }, // YYYY-MM-DD (India time)
+    records: [{
+        _id: false,
+        student: { type: mongoose.Schema.Types.ObjectId, ref: 'BatchStudent' },
+        name: { type: String, default: '' },
+        present: { type: Boolean, default: true },
+    }],
+    savedBy: { type: String, default: '' },
+}, { timestamps: true });
 
-// Prevent model overwrite in dev
-if (process.env.NODE_ENV === 'development') {
-    delete mongoose.models.Attendance;
-}
+AttendanceSchema.index({ batch: 1, date: 1 }, { unique: true });
 
 export default mongoose.models.Attendance || mongoose.model('Attendance', AttendanceSchema);

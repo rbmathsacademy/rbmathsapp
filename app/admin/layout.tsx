@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, FileText, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Upload, ClipboardCheck, ClipboardList, BookText, DollarSign, LogOut, Menu, X, Calendar, BarChart3, ChevronRight, MessageSquare, GraduationCap, CalendarCheck } from 'lucide-react';
 import InstallPWA from '@/components/InstallPWA';
 import '../portal-theme.css';
 import { clearAdminCache } from '@/lib/adminCache';
@@ -229,6 +229,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
         { name: 'Lesson Plan', href: '/admin/lesson-plan', icon: BookText },
         { name: 'Fees Management', href: '/admin/fees', icon: DollarSign },
+        { name: 'Attendance', href: '/admin/attendance', icon: CalendarCheck },
     ];
 
     // Filter Navigation based on Role
