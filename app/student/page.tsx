@@ -124,14 +124,34 @@ export default function StudentDashboard() {
     }, [router]);
 
     useEffect(() => {
-        fetchData();
-        fetchUnreadStatus();
+        fetchData(); // also brings the unread chat count
+        // Unread badge: every 2 minutes, but only while the student is actually using the page
+        // (visible and touched in the last 10 minutes). Coming back after a break checks at once.
+        const IDLE_MS = 10 * 60 * 1000;
+        let lastActive = Date.now();
+        let lastCheck = Date.now();
+        const check = () => { lastCheck = Date.now(); fetchUnreadStatus(); };
+        const onActivity = () => {
+            const wasIdle = Date.now() - lastActive > IDLE_MS;
+            lastActive = Date.now();
+            if (wasIdle && document.visibilityState === 'visible' && Date.now() - lastCheck > 120000) check();
+        };
+        const onVisible = () => {
+            if (document.visibilityState !== 'visible') return;
+            lastActive = Date.now();
+            if (Date.now() - lastCheck > 120000) check();
+        };
         const interval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                fetchUnreadStatus();
-            }
-        }, 120000); // Check every 2 minutes only if visible
-        return () => clearInterval(interval);
+            if (document.visibilityState === 'visible' && Date.now() - lastActive < IDLE_MS) check();
+        }, 120000);
+        const events = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+        events.forEach(e => window.addEventListener(e, onActivity, { passive: true }));
+        document.addEventListener('visibilitychange', onVisible);
+        return () => {
+            clearInterval(interval);
+            events.forEach(e => window.removeEventListener(e, onActivity));
+            document.removeEventListener('visibilitychange', onVisible);
+        };
     }, []);
 
     // Once data loads, set default selected batch (first non-free batch)
@@ -170,6 +190,7 @@ export default function StudentDashboard() {
             if (res.ok) {
                 const result = await res.json();
                 writeCache(cacheKey, result);
+                if (typeof result.unreadChat === 'number') { setUnreadChatCount(result.unreadChat); writeCache('chat-unread', result.unreadChat); }
                 if (seq === fetchSeq.current) setData(result);
             } else {
                 if (res.status === 401) {

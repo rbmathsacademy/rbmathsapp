@@ -1,5 +1,7 @@
 import { isOutOfScope } from '@/lib/assignmentScope';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import ChatBatchMetadata from '@/models/ChatBatchMetadata';
+import { processDueAiRetries } from '@/lib/retryAiWorker';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
@@ -25,7 +27,7 @@ export async function GET(req: NextRequest) {
         const phoneNumber = payload.phoneNumber as string;
 
         // 1. Get Student Details
-        const student = await BatchStudent.findOne({ phoneNumber }).select('name phoneNumber courses createdAt').lean();
+        const student = await BatchStudent.findOne({ phoneNumber }).select('name phoneNumber courses createdAt chatReadStatus').lean();
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
@@ -34,6 +36,16 @@ export async function GET(req: NextRequest) {
         // Optional batch filter — scope data to a single batch
         const batchParam = req.nextUrl.searchParams.get('batch');
         const targetBatches = batchParam ? [batchParam] : student.courses;
+
+        // Unread chat badge comes with the dashboard (saves the home page a separate request). Like the
+        // badge route, this also wakes the queued-AI-doubt worker after the response is sent.
+        after(() => processDueAiRetries().catch(err => console.error('[Retry worker trigger error]', err)));
+        const chatMeta = await ChatBatchMetadata.find({ batchId: { $in: student.courses || [] } }).select('batchId lastMessageAt').lean();
+        const readStatus: any = (student as any).chatReadStatus || {};
+        const unreadChat = chatMeta.filter((m: any) => {
+            const lastRead = readStatus instanceof Map ? readStatus.get(m.batchId) : readStatus[m.batchId];
+            return (m.lastMessageAt ? new Date(m.lastMessageAt).getTime() : 0) > (lastRead ? new Date(lastRead).getTime() : 0);
+        }).length;
 
         // 2. Get Tests Data
         const allTests = await OnlineTest.find({
@@ -273,6 +285,7 @@ export async function GET(req: NextRequest) {
         });
 
         return NextResponse.json({
+            unreadChat,
             student: {
                 name: student.name,
                 phoneNumber: student.phoneNumber,
