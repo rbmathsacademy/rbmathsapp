@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { assignmentId, driveLink } = body;
+        const { assignmentId, driveLink, replace } = body;
 
         if (!assignmentId || !driveLink) {
             return NextResponse.json({ error: 'Missing assignment ID or drive link' }, { status: 400 });
@@ -60,7 +60,10 @@ export async function POST(req: NextRequest) {
             assignment: assignmentId,
             student: student._id
         });
-        if (existingSub) {
+        // A rejected submission may be replaced: the old one (and its feedback) is removed only after the
+        // new one has been saved, so nothing is lost if the re-upload fails
+        const replacing = existingSub && replace === true && !!(existingSub as any).rejection;
+        if (existingSub && !replacing) {
             return NextResponse.json({ error: 'You have already submitted this assignment.' }, { status: 409 });
         }
 
@@ -95,6 +98,8 @@ export async function POST(req: NextRequest) {
             submittedAt: now,
             isLate
         });
+
+        if (replacing) await AssignmentSubmission.deleteOne({ _id: existingSub!._id });
 
         // A redo was handed in: the permission has been used (this is now a normal, fresh submission)
         if (redoAllowed) {

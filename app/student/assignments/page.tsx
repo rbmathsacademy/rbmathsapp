@@ -195,7 +195,8 @@ export default function StudentAssignmentsPage() {
                 const subRes = await fetch('/api/student/assignments/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ assignmentId: assignment._id, driveLink })
+                    // A rejected copy is replaced in one step: the old one is removed only once this one is saved
+                    body: JSON.stringify({ assignmentId: assignment._id, driveLink, ...(assignment.rejection ? { replace: true } : {}) })
                 });
 
                 const subData = await subRes.json();
@@ -652,7 +653,7 @@ function AssignmentCard({
                 {assignment.rejection && isSubmitted && (
                     <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-100 shadow-[0_0_20px_-6px_rgba(244,63,94,0.6)]">
                         <p className="font-black text-rose-300 mb-1">↩ Please redo this assignment</p>
-                        <p>Your teacher has asked you to redo it. Read the feedback below, correct your work, then <b>delete this submission</b> and upload the corrected PDF again.</p>
+                        <p>Your teacher has asked you to redo it. Read the feedback below, correct your work, then tap <b>Delete &amp; Re-submit</b> and choose the corrected PDF. This submission and its feedback stay until the new one is uploaded.</p>
                         {assignment.rejection.reason && <p className="mt-1.5 italic">Teacher's note: "{assignment.rejection.reason}"</p>}
                     </div>
                 )}
@@ -722,7 +723,15 @@ function AssignmentCard({
                             View Submission <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                         )}
-                        {assignment.type !== 'INTERACTIVE' && (
+                        {assignment.type !== 'INTERACTIVE' && assignment.rejection && (
+                        <label className={`py-2.5 px-3 rounded-lg text-sm font-bold transition-colors border flex items-center justify-center gap-1.5 cursor-pointer bg-rose-600 hover:bg-rose-500 text-white border-rose-400/50 shadow-[0_0_18px_-4px_rgba(244,63,94,0.7)] ${uploadingId === assignment._id ? 'opacity-70 pointer-events-none' : ''}`}
+                            title="Choose your corrected PDF - it replaces this submission">
+                            {uploadingId === assignment._id ? <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                            {uploadingId === assignment._id ? 'Uploading...' : 'Delete & Re-submit'}
+                            <input type="file" accept="application/pdf" className="hidden" onChange={(e) => onUpload(assignment, e)} disabled={!!uploadingId} />
+                        </label>
+                        )}
+                        {assignment.type !== 'INTERACTIVE' && !assignment.rejection && (
                         <button
                             onClick={onDelete}
                             disabled={!canDelete}
