@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         const phoneNumber = payload.phoneNumber as string;
 
         // 1. Get Student Details
-        const student = await BatchStudent.findOne({ phoneNumber }).lean();
+        const student = await BatchStudent.findOne({ phoneNumber }).select('name phoneNumber courses createdAt').lean();
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
         const allTests = await OnlineTest.find({
             'deployment.batches': { $in: targetBatches },
             status: { $in: ['deployed', 'completed'] }
-        }).sort({ 'deployment.startTime': -1 }).lean();
+        }).select('title totalMarks deployment.startTime deployment.endTime deployment.students.phoneNumber excludedStudents') // not the question papers
+            .sort({ 'deployment.startTime': -1 }).lean();
 
         // Filter out tests where this student is excluded OR is not in a specific-student deployment
         const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -79,8 +80,11 @@ export async function GET(req: NextRequest) {
             }
         });
 
+        const myAttempts = new Map<string, any>();
+        for (const a of allAttempts) if (a.studentPhone === phoneNumber) myAttempts.set(a.testId.toString(), a);
+
         const formattedTests = tests.map(test => {
-            const attempt = allAttempts.find(a => a.testId.toString() === test._id.toString() && a.studentPhone === phoneNumber);
+            const attempt = myAttempts.get(test._id.toString());
             const testStartTime = new Date(test.deployment.startTime);
             const testEndTime = new Date(test.deployment.endTime);
 
@@ -113,15 +117,16 @@ export async function GET(req: NextRequest) {
         // 3. Get Assignments Data
         const allAssignments = await Assignment.find({
             batch: { $in: targetBatches }
-        }).sort({ deadline: -1 }).lean();
+        }).select('title deadline scheduledFor excludedStudents targetStudents').sort({ deadline: -1 }).lean();
 
         // Filter out assignments where this student is excluded
         const assignments = allAssignments.filter((a: any) => !isOutOfScope(a, phoneNumber));
 
-        const studentSubmissions = await AssignmentSubmission.find({ student: student._id }).lean();
+        const studentSubmissions = await AssignmentSubmission.find({ student: student._id }).select('assignment status isLate overrideOnTime submittedAt quality').lean();
+        const submissionByAssignment = new Map<string, any>(studentSubmissions.map((s: any) => [s.assignment.toString(), s]));
 
         const formattedAssignments = assignments.map(assign => {
-            const submission = studentSubmissions.find(s => s.assignment.toString() === assign._id.toString());
+            const submission = submissionByAssignment.get(assign._id.toString());
             const deadline = new Date(assign.deadline);
             const now = new Date();
 
@@ -285,7 +290,7 @@ export async function GET(req: NextRequest) {
             assignments: formattedAssignments,
             offlineExams: formattedOfflineExams,
             schoolExams: formattedSchoolExams
-        });
+        }, { headers: { 'Cache-Control': 'private, max-age=60' } }); // a re-visit within a minute is served by the browser
 
     } catch (error: any) {
         console.error("Dashboard Analytics Error:", error);
