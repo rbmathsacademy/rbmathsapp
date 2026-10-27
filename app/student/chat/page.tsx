@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, Camera, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2, Crop } from 'lucide-react';
+import { Send, Image as ImageIcon, MessageSquare, ChevronLeft, User, X, Edit2, Check, Calculator, Reply, Trash2, ShieldX, ArrowLeft, Loader2, Crop } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import ReactCrop, { type Crop as CropType, type PixelCrop } from 'react-image-crop';
@@ -23,14 +23,44 @@ import BatchTabSwitcher from '../../components/BatchTabSwitcher';
 
 const FREE_BATCH_LOWER = 'class xi (free batch) 2026-27';
 
+const driveId = (url: string) => url.match(/\/d\/([^/?#]+)/)?.[1] || url.match(/[?&]id=([^&#]+)/)?.[1] || null;
+
+/** Fallback chain for a Drive picture that did not load: thumbnail -> googleusercontent -> old view link */
+const nextImageUrl = (img: HTMLImageElement, original: string) => {
+    const id = driveId(original);
+    const step = Number(img.dataset.step || '0');
+    const chain = id ? [`https://lh3.googleusercontent.com/d/${id}=w1000`, `https://drive.google.com/uc?export=view&id=${id}`] : [];
+    if (step < chain.length) { img.dataset.step = String(step + 1); img.src = chain[step]; }
+};
+
+/** Loads the photo through the browser's own decoder and redraws it as a JPEG of at most maxSide px. */
+const shrinkPhoto = (file: File, maxSide = 2000): Promise<string> => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+        try {
+            const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('no canvas');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+        } catch (err) { reject(err); } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('This photo could not be opened')); };
+    img.src = url;
+});
+
 const getPreviewUrl = (url: string) => {
     if (!url) return '';
-    if (url.includes('drive.google.com/file/d/')) {
-        const id = url.split('/d/')[1]?.split('/')[0];
-        if (id) return `https://drive.google.com/uc?export=view&id=${id}`;
-    }
-    if (url.includes('drive.google.com/uc?export=download&id=')) {
-        return url.replace('export=download', 'export=view');
+    if (url.includes('drive.google.com')) {
+        // The thumbnail endpoint shows reliably inside <img>; uc?export=view is blocked on many phones
+        const id = driveId(url);
+        if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
     }
     return url;
 };
@@ -116,6 +146,7 @@ export default function StudentChat() {
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [previewFailed, setPreviewFailed] = useState(false); // the phone could not draw the picked photo
     const [editingMessage, setEditingMessage] = useState<Message | null>(null);
     const [editContent, setEditContent] = useState('');
     const [myRoll, setMyRoll] = useState<string | null>(null);
@@ -461,29 +492,32 @@ export default function StudentChat() {
         ), { duration: 5000 });
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const result = event.target?.result as string;
-            setUnCroppedImage(result);
+        // Transfer any text already typed into the popup's doubt text
+        if (newMessage.trim()) {
+            setDoubtText(newMessage);
+            setNewMessage('');
+        }
+        try {
+            // A small JPEG (max 2000 px) that every phone can show, crop and send
+            setUnCroppedImage(await shrinkPhoto(file));
             setIsCropping(true);
-            
-            // Transfer any text already typed into the popup's doubt text
-            if (newMessage.trim()) {
-                setDoubtText(newMessage);
-                setNewMessage('');
-            }
-        };
-        reader.readAsDataURL(file);
+        } catch {
+            // This phone cannot open the photo format (e.g. HEIC): send it as it is, without a preview
+            const reader = new FileReader();
+            reader.onload = (event) => { setPreviewFailed(true); setImagePreview(event.target?.result as string); };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSendImage = async () => {
         if (!imagePreview || !selectedBatch) return;
         const b64 = imagePreview;
         setImagePreview(null);
+        setPreviewFailed(false);
         await sendImageMessageAndAskAi(b64, doubtText);
         setDoubtText('');
     };
@@ -795,7 +829,7 @@ export default function StudentChat() {
                                             </div>
                                         ) : (
                                             <div className="relative">
-                                                <img src={getPreviewUrl(msg.content)} alt="Sent" className="rounded-2xl max-h-80 w-auto object-contain bg-white/5 cursor-pointer" onClick={() => window.open(msg.content, '_blank')} />
+                                                <img src={getPreviewUrl(msg.content)} alt="Sent" onError={e => nextImageUrl(e.currentTarget, msg.content)} className="rounded-2xl max-h-80 w-auto object-contain bg-white/5 cursor-pointer" onClick={() => window.open(msg.content, '_blank')} />
                                                 {msg.doubtMetadata?.status === 'resolved' && !msg.isAiResponse && !isAdmin && (
                                                     <div className="absolute top-2 right-2 text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-md backdrop-blur-md">
                                                         Resolved
@@ -917,8 +951,15 @@ export default function StudentChat() {
                 {imagePreview && (
                     <div className="absolute bottom-full left-0 right-0 p-4 bg-slate-900 border-t border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2">
                         <div className="relative group w-full max-w-md">
-                            <img src={imagePreview} alt="Preview" className="max-h-60 rounded-xl border border-white/10 shadow-2xl mx-auto" />
-                            <button onClick={() => setImagePreview(null)} className="absolute -top-3 -right-3 p-1.5 bg-red-600 rounded-full text-white shadow-lg"><X className="h-4 w-4" /></button>
+                            {previewFailed ? (
+                                <div className="h-28 rounded-xl border border-white/10 bg-white/5 flex flex-col items-center justify-center text-center px-4">
+                                    <ImageIcon className="h-6 w-6 text-slate-400 mb-1" />
+                                    <p className="text-xs text-slate-300">Photo attached - this phone cannot show a preview, but it will be sent.</p>
+                                </div>
+                            ) : (
+                                <img src={imagePreview} alt="Preview" onError={() => setPreviewFailed(true)} className="max-h-60 rounded-xl border border-white/10 shadow-2xl mx-auto" />
+                            )}
+                            <button onClick={() => { setImagePreview(null); setPreviewFailed(false); }} className="absolute -top-3 -right-3 p-1.5 bg-red-600 rounded-full text-white shadow-lg"><X className="h-4 w-4" /></button>
                         </div>
                         <div className="mt-4 w-full max-w-md">
                             <textarea 
@@ -985,17 +1026,6 @@ export default function StudentChat() {
                                     <button type="button" onClick={() => setShowMathTools(!showMathTools)} className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-colors border ${showMathTools ? 'bg-blue-600/20 text-blue-400 border-blue-500/50' : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'}`}>
                                         <Calculator className="h-[1.2rem] w-[1.2rem]" />
                                     </button>
-                                    <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Take Photo">
-                                        <Camera className="h-[1.2rem] w-[1.2rem]" />
-                                        <input 
-                                            type="file" 
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                                            accept="image/*" 
-                                            capture="environment"
-                                            onChange={handleImageUpload}
-                                            onClick={(e) => { (e.target as HTMLInputElement).value = '' }} 
-                                        />
-                                    </label>
                                     <label className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 transition-all cursor-pointer flex items-center justify-center m-0 overflow-hidden" title="Upload from Gallery">
                                         <ImageIcon className="h-[1.2rem] w-[1.2rem]" />
                                         <input 
@@ -1044,18 +1074,6 @@ export default function StudentChat() {
                         <div className="flex flex-col gap-3">
                             <div className="flex gap-3">
                                 <label className="relative overflow-hidden flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
-                                    <Camera className="h-4 w-4" /> Camera
-                                    <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" capture="environment" onChange={(e) => {
-                                        setActiveDoubtSessionId(followUpModalSessionId);
-                                        if (followUpText.trim()) {
-                                            setNewMessage(followUpText);
-                                        }
-                                        setFollowUpModalSessionId(null);
-                                        setFollowUpText('');
-                                        handleImageUpload(e);
-                                    }} onClick={(e) => { (e.target as HTMLInputElement).value = '' }} />
-                                </label>
-                                <label className="relative overflow-hidden flex-1 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 shadow-xl flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
                                     <ImageIcon className="h-4 w-4" /> Gallery
                                     <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => {
                                         setActiveDoubtSessionId(followUpModalSessionId);
@@ -1098,6 +1116,7 @@ export default function StudentChat() {
                                 src={unCroppedImage} 
                                 alt="Crop me" 
                                 className="max-h-[70vh] object-contain"
+                                onError={() => { setPreviewFailed(true); setImagePreview(unCroppedImage); setIsCropping(false); setUnCroppedImage(null); }}
                                 onLoad={(e) => {
                                     const { width, height } = e.currentTarget;
                                     setCrop({ unit: '%', x: 5, y: 5, width: 90, height: 90 });
@@ -1120,6 +1139,7 @@ export default function StudentChat() {
                                 if (imgRef.current && completedCrop && completedCrop.width > 0 && completedCrop.height > 0) {
                                     cropped = getCroppedImg(imgRef.current, completedCrop);
                                 }
+                                setPreviewFailed(false);
                                 setImagePreview(cropped);
                                 setIsCropping(false);
                                 setUnCroppedImage(null);
