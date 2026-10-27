@@ -294,12 +294,12 @@ export default function SchoolPerformancePanel({ batch, analyticsData }: { batch
                         <Download className="w-4 h-4" /> Download Report
                     </button>
 
-                    <input 
-                        type="text" 
-                        placeholder="WhatsApp message..."
+                    <textarea
+                        rows={3}
+                        placeholder="WhatsApp message... (Enter = new line)"
                         value={whatsappMessage}
                         onChange={(e) => setWhatsappMessage(e.target.value)}
-                        className="bg-[#140d27] border border-[#352a55] text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-fuchsia-500 flex-1 min-w-[150px]"
+                        className="bg-[#140d27] border border-[#352a55] text-slate-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-fuchsia-500 flex-1 min-w-[150px] resize-y"
                     />
                     <button 
                         onClick={copyForWhatsApp}
