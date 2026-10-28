@@ -6,6 +6,7 @@ import BatchStudent from '@/models/BatchStudent';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import { resolveStudentJoinedAt } from '@/lib/studentJoinDate';
+import { unlimitedExpiry, stretchTo, unlimitedNoteDate } from '@/lib/unlimitedAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -68,12 +69,16 @@ export async function GET(req: NextRequest) {
         const now = new Date();
         const studentBoard = student.board || null;
         const studentJoinedAt = resolveStudentJoinedAt(student);
+        const unlimitedUntil = unlimitedExpiry(student as any, now); // active unlimited access, else null
         let hasBoardWiseAssignment = false;
 
         const enhancedAssignments = assignments.map((a: any) => {
             const submission = submissionMap.get(a._id.toString());
             const deadline = new Date(a.deadline);
-            const cooldownEndDate = new Date(deadline.getTime() + (a.cooldownDuration || 0) * 60000);
+            const realCooldownEnd = new Date(deadline.getTime() + (a.cooldownDuration || 0) * 60000);
+            // Unlimited access: the student's deadline is the access expiry (when later than the real one)
+            const shownDeadline = stretchTo(deadline, unlimitedUntil)!;
+            const cooldownEndDate = stretchTo(realCooldownEnd, unlimitedUntil)!;
             const scheduledFor = a.scheduledFor ? new Date(a.scheduledFor) : null;
 
             let status = 'PENDING';
@@ -88,12 +93,12 @@ export async function GET(req: NextRequest) {
             } else if (scheduledFor && now < scheduledFor) {
                 // Assignment is scheduled for a future time — not yet open
                 status = 'SCHEDULED';
-            } else if (studentJoinedAt > deadline) {
+            } else if (!unlimitedUntil && studentJoinedAt > deadline) {
                 // The deadline had already passed before this student even joined —
                 // never mark it as something they personally missed.
                 status = 'NOT_ENROLLED';
             } else {
-                if (now < deadline) {
+                if (now < shownDeadline) {
                     status = 'PENDING';
                 } else if (now < cooldownEndDate) {
                     status = 'LATE_ALLOWED';
@@ -128,7 +133,7 @@ export async function GET(req: NextRequest) {
                 title: a.title,
                 type: a.type,
                 batch: a.batch,
-                deadline: a.deadline,
+                deadline: unlimitedUntil ? shownDeadline.toISOString() : a.deadline,
                 scheduledFor: scheduledFor ? scheduledFor.toISOString() : null,
                 cooldownDuration: a.cooldownDuration,
                 cooldownEndDate,
@@ -153,6 +158,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
             assignments: enhancedAssignments,
             needsBoardSetup: hasBoardWiseAssignment && !studentBoard,
+            unlimitedUntil: unlimitedNoteDate(unlimitedUntil),
             // Lets the client measure its own clock drift, so a phone with a wrong
             // clock doesn't show/unlock a scheduled assignment at the wrong moment.
             serverNow: now.toISOString()

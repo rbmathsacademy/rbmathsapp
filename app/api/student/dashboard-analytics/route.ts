@@ -11,6 +11,7 @@ import AssignmentSubmission from '@/models/AssignmentSubmission';
 import OfflineExam from '@/models/OfflineExam';
 import SchoolExam from '@/models/SchoolExam';
 import { jwtVerify } from 'jose';
+import { unlimitedExpiry } from '@/lib/unlimitedAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 
@@ -27,10 +28,11 @@ export async function GET(req: NextRequest) {
         const phoneNumber = payload.phoneNumber as string;
 
         // 1. Get Student Details
-        const student = await BatchStudent.findOne({ phoneNumber }).select('name phoneNumber courses createdAt chatReadStatus').lean();
+        const student = await BatchStudent.findOne({ phoneNumber }).select('name phoneNumber courses createdAt chatReadStatus noExpiry unlimitedUntil').lean();
         if (!student) {
             return NextResponse.json({ error: 'Student not found' }, { status: 404 });
         }
+        const hasUnlimited = !!unlimitedExpiry(student as any); // everything open while unlimited access lasts
         const studentCreatedAt = student.createdAt ? new Date(student.createdAt) : new Date(parseInt(student._id.toString().slice(0, 8), 16) * 1000);
 
         // Optional batch filter — scope data to a single batch
@@ -104,7 +106,9 @@ export async function GET(req: NextRequest) {
             if (attempt) {
                 status = attempt.status;
             } else {
-                if (studentCreatedAt > testStartTime) {
+                if (hasUnlimited) {
+                    status = 'pending';
+                } else if (studentCreatedAt > testStartTime) {
                     status = 'not_enrolled';
                 } else if (new Date() > testEndTime) {
                     status = 'missed';
@@ -148,7 +152,7 @@ export async function GET(req: NextRequest) {
                 status = submission.status === 'CORRECTED' ? 'CORRECTED' : ((submission as any).overrideOnTime ? 'SUBMITTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED'));
             } else if (scheduledFor && now < scheduledFor) {
                 status = 'SCHEDULED';
-            } else {
+            } else if (!hasUnlimited) {
                 if (studentCreatedAt > deadline) {
                     status = 'NOT_ENROLLED';
                 } else if (now > deadline) {

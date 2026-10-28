@@ -6,6 +6,7 @@ import StudentTestAttempt from '@/models/StudentTestAttempt';
 import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
 import { resolveStudentJoinedAt } from '@/lib/studentJoinDate';
+import { unlimitedExpiry, stretchTo } from '@/lib/unlimitedAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -109,13 +110,15 @@ export async function GET(req: NextRequest) {
                 // noExpiry students are exempt: every test in the batch is treated
                 // as theirs regardless of join date, so fall through to normal
                 // missed/pending counting instead.
-                const isPreJoin = !dbStudent?.noExpiry && !!(studentJoinedAt && startTime && studentJoinedAt > startTime);
+                const unlimitedUntil = unlimitedExpiry(dbStudent as any, now);
+                const effEnd = stretchTo(endTime, unlimitedUntil);
+                const isPreJoin = !unlimitedUntil && !!(studentJoinedAt && startTime && studentJoinedAt > startTime);
                 if (isPreJoin) {
                     // not counted
-                } else if (endTime && now > endTime) {
+                } else if (effEnd && now > effEnd) {
                     missed++;
                 } else if (
-                    (!endTime || now <= endTime) &&
+                    (!effEnd || now <= effEnd) &&
                     (!startTime || now >= startTime)
                 ) {
                     pending++;

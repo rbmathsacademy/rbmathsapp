@@ -5,6 +5,7 @@ import BatchStudent from '@/models/BatchStudent';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import { isOutOfScope } from '@/lib/assignmentScope';
+import { unlimitedExpiry, stretchTo, unlimitedNoteDate } from '@/lib/unlimitedAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -75,7 +76,8 @@ export async function POST(req: NextRequest) {
         }
 
         const deadline = new Date(assignment.deadline);
-        const cooldownEndDate = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
+        // Unlimited access keeps submissions open until its expiry; anything after the real deadline is still marked late
+        const cooldownEndDate = stretchTo(new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000), unlimitedExpiry(student as any, now))!;
 
         let isLate = false;
 

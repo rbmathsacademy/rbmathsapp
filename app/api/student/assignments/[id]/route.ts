@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
+import { unlimitedExpiry, stretchTo } from '@/lib/unlimitedAccess';
 import BatchStudent from '@/models/BatchStudent';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
@@ -47,7 +48,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         // 3. Check deadline + cooldown hasn't passed
         const now = new Date();
         const deadline = new Date(assignment.deadline);
-        const cooldownEnd = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
+        const cooldownEnd = stretchTo(new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000), unlimitedExpiry(student as any, now))!;
 
         // A submission the teacher rejected may always be deleted, so the student can redo it
         const existing = await AssignmentSubmission.findOne({ assignment: assignmentId, student: student._id }).select('rejection').lean() as any;

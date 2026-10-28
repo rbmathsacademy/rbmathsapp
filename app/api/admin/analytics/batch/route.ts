@@ -1,5 +1,6 @@
 
 import { isOutOfScope } from '@/lib/assignmentScope';
+import { unlimitedExpiry } from '@/lib/unlimitedAccess';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
         // 1. Fetch Students in Batch with createdAt
         const students = await BatchStudent.find({ courses: batch })
-            .select('name phoneNumber createdAt schoolName board')
+            .select('name phoneNumber createdAt schoolName board noExpiry unlimitedUntil')
             .lean();
 
         if (!students.length) {
@@ -177,7 +178,9 @@ export async function GET(request: NextRequest) {
                 let status = 'PENDING';
                 if (submission) {
                     status = submission.status === 'CORRECTED' ? 'CORRECTED' : ((submission as any).overrideOnTime ? 'SUBMITTED' : (submission.isLate ? 'LATE_SUBMITTED' : 'SUBMITTED'));
-                } else {
+                } else if (unlimitedExpiry(student as any)) {
+                    // unlimited access: still open for them, never missed / not enrolled
+                    } else {
                     const now = new Date();
 
                     if (studentCreatedAt > assignmentDate) {

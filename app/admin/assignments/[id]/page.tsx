@@ -24,6 +24,7 @@ interface StudentSubmission {
         guardianPhone?: string;
         board?: string | null;
     };
+    unlimitedUntil?: string | null; // the student has unlimited access until this date
     status: 'PENDING' | 'CORRECTED'; // Correction Status
     submissionStatus: 'SUBMITTED' | 'LATE_SUBMITTED' | 'MISSED' | 'PENDING' | 'NEW_ADMISSION';
     submittedAt: string | null;
@@ -979,7 +980,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                             )}
                                             {student.submissionStatus === 'PENDING' && (
                                                 <span className="inline-flex items-center gap-1.5 text-gray-400 text-xs bg-gray-500/10 px-2 py-1 rounded-full">
-                                                    <Clock className="w-3 h-3" /> Pending
+                                                    <Clock className="w-3 h-3" /> Pending{student.unlimitedUntil ? ' (unlimited access)' : ''}
                                                 </span>
                                             )}
                                             {student.submissionStatus === 'NEW_ADMISSION' && (

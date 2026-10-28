@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
+import { unlimitedExpiry, stretchTo } from '@/lib/unlimitedAccess';
 import OnlineTest from '@/models/OnlineTest';
 import BatchStudent from '@/models/BatchStudent';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
@@ -232,8 +233,8 @@ export async function GET(
         }
 
         // If no attempt yet and test hasn't started, return test info only
-        // Bypass time check if student has noExpiry flag
-        if (!attempt && startTime && now < startTime && !(dbStudent as any)?.noExpiry) {
+        // A test opens at its normal start time (unlimited access only stretches the end)
+        if (!attempt && startTime && now < startTime) {
             return NextResponse.json({
                 error: 'Test has not started yet',
                 startsAt: startTime
@@ -345,7 +346,7 @@ export async function GET(
                 totalMarks: test.totalMarks,
                 durationMinutes: test.deployment?.durationMinutes,
                 startTime: test.deployment?.startTime,
-                endTime: test.deployment?.endTime,
+                endTime: stretchTo(test.deployment?.endTime, unlimitedExpiry(dbStudent as any))?.toISOString() ?? test.deployment?.endTime,
                 config: test.config,
                 questions
             },

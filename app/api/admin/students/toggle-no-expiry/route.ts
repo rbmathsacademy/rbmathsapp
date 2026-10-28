@@ -12,15 +12,22 @@ export async function POST(req: NextRequest) {
         }
 
         await dbConnect();
-        const { studentId, noExpiry } = await req.json();
+        const { studentId, noExpiry, until } = await req.json();
 
         if (!studentId) {
             return NextResponse.json({ error: 'Student ID is required' }, { status: 400 });
         }
 
+        let untilDate: Date | null = null;
+        if (noExpiry) {
+            untilDate = until ? new Date(until) : null;
+            if (!untilDate || isNaN(untilDate.getTime()) || untilDate.getTime() <= Date.now()) {
+                return NextResponse.json({ error: 'Choose an end date in the future for the unlimited access' }, { status: 400 });
+            }
+        }
         const student = await BatchStudent.findByIdAndUpdate(
             studentId,
-            { $set: { noExpiry: Boolean(noExpiry) } },
+            { $set: { noExpiry: Boolean(noExpiry), unlimitedUntil: untilDate, unlimitedReminderFor: '' } },
             { new: true }
         );
 
@@ -30,8 +37,11 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ 
             success: true, 
-            message: `Unlimited access has been ${noExpiry ? 'enabled' : 'disabled'} for ${student.name}`,
-            noExpiry: student.noExpiry
+            message: noExpiry
+                ? `Unlimited access enabled for ${student.name} until ${untilDate!.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}`
+                : `Unlimited access has been disabled for ${student.name}`,
+            noExpiry: student.noExpiry,
+            unlimitedUntil: student.unlimitedUntil
         });
     } catch (error: any) {
         console.error('Failed to toggle noExpiry:', error);

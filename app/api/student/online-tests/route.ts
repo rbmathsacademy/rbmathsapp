@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
+import { unlimitedExpiry, stretchTo, unlimitedNoteDate } from '@/lib/unlimitedAccess';
 import OnlineTest from '@/models/OnlineTest';
 import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
@@ -91,6 +92,7 @@ export async function GET(req: NextRequest) {
         attempts.forEach(a => attemptMap.set(a.testId.toString(), a));
 
         const now = new Date();
+        const unlimitedUntil = unlimitedExpiry(dbStudent as any, now); // active unlimited access, else null
         const available: any[] = [];
         const upcoming: any[] = [];
         const completed: any[] = [];
@@ -133,7 +135,8 @@ export async function GET(req: NextRequest) {
                     questionCount,
                 durationMinutes: test.deployment?.durationMinutes,
                 startTime: test.deployment?.startTime,
-                endTime: test.deployment?.endTime,
+                // while unlimited access lasts the student sees its expiry as the end of the test
+                endTime: unlimitedUntil ? stretchTo(test.deployment?.endTime, unlimitedUntil)?.toISOString() : test.deployment?.endTime,
                 config: test.config,
                 attemptStatus: attempt?.status || 'not_started',
                 score: resultsPending ? null : attempt?.score,
@@ -144,11 +147,10 @@ export async function GET(req: NextRequest) {
 
             if (attempt?.status === 'completed') {
                 completed.push(testInfo);
-            } else if (dbStudent?.noExpiry) {
-                // noExpiry students see every uncompleted test in the batch,
-                // regardless of dates OR join date — this is a deliberate,
-                // unconditional override, not subject to the pre-join check below.
-                available.push(testInfo);
+            } else if (unlimitedUntil) {
+                // Unlimited access (until its expiry): every test that has started is open, whether it
+                // ended already or was from before the student joined. Upcoming tests open at their normal start.
+                if (startTime && now < startTime) upcoming.push(testInfo); else available.push(testInfo);
             } else if (studentJoinedAt && startTime && studentJoinedAt > startTime) {
                 // This test's window was already open — or over — before the student
                 // even joined. Never surface it as "available"/"missed".
@@ -169,7 +171,7 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        return NextResponse.json({ available, upcoming, completed, expired, preJoin });
+        return NextResponse.json({ available, upcoming, completed, expired, preJoin, unlimitedUntil: unlimitedNoteDate(unlimitedUntil) });
     } catch (error: any) {
         console.error('Error fetching student tests:', error);
         return NextResponse.json({ error: 'Failed to fetch tests' }, { status: 500 });

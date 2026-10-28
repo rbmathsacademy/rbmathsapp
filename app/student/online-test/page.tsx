@@ -66,6 +66,7 @@ export default function OnlineTestPage() {
     // Tests whose window was already over before this student joined — never
     // counted as missed, shown separately instead.
     const [preJoin, setPreJoin] = useState<TestInfo[]>([]);
+    const [unlimitedUntil, setUnlimitedUntil] = useState<string | null>(null);
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
@@ -96,6 +97,7 @@ export default function OnlineTestPage() {
         setCompleted(data.completed || []);
         setExpired(data.expired || []);
         setPreJoin(data.preJoin || []);
+        setUnlimitedUntil(data.unlimitedUntil || null);
     };
 
     const fetchTests = async (batch?: string) => {
@@ -281,6 +283,12 @@ export default function OnlineTestPage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-2 sm:py-6 relative z-10 space-y-8">
+
+                {unlimitedUntil && (
+                <div className="mb-4 rounded-xl border border-amber-300/30 bg-amber-400/[0.08] px-3 py-2 text-xs text-amber-100">
+                    ♾ Unlimited access until <b>{new Date(unlimitedUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}</b> - all assignments and tests of your batch are open to you till then.
+                </div>
+            )}
 
                 {/* ===== BATCH SELECTION TABS ===== */}
                 {batches.length > 1 && (

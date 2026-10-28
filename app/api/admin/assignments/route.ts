@@ -7,6 +7,7 @@ import BatchStudent from '@/models/BatchStudent';
 import Question from '@/models/Question';
 import AssignmentFolder from '@/models/AssignmentFolder';
 import { isOutOfScope, isTargeted } from '@/lib/assignmentScope';
+import { unlimitedExpiry } from '@/lib/unlimitedAccess';
 
 export async function POST(req: Request) {
     try {
@@ -61,7 +62,7 @@ export async function GET(req: Request) {
         const uniqueBatches = [...new Set(assignments.map((a: any) => a.batch))];
         const batchStudentsMap: Record<string, Array<{ _id: any; createdAt: Date; phoneNumber: string }>> = {};
         await Promise.all(uniqueBatches.map(async (b) => {
-            batchStudentsMap[b] = await BatchStudent.find({ courses: b }).select('_id createdAt phoneNumber').lean();
+            batchStudentsMap[b] = await BatchStudent.find({ courses: b }).select('_id createdAt phoneNumber noExpiry unlimitedUntil').lean();
         }));
 
         const now = new Date();
@@ -113,6 +114,7 @@ export async function GET(req: Request) {
             batchStudents.forEach((student: any) => {
                 if (submittedStudentIds.has(student._id.toString())) return; // submitted
                 if (isOutOfScope(a, student.phoneNumber)) return; // excluded or not selected
+                if (unlimitedExpiry(student, now)) { pendingCount++; return; } // unlimited access: still open for them
 
                 const studentJoinDate = new Date(student.createdAt);
                 if (studentJoinDate > deadline) {

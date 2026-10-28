@@ -29,7 +29,9 @@ const BatchStudentSchema = new mongoose.Schema({
     },
     collegeName: { type: String, trim: true },
     modeOfClass: { type: String, enum: ['online', 'offline', ''], default: '' },
-    noExpiry: { type: Boolean, default: false }  // If true, all online tests never expire for this student
+    noExpiry: { type: Boolean, default: false },  // Unlimited access switched on (see unlimitedUntil)
+    unlimitedUntil: { type: Date, default: null },  // When the unlimited access ends (it is revoked automatically)
+    unlimitedReminderFor: { type: String, default: '' }  // the expiry date a reminder popup was already sent for
 }, { timestamps: true });
 
 // Prevent overwrite

@@ -46,6 +46,7 @@ export default function StudentAssignmentsPage() {
     const [activeTab, setActiveTab] = useState<TabType>('PENDING');
     const [loading, setLoading] = useState(true);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [unlimitedUntil, setUnlimitedUntil] = useState<string | null>(null);
     const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
     // A picked PDF over 3 MB: offer to compress it on the device before the normal upload
     const [compressFor, setCompressFor] = useState<{ assignment: Assignment; file: File } | null>(null);
@@ -96,6 +97,7 @@ export default function StudentAssignmentsPage() {
             if (data.assignments) {
                 setAssignments(data.assignments);
             }
+            setUnlimitedUntil(data.unlimitedUntil || null);
         } catch (error) {
             toast.error('Failed to load assignments');
         } finally {
@@ -407,6 +409,12 @@ export default function StudentAssignmentsPage() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-300 via-white to-cyan-300 bg-clip-text text-transparent mb-6">
                 My Assignments
             </h1>
+
+            {unlimitedUntil && (
+                <div className="mb-4 rounded-xl border border-amber-300/30 bg-amber-400/[0.08] px-3 py-2 text-xs text-amber-100">
+                    ♾ Unlimited access until <b>{new Date(unlimitedUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}</b> - all assignments and tests of your batch are open to you till then.
+                </div>
+            )}
 
             {/* Batch Tab Switcher */}
             {nonFreeBatches.length > 1 && (

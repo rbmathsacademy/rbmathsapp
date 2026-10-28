@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import BatchStudent from '@/models/BatchStudent';
+import { unlimitedExpiry } from '@/lib/unlimitedAccess';
 import Question from '@/models/Question';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -62,7 +63,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 // NEW_ADMISSION: joined AFTER the deadline (regardless of cooldown)
                 // PENDING:       joined on/before deadline, cooldown NOT yet expired
                 // MISSED:        joined on/before deadline, cooldown HAS expired
-                if (studentJoinDate > assignmentDeadline) {
+                if (unlimitedExpiry(student, now)) {
+                    // unlimited access: open for them, so neither missed nor a new admission (stays 'PENDING')
+                } else if (studentJoinDate > assignmentDeadline) {
                     submissionStatus = 'NEW_ADMISSION';
                 } else if (cooldownExpired) {
                     submissionStatus = 'MISSED';
@@ -82,6 +85,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     guardianPhone: student.guardianPhone,
                     board: student.board || null
                 },
+                unlimitedUntil: unlimitedExpiry(student, now) ? (student.unlimitedUntil || null) : null,
                 status: correctionStatus,
                 submissionStatus,
                 submittedAt: submission ? submission.submittedAt : null,
@@ -107,6 +111,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 studentList.push({
                     _id: sub._id,
                     student: sub.student,
+                    unlimitedUntil: null,
                     status: sub.status || 'PENDING',
                     submissionStatus: isLateDynamically ? 'LATE_SUBMITTED' : 'SUBMITTED',
                     submittedAt: sub.submittedAt,

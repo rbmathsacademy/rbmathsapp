@@ -21,6 +21,7 @@ interface Student {
     board?: string;
     guestClass?: string;
     noExpiry?: boolean;
+    unlimitedUntil?: string | null;
     createdAt: string;
 }
 
@@ -264,10 +265,27 @@ export default function AdminStudents() {
         }
     };
 
-    const handleToggleNoExpiry = async (student: Student) => {
-        const action = student.noExpiry ? 'disable' : 'enable';
-        if (!confirm(`Are you sure you want to ${action} unlimited test access for ${student.name}?`)) return;
-        
+    // --- Unlimited access (with an end date; it is revoked automatically when the date passes) ---
+    const ACCESS_CHOICES = [{ days: 7, label: '1 week' }, { days: 30, label: '1 month' }, { days: 90, label: '3 months' }, { days: 180, label: '6 months' }, { days: 365, label: '1 year' }];
+    const dayStr = (addDays: number) => new Date(Date.now() + 5.5 * 3600 * 1000 + addDays * 86400000).toISOString().slice(0, 10); // India date
+    const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+    const isUnlimitedActive = (s: Student) => !!s.noExpiry && (!s.unlimitedUntil || new Date(s.unlimitedUntil).getTime() > Date.now());
+    const [accessFor, setAccessFor] = useState<Student | null>(null);
+    const [accessDays, setAccessDays] = useState(30);
+    const [accessDate, setAccessDate] = useState('');
+    const accessEndDay = () => (accessDays === 0 ? accessDate : dayStr(accessDays));
+    const accessEndLabel = () => { const d = accessEndDay(); return d ? fmtDay(d + 'T12:00:00+05:30') : 'pick a date'; };
+
+    const handleToggleNoExpiry = (student: Student) => { setAccessFor(student); setAccessDays(30); setAccessDate(''); };
+
+    const saveAccess = async () => {
+        const day = accessEndDay();
+        if (!day) { toast.error('Pick an end date'); return; }
+        await setAccess(accessFor!, true, new Date(day + 'T23:59:59+05:30').toISOString());
+    };
+
+    const setAccess = async (student: Student, on: boolean, until?: string) => {
+        const action = on ? 'enable' : 'disable';
         const toastId = toast.loading(`${action === 'enable' ? 'Enabling' : 'Disabling'} unlimited access...`);
         try {
             const userStr = localStorage.getItem('user');
@@ -280,12 +298,13 @@ export default function AdminStudents() {
             const res = await fetch('/api/admin/students/toggle-no-expiry', {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ studentId: student._id, noExpiry: !student.noExpiry })
+                body: JSON.stringify({ studentId: student._id, noExpiry: on, until })
             });
             
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             toast.success(data.message, { id: toastId });
+            setAccessFor(null);
             fetchStudents();
         } catch (error: any) {
             toast.error(error.message || 'Failed to toggle access', { id: toastId });
@@ -981,11 +1000,15 @@ export default function AdminStudents() {
                                             <div className="max-w-[120px] sm:max-w-none truncate">
                                                 <p className="font-bold text-white truncate flex items-center gap-2">
                                                     {student.name}
-                                                    {student.noExpiry && (
-                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 text-[9px] font-bold border border-yellow-500/30" title="This student has unlimited lifetime access to all tests in their batches, ignoring deadlines.">
-                                                            <Infinity className="h-3 w-3" /> Unlimited Access
+                                                    {student.noExpiry && (isUnlimitedActive(student) ? (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 text-[9px] font-bold border border-yellow-500/30" title="Unlimited access: every assignment and test of the batch is open until the end date, then it is revoked automatically.">
+                                                            <Infinity className="h-3 w-3" /> Unlimited{student.unlimitedUntil ? ' until ' + fmtDay(student.unlimitedUntil) : ''}
                                                         </span>
-                                                    )}
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 text-[9px] font-bold border border-slate-500/20" title="Unlimited access has ended">
+                                                            <Infinity className="h-3 w-3" /> Unlimited ended {student.unlimitedUntil ? fmtDay(student.unlimitedUntil) : ''}
+                                                        </span>
+                                                    ))}
                                                 </p>
                                                 <p className="text-[10px] text-slate-500 sm:hidden">{student.phoneNumber}</p>
                                                 {student.email && <p className="text-[10px] text-slate-500 truncate hidden sm:block">{student.email}</p>}
@@ -1047,8 +1070,8 @@ export default function AdminStudents() {
                                     <td className="px-3 md:px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <button onClick={() => handleToggleNoExpiry(student)}
-                                                className={`p-2 rounded-lg transition-all ${student.noExpiry ? 'hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300' : 'hover:bg-slate-500/20 text-slate-500 hover:text-slate-400'}`} 
-                                                title={student.noExpiry ? "Disable Unlimited Access" : "Enable Unlimited Access"}>
+                                                className={`p-2 rounded-lg transition-all ${isUnlimitedActive(student) ? 'hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300' : 'hover:bg-slate-500/20 text-slate-500 hover:text-slate-400'}`} 
+                                                title={isUnlimitedActive(student) ? "Unlimited access - change or switch off" : "Give unlimited access"}>
                                                 <Infinity className="h-4 w-4" />
                                             </button>
                                             <button onClick={() => openEditModal(student)}
@@ -1319,6 +1342,46 @@ export default function AdminStudents() {
                                     Rename College
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Unlimited access: pick how long it lasts */}
+            {accessFor && (
+                <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-[#140d27] border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h3 className="text-lg font-black text-white flex items-center gap-2"><Infinity className="h-5 w-5 text-yellow-300" /> Unlimited access</h3>
+                                <p className="text-xs text-slate-400 mt-0.5">{accessFor.name}</p>
+                            </div>
+                            <button onClick={() => setAccessFor(null)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400"><X className="h-4 w-4" /></button>
+                        </div>
+                        {isUnlimitedActive(accessFor) && (
+                            <p className="text-xs text-yellow-200 bg-yellow-500/10 border border-yellow-400/20 rounded-lg px-3 py-2">
+                                Active {accessFor.unlimitedUntil ? 'until ' + fmtDay(accessFor.unlimitedUntil) : '(no end date)'}. Pick a new period below to change it, or switch it off.
+                            </p>
+                        )}
+                        <p className="text-xs text-slate-400">While it lasts, every assignment and test of the batch is open to the student (also missed ones and ones from before they joined), and deadlines are shown as the end date. When it ends everything goes back to the real deadlines automatically.</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            {ACCESS_CHOICES.map(c => (
+                                <button key={c.days} onClick={() => setAccessDays(c.days)}
+                                    className={`px-2 py-2 rounded-lg text-xs font-bold border transition-colors ${accessDays === c.days ? 'bg-yellow-500/20 border-yellow-400/60 text-yellow-200' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}>{c.label}</button>
+                            ))}
+                            <button onClick={() => setAccessDays(0)}
+                                className={`px-2 py-2 rounded-lg text-xs font-bold border transition-colors ${accessDays === 0 ? 'bg-yellow-500/20 border-yellow-400/60 text-yellow-200' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}>Custom date</button>
+                        </div>
+                        {accessDays === 0 && (
+                            <input type="date" value={accessDate} min={dayStr(1)} onChange={e => setAccessDate(e.target.value)}
+                                className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-yellow-400/60" />
+                        )}
+                        <p className="text-xs text-slate-300">Ends on the night of <b className="text-white">{accessEndLabel()}</b> (India time).</p>
+                        <div className="flex gap-2">
+                            <button onClick={saveAccess} className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-black text-sm">{isUnlimitedActive(accessFor) ? 'Change period' : 'Enable'}</button>
+                            {isUnlimitedActive(accessFor) && (
+                                <button onClick={() => setAccess(accessFor, false)} className="px-4 py-2.5 rounded-xl bg-rose-500/20 border border-rose-400/40 text-rose-200 font-bold text-sm">Switch off</button>
+                            )}
                         </div>
                     </div>
                 </div>
