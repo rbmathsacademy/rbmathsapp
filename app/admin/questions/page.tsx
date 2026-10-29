@@ -211,6 +211,7 @@ const PREDEFINED_BATCHES = [
     '5th Sem Major',
     '5th Sem Minor',
     '6th Sem Major',
+    'Class 8',
     'Class XI',
     'Class XI JEE',
     'Class XII',
