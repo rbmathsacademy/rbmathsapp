@@ -710,13 +710,24 @@ function AssignmentCard({
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                    {/* View Button */}
+                    {/* View Button: a real link for Drive PDFs (a browser never blocks a link the way it can block window.open) */}
+                    {assignment.type === 'PDF' && typeof assignment.content === 'string' && assignment.content.startsWith('http') ? (
+                    <a
+                        href={assignment.content}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm font-medium transition-colors ring-1 ring-white/5 text-center"
+                    >
+                        View Assignment
+                    </a>
+                    ) : (
                     <button
                         onClick={onOpen}
                         className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm font-medium transition-colors ring-1 ring-white/5"
                     >
                         View Assignment
                     </button>
+                    )}
 
                     {/* Upload / View Submission / Missed */}
                     {isSubmitted ? (
