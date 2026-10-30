@@ -14,7 +14,11 @@ const logout = () => {
 };
 
 /** Full-screen notice shown instead of any locked page. */
-export function RedoLockScreen({ items }: { items: RedoLockItem[] }) {
+type LockKind = 'rejected' | 'missed';
+
+export function RedoLockScreen({ items, kind = 'rejected' }: { items: RedoLockItem[]; kind?: LockKind }) {
+    const missed = kind === 'missed';
+    const one = items.length === 1;
     return (
         <div className="min-h-[100dvh] flex items-start sm:items-center justify-center px-4 py-8 bg-[#0b0718]">
             <div className="w-full max-w-lg rounded-2xl border border-rose-400/40 bg-[#140d27] shadow-[0_0_60px_-15px_rgba(244,63,94,0.6)] overflow-hidden">
@@ -24,8 +28,9 @@ export function RedoLockScreen({ items }: { items: RedoLockItem[] }) {
                     </div>
                     <h1 className="text-xl sm:text-2xl font-black text-white">Your portal is locked</h1>
                     <p className="mt-2 text-sm text-rose-100/90 leading-relaxed">
-                        Your teacher has rejected {items.length === 1 ? 'an assignment' : `${items.length} assignments`} you submitted.
-                        Until you make all the required changes and re-submit {items.length === 1 ? 'it' : 'them'}, every other feature of the portal stays locked.
+                        {missed
+                            ? <>You did not submit {one ? 'an assignment' : `${items.length} assignments`} before the deadline. Until you submit {one ? 'it' : 'all of them'} (it will be marked late), every other feature of the portal stays locked.</>
+                            : <>Your teacher has rejected {one ? 'an assignment' : `${items.length} assignments`} you submitted. Until you make all the required changes and re-submit {one ? 'it' : 'them'}, every other feature of the portal stays locked.</>}
                     </p>
                 </div>
 
@@ -40,11 +45,13 @@ export function RedoLockScreen({ items }: { items: RedoLockItem[] }) {
 
                 <div className="px-5 py-4 space-y-2.5">
                     <p className="text-xs text-violet-200/70 text-center">
-                        Open <b className="text-white">Assignments → Completed</b>, read the feedback, then tap <b className="text-white">Delete &amp; Re-submit</b> and choose your corrected PDF. Everything unlocks as soon as it is submitted.
+                        {missed
+                            ? <>Open <b className="text-white">Assignments → Missed</b> and tap <b className="text-white">Submit late</b> on each one. Everything unlocks as soon as the last one is submitted.</>
+                            : <>Open <b className="text-white">Assignments → Completed</b>, read the feedback, then tap <b className="text-white">Delete &amp; Re-submit</b> and choose your corrected PDF. Everything unlocks as soon as it is submitted.</>}
                     </p>
-                    <Link href="/student/assignments?tab=completed"
+                    <Link href={missed ? '/student/assignments?tab=missed' : '/student/assignments?tab=completed'}
                         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-rose-600 to-fuchsia-600 text-white font-black text-sm active:scale-[0.98] transition-transform">
-                        <FileText className="h-4 w-4" /> Re-submit my assignment
+                        <FileText className="h-4 w-4" /> {missed ? (one ? 'Submit my missed assignment' : 'Submit my missed assignments') : 'Re-submit my assignment'}
                     </Link>
                     <Link href="/student/chat"
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm active:scale-[0.98] transition-transform">
@@ -60,15 +67,16 @@ export function RedoLockScreen({ items }: { items: RedoLockItem[] }) {
 }
 
 /** Slim banner on the pages that stay open (Assignments, Student Chat). */
-export function RedoLockBanner({ items }: { items: RedoLockItem[] }) {
+export function RedoLockBanner({ items, kind = 'rejected' }: { items: RedoLockItem[]; kind?: LockKind }) {
+    const missed = kind === 'missed';
     return (
         <div className="sticky top-0 z-[60] bg-rose-600/95 backdrop-blur text-white px-3 py-2 text-[11px] sm:text-xs leading-snug shadow-lg">
             <div className="max-w-4xl mx-auto flex items-center gap-2">
                 <Lock className="h-3.5 w-3.5 shrink-0" />
                 <p className="flex-1 min-w-0">
-                    <b>Portal locked</b> until you re-submit: {items.map(i => i.title).join(', ')}.
+                    <b>Portal locked</b> until you {missed ? 'submit (late)' : 're-submit'}: {items.map(i => i.title).join(', ')}.
                 </p>
-                <Link href="/student/assignments?tab=completed" className="shrink-0 px-2 py-1 rounded-md bg-white/20 font-bold">Re-submit</Link>
+                <Link href={missed ? '/student/assignments?tab=missed' : '/student/assignments?tab=completed'} className="shrink-0 px-2 py-1 rounded-md bg-white/20 font-bold">{missed ? 'Submit' : 'Re-submit'}</Link>
             </div>
         </div>
     );

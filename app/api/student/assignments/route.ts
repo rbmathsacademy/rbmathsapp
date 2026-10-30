@@ -7,6 +7,7 @@ import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import { resolveStudentJoinedAt } from '@/lib/studentJoinDate';
 import { unlimitedExpiry, stretchTo, unlimitedNoteDate } from '@/lib/unlimitedAccess';
+import { countsAsMissed } from '@/lib/missedLock';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -144,6 +145,8 @@ export async function GET(req: NextRequest) {
                 correctionStatus: submission?.status || 'PENDING',
                 quality: submission?.quality || null,
                 redoRequested,
+                // a missed assignment that locks the portal: it can still be handed in (marked late)
+                lateSubmitOpen: status === 'CLOSED' && countsAsMissed(a, student, false, now),
                 rejection: submission?.rejection ? { at: submission.rejection.at, reason: submission.rejection.reason || '' } : null,
                 warning: submission?.warning ? { count: submission.warning.count, limit: submission.warning.limit } : null,
                 // AI checker's question-wise feedback, shown once the copy is marked corrected

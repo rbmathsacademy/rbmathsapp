@@ -5,6 +5,7 @@ import BatchStudent from '@/models/BatchStudent';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 import { isOutOfScope } from '@/lib/assignmentScope';
+import { countsAsMissed } from '@/lib/missedLock';
 import { unlimitedExpiry, stretchTo, unlimitedNoteDate } from '@/lib/unlimitedAccess';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
@@ -84,7 +85,10 @@ export async function POST(req: NextRequest) {
         // The teacher asked for a redo: accepted even after the deadline, and not counted as late
         const redoAllowed = (assignment.redoAllowed || []).includes(student._id.toString());
 
-        if (now > cooldownEndDate && !redoAllowed) {
+        // a missed assignment that locks the portal may always be handed in late
+        const lateMakeUp = !existingSub && countsAsMissed(assignment, student, false, now);
+
+        if (now > cooldownEndDate && !redoAllowed && !lateMakeUp) {
             return NextResponse.json({ error: 'Submission deadline has passed. No more submissions allowed.' }, { status: 403 });
         }
 

@@ -32,21 +32,23 @@ const REDO_OPEN_PATHS = ['/student/assignments', '/student/chat'];
 function RedoLockGate({ children }: { children: React.ReactNode }) {
     const { profile } = useStudentProfile();
     const pathname = usePathname() || '';
-    const items = profile?.redoLock || [];
+    const rejected = profile?.redoLock || [];
+    const kind: 'rejected' | 'missed' = rejected.length ? 'rejected' : 'missed';
+    const items = rejected.length ? rejected : (profile?.missedLock || []);
     if (items.length === 0) return <>{children}</>;
     const open = REDO_OPEN_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
-    if (!open) return <RedoLockScreen items={items} />;
+    if (!open) return <RedoLockScreen items={items} kind={kind} />;
     if (pathname.startsWith('/student/chat')) {
         // The chat fills the screen: fit it under the banner so its message box stays on screen
         return (
             <div className="h-[100svh] flex flex-col">
                 <style>{'.redo-chat-fit > div { height: 100% !important; }'}</style>
-                <RedoLockBanner items={items} />
+                <RedoLockBanner items={items} kind={kind} />
                 <div className="redo-chat-fit flex-1 min-h-0">{children}</div>
             </div>
         );
     }
-    return <><RedoLockBanner items={items} />{children}</>;
+    return <><RedoLockBanner items={items} kind={kind} />{children}</>;
 }
 
 function SurveyGate({ children }: { children: React.ReactNode }) {
@@ -70,7 +72,7 @@ function SurveyGate({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // no survey popups while the portal is locked for a re-submission
-        if (!loading && profile && profile._id !== 'GUEST' && !(profile.redoLock || []).length) {
+        if (!loading && profile && profile._id !== 'GUEST' && !(profile.redoLock || []).length && !(profile.missedLock || []).length) {
             fetchSurveys();
         } else if (!loading) {
             setSurveyLoading(false);

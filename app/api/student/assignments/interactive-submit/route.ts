@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/db';
 import BatchStudent from '@/models/BatchStudent';
+import { countsAsMissed } from '@/lib/missedLock';
+import { unlimitedExpiry, stretchTo } from '@/lib/unlimitedAccess';
 import Assignment from '@/models/Assignment';
 import AssignmentSubmission from '@/models/AssignmentSubmission';
 
@@ -60,9 +62,11 @@ export async function POST(req: NextRequest) {
         }
 
         const deadline = new Date(assignment.deadline);
-        const cooldownEndDate = new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000);
+        // unlimited access keeps it open until its expiry; a missed assignment that locks the portal may be handed in late
+        const cooldownEndDate = stretchTo(new Date(deadline.getTime() + (assignment.cooldownDuration || 0) * 60000), unlimitedExpiry(student as any, now))!;
+        const lateMakeUp = countsAsMissed(assignment, student, false, now);
 
-        if (now > cooldownEndDate) {
+        if (now > cooldownEndDate && !lateMakeUp) {
             return NextResponse.json({ error: 'Submission deadline has passed.' }, { status: 403 });
         }
 

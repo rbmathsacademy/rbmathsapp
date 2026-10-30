@@ -35,6 +35,7 @@ interface Assignment {
     redoRequested?: boolean;
     rejection?: { at: string; reason?: string } | null;
     warning?: { count: number; limit: number } | null;
+    lateSubmitOpen?: boolean; // missed, but may still be handed in late (it is locking the portal)
 }
 
 type TabType = 'PENDING' | 'COMPLETED' | 'MISSED';
@@ -53,7 +54,11 @@ export default function StudentAssignmentsPage() {
     const { profile, loading: profileLoading, updateProfile, refreshProfile } = useStudentProfile();
     // Coming from the lock screen (?tab=completed): open where the rejected copy is
     useEffect(() => {
-        try { if (new URLSearchParams(window.location.search).get('tab') === 'completed') setActiveTab('COMPLETED'); } catch { }
+        try {
+            const tab = new URLSearchParams(window.location.search).get('tab');
+            if (tab === 'completed') setActiveTab('COMPLETED');
+            if (tab === 'missed') setActiveTab('MISSED');
+        } catch { }
     }, []);
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
     // Difference between the server clock and this device's clock (ms). Phones
@@ -209,7 +214,7 @@ export default function StudentAssignmentsPage() {
                 if (subRes.ok) {
                     toast.success('Assignment submitted successfully!', { id: toastId });
                     fetchAssignments();
-                    if ((profile?.redoLock || []).length) refreshProfile(); // a re-submission lifts the portal lock straight away
+                    if ((profile?.redoLock || []).length || (profile?.missedLock || []).length) refreshProfile(); // a (re-)submission lifts the portal lock straight away
                 } else {
                     toast.error(subData.error || 'Failed to save submission', { id: toastId });
                     setShowUploadErrorModal(true);
@@ -581,7 +586,7 @@ function AssignmentCard({
     const deadlineDate = new Date(assignment.deadline);
 
     return (
-        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${(assignment.rejection || assignment.redoRequested) ? 'ring-2 ring-rose-500/70 shadow-[0_0_28px_-4px_rgba(244,63,94,0.6)]' : assignment.warning ? 'ring-2 ring-amber-400/70 shadow-[0_0_28px_-4px_rgba(251,191,36,0.6)]' : isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
+        <div className={`relative sd-card bg-[#140d27]/90 rounded-xl overflow-hidden transition-all ${(assignment.rejection || assignment.redoRequested || assignment.lateSubmitOpen) ? 'ring-2 ring-rose-500/70 shadow-[0_0_28px_-4px_rgba(244,63,94,0.6)]' : assignment.warning ? 'ring-2 ring-amber-400/70 shadow-[0_0_28px_-4px_rgba(251,191,36,0.6)]' : isLateAllowed ? 'ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
             isSubmitted ? 'ring-1 ring-lime-400/25' :
                 isClosed ? 'ring-1 ring-red-500/10 opacity-70' :
                     'sd-gborder shadow-[0_12px_30px_-16px_rgba(217,70,239,0.55)]'
@@ -771,6 +776,16 @@ function AssignmentCard({
                         </button>
                         )}
                         </>
+                    ) : isClosed && assignment.lateSubmitOpen && assignment.type === 'INTERACTIVE' ? (
+                        <button onClick={onOpen} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_18px_-4px_rgba(244,63,94,0.7)]">
+                            Do it now (late)
+                        </button>
+                    ) : isClosed && assignment.lateSubmitOpen ? (
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold cursor-pointer bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_18px_-4px_rgba(244,63,94,0.7)] ${uploadingId === assignment._id ? 'opacity-70 pointer-events-none' : ''}`}>
+                            {uploadingId === assignment._id ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
+                            {uploadingId === assignment._id ? 'Uploading...' : 'Submit late'}
+                            <input type="file" accept="application/pdf" className="hidden" onChange={(e) => onUpload(assignment, e)} disabled={!!uploadingId} />
+                        </label>
                     ) : isClosed ? (
                         <button disabled className="flex-1 py-2.5 bg-red-900/20 text-red-400/60 rounded-lg text-sm font-medium cursor-not-allowed ring-1 ring-red-500/10">
                             Missed

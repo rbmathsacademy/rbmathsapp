@@ -6,6 +6,7 @@ import User from '@/models/User';
 import Notification from '@/models/Notification';
 import { unlimitedExpiry } from '@/lib/unlimitedAccess';
 import { getRedoLock } from '@/lib/redoLock';
+import { getMissedLock } from '@/lib/missedLock';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -92,6 +93,8 @@ export async function GET(req: NextRequest) {
                     collegeName: student.collegeName || null,
                     // rejected assignments still to be re-submitted: the portal is locked while this is not empty
                     redoLock: await getRedoLock(String(student._id)),
+                    // missed assignments (from 15 Oct 2026) that also lock the portal until handed in late
+                    missedLock: await getMissedLock(student),
                 });
             }
         }

@@ -13,6 +13,7 @@ interface StudentProfile {
     board: string | null;
     collegeName: string | null;
     redoLock?: { assignmentId: string; title: string; reason: string }[];
+    missedLock?: { assignmentId: string; title: string; reason: string }[];
 }
 
 interface StudentProfileContextType {
