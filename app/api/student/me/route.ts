@@ -5,6 +5,7 @@ import BatchStudent from '@/models/BatchStudent';
 import User from '@/models/User';
 import Notification from '@/models/Notification';
 import { unlimitedExpiry } from '@/lib/unlimitedAccess';
+import { getRedoLock } from '@/lib/redoLock';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -88,7 +89,9 @@ export async function GET(req: NextRequest) {
                     phoneNumber: student.phoneNumber,
                     schoolName: student.schoolName || null,
                     board: student.board || null,
-                    collegeName: student.collegeName || null
+                    collegeName: student.collegeName || null,
+                    // rejected assignments still to be re-submitted: the portal is locked while this is not empty
+                    redoLock: await getRedoLock(String(student._id)),
                 });
             }
         }

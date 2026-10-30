@@ -8,6 +8,7 @@ import CollegeNameModal from './CollegeNameModal';
 
 import SurveyPopupModal from './components/SurveyPopupModal';
 import NotificationPopupModal from './components/NotificationPopupModal';
+import { RedoLockScreen, RedoLockBanner } from './components/RedoLock';
 import '../portal-theme.css';
 
 // Helper: check if student belongs to a school batch (contains "class")
@@ -22,6 +23,30 @@ function isTargetCollegeBatch(courses: string[]): boolean {
         const lowerC = c.toLowerCase();
         return keywords.some(kw => lowerC.includes(kw));
     });
+}
+
+// Pages a student with a rejected assignment can still use (to re-submit it, and to ask doubts)
+const REDO_OPEN_PATHS = ['/student/assignments', '/student/chat'];
+
+/** A rejected assignment locks the rest of the portal until it is re-submitted. */
+function RedoLockGate({ children }: { children: React.ReactNode }) {
+    const { profile } = useStudentProfile();
+    const pathname = usePathname() || '';
+    const items = profile?.redoLock || [];
+    if (items.length === 0) return <>{children}</>;
+    const open = REDO_OPEN_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
+    if (!open) return <RedoLockScreen items={items} />;
+    if (pathname.startsWith('/student/chat')) {
+        // The chat fills the screen: fit it under the banner so its message box stays on screen
+        return (
+            <div className="h-[100svh] flex flex-col">
+                <style>{'.redo-chat-fit > div { height: 100% !important; }'}</style>
+                <RedoLockBanner items={items} />
+                <div className="redo-chat-fit flex-1 min-h-0">{children}</div>
+            </div>
+        );
+    }
+    return <><RedoLockBanner items={items} />{children}</>;
 }
 
 function SurveyGate({ children }: { children: React.ReactNode }) {
@@ -44,7 +69,8 @@ function SurveyGate({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        if (!loading && profile && profile._id !== 'GUEST') {
+        // no survey popups while the portal is locked for a re-submission
+        if (!loading && profile && profile._id !== 'GUEST' && !(profile.redoLock || []).length) {
             fetchSurveys();
         } else if (!loading) {
             setSurveyLoading(false);
@@ -199,7 +225,7 @@ export default function StudentLayout({
                         <SchoolBoardGate>
                             <SurveyGate>
                                 <NotificationGate>
-                                    {children}
+                                    <RedoLockGate>{children}</RedoLockGate>
                                 </NotificationGate>
                             </SurveyGate>
                         </SchoolBoardGate>

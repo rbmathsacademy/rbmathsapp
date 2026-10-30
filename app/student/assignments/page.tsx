@@ -50,7 +50,11 @@ export default function StudentAssignmentsPage() {
     const [showUploadErrorModal, setShowUploadErrorModal] = useState(false);
     // A picked PDF over 3 MB: offer to compress it on the device before the normal upload
     const [compressFor, setCompressFor] = useState<{ assignment: Assignment; file: File } | null>(null);
-    const { profile, loading: profileLoading, updateProfile } = useStudentProfile();
+    const { profile, loading: profileLoading, updateProfile, refreshProfile } = useStudentProfile();
+    // Coming from the lock screen (?tab=completed): open where the rejected copy is
+    useEffect(() => {
+        try { if (new URLSearchParams(window.location.search).get('tab') === 'completed') setActiveTab('COMPLETED'); } catch { }
+    }, []);
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
     // Difference between the server clock and this device's clock (ms). Phones
     // frequently have the wrong time, so all open/lock comparisons use server time.
@@ -205,6 +209,7 @@ export default function StudentAssignmentsPage() {
                 if (subRes.ok) {
                     toast.success('Assignment submitted successfully!', { id: toastId });
                     fetchAssignments();
+                    if ((profile?.redoLock || []).length) refreshProfile(); // a re-submission lifts the portal lock straight away
                 } else {
                     toast.error(subData.error || 'Failed to save submission', { id: toastId });
                     setShowUploadErrorModal(true);
