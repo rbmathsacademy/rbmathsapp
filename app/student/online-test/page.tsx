@@ -67,6 +67,7 @@ export default function OnlineTestPage() {
     // counted as missed, shown separately instead.
     const [preJoin, setPreJoin] = useState<TestInfo[]>([]);
     const [unlimitedUntil, setUnlimitedUntil] = useState<string | null>(null);
+    const [openingTest, setOpeningTest] = useState<string | null>(null); // Start tapped: show it is opening
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
@@ -542,10 +543,12 @@ export default function OnlineTestPage() {
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => router.push(`/student/online-test/${test._id}`)}
-                                            className="relative self-center px-5 py-2.5 bg-gradient-to-r from-lime-400 to-emerald-500 text-black rounded-xl font-black text-xs shadow-lg shadow-lime-500/30 transition-transform active:scale-95"
+                                            onClick={() => { setOpeningTest(test._id); setTimeout(() => setOpeningTest(null), 8000); router.push(`/student/online-test/${test._id}`); }}
+                                            disabled={openingTest === test._id}
+                                            className="relative self-center px-5 py-2.5 bg-gradient-to-r from-lime-400 to-emerald-500 text-black rounded-xl font-black text-xs shadow-lg shadow-lime-500/30 transition-transform active:scale-95 disabled:opacity-80 flex items-center gap-1.5"
                                         >
-                                            {test.attemptStatus === 'in_progress' ? 'Resume' : 'Start'}
+                                            {openingTest === test._id && <span className="h-3 w-3 rounded-full border-2 border-black/30 border-t-black animate-spin" />}
+                                            {openingTest === test._id ? 'Opening...' : test.attemptStatus === 'in_progress' ? 'Resume' : 'Start'}
                                         </button>
                                     </div>
                                     {test.endTime && (

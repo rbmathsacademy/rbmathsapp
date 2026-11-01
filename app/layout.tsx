@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
+import DeployRecovery from './components/DeployRecovery';
 
 // Date-based domain switch, done in the visitor's browser (no server cost):
 // 10th-24th (India time) -> rbmathsapp9.vercel.app, other days -> rbmathsapp92.vercel.app.
@@ -53,6 +54,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster position="top-right" />
+        <DeployRecovery />
       </body>
     </html>
   );

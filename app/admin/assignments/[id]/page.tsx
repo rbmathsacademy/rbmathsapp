@@ -9,8 +9,13 @@ import { toast, Toaster } from 'react-hot-toast';
 import { swrJson } from '@/lib/adminCache';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
-import AiGradingPanel from './AiGradingPanel';
-import AiReviewEditor from './AiReviewEditor';
+import dynamic from 'next/dynamic';
+// Heavy parts (PDF tools, AI checking) load separately, so the student list shows up first
+const AiGradingPanel = dynamic(() => import('./AiGradingPanel'), {
+    ssr: false,
+    loading: () => <div className="rounded-2xl border border-white/10 bg-[#140d27]/60 px-4 py-3 text-xs text-violet-200/50">Loading AI checking tools...</div>,
+});
+const AiReviewEditor = dynamic(() => import('./AiReviewEditor'), { ssr: false });
 import AiFeedbackView, { AiScoreChips } from '@/app/components/AiFeedbackView';
 import type { AiReview } from '@/lib/aiGrading';
 
