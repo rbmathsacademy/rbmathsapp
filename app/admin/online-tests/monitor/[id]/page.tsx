@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Users, Trophy, Clock, XCircle, X, MessageSquare, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert, UserMinus, UserPlus, User, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Clock, XCircle, X, MessageSquare, RefreshCw, BarChart3, Target, TrendingUp, Award, Percent, RotateCcw, CalendarClock, Eye, ShieldAlert, UserMinus, UserPlus, User, ChevronDown, ChevronUp, FileDown, Star } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { swrJson } from '@/lib/adminCache';
 import SubmissionReviewModal from '../components/SubmissionReviewModal';
@@ -255,6 +255,25 @@ export default function MonitorTestPage() {
     };
 
     const maxDistCount = analytics?.scoreDistribution ? Math.max(...analytics.scoreDistribution.map(d => d.count), 1) : 1;
+
+    // --- Stars on submissions (Done tab) ---
+    const [starredOnly, setStarredOnly] = useState(false);
+    const toggleBookmark = async (s: any) => {
+        if (!s.attemptId) return;
+        const next = !s.bookmarked;
+        setCompleted(prev => prev.map(x => (x.attemptId === s.attemptId ? { ...x, bookmarked: next } : x))); // instant
+        try {
+            const res = await fetch(`/api/admin/online-tests/${testId}/bookmark`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Email': userEmail! },
+                body: JSON.stringify({ attemptId: s.attemptId, bookmarked: next }),
+            });
+            if (!res.ok) throw new Error();
+        } catch {
+            setCompleted(prev => prev.map(x => (x.attemptId === s.attemptId ? { ...x, bookmarked: !next } : x)));
+            toast.error('Could not save the star');
+        }
+    };
+    const shownCompleted = starredOnly ? completed.filter(s => s.bookmarked) : completed;
 
     // --- Reassign helpers ---
     const toggleSelectPhone = (phone: string) => {
@@ -1029,6 +1048,16 @@ export default function MonitorTestPage() {
                         {/* Completed Leaderboard (with reassign) */}
                         {activeTab === 'completed' && (
                             <div className="space-y-4">
+                                {completed.some(s => s.bookmarked) && (
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setStarredOnly(v => !v)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${starredOnly ? 'bg-amber-500/20 border-amber-400/50 text-amber-300' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}>
+                                            <Star className="w-3.5 h-3.5" fill={starredOnly ? 'currentColor' : 'none'} /> Starred ({completed.filter(s => s.bookmarked).length})
+                                        </button>
+                                        {starredOnly && <span className="text-[11px] text-slate-500">Showing starred submissions only</span>}
+                                    </div>
+                                )}
+
                                 {/* Bulk Reassign Toolbar */}
                                 {completed.length > 0 && (
                                     <div className="flex items-center justify-between bg-[#140d27]/60 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
@@ -1080,10 +1109,10 @@ export default function MonitorTestPage() {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {completed.map((student, i) => (
+                                                    {shownCompleted.map(student => ({ student, i: completed.indexOf(student) })).map(({ student, i }) => (
                                                         <tr
                                                             key={student.phone}
-                                                            className={`border-b border-white/5 hover:bg-white/10 transition-colors cursor-pointer ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''}`}
+                                                            className={`border-b border-white/5 hover:bg-white/10 transition-colors cursor-pointer ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''} ${student.bookmarked ? 'shadow-[inset_3px_0_0_rgba(251,191,36,0.9)] bg-amber-400/[0.05]' : ''}`}
                                                             onClick={() => setReviewStudentPhone(student.phone)}
                                                         >
                                                             <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -1105,8 +1134,19 @@ export default function MonitorTestPage() {
                                                                 )}
                                                             </td>
                                                             <td className="px-4 py-3">
+                                                                <div className="flex items-center gap-1.5">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); toggleBookmark(student); }}
+                                                                    className={`p-1 rounded-lg transition-colors ${student.bookmarked ? 'text-amber-400' : 'text-slate-600 hover:text-amber-300'}`}
+                                                                    title={student.bookmarked ? 'Remove star' : 'Star this submission'}
+                                                                >
+                                                                    <Star className="w-4 h-4" fill={student.bookmarked ? 'currentColor' : 'none'} />
+                                                                </button>
+                                                                <div>
                                                                 <div className="text-white font-medium text-sm">{student.name}</div>
                                                                 <div className="text-[10px] text-slate-500">{student.phone}</div>
+                                                                </div>
+                                                                </div>
                                                             </td>
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{student.batch}</td>
                                                             <td className="px-4 py-3">
@@ -1158,10 +1198,10 @@ export default function MonitorTestPage() {
 
                                         {/* Mobile Card View */}
                                         <div className="sm:hidden divide-y divide-white/5">
-                                            {completed.map((student, i) => (
+                                            {shownCompleted.map(student => ({ student, i: completed.indexOf(student) })).map(({ student, i }) => (
                                                 <div
                                                     key={student.phone}
-                                                    className={`p-3 ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''}`}
+                                                    className={`p-3 ${selectedPhones.has(student.phone) ? 'bg-amber-500/5' : ''} ${student.bookmarked ? 'shadow-[inset_3px_0_0_rgba(251,191,36,0.9)] bg-amber-400/[0.05]' : ''}`}
                                                     onClick={() => setReviewStudentPhone(student.phone)}
                                                 >
                                                     <div className="flex items-center justify-between gap-2 mb-2">
@@ -1179,6 +1219,13 @@ export default function MonitorTestPage() {
                                                                 i === 2 ? 'bg-orange-500/20 text-orange-400' :
                                                                 'bg-[#2a2045]/50 text-slate-500'
                                                             }`}>{i + 1}</span>
+                                                            <button
+                                                                    onClick={(e) => { e.stopPropagation(); toggleBookmark(student); }}
+                                                                    className={`p-1 rounded-lg transition-colors ${student.bookmarked ? 'text-amber-400' : 'text-slate-600 hover:text-amber-300'}`}
+                                                                    title={student.bookmarked ? 'Remove star' : 'Star this submission'}
+                                                                >
+                                                                    <Star className="w-3.5 h-3.5" fill={student.bookmarked ? 'currentColor' : 'none'} />
+                                                                </button>
                                                             <p className="text-white font-medium text-sm truncate">{student.name}</p>
                                                         </div>
                                                         <div className="flex items-center gap-1.5 shrink-0">

@@ -193,7 +193,16 @@ export async function PUT(request: NextRequest) {
                         : (updates.questions || test.questions || []);
                     const updatedMap = new Map(allUpdatedQuestions.map((q: any) => [q.id, q]));
 
-                    sourceQuestions = attempt.questions.map((q: any) => {
+                    // A question deleted from the test no longer counts for anyone: drop it from the
+                    // attempt (its marks leave the score and the total). Safety: only when the question ids
+                    // still match (most of this attempt's questions are still in the test); otherwise keep
+                    // everything as before rather than risk dropping questions whose ids changed.
+                    const snapshotIds = attempt.questions.map((q: any) => q.id);
+                    const stillThere = snapshotIds.filter((qid: any) => updatedMap.has(qid)).length;
+                    const idsStable = snapshotIds.length > 0 && stillThere >= Math.ceil(snapshotIds.length / 2);
+                    const keptQuestions = idsStable ? attempt.questions.filter((q: any) => updatedMap.has(q.id)) : attempt.questions;
+
+                    sourceQuestions = keptQuestions.map((q: any) => {
                         const updated: any = updatedMap.get(q.id);
                         if (!updated) return q;
                         return {

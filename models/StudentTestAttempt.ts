@@ -34,7 +34,8 @@ const StudentTestAttemptSchema = new mongoose.Schema({
         detail: { type: String, default: '' }
     }],
     resumeCount: { type: Number, default: 0 },
-    terminationReason: { type: String, default: null }
+    terminationReason: { type: String, default: null },
+    bookmarked: { type: Boolean, default: false } // admin's star on this submission (monitor > Done)
 }, { timestamps: true });
 
 // Index for faster queries

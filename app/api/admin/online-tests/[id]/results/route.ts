@@ -234,6 +234,8 @@ export async function GET(
                     terminationReason: attempt.terminationReason,
                     warningCount: attempt.warningCount || 0,
                     violationLog: attempt.violationLog || [],
+                    attemptId: String(attempt._id),
+                    bookmarked: !!attempt.bookmarked,
                     submittedAssignments
                 });
             } else if (attempt.status === 'in_progress') {
