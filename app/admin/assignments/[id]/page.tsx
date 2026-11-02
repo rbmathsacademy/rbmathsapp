@@ -1825,8 +1825,8 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                 review={feedbackFor.aiReview}
                                 currentQuality={feedbackFor.quality}
                                 onCancel={() => (feedbackFor.aiReview ? setFeedbackEditing(false) : closeFeedback())}
-                                onSaved={({ status, quality, aiReview }) => {
-                                    const upd = { ...feedbackFor, status, quality, aiReview };
+                                onSaved={({ status, quality, aiReview, warning }) => {
+                                    const upd = { ...feedbackFor, status, quality, aiReview, warning };
                                     setStudents(prev => prev.map(s => (s._id === feedbackFor._id ? upd : s)));
                                     setFeedbackFor(upd);
                                     setFeedbackEditing(false);

@@ -29,7 +29,7 @@ export default function AiReviewEditor({ assignmentId, submissionId, review, cur
     submissionId: string;
     review: AiReview | null | undefined;
     currentQuality?: string | null;
-    onSaved: (r: { status: 'PENDING' | 'CORRECTED'; quality: any; aiReview: AiReview }) => void;
+    onSaved: (r: { status: 'PENDING' | 'CORRECTED'; quality: any; aiReview: AiReview; warning: { count: number; limit: number } | null }) => void;
     onCancel: () => void;
 }) {
     const [r, setR] = useState<AiReview>(() => JSON.parse(JSON.stringify(review || EMPTY)));
@@ -63,7 +63,7 @@ export default function AiReviewEditor({ assignmentId, submissionId, review, cur
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed');
             toast.success('Feedback saved');
-            onSaved({ status: data.status, quality: data.quality, aiReview: data.aiReview });
+            onSaved({ status: data.status, quality: data.quality, aiReview: data.aiReview, warning: data.warning || null });
         } catch (e: any) {
             toast.error(e.message || 'Could not save');
         } finally {
