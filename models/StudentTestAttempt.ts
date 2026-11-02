@@ -35,7 +35,8 @@ const StudentTestAttemptSchema = new mongoose.Schema({
     }],
     resumeCount: { type: Number, default: 0 },
     terminationReason: { type: String, default: null },
-    bookmarked: { type: Boolean, default: false } // admin's star on this submission (monitor > Done)
+    bookmarked: { type: Boolean, default: false }, // admin's star on this submission (monitor > Done)
+    answersUnlocked: { type: Boolean, default: false } // terminated attempt: the admin chose to show the answers to the student
 }, { timestamps: true });
 
 // Index for faster queries

@@ -38,6 +38,26 @@ export async function DELETE(
             return NextResponse.json({ error: 'No students selected' }, { status: 400 });
         }
 
+        // Remember what is being cleared, so the new attempt shows up as a re-attempt in the monitor
+        const cleared = await StudentTestAttempt.find({ testId, studentPhone: { $in: phones } })
+            .select('studentPhone status terminationReason score percentage submittedAt').lean() as any[];
+        if (cleared.length > 0) {
+            const now = new Date();
+            await OnlineTest.updateOne({ _id: testId }, {
+                $push: {
+                    reattempts: {
+                        $each: cleared.map(a => ({
+                            phone: a.studentPhone, at: now, by: userEmail,
+                            prevStatus: a.status || '', prevTerminationReason: a.terminationReason || null,
+                            prevScore: a.status === 'completed' ? (a.score ?? null) : null,
+                            prevPercentage: a.status === 'completed' ? (a.percentage ?? null) : null,
+                            prevSubmittedAt: a.submittedAt || null,
+                        })),
+                    },
+                },
+            });
+        }
+
         // Delete the attempt records for selected students
         const result = await StudentTestAttempt.deleteMany({
             testId,

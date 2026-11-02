@@ -74,6 +74,18 @@ const OnlineTestSchema = new mongoose.Schema({
         perQuestionDuration: { type: Number, default: 60 }
     },
     excludedStudents: [{ type: String }],
+    // One entry per attempt cleared by "Reassign", so the monitor can mark the new attempt as a re-attempt
+    reattempts: [{
+        _id: false,
+        phone: { type: String },
+        at: { type: Date },
+        by: { type: String, default: '' },
+        prevStatus: { type: String, default: '' },
+        prevTerminationReason: { type: String, default: null },
+        prevScore: { type: Number, default: null },
+        prevPercentage: { type: Number, default: null },
+        prevSubmittedAt: { type: Date, default: null },
+    }],
     status: { type: String, enum: ['draft', 'deployed', 'completed'], default: 'draft' },
     createdBy: { type: String, required: true },
     folderId: { type: String, default: null },

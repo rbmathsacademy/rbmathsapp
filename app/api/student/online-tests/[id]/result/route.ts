@@ -6,6 +6,7 @@ import StudentTestAttempt from '@/models/StudentTestAttempt';
 import BatchStudent from '@/models/BatchStudent';
 import { shuffleOptionsForQuestion } from '@/lib/seededRandom';
 import { unionBoardQuestions } from '@/lib/boardAccess';
+import { isTerminated } from '@/lib/testTermination';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret-change-this-in-prod';
 const key = new TextEncoder().encode(JWT_SECRET);
@@ -260,6 +261,8 @@ export async function GET(
         const topperScore = (topperAttempt as any)?.score || attempt.score;
         const topperPercentage = (topperAttempt as any)?.percentage || attempt.percentage;
 
+        const answersLocked = isTerminated(attempt.terminationReason) && !attempt.answersUnlocked;
+
         // Summary stats
         const correctCount = questionReview.filter((q: any) => q.isCorrect).length;
         const incorrectCount = questionReview.filter((q: any) => !q.isCorrect && q.studentAnswer !== null && q.studentAnswer !== undefined && q.studentAnswer !== '' && !(Array.isArray(q.studentAnswer) && q.studentAnswer.length === 0)).length;
@@ -319,7 +322,9 @@ export async function GET(
                 unansweredCount,
                 leaderboard
             },
-            questionReview,
+            // Terminated attempt: keep the answers hidden (a re-attempt may be given) until the admin unlocks them
+            questionReview: answersLocked ? [] : questionReview,
+            answersLocked,
             topicAnalysis
         });
     } catch (error: any) {

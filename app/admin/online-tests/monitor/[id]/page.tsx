@@ -275,6 +275,32 @@ export default function MonitorTestPage() {
     };
     const shownCompleted = starredOnly ? completed.filter(s => s.bookmarked) : completed;
 
+    // --- Terminated attempts: answers stay hidden from the student until shown from here ---
+    const isTerminatedRow = (s: any) => !!s.terminationReason && !['time_limit', 'server_auto_expired'].includes(s.terminationReason);
+    const toggleAnswers = async (s: any) => {
+        if (!s.attemptId) return;
+        const next = !s.answersUnlocked;
+        if (next && !window.confirm(`Show the answers and solutions of this test to ${s.name}?\n\nOnly do this if you will not give them a re-attempt.`)) return;
+        setCompleted(prev => prev.map(x => (x.attemptId === s.attemptId ? { ...x, answersUnlocked: next } : x)));
+        try {
+            const res = await fetch(`/api/admin/online-tests/${testId}/answers-unlock`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Email': userEmail! },
+                body: JSON.stringify({ attemptId: s.attemptId, unlocked: next }),
+            });
+            if (!res.ok) throw new Error();
+            toast.success(next ? 'Answers are now visible to the student' : 'Answers hidden again');
+        } catch {
+            setCompleted(prev => prev.map(x => (x.attemptId === s.attemptId ? { ...x, answersUnlocked: !next } : x)));
+            toast.error('Could not change the answer visibility');
+        }
+    };
+    const reattemptTitle = (s: any) => (s.reattempts || []).map((r: any, k: number) => {
+        const prev = r.prevStatus === 'completed'
+            ? `${isTerminatedRow({ terminationReason: r.prevTerminationReason }) ? 'terminated' : r.prevTerminationReason ? 'time up' : 'submitted'}, scored ${r.prevScore ?? '-'}${r.prevPercentage != null ? ` (${r.prevPercentage}%)` : ''}`
+            : (r.prevStatus || 'not finished').replace('_', ' ');
+        return `Attempt ${k + 1}: ${prev} - cleared ${r.at ? new Date(r.at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }) : ''}`;
+    }).join('\n');
+
     // --- Reassign helpers ---
     const toggleSelectPhone = (phone: string) => {
         setSelectedPhones(prev => {
@@ -1164,6 +1190,18 @@ export default function MonitorTestPage() {
                                                                         {['time_limit', 'server_auto_expired'].includes(student.terminationReason) ? 'Time Up' : 'Terminated'}
                                                                     </span>
                                                                 )}
+                                                                {(student.reattempts?.length > 0) && (
+                                                                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold border bg-sky-500/20 text-sky-300 border-sky-500/30 cursor-help" title={reattemptTitle(student)}>
+                                                                        ↻ Re-attempt{student.reattempts.length > 1 ? ` ×${student.reattempts.length}` : ''}
+                                                                    </span>
+                                                                )}
+                                                                {isTerminatedRow(student) && (
+                                                                    <button onClick={(e) => { e.stopPropagation(); toggleAnswers(student); }}
+                                                                        className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${student.answersUnlocked ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10'}`}
+                                                                        title={student.answersUnlocked ? 'The student can see the answers - click to hide them again' : 'Answers are hidden from this student - click to show them'}>
+                                                                        {student.answersUnlocked ? '👁 Answers shown' : '🔒 Show answers'}
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                             <td className="px-4 py-3 text-slate-300 text-sm">{formatTime(student.timeSpent)}</td>
                                                             <td className="px-4 py-3">
@@ -1238,6 +1276,19 @@ export default function MonitorTestPage() {
                                                         <div className="flex items-center gap-2 text-[10px] text-slate-500">
                                                             <span>{formatTime(student.timeSpent)}</span>
                                                             <span>{formatScore(student.percentage)}%</span>
+                                                            {isTerminatedRow(student) && <span className="px-1.5 py-0.5 rounded font-bold border bg-red-500/20 text-red-400 border-red-500/30">Terminated</span>}
+                                                            {(student.reattempts?.length > 0) && (
+                                                                <span className="px-1.5 py-0.5 rounded font-bold border bg-sky-500/20 text-sky-300 border-sky-500/30" title={reattemptTitle(student)}
+                                                                    onClick={(e) => { e.stopPropagation(); toast(reattemptTitle(student)); }}>
+                                                                    ↻ Re-attempt{student.reattempts.length > 1 ? ` ×${student.reattempts.length}` : ''}
+                                                                </span>
+                                                            )}
+                                                            {isTerminatedRow(student) && (
+                                                                <button onClick={(e) => { e.stopPropagation(); toggleAnswers(student); }}
+                                                                    className={`px-1.5 py-0.5 rounded font-bold border ${student.answersUnlocked ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-white/5 text-slate-300 border-white/15'}`}>
+                                                                    {student.answersUnlocked ? '👁 Answers shown' : '🔒 Show answers'}
+                                                                </button>
+                                                            )}
                                                             {student.warningCount > 0 && (
                                                                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold border border-red-500/20">
                                                                     <ShieldAlert className="w-2.5 h-2.5" /> {student.warningCount}

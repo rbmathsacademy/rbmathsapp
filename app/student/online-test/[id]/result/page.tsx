@@ -117,6 +117,7 @@ export default function TestResultPage() {
     const [questionReview, setQuestionReview] = useState<QuestionReview[]>([]);
     const [topicAnalysis, setTopicAnalysis] = useState<TopicAnalysis[]>([]);
     const [showQuestions, setShowQuestions] = useState(false);
+    const [answersLocked, setAnswersLocked] = useState(false);
 
     useEffect(() => {
         fetchResult();
@@ -152,6 +153,7 @@ export default function TestResultPage() {
             setTestInfo(data.test);
             setResult(data.result);
             setQuestionReview(data.questionReview || []);
+            setAnswersLocked(!!data.answersLocked);
             setTopicAnalysis(data.topicAnalysis || []);
         } catch {
             setError('Network error');
@@ -425,6 +427,15 @@ export default function TestResultPage() {
                         </div>
                     )}
                 </div>
+
+                {answersLocked && !result?.resultsHidden && (
+                    <div className="pt-4">
+                        <div className="px-5 py-4 rounded-2xl bg-red-500/10 ring-1 ring-red-500/30 text-sm text-red-200">
+                            <div className="font-bold text-red-300 mb-1">Answers are hidden</div>
+                            Your test was terminated, so the question-wise answers and solutions are not shown. Your teacher may make them available later.
+                        </div>
+                    </div>
+                )}
 
                 {/* Question Link Toggle */}
                 {questionReview.length > 0 && !result?.resultsHidden && (

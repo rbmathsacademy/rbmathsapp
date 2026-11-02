@@ -213,6 +213,15 @@ export async function GET(
         const inProgress: any[] = [];
         const notStarted: any[] = [];
 
+        // Attempts cleared by "Reassign" (oldest first) - the current attempt of these students is a re-attempt
+        const reattemptsByPhone = new Map<string, any[]>();
+        for (const r of (test.reattempts || []) as any[]) {
+            if (!r?.phone) continue;
+            const list = reattemptsByPhone.get(r.phone) || [];
+            list.push({ at: r.at, prevStatus: r.prevStatus, prevTerminationReason: r.prevTerminationReason, prevScore: r.prevScore, prevPercentage: r.prevPercentage, prevSubmittedAt: r.prevSubmittedAt });
+            reattemptsByPhone.set(r.phone, list);
+        }
+
         for (const [phone, student] of studentMap) {
             const attempt = attemptMap.get(phone);
             const submittedAssignments = studentSubmissionsMap.get(student.studentId.toString()) || [];
@@ -236,6 +245,8 @@ export async function GET(
                     violationLog: attempt.violationLog || [],
                     attemptId: String(attempt._id),
                     bookmarked: !!attempt.bookmarked,
+                    answersUnlocked: !!attempt.answersUnlocked,
+                    reattempts: reattemptsByPhone.get(phone) || [],
                     submittedAssignments
                 });
             } else if (attempt.status === 'in_progress') {
