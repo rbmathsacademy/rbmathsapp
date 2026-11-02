@@ -42,6 +42,7 @@ interface StudentSubmission {
     aiReview?: AiReview | null;
     warning?: { count: number; limit: number } | null;
     rejection?: { at: string; reason?: string; by?: string } | null;
+    accepted?: { at: string; by?: string } | null;
 }
 
 interface Assignment {
@@ -132,6 +133,29 @@ export default function AssignmentDetailsPage() {
             if (!res.ok) throw new Error((await res.json()).error || 'Failed');
             patchStudent(s._id, { rejection: null });
             toast.success('Rejection removed');
+        } catch (e: any) { toast.error(e.message || 'Could not undo'); }
+    };
+    const acceptSubmission = async (s: StudentSubmission) => {
+        if (!s._id) return;
+        if (!window.confirm(`Accept ${s.student.name}'s submission on exceptional grounds?
+
+The warning${s.rejection ? ' and the rejection' : ''} will be removed, the student's popup withdrawn and their portal unlocked. Later re-checks will not warn this submission again.`)) return;
+        try {
+            const res = await fetch(`/api/admin/assignments/submission/${s._id}/accept`, { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed');
+            patchStudent(s._id, { accepted: data.accepted, warning: null, rejection: null });
+            toast.success('Submission accepted');
+        } catch (e: any) { toast.error(e.message || 'Could not accept'); }
+    };
+    const undoAccept = async (s: StudentSubmission) => {
+        if (!s._id) return;
+        try {
+            const res = await fetch(`/api/admin/assignments/submission/${s._id}/accept`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed');
+            patchStudent(s._id, { accepted: null, warning: data.warning || null });
+            toast.success(data.warning ? 'Acceptance removed - the warning is back' : 'Acceptance removed');
         } catch (e: any) { toast.error(e.message || 'Could not undo'); }
     };
     const deleteFeedbackItem = async (s: StudentSubmission, index: number) => {
@@ -1037,6 +1061,9 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                     {student.rejection && (
                                                         <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40" title={student.rejection.reason || 'Rejected - the student must redo it'}>↩ Rejected</span>
                                                     )}
+                                                    {student.accepted && (
+                                                        <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-300 border-emerald-400/40" title="Accepted by the teacher on exceptional grounds (open the feedback to undo)">✓ Accepted</span>
+                                                    )}
                                                     {student.aiReview ? (
                                                         <button onClick={() => openFeedback(student)} className="flex flex-col items-center gap-1 group" title="View / edit feedback">
                                                             {student.aiReview.unreadable
@@ -1072,6 +1099,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                             <button onClick={() => rejectSubmission(student)} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-rose-500/90 hover:bg-rose-400 text-white" title="Ask the student to redo and re-upload">↩ Reject</button>
                                                         )
                                                     )}
+                                                    {(student.rejection || student.warning) && <button onClick={() => acceptSubmission(student)} className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-emerald-500/90 hover:bg-emerald-400 text-white" title="Accept this submission on exceptional grounds (removes the warning / rejection)">✓ Accept</button>}
                                                     <button
                                                         onClick={() => handleDeleteSubmission(student._id!)}
                                                         className="inline-flex items-center justify-center w-7 h-7 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors border border-red-500/20"
@@ -1220,8 +1248,9 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                     )}
                                 </div>
 
-                                {(student.warning || student.rejection) && (
+                                {(student.warning || student.rejection || student.accepted) && (
                                     <div className="flex flex-wrap gap-1.5">
+                                        {student.accepted && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-300 border-emerald-400/40">✓ Accepted</span>}
                                         {student.warning && !student.rejection && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.5)]">⚠ {student.warning.count} / limit {student.warning.limit}</span>}
                                         {student.rejection && <span className="text-[10px] font-black px-2 py-0.5 rounded border bg-rose-500/10 text-rose-300 border-rose-400/40">↩ Rejected</span>}
                                     </div>
@@ -1295,6 +1324,7 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                                             <button onClick={() => rejectSubmission(student)} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 bg-rose-500/90 hover:bg-rose-400 text-white" title="Ask the student to redo and re-upload">↩ Reject</button>
                                                         )
                                                     )}
+                                                    {(student.rejection || student.warning) && <button onClick={() => acceptSubmission(student)} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold flex-shrink-0 bg-emerald-500/90 hover:bg-emerald-400 text-white" title="Accept this submission on exceptional grounds (removes the warning / rejection)">✓ Accept</button>}
                                             <button
                                                 onClick={() => handleDeleteSubmission(student._id!)}
                                                 className="inline-flex items-center justify-center w-6 h-6 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 flex-shrink-0"
@@ -1847,6 +1877,14 @@ The copy goes back to "not checked": counts, grade and warning are removed and t
                                 ) : (
                                     <button onClick={() => rejectSubmission(feedbackFor)} className="px-3 py-2 rounded-lg bg-rose-500/90 hover:bg-rose-400 text-white text-xs font-black">↩ Reject - ask the student to redo</button>
                                 ))}
+                                {(feedbackFor.rejection || feedbackFor.warning) && (
+                                    <button onClick={() => acceptSubmission(feedbackFor)} className="ml-2 px-3 py-2 rounded-lg bg-emerald-500/90 hover:bg-emerald-400 text-white text-xs font-black">✓ Accept (exceptional grounds)</button>
+                                )}
+                                {feedbackFor.accepted && (
+                                    <span className="inline-flex items-center gap-2 text-xs text-emerald-300 font-bold">✓ Accepted on exceptional grounds
+                                        <button onClick={() => undoAccept(feedbackFor)} className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-[11px] font-bold">Undo accept</button>
+                                    </span>
+                                )}
                                 {feedbackFor.aiReview && (
                                     <button onClick={() => deleteWholeFeedback(feedbackFor)} className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 text-rose-300 hover:bg-rose-500/20 text-xs font-bold">🗑 Delete all feedback (make ungraded)</button>
                                 )}

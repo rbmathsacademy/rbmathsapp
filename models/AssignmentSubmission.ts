@@ -47,6 +47,14 @@ const AssignmentSubmissionSchema = new mongoose.Schema({
         default: null,
     },
     warningNotifiedAt: { type: Date, default: null }, // the student was told once; never repeated for this submission
+    // Teacher accepted this submission on exceptional grounds: no warning / rejection applies to it any more
+    accepted: {
+        type: new mongoose.Schema({
+            at: { type: Date, default: Date.now },
+            by: { type: String, default: '' },
+        }, { _id: false }),
+        default: null,
+    },
     // Teacher rejected this submission: the student must follow the feedback, delete it and upload again
     rejection: {
         type: new mongoose.Schema({

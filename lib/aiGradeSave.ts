@@ -101,7 +101,7 @@ export async function saveReviews(assignmentId: string, items: SaveItem[], opts:
     const limit: number | null = typeof assignment.warningLimit === 'number' ? assignment.warningLimit : null;
 
     const subs = await AssignmentSubmission.find({ _id: { $in: items.map(i => i.submissionId) }, assignment: assignmentId })
-        .select('student aiReview warning warningNotifiedAt').lean() as any[];
+        .select('student aiReview warning warningNotifiedAt accepted').lean() as any[];
     const subById = new Map(subs.map(s => [s._id.toString(), s]));
     const students = await BatchStudent.find({ _id: { $in: subs.map(s => s.student) } }).select('name phoneNumber').lean() as any[];
     const studentById = new Map(students.map(s => [s._id.toString(), s]));
@@ -123,7 +123,7 @@ export async function saveReviews(assignmentId: string, items: SaveItem[], opts:
 
         // Warning: more wrong + skipped questions than the teacher allows (not for unreadable copies)
         const wrongPlusSkipped = review.incorrect + review.skippedOrIncomplete;
-        const warn = !review.unreadable && limit !== null && wrongPlusSkipped > limit;
+        const warn = !review.unreadable && limit !== null && wrongPlusSkipped > limit && !sub.accepted; // accepted by the teacher: never warned
         const unchanged = warn && sub.warning && sub.warning.count === wrongPlusSkipped && sub.warning.limit === limit;
         const warning = warn ? { count: wrongPlusSkipped, limit: limit as number, at: unchanged ? sub.warning.at : new Date() } : null;
         const student = studentById.get(sub.student.toString());
@@ -191,7 +191,7 @@ export async function recheckWarnings(assignmentId: string): Promise<{ warned: n
     const limit: number | null = typeof assignment.warningLimit === 'number' ? assignment.warningLimit : null;
 
     const subs = await AssignmentSubmission.find({ assignment: assignmentId, status: 'CORRECTED', aiReview: { $ne: null }, 'aiReview.unreadable': { $ne: true } })
-        .select('student aiReview warning warningNotifiedAt').lean() as any[];
+        .select('student aiReview warning warningNotifiedAt accepted').lean() as any[];
     const students = await BatchStudent.find({ _id: { $in: subs.map(s => s.student) } }).select('name phoneNumber').lean() as any[];
     const studentById = new Map(students.map(s => [s._id.toString(), s]));
 
@@ -200,7 +200,7 @@ export async function recheckWarnings(assignmentId: string): Promise<{ warned: n
     const retractPhones: string[] = [];
     for (const sub of subs) {
         const count = (sub.aiReview.incorrect || 0) + (sub.aiReview.skippedOrIncomplete || 0);
-        const warn = limit !== null && count > limit;
+        const warn = limit !== null && count > limit && !sub.accepted;
         if (warn) {
             out.warned++;
             const student = studentById.get(sub.student.toString());
